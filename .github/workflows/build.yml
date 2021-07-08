@@ -1,6 +1,9 @@
 name: Build
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
 
@@ -11,7 +14,6 @@ jobs:
       matrix:
         os: [windows-latest,macos-latest,ubuntu-latest]
 
-    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
 
