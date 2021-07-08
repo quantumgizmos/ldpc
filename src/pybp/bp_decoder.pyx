@@ -1,9 +1,8 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
 import numpy as np
-from scipy.special import comb as nCr
 
 from libc.stdlib cimport malloc, calloc,free
-from libc.math cimport log, tanh, isnan
+from libc.math cimport log, tanh, isnan, abs
 cimport numpy as np
 cimport cython
 
@@ -30,9 +29,6 @@ cdef class bp_decoder:
     cdef int max_iter
     cdef int bp_method
     cdef double ms_scaling_factor
-    cdef int rank
-    cdef int k
-    cdef int i, j
 
     def __cinit__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
 
