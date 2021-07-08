@@ -31,7 +31,7 @@ def ext_class(extension, cython_installed):
       return [extension]
 
 setup(
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     name='pybp',
     version='0.0.1',
     description='',

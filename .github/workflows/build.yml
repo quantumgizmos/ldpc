@@ -31,7 +31,7 @@ jobs:
 
       - name: Build wheels
         env:
-          CIBW_SKIP: pp* cp27-* cp33-* cp34-* cp35-*
+          CIBW_SKIP: pp* cp27-* cp33-* cp34-* cp35-* cp36-*
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
