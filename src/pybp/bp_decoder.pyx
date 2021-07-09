@@ -3,6 +3,10 @@ import numpy as np
 
 cdef class bp_decoder:
 
+    '''
+    This class implements a belief propagation decoder for LDPC codes   
+    '''
+
     def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
 
         pass
@@ -62,7 +66,6 @@ cdef class bp_decoder:
         elif error_rate!=None:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
-
         
 
     cdef char* bp_decode_cy(self):
@@ -383,14 +386,15 @@ cdef class bp_decoder:
 
     ###note dealloc is causing exception handling to fail. Don't know why this is happening?
 
-    # def __dealloc__(self):
-    #         mod2sparse_free(self.H)
-    #         free(self.error)
-    #         free(self.synd)
-    #         free(self.bp_decoding_synd)
-    #         free(self.channel_probs)
-    #         free(self.bp_decoding)
-    #         free(self.log_prob_ratios)
+    def __dealloc__(self):
+            free(self.error)
+            free(self.synd)
+            free(self.bp_decoding_synd)
+            free(self.channel_probs)
+            free(self.bp_decoding)
+            free(self.log_prob_ratios)
+            # mod2sparse_free(self.H)
+
         
 
 
