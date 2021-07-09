@@ -1,30 +1,7 @@
-# from setuptools import setup
-# from distutils.extension import Extension
-# import numpy
-
-# from Cython.Build import cythonize
-# import Cython.Compiler.Options
-# Cython.Compiler.Options.docstrings = False
-
 from setuptools import setup
 from setuptools import Extension
 from Cython.Build import cythonize
 import numpy
-
-# setup(
-#     name = 'pybp',
-#     version='1.0.0',
-#     author='Cython Demo',
-#     url='http://example.com',
-#     packages = ['pybp'],
-#     ext_modules = cythonize(Extension(name="pybp.c_math", sources=["src/pybp/c_math.pyx"],include_dirs=[numpy.get_include()])),
-#     package_dir={'':'src'},
-#     package_data = {'pybp': ['c_math.pxd']},
-#     include_package_data=True,
-#     setup_requires=["cython >= 0.26"],
-#     zip_safe=False
-#     )
-
 
 extension = Extension(
     name="pybp.bp_decoder",
