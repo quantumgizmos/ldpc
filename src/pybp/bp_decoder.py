@@ -1,5 +1,5 @@
 import numpy as np
-import cybp
+import pybp.bp_decoder_c
 
 #wrapper to return cython class
 def bp_decoder(H,error_rate=None,max_iter=0,bp_method=0,ms_scaling_factor=1.0,channel_probs=[None]):
@@ -31,4 +31,4 @@ def bp_decoder(H,error_rate=None,max_iter=0,bp_method=0,ms_scaling_factor=1.0,ch
             if len(channel_probs)!=n:
                 raise Exception(f"Error: the channel probability vector must have lenght equal to the block size n={n}.")
 
-        return cybp.bp_decoder(H,error_rate,max_iter=max_iter,bp_method=bp_method,ms_scaling_factor=ms_scaling_factor,channel_probs=channel_probs)
+        return pybp.bp_decoder_c.bp_decoder(H,error_rate,max_iter=max_iter,bp_method=bp_method,ms_scaling_factor=ms_scaling_factor,channel_probs=channel_probs)

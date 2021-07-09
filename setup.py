@@ -26,7 +26,7 @@ Cython.Compiler.Options.docstrings = False
 
 
 extension = Extension(
-    name="pybp.bp_decoder",
+    name="pybp.bp_decoder_c",
     sources=["include/mod2sparse.c","src/pybp/bp_decoder.pyx"],
     libraries=[],
     library_dirs=[],
