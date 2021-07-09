@@ -1,7 +1,13 @@
 from setuptools import setup
-from setuptools import Extension
+from distutils.extension import Extension
 from Cython.Build import cythonize
+import Cython.Compiler.Options
 import numpy
+
+#  from setuptools import setup
+# from setuptools import Extension
+# from Cython.Build import cythonize
+# import numpy
 
 extension = Extension(
     name="pybp.bp_decoder",
