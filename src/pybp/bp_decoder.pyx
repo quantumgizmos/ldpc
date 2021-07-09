@@ -1,36 +1,43 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
 import numpy as np
-cimport numpy as np
-
-from libc.stdlib cimport malloc, calloc,free
-from libc.math cimport log, tanh, isnan, abs
-
-from mod2sparse cimport *
-from c_util cimport numpy2char, char2numpy, numpy2double, double2numpy
 
 cdef class bp_decoder:
-    cdef mod2sparse* H
-    cdef int m, n
-    cdef char* error
-    cdef char* synd
-    cdef char* bp_decoding_synd
-    cdef char* bp_decoding
-    cdef char* decoding
-    cdef int iter
-    cdef int converge
-    cdef double* channel_probs
-    cdef double* log_prob_ratios
-    cdef double error_rate
-    cdef int max_iter
-    cdef int bp_method
-    cdef double ms_scaling_factor
+
+    def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
+
+        pass
 
     def __cinit__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
 
         cdef i,j
-
         self.m=mat.shape[0]
         self.n=mat.shape[1]
+
+        #Error rate
+        if error_rate!=None:
+            if error_rate<=0 or error_rate>=1.0:
+                raise ValueError(f"The error rate must be in the range 0.0<error_rate<1.0")
+
+        #BP iterations
+        if max_iter<0: raise ValueError('The maximum number of iterations must a positive number')
+        if max_iter==0: max_iter=self.n        
+
+        #BP method
+        if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
+            bp_method=0
+        elif str(bp_method).lower() in ['min_sum','mininum_sum','ms','1','mininum sum','min sum']:
+            bp_method=1
+        elif str(bp_method).lower() in ['prod_sum_log','product_sum_log','ps_log','2','psl']:
+            bp_method=2
+        elif str(bp_method).lower() in ['min_sum_log','mininum_sum_log','ms_log','3','mininum sum_log','msl']:
+            bp_method=3
+        else: raise ValueError(f"BP method '{bp_method}' is invalid.\
+                            Please choose from the following methods:'product_sum',\
+                            'mininum_sum', 'product_sum_log' or 'mininum_sum_log'")
+        
+        if channel_probs[0]!=None:
+            if len(channel_probs)!=self.n:
+                raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
 
         #BP Settings
         self.max_iter=max_iter
@@ -56,6 +63,7 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
+        
 
     cdef char* bp_decode_cy(self):
 
@@ -373,16 +381,19 @@ cdef class bp_decoder:
     def channel_probs(self): return double2numpy(self.channel_probs,self.n)
 
 
+    ###note dealloc is causing exception handling to fail. Don't know why this is happening?
 
-    def __dealloc__(self):
+    # def __dealloc__(self):
+    #         mod2sparse_free(self.H)
+    #         free(self.error)
+    #         free(self.synd)
+    #         free(self.bp_decoding_synd)
+    #         free(self.channel_probs)
+    #         free(self.bp_decoding)
+    #         free(self.log_prob_ratios)
         
-        mod2sparse_free(self.H)
-        free(self.error)
-        free(self.synd)
-        free(self.bp_decoding_synd)
-        free(self.channel_probs)
-        free(self.bp_decoding)
-        free(self.log_prob_ratios)
+
+
 
 
 
