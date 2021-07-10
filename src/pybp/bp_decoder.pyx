@@ -160,7 +160,7 @@ cdef class bp_decoder:
                         e.sgn=sgn
                         if abs(abs(e.bit_to_check)-1)<temp:
                             temp=abs(e.bit_to_check)
-                        if e.bit_to_check <=0: sgn+=1
+                        if e.bit_to_check >=1: sgn+=1
                         e=mod2sparse_next_in_row(e)
 
                     e=mod2sparse_last_in_row(self.H,i)
@@ -175,7 +175,7 @@ cdef class bp_decoder:
 
                         if abs(e.bit_to_check)<temp:
                             temp=abs(e.bit_to_check)
-                        if e.bit_to_check <=0: sgn+=1
+                        if e.bit_to_check >=1: sgn+=1
 
 
                         e=mod2sparse_prev_in_row(e)
