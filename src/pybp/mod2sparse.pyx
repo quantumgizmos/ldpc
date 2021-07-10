@@ -45,6 +45,7 @@ cdef class pymod2sparse():
         self.iter_axis=-1
         self.vec_n=<char*>calloc(self.n,sizeof(char)) 
         self.vec_m=<char*>calloc(self.m,sizeof(char))
+        self.e=mod2sparse_first_in_col(self.matrix,0)
         self.MEM_ALLOCATED=True
 
     def __iter__(self):
@@ -135,23 +136,22 @@ cdef class pymod2sparse():
     @property
     def check_to_bit(self):
         return self.e.check_to_bit
-    
     @check_to_bit.setter
-    def check_to_bit(self,value):
+    def check_to_bit(self, double value):
         self.e.check_to_bit=value
 
     @property
     def bit_to_check(self):
         return self.e.bit_to_check
     @bit_to_check.setter
-    def bit_to_check(self,value):
+    def bit_to_check(self,double value):
         self.e.bit_to_check=value
 
     @property
     def sgn(self):
         return self.e.sgn
     @sgn.setter
-    def sgn(self,value):
+    def sgn(self,int value):
         self.e.sgn=value
 
     @property

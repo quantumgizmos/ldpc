@@ -53,6 +53,7 @@ cdef class pymod2sparse():
     cdef int m,n,iter_axis,reverse_iterate, row_index, col_index,start
     cdef char *vec_n
     cdef char *vec_m
+    cdef int MEM_ALLOCATED
 
     cpdef iter_row(self,int row_index,int reverse_iterate)
     cpdef iter_col(self,int col_index,int reverse_iterate)
