@@ -18,15 +18,6 @@ extension = Extension(
     extra_compile_args=['-std=c11']
     )
 
-extension4 = Extension(
-    name="pybp.bp_decoder2",
-    sources=["include/mod2sparse.c","src/pybp/bp_decoder2.pyx"],
-    libraries=[],
-    library_dirs=[],
-    include_dirs=[numpy.get_include(),'include'],
-    extra_compile_args=['-std=c11']
-    )
-
 extension2 = Extension(
     name="pybp.mod2sparse",
     sources=["include/mod2sparse.c","src/pybp/mod2sparse.pyx"],
@@ -56,7 +47,7 @@ setup(
     packages=["pybp"],  #same as name
     package_dir={'':'src'},
     package_data = {'pybp': ['*.pxd']},
-    ext_modules=cythonize([extension,extension2,extension3,extension4]),
+    ext_modules=cythonize([extension,extension2,extension3]),
     classifiers=['Development Status :: 1 - Planning'],
     install_requires=["tqdm","scipy"],
     include_package_data=True,
