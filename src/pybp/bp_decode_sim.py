@@ -5,7 +5,6 @@ import time
 import datetime
 
 from pybp import bp_decoder
-from pybp.bp_decoder2 import bp_decoder as bp_decoder2 #experimental
 from .mod2 import rank
 
 
@@ -38,21 +37,15 @@ def classical_decode_sim(
     k=n-rank(pcm)
     output_dict['k']=k
     
-    if bp_method==42:
-        bpd=bp_decoder2(
+
+  
+    bpd=bp_decoder(
         pcm,
         error_rate,
         max_iter=max_iter,
-        bp_method=0
+        bp_method=bp_method,
+        ms_scaling_factor=ms_scaling_factor
     )
-    else:
-        bpd=bp_decoder(
-            pcm,
-            error_rate,
-            max_iter=max_iter,
-            bp_method=bp_method,
-            ms_scaling_factor=ms_scaling_factor
-        )
 
 
 

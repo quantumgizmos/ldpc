@@ -16,6 +16,17 @@ cdef class bp_decoder:
         self.MEM_ALLOCATED=False
 
         cdef i,j
+
+
+        #check that mat is a numpy array
+
+        if isinstance(mat,np.ndarray):
+            pass
+        else:
+            raise TypeError("The input matrix is of an invalid type. Please input a np.ndarray object.")
+        #allow scipy sparse matrices?    
+
+
         self.m=mat.shape[0]
         self.n=mat.shape[1]
 

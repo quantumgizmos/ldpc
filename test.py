@@ -6,10 +6,10 @@ from pybp.classical_codes import rep_code
 
 from pybp.mod2sparse import pymod2sparse
 
-H=rep_code(1000,False)
+H=rep_code(10,False)
 
 
-# H = pymod2sparse(H)
+H = pymod2sparse(H)
 
 # print(H)
 
@@ -21,7 +21,7 @@ H=rep_code(1000,False)
 
 # print(H.shape)
 
-from pybp.bp_decoder2 import bp_decoder
+from pybp.bp_decoder import bp_decoder
 
 bpd=bp_decoder(H,0.1,max_iter=10,bp_method="0")
 
@@ -34,7 +34,7 @@ for i in range(1):
     print()
 
 
-
+print(isinstance(H,np.ndarray))
 
 
 
