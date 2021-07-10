@@ -13,13 +13,15 @@ cdef class bp_decoder:
 
     def __cinit__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
 
+        self.MEM_ALLOCATED=False
+
         cdef i,j
         self.m=mat.shape[0]
         self.n=mat.shape[1]
 
         #Error rate
         if error_rate!=None:
-            if error_rate<=0 or error_rate>=1.0:
+            if error_rate<0 or error_rate>1.0:
                 raise ValueError(f"The error rate must be in the range 0.0<error_rate<1.0")
 
         #BP iterations
@@ -58,6 +60,8 @@ cdef class bp_decoder:
         self.bp_decoding=<char*>calloc(self.n,sizeof(char)) #BP decoding
         self.channel_probs=<double*>calloc(self.n,sizeof(double)) #channel probs
         self.log_prob_ratios=<double*>calloc(self.n,sizeof(double)) #log probability ratios
+
+        self.MEM_ALLOCATED=True
 
         #error channel setup        
         if channel_probs[0]!=None:
@@ -387,13 +391,14 @@ cdef class bp_decoder:
     ###note dealloc is causing exception handling to fail. Don't know why this is happening?
 
     def __dealloc__(self):
-            free(self.error)
-            free(self.synd)
-            free(self.bp_decoding_synd)
-            free(self.channel_probs)
-            free(self.bp_decoding)
-            free(self.log_prob_ratios)
-            # mod2sparse_free(self.H)
+            if self.MEM_ALLOCATED:
+                free(self.error)
+                free(self.synd)
+                free(self.bp_decoding_synd)
+                free(self.channel_probs)
+                free(self.bp_decoding)
+                free(self.log_prob_ratios)
+                mod2sparse_free(self.H)
 
         
 

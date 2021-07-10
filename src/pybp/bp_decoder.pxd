@@ -25,6 +25,7 @@ cdef class bp_decoder:
     cdef int max_iter
     cdef int bp_method
     cdef double ms_scaling_factor
+    cdef int MEM_ALLOCATED
 
     cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome)
 
