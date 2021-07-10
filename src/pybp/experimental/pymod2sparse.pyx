@@ -61,7 +61,7 @@ cdef class pymod2sparse():
             else:
                 raise StopIteration
 
-    def iter_row(self,row_index,reverse_iterate=False):
+    cpdef iter_row(self,int row_index,int reverse_iterate=False):
         
         self.iter_axis=1
         self.reverse_iterate=reverse_iterate
@@ -74,7 +74,7 @@ cdef class pymod2sparse():
         
         return self
 
-    def iter_col(self,col_index,reverse_iterate=False):
+    cpdef iter_col(self, int col_index, int reverse_iterate=False):
         
         self.iter_axis=0
         self.reverse_iterate=reverse_iterate
@@ -132,9 +132,3 @@ cdef class pymod2sparse():
         mod2sparse_free(self.matrix)
         free(self.vec_n)
         free(self.vec_m)
-
-cpdef double fast_tanh(double x):
-    return tanh(x)
-
-cpdef double fast_log(double x):
-    return log(x)
