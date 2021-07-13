@@ -6,10 +6,32 @@ from scipy import sparse
 
 
 def mod10_to_mod2(dec, length=0):
+ 
+    """Converts decimal number to binary number, padded if necessary to 
+    ensure list size is equal to the length parameter.
+
+    Parameters
+    ----------
+    dec : int
+        Decimal number (base 10).
+    length : int, optional
+        The length of the binary string. If the specified `length' is greater
+        than the bit-length of the binary number the output is -left padded
+        with zeros. The default `length' is set to zero.
+
+    Returns
+    -------
+    list
+        A binary integer list encoding the binary represenation of the
+        inputted decimal number 
+    
+    Examples
+    --------
+    >>> mod10_to_mod2(2,length=5)
+    [0,0,0,1,0]
+
     """
-    Converts decimal number to binary number, represented as list with MSB first, padded if necessary to ensure
-    list size is equal to length parameter.
-    """
+
     # Convert dec to a binary string, with <length> leading zeros
     bin_str = format(dec, '0{}b'.format(length))
 
