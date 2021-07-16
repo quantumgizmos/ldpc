@@ -6,8 +6,8 @@ cimport cython
 from libc.stdlib cimport malloc, calloc, free
 from libc.math cimport log, tanh, isnan, abs
 
-from pybp.mod2sparse cimport *
-from pybp.c_util cimport numpy2char, char2numpy, numpy2double, double2numpy
+from ldpc.mod2sparse cimport *
+from ldpc.c_util cimport numpy2char, char2numpy, numpy2double, double2numpy
 
 cdef class bp_decoder:
     cdef pymod2sparse H

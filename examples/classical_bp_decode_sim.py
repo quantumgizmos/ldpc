@@ -1,6 +1,6 @@
 import numpy as np
-from pybp.classical_codes import rep_code
-from pybp.bp_decode_sim import classical_decode_sim
+from ldpc.classical_codes import rep_code
+from ldpc.bp_decode_sim import classical_decode_sim
 
 d=1000
 

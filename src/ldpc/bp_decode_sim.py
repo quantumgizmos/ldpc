@@ -4,7 +4,7 @@ import json
 import time
 import datetime
 
-from pybp import bp_decoder
+from ldpc import bp_decoder
 from .mod2 import rank
 
 

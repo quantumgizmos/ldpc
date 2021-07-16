@@ -10,8 +10,8 @@ import numpy
 # import numpy
 
 extension = Extension(
-    name="pybp.bp_decoder",
-    sources=["include/mod2sparse.c","src/pybp/bp_decoder.pyx"],
+    name="ldpc.bp_decoder",
+    sources=["include/mod2sparse.c","src/ldpc/bp_decoder.pyx"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'include'],
@@ -19,8 +19,8 @@ extension = Extension(
     )
 
 extension2 = Extension(
-    name="pybp.mod2sparse",
-    sources=["include/mod2sparse.c","src/pybp/mod2sparse.pyx"],
+    name="ldpc.mod2sparse",
+    sources=["include/mod2sparse.c","src/ldpc/mod2sparse.pyx"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'include'],
@@ -28,8 +28,8 @@ extension2 = Extension(
     )
 
 extension3 = Extension(
-    name="pybp.c_util",
-    sources=["src/pybp/c_util.pyx","include/mod2sparse.c"],
+    name="ldpc.c_util",
+    sources=["src/ldpc/c_util.pyx","include/mod2sparse.c"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'include'],
@@ -38,15 +38,15 @@ extension3 = Extension(
 
 setup(
     python_requires='>=3.7',
-    name='pybp',
+    name='ldpc',
     version='0.0.1',
     description='',
     long_description='A belief propagation decoder for low density parity check (LDPC) codes',
     url='https://roffe.eu',
     author='Joschka Roffe',
-    packages=["pybp"],  #same as name
+    packages=["ldpc"],  #same as name
     package_dir={'':'src'},
-    package_data = {'pybp': ['*.pxd']},
+    package_data = {'ldpc': ['*.pxd']},
     ext_modules=cythonize([extension,extension2,extension3]),
     classifiers=['Development Status :: 1 - Planning'],
     install_requires=["tqdm","scipy"],

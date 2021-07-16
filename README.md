@@ -1,4 +1,4 @@
-# pybp
+# ldpc
 A belief propagation (BP) decoder for low density parity check (LDPC) codes
 
 ## Installation (from source)

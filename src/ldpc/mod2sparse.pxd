@@ -3,7 +3,7 @@ from libc.stdlib cimport malloc, calloc,free
 import numpy as np
 cimport numpy as np
 
-from pybp.c_util cimport numpy2double,numpy2char,char2numpy,double2numpy
+from ldpc.c_util cimport numpy2double,numpy2char,char2numpy,double2numpy
 
 cdef extern from "mod2sparse.h":
     
