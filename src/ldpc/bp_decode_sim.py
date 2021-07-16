@@ -47,10 +47,6 @@ def classical_decode_sim(
         ms_scaling_factor=ms_scaling_factor
     )
 
-
-
-
-
     print(f"BP Method: {bpd.bp_method}")
 
     if seed==0: seed=np.random.randint(low=1,high=2**32-1)

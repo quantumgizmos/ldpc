@@ -7,8 +7,8 @@ from scipy import sparse
 
 def mod10_to_mod2(dec, length=0):
  
-    """Converts decimal number to binary number, padded if necessary to 
-    ensure list size is equal to the length parameter.
+    """Converts a decimal number to a binary number, with optional padding
+    to produce a binary vector of a given length.
 
     Parameters
     ----------
@@ -16,7 +16,7 @@ def mod10_to_mod2(dec, length=0):
         Decimal number (base 10).
     length : int, optional
         The length of the binary string. If the specified `length' is greater
-        than the bit-length of the binary number the output is -left padded
+        than the bit-length of the binary number the output is left-padded
         with zeros. The default `length' is set to zero.
 
     Returns
