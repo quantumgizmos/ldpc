@@ -43,7 +43,7 @@ cdef class bp_decoder:
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
             bp_method=0
         elif str(bp_method).lower() in ['min_sum','mininum_sum','ms','1','mininum sum','min sum']:
-            bp_method=3 # method 1 is not working at the moment (see issue 1).
+            bp_method=3 # method 1 is not working (see issue 1). Defaulting to the log version of bp.
         elif str(bp_method).lower() in ['prod_sum_log','product_sum_log','ps_log','2','psl']:
             bp_method=2
         elif str(bp_method).lower() in ['min_sum_log','mininum_sum_log','ms_log','3','mininum sum_log','msl']:

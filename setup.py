@@ -1,13 +1,7 @@
 from setuptools import setup
 from distutils.extension import Extension
 from Cython.Build import cythonize
-import Cython.Compiler.Options
 import numpy
-
-#  from setuptools import setup
-# from setuptools import Extension
-# from Cython.Build import cythonize
-# import numpy
 
 extension = Extension(
     name="ldpc.bp_decoder",
@@ -40,8 +34,11 @@ setup(
     python_requires='>=3.7',
     name='ldpc',
     version='0.0.1',
-    description='',
-    long_description='A belief propagation decoder for low density parity check (LDPC) codes',
+    description='Python tools for low density parity check (LDPC) codes',
+    long_description='This module provides a suite of tools for building and\
+        benmarking low density parity check (LDPC) codes. Features include\
+        functions for mod2 (binary) arithmatic, tools for constructing quasi-cyclic\
+        codes and a fast implementation of the belief propagation decoder ',
     url='https://roffe.eu',
     author='Joschka Roffe',
     packages=["ldpc"],  #same as name
