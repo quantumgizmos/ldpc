@@ -40,25 +40,53 @@ def mod10_to_mod2(dec, length=0):
 
 
 def mod2_to_mod10(binary_arr):
+    
     """
-    Converts binary number represented as a list with MSB first, to decimal number.
+    Converts binary number represented as a list to a decimal number.
+
+    Parameters
+    ----------
+    binary_arr : list
+        A binary number represented as the entries of a list
+    
+    Returns
+    -------
+    int
+        The decimal representation of the inputted binary array 
+    
+    Examples
+    --------
+    >>> mod2_to_mod10([0,0,0,1,0])
+    2
+
     """
+
     bases = 2 ** np.arange(len(binary_arr))[::-1]
     return binary_arr @ bases
 
 
 def row_echelon(matrix, full=False):
+    
     """
-    Convert matrix to row echelon form - NOT reduced row echelon form (see other function) - via Gaussian Elimination
+    Converts a binary matrix to row echelon form via Gaussian Elimination
 
-    Accepts numpy array or space csr matrix.
-
+    Parameters
+    ----------
+    matrix : numpy.ndarry or scipy.sparse
+        A binary matrix in either numpy.ndarray format or scipy.sparse
+    full: bool, optional
+        If set to full, the function returns the reduced row echelon form
+        of the matrix (ie. Gaussian elemination is used to eliminate entries
+        above and below the pivot row.)
+    
     Returns
+    -------
         row_ech_form: row echelon form of input
         rank: matrix rank
         transform_matrix: the transformation matrix such that (transform_matrix@matrix)=row_ech_form
         pivot_cols: list of the indices of pivot num_cols found during Gauss elimination
     """
+
     num_rows, num_cols = np.shape(matrix)
 
     # Take copy of matrix if numpy (why?) and initialise transform matrix to identity
@@ -125,13 +153,38 @@ def row_echelon(matrix, full=False):
 
 
 def rank(matrix):
-    """ Return rank of matrix """
+    """
+    Returns the rank of a binary matrix
+
+    Parameters
+    ----------
+
+    matrix: numpy.ndarray
+        A binary matrix in numpy.ndarray format
+
+    Returns
+    -------
+    int
+        The rank of the matrix
+    
+    """
     return row_echelon(matrix)[1]
 
 
 def reduced_row_echelon(matrix):
     """
     Converts matrix to reduced row echelon form. Output has form reM_Q=[I,A]
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        A binary matrix in numpy.ndarray format
+
+    Returns
+    -------
+    numpy.ndarray
+        The reduced row echelon form of the inputted matrix
+
     """
     num_rows, num_cols = matrix.shape
 
@@ -165,6 +218,17 @@ def nullspace(matrix):
     where the width of A is equal to the rank. This means the bottom n-k rows of P
     must produce a zero vector when applied to M. For a more formal definition see
     the Rank-Nullity theorem.
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        A binary matrix in numpy.ndarray format
+    
+    Returns
+    -------
+    numpy.ndarray
+        A binary matrix where each row is a nullspace vector of the inputted binary
+        matrix
 
     """
     transpose = matrix.T

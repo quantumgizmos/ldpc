@@ -3,15 +3,19 @@ This module provides a suite of tools for building and benmarking low density pa
 
 ## Installation (from source)
 
-Installation from sources requires Python>=3.6 and a local C compiler (eg. 'gcc' in Linux or 'clang' in Windows). Once these requirements have been met, navigate to the repository route and install using pip:
+Installation from sources requires Python>=3.7 and a local C compiler (eg. 'gcc' in Linux or 'clang' in Windows). Once these requirements have been met, navigate to the repository route and install using pip:
 
 ```
-pip install .
+pip install -e ldpc
 ```
 
 ## Installion (from PyPi)
 
-Coming soon!
+Open a terminal window and run
+
+```
+pip install ldpc
+```
 
 ## Demo Scripts
 
