@@ -229,8 +229,8 @@ def nullspace(matrix):
     numpy.ndarray
         A binary matrix where each row is a nullspace vector of the inputted binary
         matrix
-
     """
+
     transpose = matrix.T
     m, n = transpose.shape
     _, matrix_rank, transform, _ = row_echelon(transpose)
@@ -239,7 +239,7 @@ def nullspace(matrix):
 
 def kernel(matrix):
     '''
-    The nullspace is sometimes referred to as the kernel
+    The nullspace is sometimes referred to as the kernel. 
     '''
     return nullspace(matrix)
 
