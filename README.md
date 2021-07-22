@@ -1,5 +1,5 @@
 # ldpc
-A belief propagation (BP) decoder for low density parity check (LDPC) codes
+This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic, tools for constructing quasi-cyclic codes and a fast implementation of the belief propagation decoder
 
 ## Installation (from source)
 
