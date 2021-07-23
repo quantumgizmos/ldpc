@@ -239,7 +239,22 @@ def nullspace(matrix):
 
 def kernel(matrix):
     '''
-    The nullspace is sometimes referred to as the kernel. 
+    Returns the kernel of a binary matrix.
+
+    This function is equivalent to the nullspace function
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        A binary matrix in numpy.ndarray format
+    
+    Returns
+    -------
+    numpy.ndarray
+        A binary matrix where each row is a nullspace vector of the inputted binary
+        matrix
+    """
+
     '''
     return nullspace(matrix)
 

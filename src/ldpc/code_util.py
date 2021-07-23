@@ -9,10 +9,26 @@ def nCr(n,r): return int(fact(n) // fact(r) // fact(n-r))
 def construct_generator_matrix(H):
     '''
     Constructs a generator matrix from a parity check H.
-    --The generator matrix G satisfies the condition:
-                    H@G.T = 0
-    --Each of the columns of the generator matrix is a nullspace vector
-        of the matrix H
+    
+    The generator matrix G satisfies the condition:
+                    $$H@G.T = 0$$.
+    
+    Each of the columns of the generator matrix is a nullspace vector of
+    the matrix H
+    
+    
+    Parameters
+    ----------
+
+    H: numpy.ndarray
+        A binary matrix in numpy.ndarray format.
+    
+    Returns
+    -------
+
+    numpy.ndarray
+        The generator matrix in numpy.ndarray format
+    
     '''
     return nullspace(H)
 
