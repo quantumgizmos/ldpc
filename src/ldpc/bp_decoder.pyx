@@ -21,29 +21,6 @@ cdef class bp_decoder:
         Sets the min-sum scaling factor for the min-sum BP method
     channel_probs: list, optional
         This parameter can be used to set the initial error channel across all bits.
-
-
-    Attributes
-    ----------
-    bp_decoding: numpy.ndarray
-        The decoding from the last round of BP in numpy.ndarray format.
-    bp_method: str
-        The BP method.
-    bp_probs: numpy.ndarray
-        The soft decision probabalities on each bit from the last round of
-        BP decoding.
-    channel_probs: numpy.ndarray
-        The soft decision log probability ratios for each bit from the last
-        round of BP decoding.
-    converge: bool
-        Returns `1' if the previous BP run suceeded and `0' if it failed.
-    iter: int
-        The number of iterations performed in the last BP run.
-    max_iter: int
-        The maximum number of iterations the BP decoder will attempt.
-    ms_scaling_factor: float64
-        The scaling factor for min-sum decoding
-
     '''
 
     def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
@@ -120,18 +97,6 @@ cdef class bp_decoder:
         elif error_rate!=None:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
-        
-
-    cdef char* bp_decode_cy(self):
-
-        if self.bp_method == 0 or self.bp_method == 1:
-            self.bp_decode_prob_ratios()
-
-        elif self.bp_method == 2 or self.bp_method==3:
-            self.bp_decode_log_prob_ratios()
-
-        else:
-            ValueError("Specified BP method is invalid.")
 
     cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
         """
@@ -152,8 +117,46 @@ cdef class bp_decoder:
         self.bp_decode_cy()
         return char2numpy(self.bp_decoding,self.n)
 
-    # Belief propagation with probability ratios
+    def update_channel_probs(self,channel):
+        """
+        Function updates the channel probabilities for each bit in the BP decoder.
+
+        Parameters
+        ----------
+        channel: numpy.ndarray
+            A list of the channel probabilities for each bit
+
+        Returns
+        -------
+        NoneType
+        """
+        cdef j
+        for j in range(self.n): self.channel_probs[j]=channel[j]     
+
+    cdef char* bp_decode_cy(self):
+        """
+        Cython function for calling the BP decoder
+
+        Notes
+        -----
+        This funciton accepts no paremeters. The syndrome must be set beforehand:
+
+        eg. self.synd=syndrome
+        """
+
+        if self.bp_method == 0 or self.bp_method == 1:
+            self.bp_decode_prob_ratios()
+
+        elif self.bp_method == 2 or self.bp_method==3:
+            self.bp_decode_log_prob_ratios()
+
+        else:
+            ValueError("Specified BP method is invalid.")
+
     cdef int bp_decode_prob_ratios(self):
+        """
+        This Function implements belief propagation for probability ratios.
+        """
    
         cdef mod2entry *e
         cdef int i, j, check,equal, iteration
@@ -277,6 +280,9 @@ cdef class bp_decoder:
 
     # Belief propagation with log probability ratios
     cdef int bp_decode_log_prob_ratios(self):
+        """
+        This function implements belief propagation using log probability ratios.
+        """
 
         cdef mod2entry *e
         cdef int i, j, check,equal, iteration, sgn
@@ -394,10 +400,6 @@ cdef class bp_decoder:
         return 0
 
   
-    def update_channel_probs(self,channel):
-        cdef j
-        for j in range(self.n): self.channel_probs[j]=channel[j]
-
     @property
     def channel_probs(self):
         probs=np.zeros(self.n).astype("float")
