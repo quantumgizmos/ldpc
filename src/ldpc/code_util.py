@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import combinations
 from math import factorial as fact
-from .mod2 import reduced_row_echelon, nullspace, col_basis, row_span, rank
+from .mod2 import reduced_row_echelon, nullspace, row_span, rank
 
 #nCr combinations function
 def nCr(n,r): return int(fact(n) // fact(r) // fact(n-r))

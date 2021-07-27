@@ -1,10 +1,49 @@
-#cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
+#cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True, embedsignature=True
 import numpy as np
 
 cdef class bp_decoder:
-
     '''
-    This class implements a belief propagation decoder for LDPC codes   
+    A class implementing a belief propagation decoder for LDPC codes
+
+    Parameters
+    ----------
+    mat: numpy.ndarray
+        The parity check matrix of the binary code in numpy.ndarray format.
+    error_rate: float64, optional
+        The bit error rate.
+    max_iter: int, optional
+        The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
+        will iterate n times, where n is the block length of the code.
+    bp_method: str OR int, optional
+        The BP method. Currenlty three methods are implemented: 1) "ps": product sum updates;
+        2) "ms": min-sum updates; 3) "msl": min-sum log updates
+    ms_scaling_factor: float64, optional
+        Sets the min-sum scaling factor for the min-sum BP method
+    channel_probs: list, optional
+        This parameter can be used to set the initial error channel across all bits.
+
+
+    Attributes
+    ----------
+    bp_decoding: numpy.ndarray
+        The decoding from the last round of BP in numpy.ndarray format.
+    bp_method: str
+        The BP method.
+    bp_probs: numpy.ndarray
+        The soft decision probabalities on each bit from the last round of
+        BP decoding.
+    channel_probs: numpy.ndarray
+        The soft decision log probability ratios for each bit from the last
+        round of BP decoding.
+    converge: bool
+        Returns `1' if the previous BP run suceeded and `0' if it failed.
+    iter: int
+        The number of iterations performed in the last BP run.
+    max_iter: int
+        The maximum number of iterations the BP decoder will attempt.
+    ms_scaling_factor: float64
+        The scaling factor for min-sum decoding
+
     '''
 
     def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
@@ -24,7 +63,7 @@ cdef class bp_decoder:
             pass
         else:
             raise TypeError("The input matrix is of an invalid type. Please input a np.ndarray object.")
-        #allow scipy sparse matrices?    
+        #todo?: allow scipy sparse matrices?    
 
 
         self.m=mat.shape[0]
@@ -92,9 +131,23 @@ cdef class bp_decoder:
             self.bp_decode_log_prob_ratios()
 
         else:
-            print("Decoder not called")
+            ValueError("Specified BP method is invalid.")
 
     cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
+        """
+        Runs the BP decoder for a given syndrome.
+
+        Parameters
+        ----------
+        syndrome: numpy.ndarray
+            The syndrome to be decoded.
+
+        Returns
+        -------
+        numpy.ndarray
+            The belief propagation decoding in numpy.ndarray format.
+
+        """
         self.synd=numpy2char(syndrome,self.synd)
         self.bp_decode_cy()
         return char2numpy(self.bp_decoding,self.n)
@@ -381,25 +434,13 @@ cdef class bp_decoder:
     def converge(self): return self.converge
 
     @property
-    def osd_order(self): return self.osd_order
-
-    @property
-    def osdw_decoding(self): return char2numpy(self.osdw_decoding,self.n)
-
-    @property
     def bp_decoding(self): return char2numpy(self.bp_decoding,self.n)
-
-    @property
-    def osd0_decoding(self): return char2numpy(self.osd0_decoding,self.n)
 
     @property
     def log_prob_ratios(self): return double2numpy(self.log_prob_ratios,self.n)
 
     @property
     def channel_probs(self): return double2numpy(self.channel_probs,self.n)
-
-
-    ###note dealloc is causing exception handling to fail. Don't know why this is happening?
 
     def __dealloc__(self):
             if self.MEM_ALLOCATED:

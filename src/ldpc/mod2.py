@@ -1,9 +1,9 @@
-#
-# Assorted functions to work with binary vectors and matrices
-#
+"""
+Assorted functions to work with binary vectors and matrices
+"""
+
 import numpy as np
 from scipy import sparse
-
 
 def mod10_to_mod2(dec, length=0):
  
@@ -75,16 +75,20 @@ def row_echelon(matrix, full=False):
     matrix : numpy.ndarry or scipy.sparse
         A binary matrix in either numpy.ndarray format or scipy.sparse
     full: bool, optional
-        If set to full, the function returns the reduced row echelon form
-        of the matrix (ie. Gaussian elemination is used to eliminate entries
-        above and below the pivot row.)
+        If set to `True', Gaussian elimination is only performed on the rows below
+        the pivot. If set to `False' Gaussian eliminatin is performed on rows above
+        and below the pivot. 
     
     Returns
     -------
-        row_ech_form: row echelon form of input
-        rank: matrix rank
-        transform_matrix: the transformation matrix such that (transform_matrix@matrix)=row_ech_form
-        pivot_cols: list of the indices of pivot num_cols found during Gauss elimination
+        row_ech_form: numpy.ndarray
+            The row echelon form of input matrix
+        rank: int
+            The rank of the matrix
+        transform_matrix: numpy.ndarray
+            The transformation matrix such that (transform_matrix@matrix)=row_ech_form
+        pivot_cols: list
+            List of the indices of pivot num_cols found during Gaussian elimination
     """
 
     num_rows, num_cols = np.shape(matrix)
@@ -123,7 +127,7 @@ def row_echelon(matrix, full=False):
         # If we have got a pivot, now let's ensure values below that pivot are zeros
         if the_matrix[pivot_row, col]:
 
-            if not full:  #???
+            if not full:  
                 elimination_range = [k for k in range(pivot_row + 1, num_rows)]
             else:
                 elimination_range = [k for k in range(num_rows) if k != pivot_row]
@@ -173,7 +177,8 @@ def rank(matrix):
 
 def reduced_row_echelon(matrix):
     """
-    Converts matrix to reduced row echelon form. Output has form reM_Q=[I,A]
+    Converts matrix to reduced row echelon form such that the output has
+    the form rre=[I,A]
 
     Parameters
     ----------
@@ -182,10 +187,16 @@ def reduced_row_echelon(matrix):
 
     Returns
     -------
-    numpy.ndarray
-        The reduced row echelon form of the inputted matrix
-
+    reduced_row_echelon_from: numpy.ndarray
+        The reduced row echelon form of the inputted matrix in the form rre=[I,A]
+    matrix_rank: int
+        The binary rank of the matrix
+    transform_matrix_rows: numpy.ndarray
+        The transformation matrix for row permutations
+    transform_matrix_cols: numpy.ndarray
+        The transformation matrix for the columns
     """
+
     num_rows, num_cols = matrix.shape
 
     # Row reduce matrix to calculate rank and find the pivot cols
@@ -193,13 +204,13 @@ def reduced_row_echelon(matrix):
 
     # Rearrange matrix so that the pivot columns are first
     info_set_order = pivot_columns + [j for j in range(num_cols) if j not in pivot_columns]
-    infoset_id_transpose = (np.identity(num_cols)[info_set_order].astype(int)).T
-    m_q = matrix @ infoset_id_transpose  # Rearranged M
+    transform_matrix_columns = (np.identity(num_cols)[info_set_order].astype(int)).T
+    m_q = matrix @ transform_matrix_columns  # Rearranged M
 
     # Row reduce m_q
-    row_echelon_form, _, transform, _ = row_echelon(m_q, full=True)
+    reduced_row_echelon_form, _, transform_matrix_rows, _ = row_echelon(m_q, full=True)
 
-    return [row_echelon_form, matrix_rank, transform, infoset_id_transpose]
+    return [reduced_row_echelon_form, matrix_rank, transform_matrix_rows, transform_matrix_columns]
 
 def nullspace(matrix):
     """
@@ -209,6 +220,8 @@ def nullspace(matrix):
 
         Mx=0 \forall x \in nullspace(M)
 
+    Notes
+    -----
     Why does this work?
 
     The transformation matrix, P, transforms the matrix M into row echelon form, ReM:
@@ -237,69 +250,23 @@ def nullspace(matrix):
     nspace = transform[matrix_rank:m]
     return nspace
 
-def kernel(matrix):
-    '''
-    Returns the kernel of a binary matrix.
+def row_span(matrix):
+    """
+    Outputs the span of the row space of the matrix i.e. all linear combinations of the rows
 
-    This function is equivalent to the nullspace function
 
     Parameters
     ----------
     matrix: numpy.ndarray
-        A binary matrix in numpy.ndarray format
-    
+        The input matrix
+
     Returns
     -------
     numpy.ndarray
-        A binary matrix where each row is a nullspace vector of the inputted binary
-        matrix
+        A numpy.ndarray matrix with rows reperesenting all linear combinations of the rows of
+        the inputted matrix.
     """
 
-    '''
-    return nullspace(matrix)
-
-def information_set(matrix):
-    '''
-    Returns the information set of a matrix:
-    Information set: given a m \times n of rank r where n>m, the information set is a m \times r sub-matrix of rank r.
-    '''
-
-    the_matrix=np.copy(matrix)
-    the_matrix = np.copy(matrix)
-    _, _, _, pivot_columns = row_echelon(the_matrix)
-    return the_matrix[:,pivot_columns]
-
-def col_basis(matrix):
-    """
-    Outputs the columnsapce of the matrix, also known as the image.
-    The image of the matrix M. The image is the list of vectors y that
-    can result from the computation y=Mx
-    """
-
-    # the_matrix = np.copy(matrix)
-    # _, _, _, pivot_columns = row_echelon(the_matrix)
-    return information_set(matrix).T
-
-def image(matrix):
-    return col_basis(matrix)
-
-def col_basis_complement(matrix):
-
-    """
-    Returns the complement of the column basis.
-    Column basis complement: For a column basis B, the complement column basis CCB is the mininum set of vectors such that (B \cup CCB) is full rank.
-    Also referred to as the complement image
-    """
-
-    the_matrix = np.copy(matrix)
-    m, n = the_matrix.shape
-    matrix_rank = row_echelon(the_matrix)[1]
-    return col_basis(np.hstack([the_matrix, np.identity(m).astype(int)]))[matrix_rank::]
-
-def row_span(matrix):
-    """
-    Outputs the span of the row space of the matrix i.e. all linear combinations of the rows
-    """
     span = []
     for row in matrix:
         temp = [row]
@@ -315,11 +282,34 @@ def row_span(matrix):
 def inverse(matrix):
     """
     Computes the left inverse of a full-rank matrix.
-    https://en.wikipedia.org/wiki/Inverse_element
 
-    Left inverse: Inverse(M.T@M)@M.T
-    If the matrix is in standard form: transform@M, the above simplifies to:
-    Left inverse simplified: ((transform@M).T)@transform
+    Notes
+    -----
+
+    The `left inverse' is computed when the number of rows in the matrix
+    exceeds the matrix rank. The left inverse is defined as follows:
+
+    Inverse(M.T@M)@M.T
+
+    We can make a further simplification by noting that the row echelon form matrix
+    with full column rank has the form:
+
+    row_echelon_form=P@M=vstack[I,A]
+
+    In this case the left inverse simplifies to:
+
+    Inverse(M^T@P^T@P@M)@M^T@P^T@P=M^T@P^T@P=row_echelon_form.T@P
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        The binary matrix to be inverted in numpy.ndarray format. This matrix must either be
+        square full-rank or rectangular with full-column rank.
+
+    Returns
+    -------
+    numpy.ndarray
+        The inverted binary matrix
 
     """
     m, n = matrix.shape
@@ -330,4 +320,8 @@ def inverse(matrix):
     # compute the left-inverse
     elif m > matrix_rank and n == matrix_rank:  # left inverse
         return row_echelon_form.T @ transform % 2
+
+    else:
+        raise ValueError("This matrix is not invertible. Please provide either a full-rank square\
+        matrix or a rectangular matrix with full column rank.")
 
