@@ -4,13 +4,23 @@
    contain the root `toctree` directive.
 
 
-ldpc Documentation
+Installation
 ==================
 
 .. toctree::
    :maxdepth: 2
    
+   installation
+
+
+Documentation
+============
+
+.. toctree::
+   :maxdepth: 2
+   
    ldpc
+
 
 Indices and tables
 ==================

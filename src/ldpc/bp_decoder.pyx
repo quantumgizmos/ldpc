@@ -15,12 +15,13 @@ cdef class bp_decoder:
         The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
         will iterate n times, where n is the block length of the code.
     bp_method: str OR int, optional
-        The BP method. Currenlty three methods are implemented: 1) "ps": product sum updates;
+        The BP method. Currently three methods are implemented: 1) "ps": product sum updates;
         2) "ms": min-sum updates; 3) "msl": min-sum log updates
     ms_scaling_factor: float64, optional
         Sets the min-sum scaling factor for the min-sum BP method
     channel_probs: list, optional
         This parameter can be used to set the initial error channel across all bits.
+
     '''
 
     def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
@@ -139,7 +140,7 @@ cdef class bp_decoder:
 
         Notes
         -----
-        This funciton accepts no paremeters. The syndrome must be set beforehand:
+        This funciton accepts no parameters. The syndrome must be set beforehand:
 
         eg. self.synd=syndrome
         """
@@ -155,7 +156,11 @@ cdef class bp_decoder:
 
     cdef int bp_decode_prob_ratios(self):
         """
-        This Function implements belief propagation for probability ratios.
+        Cython function implementing belief propagation for probability ratios.
+
+        Notes
+        -----
+        This function accepts no parameters. The syndrome must be set beforehand. 
         """
    
         cdef mod2entry *e
@@ -281,7 +286,11 @@ cdef class bp_decoder:
     # Belief propagation with log probability ratios
     cdef int bp_decode_log_prob_ratios(self):
         """
-        This function implements belief propagation using log probability ratios.
+        Cython function implementing belief propagation for log probability ratios.
+
+        Notes
+        -----
+        This function accepts no parameters. The syndrome must be set beforehand. 
         """
 
         cdef mod2entry *e
@@ -402,6 +411,9 @@ cdef class bp_decoder:
   
     @property
     def channel_probs(self):
+        """
+        numpy.ndarray: The initial error channel probabilities
+        """
         probs=np.zeros(self.n).astype("float")
         for j in range(self.n):
             probs[j]=self.channel_probs[j]
@@ -410,6 +422,13 @@ cdef class bp_decoder:
 
     @property
     def bp_probs(self):
+        """
+        Getter fo the soft-decision probabilities from the last round of BP decoding
+        
+        Returns
+        -------
+        numpy.ndarray
+        """
         probs=np.zeros(self.n).astype("float")
         for j in range(self.n):
             probs[j]=self.log_prob_ratios[j]
@@ -418,31 +437,96 @@ cdef class bp_decoder:
 
     @property
     def bp_method(self):
+        """
+        Getter for the BP method
+        
+        Returns
+        -------
+        str
+        """
         if self.bp_method==0: return "product_sum"
         elif self.bp_method==1: return "mininum_sum"
         elif self.bp_method==2: return "product_sum_log"
         elif self.bp_method==3: return "mininum_sum_log"
 
     @property
-    def iter(self): return self.iter
+    def iter(self):
+        """
+        Getter. Returns the number of iterations in the last round of BP decoding.
+        
+        Returns
+        -------
+        numpy.ndarray
+        """
+        return self.iter
 
     @property
-    def ms_scaling_factor(self): return self.ms_scaling_factor
+    def ms_scaling_factor(self):
+        """
+        Getter. Returns the min-sum scaling factor.
+
+        Returns
+        -------
+        float64
+        """
+        return self.ms_scaling_factor
 
     @property
-    def max_iter(self): return self.max_iter
+    def max_iter(self):
+        """
+        Getter. Returns the maximum interation depth for the BP decoder.
+        
+        Returns
+        -------
+        int
+        """
+        return self.max_iter
 
     @property
-    def converge(self): return self.converge
+    def converge(self):
+        """
+        Getter. Returns `1' if the last round of BP succeeded (converged) and `0' if it failed.
+        
+        Returns
+        -------
+        int
+        """
+        return self.converge
 
     @property
-    def bp_decoding(self): return char2numpy(self.bp_decoding,self.n)
+    def bp_decoding(self):
+        """
+        Getter. Returns the soft-decision propbability ratios on each bit from the last round
+        of BP decoding.
+        
+        Returns
+        -------
+        numpy.ndarray
+        """
+        return char2numpy(self.bp_decoding,self.n)
 
     @property
-    def log_prob_ratios(self): return double2numpy(self.log_prob_ratios,self.n)
+    def log_prob_ratios(self):
+        """
+        Getter. Returns the soft-decision log probability ratios from the last round of BP
+        decoding.
+        
+        Returns
+        -------
+        numpy.ndarray
+        """
+        return double2numpy(self.log_prob_ratios,self.n)
 
-    @property
-    def channel_probs(self): return double2numpy(self.channel_probs,self.n)
+    # @property
+    # def channel_probs(self):
+    #     """
+    #     Getter.
+        
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #     """
+    #     return double2numpy(self.channel_probs,self.n)
 
     def __dealloc__(self):
             if self.MEM_ALLOCATED:

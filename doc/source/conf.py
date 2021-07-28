@@ -15,8 +15,6 @@ import sys
 sys.path.insert(0, os.path.abspath('../../src/ldpc'))
 sys.path.insert(0, os.path.abspath('.'))
 
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'ldpc'
@@ -49,6 +47,11 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+
+html_theme_options = {
+    'navigation_depth': 4,
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
