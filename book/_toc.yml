@@ -1,0 +1,22 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+- caption: Classical error correction
+  chapters:
+  - file: markdown
+  - file: notebooks
+  - file: test
+  - file: classical_error_correction/classical_error_correction
+    sections:
+      - file: classical_error_correction/binary_codes
+
+# chapters:
+# - file: markdown
+# - file: notebooks
+# - file: test
+# - file: classical_error_correction/classical_error_correction
+#   sections:
+#     - file: classical_error_correction/binary_codes

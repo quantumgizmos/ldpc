@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ldpc.bp_decoder module &#8212; Test</title>
+    
+  <link href="_static/css/theme.css" rel="stylesheet" />
+  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/togglebutton.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://unpkg.com/thebelab@latest/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Content with notebooks" href="notebooks.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="index.html">
+      
+      <img src="_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Test</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="intro.html">
+   Welcome to your Jupyter Book
+  </a>
+ </li>
+</ul>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="markdown.html">
+   Markdown Files
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="notebooks.html">
+   Content with notebooks
+  </a>
+ </li>
+ <li class="toctree-l1 current active">
+  <a class="current reference internal" href="#">
+   ldpc.bp_decoder module
+  </a>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="_sources/test.rst"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
+        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
+    <div class="dropdown-buttons sourcebuttons">
+        <a class="repository-button"
+            href="https://github.com/executablebooks/jupyter-book"><button type="button" class="btn btn-secondary topbarbtn"
+                data-toggle="tooltip" data-placement="left" title="Source repository"><i
+                    class="fab fa-github"></i>repository</button></a>
+        <a class="issues-button"
+            href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Ftest.html&body=Your%20issue%20content%20here."><button
+                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
+                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
+        
+    </div>
+</div>
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="module-ldpc.bp_decoder">
+<span id="ldpc-bp-decoder-module"></span><h1>ldpc.bp_decoder module<a class="headerlink" href="#module-ldpc.bp_decoder" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="ldpc.bp_decoder.bp_decoder">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ldpc.bp_decoder.</span></code><code class="sig-name descname"><span class="pre">bp_decoder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bp_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ms_scaling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[None]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class implementing a belief propagation decoder for LDPC codes</p>
+<dl class="simple">
+<dt>mat: numpy.ndarray</dt><dd><p>The parity check matrix of the binary code in numpy.ndarray format.</p>
+</dd>
+<dt>error_rate: float64, optional</dt><dd><p>The bit error rate.</p>
+</dd>
+<dt>max_iter: int, optional</dt><dd><p>The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
+will iterate n times, where n is the block length of the code.</p>
+</dd>
+<dt>bp_method: str OR int, optional</dt><dd><p>The BP method. Currently three methods are implemented: 1) “ps”: product sum updates;
+2) “ms”: min-sum updates; 3) “msl”: min-sum log updates</p>
+</dd>
+<dt>ms_scaling_factor: float64, optional</dt><dd><p>Sets the min-sum scaling factor for the min-sum BP method</p>
+</dd>
+<dt>channel_probs: list, optional</dt><dd><p>This parameter can be used to set the initial error channel across all bits.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="ldpc.bp_decoder.bp_decoder.bp_decode">
+<code class="sig-name descname"><span class="pre">bp_decode</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">syndrome</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ndarray</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_decode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the BP decoder for a given syndrome.</p>
+<dl class="simple">
+<dt>syndrome: numpy.ndarray</dt><dd><p>The syndrome to be decoded.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The belief propagation decoding in numpy.ndarray format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.bp_decoding">
+<code class="sig-name descname"><span class="pre">bp_decoding</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_decoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns the soft-decision propbability ratios on each bit from the last round
+of BP decoding.</p>
+<p>numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.bp_method">
+<code class="sig-name descname"><span class="pre">bp_method</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_method" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter for the BP method</p>
+<p>str</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.bp_probs">
+<code class="sig-name descname"><span class="pre">bp_probs</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter fo the soft-decision probabilities from the last round of BP decoding</p>
+<p>numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.channel_probs">
+<code class="sig-name descname"><span class="pre">channel_probs</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.channel_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>numpy.ndarray: The initial error channel probabilities</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.converge">
+<code class="sig-name descname"><span class="pre">converge</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.converge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns <a href="#id1"><span class="problematic" id="id2">`</span></a>1’ if the last round of BP succeeded (converged) and <a href="#id3"><span class="problematic" id="id4">`</span></a>0’ if it failed.</p>
+<p>int</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.iter">
+<code class="sig-name descname"><span class="pre">iter</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns the number of iterations in the last round of BP decoding.</p>
+<p>numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.log_prob_ratios">
+<code class="sig-name descname"><span class="pre">log_prob_ratios</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.log_prob_ratios" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns the soft-decision log probability ratios from the last round of BP
+decoding.</p>
+<p>numpy.ndarray</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.max_iter">
+<code class="sig-name descname"><span class="pre">max_iter</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.max_iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns the maximum interation depth for the BP decoder.</p>
+<p>int</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="ldpc.bp_decoder.bp_decoder.ms_scaling_factor">
+<code class="sig-name descname"><span class="pre">ms_scaling_factor</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.ms_scaling_factor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Getter. Returns the min-sum scaling factor.</p>
+<p>float64</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="ldpc.bp_decoder.bp_decoder.update_channel_probs">
+<code class="sig-name descname"><span class="pre">update_channel_probs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.update_channel_probs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function updates the channel probabilities for each bit in the BP decoder.</p>
+<dl class="simple">
+<dt>channel: numpy.ndarray</dt><dd><p>A list of the channel probabilities for each bit</p>
+</dd>
+</dl>
+<p>NoneType</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="notebooks.html" title="previous page">Content with notebooks</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+          By Joschka Roffe<br/>
+        
+            &copy; Copyright 2021.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

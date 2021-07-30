@@ -3,7 +3,12 @@ from .mod2 import mod10_to_mod2
 
 
 def hamming(rank):
-    """ Outputs the Hamming code parity check matrix given its rank """
+    """
+    Outputs Hamming code parity check matrix given its rank
+    
+
+    
+    """
     rank = int(rank)
     num_rows = (2 ** rank) - 1
 
