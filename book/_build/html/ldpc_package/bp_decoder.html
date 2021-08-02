@@ -5,53 +5,54 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ldpc.bp_decoder module &#8212; Test</title>
+    <title>ldpc.bp_decoder module &#8212; Classical &amp; Quantum Error Correction</title>
     
-  <link href="_static/css/theme.css" rel="stylesheet" />
-  <link href="_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
 
     
   <link rel="stylesheet"
-    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
   <link rel="preload" as="font" type="font/woff2" crossorigin
-    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     
       
 
     
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="_static/mystnb.css" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
     
-  <link rel="preload" as="script" href="_static/js/index.1c5a1a01449ed65a7b51.js">
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
 
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/togglebutton.js"></script>
-    <script src="_static/clipboard.min.js"></script>
-    <script src="_static/copybutton.js"></script>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
     <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
-    <script src="_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
     <script async="async" src="https://unpkg.com/thebelab@latest/lib/index.js"></script>
     <script >
         const thebe_selector = ".thebe"
         const thebe_selector_input = "pre"
         const thebe_selector_output = ".output"
     </script>
-    <script async="async" src="_static/sphinx-thebe.js"></script>
-    <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Content with notebooks" href="notebooks.html" />
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ldpc.codes module" href="codes.html" />
+    <link rel="prev" title="ldpc package API" href="ldpc.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
@@ -68,41 +69,82 @@
 <div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
     
         <div class="navbar-brand-box">
-    <a class="navbar-brand text-wrap" href="index.html">
+    <a class="navbar-brand text-wrap" href="../index.html">
       
-      <img src="_static/logo.png" class="logo" alt="logo">
+      <img src="../_static/logo.png" class="logo" alt="logo">
       
       
-      <h1 class="site-logo" id="site-title">Test</h1>
+      <h1 class="site-logo" id="site-title">Classical & Quantum Error Correction</h1>
       
     </a>
-</div><form class="bd-search d-flex align-items-center" action="search.html" method="get">
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
     <div class="bd-toc-item active">
         <ul class="nav bd-sidenav">
  <li class="toctree-l1">
-  <a class="reference internal" href="intro.html">
+  <a class="reference internal" href="../intro.html">
    Welcome to your Jupyter Book
   </a>
  </li>
 </ul>
+<p class="caption">
+ <span class="caption-text">
+  Classical error correction
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../classical_error_correction/classical_error_correction.html">
+   Classical Error Correction
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../classical_error_correction/binary_codes.html">
+     Binary codes
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  ldpc package documentation
+ </span>
+</p>
 <ul class="current nav bd-sidenav">
- <li class="toctree-l1">
-  <a class="reference internal" href="markdown.html">
-   Markdown Files
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="ldpc.html">
+   ldpc package API
   </a>
- </li>
- <li class="toctree-l1">
-  <a class="reference internal" href="notebooks.html">
-   Content with notebooks
-  </a>
- </li>
- <li class="toctree-l1 current active">
-  <a class="current reference internal" href="#">
-   ldpc.bp_decoder module
-  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     ldpc.bp_decoder module
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="codes.html">
+     ldpc.codes module
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="mod2.html">
+     ldpc.mod2 module
+    </a>
+   </li>
+  </ul>
  </li>
 </ul>
 
@@ -145,7 +187,7 @@
         <!-- ipynb file if we had a myst markdown file -->
         
         <!-- Download raw file -->
-        <a class="dropdown-buttons" href="_sources/test.rst"><button type="button"
+        <a class="dropdown-buttons" href="../_sources/ldpc_package/bp_decoder.rst"><button type="button"
                 class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
                 data-placement="left">.rst</button></a>
         <!-- Download PDF via print -->
@@ -155,22 +197,6 @@
 </div>
 
             <!-- Source interaction buttons -->
-
-<div class="dropdown-buttons-trigger">
-    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn"
-        aria-label="Connect with source repository"><i class="fab fa-github"></i></button>
-    <div class="dropdown-buttons sourcebuttons">
-        <a class="repository-button"
-            href="https://github.com/executablebooks/jupyter-book"><button type="button" class="btn btn-secondary topbarbtn"
-                data-toggle="tooltip" data-placement="left" title="Source repository"><i
-                    class="fab fa-github"></i>repository</button></a>
-        <a class="issues-button"
-            href="https://github.com/executablebooks/jupyter-book/issues/new?title=Issue%20on%20page%20%2Ftest.html&body=Your%20issue%20content%20here."><button
-                type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip" data-placement="left"
-                title="Open an issue"><i class="fas fa-lightbulb"></i>open issue</button></a>
-        
-    </div>
-</div>
 
             <!-- Full screen (wrap in <a> to have style consistency -->
 
@@ -201,32 +227,33 @@
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">ldpc.bp_decoder.</span></code><code class="sig-name descname"><span class="pre">bp_decoder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bp_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ms_scaling_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[None]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A class implementing a belief propagation decoder for LDPC codes</p>
-<dl class="simple">
-<dt>mat: numpy.ndarray</dt><dd><p>The parity check matrix of the binary code in numpy.ndarray format.</p>
-</dd>
-<dt>error_rate: float64, optional</dt><dd><p>The bit error rate.</p>
-</dd>
-<dt>max_iter: int, optional</dt><dd><p>The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
-will iterate n times, where n is the block length of the code.</p>
-</dd>
-<dt>bp_method: str OR int, optional</dt><dd><p>The BP method. Currently three methods are implemented: 1) “ps”: product sum updates;
-2) “ms”: min-sum updates; 3) “msl”: min-sum log updates</p>
-</dd>
-<dt>ms_scaling_factor: float64, optional</dt><dd><p>Sets the min-sum scaling factor for the min-sum BP method</p>
-</dd>
-<dt>channel_probs: list, optional</dt><dd><p>This parameter can be used to set the initial error channel across all bits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mat</strong> (<em>numpy.ndarray</em>) – The parity check matrix of the binary code in numpy.ndarray format.</p></li>
+<li><p><strong>error_rate</strong> (<em>float64</em><em>, </em><em>optional</em>) – The bit error rate.</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
+will iterate n times, where n is the block length of the code.</p></li>
+<li><p><strong>bp_method</strong> (<em>str OR int</em><em>, </em><em>optional</em>) – The BP method. Currently three methods are implemented: 1) “ps”: product sum updates;
+2) “ms”: min-sum updates; 3) “msl”: min-sum log updates</p></li>
+<li><p><strong>ms_scaling_factor</strong> (<em>float64</em><em>, </em><em>optional</em>) – Sets the min-sum scaling factor for the min-sum BP method</p></li>
+<li><p><strong>channel_probs</strong> (<em>list</em><em>, </em><em>optional</em>) – This parameter can be used to set the initial error channel across all bits.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt id="ldpc.bp_decoder.bp_decoder.bp_decode">
 <code class="sig-name descname"><span class="pre">bp_decode</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">syndrome</span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ndarray</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_decode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs the BP decoder for a given syndrome.</p>
-<dl class="simple">
-<dt>syndrome: numpy.ndarray</dt><dd><p>The syndrome to be decoded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>syndrome</strong> (<em>numpy.ndarray</em>) – The syndrome to be decoded.</p>
 </dd>
-</dl>
-<dl class="simple">
-<dt>numpy.ndarray</dt><dd><p>The belief propagation decoding in numpy.ndarray format.</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The belief propagation decoding in numpy.ndarray format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -236,41 +263,81 @@ will iterate n times, where n is the block length of the code.</p>
 <code class="sig-name descname"><span class="pre">bp_decoding</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_decoding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns the soft-decision propbability ratios on each bit from the last round
 of BP decoding.</p>
-<p>numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.bp_method">
 <code class="sig-name descname"><span class="pre">bp_method</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_method" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter for the BP method</p>
-<p>str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.bp_probs">
 <code class="sig-name descname"><span class="pre">bp_probs</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.bp_probs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter fo the soft-decision probabilities from the last round of BP decoding</p>
-<p>numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.channel_probs">
 <code class="sig-name descname"><span class="pre">channel_probs</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.channel_probs" title="Permalink to this definition">¶</a></dt>
-<dd><p>numpy.ndarray: The initial error channel probabilities</p>
+<dd><p>The initial error channel probabilities</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.converge">
 <code class="sig-name descname"><span class="pre">converge</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.converge" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns <a href="#id1"><span class="problematic" id="id2">`</span></a>1’ if the last round of BP succeeded (converged) and <a href="#id3"><span class="problematic" id="id4">`</span></a>0’ if it failed.</p>
-<p>int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.iter">
 <code class="sig-name descname"><span class="pre">iter</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.iter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns the number of iterations in the last round of BP decoding.</p>
-<p>numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
@@ -278,32 +345,59 @@ of BP decoding.</p>
 <code class="sig-name descname"><span class="pre">log_prob_ratios</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.log_prob_ratios" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns the soft-decision log probability ratios from the last round of BP
 decoding.</p>
-<p>numpy.ndarray</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>numpy.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.max_iter">
 <code class="sig-name descname"><span class="pre">max_iter</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.max_iter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns the maximum interation depth for the BP decoder.</p>
-<p>int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt id="ldpc.bp_decoder.bp_decoder.ms_scaling_factor">
 <code class="sig-name descname"><span class="pre">ms_scaling_factor</span></code><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.ms_scaling_factor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Getter. Returns the min-sum scaling factor.</p>
-<p>float64</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float64</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="ldpc.bp_decoder.bp_decoder.update_channel_probs">
 <code class="sig-name descname"><span class="pre">update_channel_probs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.bp_decoder.bp_decoder.update_channel_probs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function updates the channel probabilities for each bit in the BP decoder.</p>
-<dl class="simple">
-<dt>channel: numpy.ndarray</dt><dd><p>A list of the channel probabilities for each bit</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>channel</strong> (<em>numpy.ndarray</em>) – A list of the channel probabilities for each bit</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>NoneType</p>
 </dd>
 </dl>
-<p>NoneType</p>
 </dd></dl>
 
 </dd></dl>
@@ -323,7 +417,7 @@ decoding.</p>
         },
         kernelOptions: {
             kernelName: "python3",
-            path: "./."
+            path: "./ldpc_package"
         },
         predefinedOutput: true
     }
@@ -335,7 +429,8 @@ decoding.</p>
         
         <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="notebooks.html" title="previous page">Content with notebooks</a>
+    <a class='left-prev' id="prev-link" href="ldpc.html" title="previous page">ldpc package API</a>
+    <a class='right-next' id="next-link" href="codes.html" title="next page">ldpc.codes module</a>
 
         </div>
         
@@ -357,7 +452,7 @@ decoding.</p>
       </div>
     </div>
   
-  <script src="_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
 
   
   </body>

@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ldpc.mod2 module &#8212; Classical &amp; Quantum Error Correction</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/sphinx-book-theme.e8e5499552300ddf5d7adccae7cc3b70.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/togglebutton.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/sphinx-book-theme.12a9622fbb08dcb3a2a40b2c02b83a57.js"></script>
+    <script async="async" src="https://unpkg.com/thebelab@latest/lib/index.js"></script>
+    <script >
+        const thebe_selector = ".thebe"
+        const thebe_selector_input = "pre"
+        const thebe_selector_output = ".output"
+    </script>
+    <script async="async" src="../_static/sphinx-thebe.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="ldpc.codes module" href="codes.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+<div class="col-12 col-md-3 bd-sidebar site-navigation show" id="site-navigation">
+    
+        <div class="navbar-brand-box">
+    <a class="navbar-brand text-wrap" href="../index.html">
+      
+      <img src="../_static/logo.png" class="logo" alt="logo">
+      
+      
+      <h1 class="site-logo" id="site-title">Classical & Quantum Error Correction</h1>
+      
+    </a>
+</div><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search this book..." aria-label="Search this book..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+    <div class="bd-toc-item active">
+        <ul class="nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../intro.html">
+   Welcome to your Jupyter Book
+  </a>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  Classical error correction
+ </span>
+</p>
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../classical_error_correction/classical_error_correction.html">
+   Classical Error Correction
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../classical_error_correction/binary_codes.html">
+     Binary codes
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+<p class="caption">
+ <span class="caption-text">
+  ldpc package documentation
+ </span>
+</p>
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="ldpc.html">
+   ldpc package API
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <label for="toctree-checkbox-2">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2">
+    <a class="reference internal" href="bp_decoder.html">
+     ldpc.bp_decoder module
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="codes.html">
+     ldpc.codes module
+    </a>
+   </li>
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
+     ldpc.mod2 module
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+    </div>
+</nav> <!-- To handle the deprecated key -->
+
+<div class="navbar_extra_footer">
+  Powered by <a href="https://jupyterbook.org">Jupyter Book</a>
+</div>
+
+</div>
+
+
+          
+
+
+          
+<main class="col py-md-3 pl-md-4 bd-content overflow-auto" role="main">
+    
+    <div class="topbar container-xl fixed-top">
+    <div class="topbar-contents row">
+        <div class="col-12 col-md-3 bd-topbar-whitespace site-navigation show"></div>
+        <div class="col pl-md-4 topbar-main">
+            
+            <button id="navbar-toggler" class="navbar-toggler ml-0" type="button" data-toggle="collapse"
+                data-toggle="tooltip" data-placement="bottom" data-target=".site-navigation" aria-controls="navbar-menu"
+                aria-expanded="true" aria-label="Toggle navigation" aria-controls="site-navigation"
+                title="Toggle navigation" data-toggle="tooltip" data-placement="left">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-arrow-left"></i>
+                <i class="fas fa-arrow-up"></i>
+            </button>
+            
+            
+<div class="dropdown-buttons-trigger">
+    <button id="dropdown-buttons-trigger" class="btn btn-secondary topbarbtn" aria-label="Download this page"><i
+            class="fas fa-download"></i></button>
+
+    <div class="dropdown-buttons">
+        <!-- ipynb file if we had a myst markdown file -->
+        
+        <!-- Download raw file -->
+        <a class="dropdown-buttons" href="../_sources/ldpc_package/mod2.rst"><button type="button"
+                class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
+                data-placement="left">.rst</button></a>
+        <!-- Download PDF via print -->
+        <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
+            onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
+    </div>
+</div>
+
+            <!-- Source interaction buttons -->
+
+            <!-- Full screen (wrap in <a> to have style consistency -->
+
+<a class="full-screen-button"><button type="button" class="btn btn-secondary topbarbtn" data-toggle="tooltip"
+        data-placement="bottom" onclick="toggleFullScreen()" aria-label="Fullscreen mode"
+        title="Fullscreen mode"><i
+            class="fas fa-expand"></i></button></a>
+
+            <!-- Launch buttons -->
+
+        </div>
+
+        <!-- Table of contents -->
+        <div class="d-none d-md-block col-md-2 bd-toc show">
+            
+        </div>
+    </div>
+</div>
+    <div id="main-content" class="row">
+        <div class="col-12 col-md-9 pl-md-3 pr-md-0">
+        
+              <div>
+                
+  <div class="section" id="module-ldpc.mod2">
+<span id="ldpc-mod2-module"></span><h1>ldpc.mod2 module<a class="headerlink" href="#module-ldpc.mod2" title="Permalink to this headline">¶</a></h1>
+<p>Assorted functions to work with binary vectors and matrices</p>
+<dl class="py function">
+<dt id="ldpc.mod2.inverse">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">inverse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the left inverse of a full-rank matrix.</p>
+<p class="rubric">Notes</p>
+<p>The <a href="#id1"><span class="problematic" id="id2">`</span></a>left inverse’ is computed when the number of rows in the matrix
+exceeds the matrix rank. The left inverse is defined as follows:</p>
+<p>Inverse(M.T&#64;M)&#64;M.T</p>
+<p>We can make a further simplification by noting that the row echelon form matrix
+with full column rank has the form:</p>
+<p>row_echelon_form=P&#64;M=vstack[I,A]</p>
+<p>In this case the left inverse simplifies to:</p>
+<p>Inverse(M^T&#64;P^T&#64;P&#64;M)&#64;M^T&#64;P^T&#64;P=M^T&#64;P^T&#64;P=row_echelon_form.T&#64;P</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>numpy.ndarray</em>) – The binary matrix to be inverted in numpy.ndarray format. This matrix must either be
+square full-rank or rectangular with full-column rank.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The inverted binary matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># full-rank square matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i_mat</span><span class="o">=</span><span class="n">inverse</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">i_mat</span><span class="nd">@mat</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[[1 0 0]</span>
+<span class="go"> [0 1 0]</span>
+<span class="go"> [0 0 1]]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># full-column rank matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i_mat</span><span class="o">=</span><span class="n">inverse</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">i_mat</span><span class="nd">@mat</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[[1 0 0]</span>
+<span class="go"> [0 1 0]</span>
+<span class="go"> [0 0 1]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.mod10_to_mod2">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">mod10_to_mod2</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.mod10_to_mod2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a decimal number to a binary number, with optional padding
+to produce a binary vector of a given length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dec</strong> (<em>int</em>) – Decimal number (base 10).</p></li>
+<li><p><strong>length</strong> (<em>int</em><em>, </em><em>optional</em>) – The length of the binary string. If the specified <a href="#id3"><span class="problematic" id="id4">`</span></a>length’ is greater
+than the bit-length of the binary number the output is left-padded
+with zeros. The default <a href="#id5"><span class="problematic" id="id6">`</span></a>length’ is set to zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A binary integer list encoding the binary represenation of the
+inputted decimal number</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mod10_to_mod2</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">length</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">[0, 0, 0, 1, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.mod2_to_mod10">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">mod2_to_mod10</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">binary_arr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.mod2_to_mod10" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts binary number represented as a list to a decimal number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>binary_arr</strong> (<em>list</em>) – A binary number represented as the entries of a list</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The decimal representation of the inputted binary array</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mod2_to_mod10</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.nullspace">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">nullspace</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.nullspace" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Computes the nullspace of the matrix M. Also sometimes referred to as the kernel.</p>
+<p>All vectors x in the nullspace of M satisfy the following condition:</p>
+<p>Mx=0</p>
+</div></blockquote>
+<p>orall x in nullspace(M)</p>
+<blockquote>
+<div><p>Why does this work?</p>
+<p>The transformation matrix, P, transforms the matrix M into row echelon form, ReM:</p>
+<p>P&#64;M=ReM=[A,0]^T,</p>
+<p>where the width of A is equal to the rank. This means the bottom n-k rows of P
+must produce a zero vector when applied to M. For a more formal definition see
+the Rank-Nullity theorem.</p>
+<dl class="simple">
+<dt>matrix: numpy.ndarray</dt><dd><p>A binary matrix in numpy.ndarray format</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>A binary matrix where each row is a nullspace vector of the inputted binary
+matrix</p>
+</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.rank">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">rank</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the rank of a binary matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>numpy.ndarray</em>) – A binary matrix in numpy.ndarray format</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The rank of the matrix</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.reduced_row_echelon">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">reduced_row_echelon</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.reduced_row_echelon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts matrix to reduced row echelon form such that the output has
+the form rre=[I,A]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>numpy.ndarray</em>) – A binary matrix in numpy.ndarray format</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>reduced_row_echelon_from</strong> (<em>numpy.ndarray</em>) – The reduced row echelon form of the inputted matrix in the form rre=[I,A]</p></li>
+<li><p><strong>matrix_rank</strong> (<em>int</em>) – The binary rank of the matrix</p></li>
+<li><p><strong>transform_matrix_rows</strong> (<em>numpy.ndarray</em>) – The transformation matrix for row permutations</p></li>
+<li><p><strong>transform_matrix_cols</strong> (<em>numpy.ndarray</em>) – The transformation matrix for the columns</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.row_echelon">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">row_echelon</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.row_echelon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a binary matrix to row echelon form via Gaussian Elimination</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>matrix</strong> (<em>numpy.ndarry</em><em> or </em><em>scipy.sparse</em>) – A binary matrix in either numpy.ndarray format or scipy.sparse</p></li>
+<li><p><strong>full</strong> (<em>bool</em><em>, </em><em>optional</em>) – If set to <a href="#id7"><span class="problematic" id="id8">`</span></a>True’, Gaussian elimination is only performed on the rows below
+the pivot. If set to <a href="#id9"><span class="problematic" id="id10">`</span></a>False’ Gaussian eliminatin is performed on rows above
+and below the pivot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>row_ech_form</strong> (<em>numpy.ndarray</em>) – The row echelon form of input matrix</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – The rank of the matrix</p></li>
+<li><p><strong>transform_matrix</strong> (<em>numpy.ndarray</em>) – The transformation matrix such that (<a class="reference external" href="mailto:transform_matrix&#37;&#52;&#48;matrix">transform_matrix<span>&#64;</span>matrix</a>)=row_ech_form</p></li>
+<li><p><strong>pivot_cols</strong> (<em>list</em>) – List of the indices of pivot num_cols found during Gaussian elimination</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.mod2.row_span">
+<code class="sig-prename descclassname"><span class="pre">ldpc.mod2.</span></code><code class="sig-name descname"><span class="pre">row_span</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.mod2.row_span" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs the span of the row space of the matrix i.e. all linear combinations of the rows</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>matrix</strong> (<em>numpy.ndarray</em>) – The input matrix</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy.ndarray matrix with rows reperesenting all linear combinations of the rows of
+the inputted matrix.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            kernelName: "python3",
+            path: "./ldpc_package"
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+              </div>
+              
+        
+        <div class='prev-next-bottom'>
+            
+    <a class='left-prev' id="prev-link" href="codes.html" title="previous page">ldpc.codes module</a>
+
+        </div>
+        
+        </div>
+    </div>
+    <footer class="footer mt-5 mt-md-0">
+    <div class="container">
+      <p>
+        
+          By Joschka Roffe<br/>
+        
+            &copy; Copyright 2021.<br/>
+      </p>
+    </div>
+  </footer>
+</main>
+
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  
+  </body>
+</html>

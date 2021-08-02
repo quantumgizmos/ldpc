@@ -28,7 +28,7 @@ def mod10_to_mod2(dec, length=0):
     Examples
     --------
     >>> mod10_to_mod2(2,length=5)
-    [0,0,0,1,0]
+    [0, 0, 0, 1, 0]
 
     """
 
@@ -218,7 +218,7 @@ def nullspace(matrix):
 
     All vectors x in the nullspace of M satisfy the following condition:
 
-        Mx=0 \forall x \in nullspace(M)
+    Mx=0 \forall x \in nullspace(M)
 
     Notes
     -----
@@ -311,6 +311,26 @@ def inverse(matrix):
     numpy.ndarray
         The inverted binary matrix
 
+
+    Examples
+    --------
+
+    >>> # full-rank square matrix
+    >>> mat=np.array([[1,1,0],[0,1,0],[0,0,1]])
+    >>> i_mat=inverse(mat)
+    >>> print(i_mat@mat%2)
+    [[1 0 0]
+     [0 1 0]
+     [0 0 1]]
+
+    >>> # full-column rank matrix
+    >>> mat=np.array([[1,1,0],[0,1,0],[0,0,1],[0,1,1]])
+    >>> i_mat=inverse(mat)
+    >>> print(i_mat@mat%2)
+    [[1 0 0]
+     [0 1 0]
+     [0 0 1]]
+
     """
     m, n = matrix.shape
     row_echelon_form, matrix_rank, transform, _ = row_echelon(matrix, True)
@@ -324,4 +344,8 @@ def inverse(matrix):
     else:
         raise ValueError("This matrix is not invertible. Please provide either a full-rank square\
         matrix or a rectangular matrix with full column rank.")
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(verbose=True)   
 

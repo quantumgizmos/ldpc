@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Classical Error Correction &#8212; Classical &amp; Quantum Error Correction</title>
+    <title>ldpc package API &#8212; Classical &amp; Quantum Error Correction</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet" />
   <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
@@ -51,8 +51,8 @@
     <script async="async" src="../_static/sphinx-thebe.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Binary codes" href="binary_codes.html" />
-    <link rel="prev" title="Welcome to your Jupyter Book" href="../intro.html" />
+    <link rel="next" title="ldpc.bp_decoder module" href="bp_decoder.html" />
+    <link rel="prev" title="Binary codes" href="../classical_error_correction/binary_codes.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
@@ -94,19 +94,19 @@
   Classical error correction
  </span>
 </p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../classical_error_correction/classical_error_correction.html">
    Classical Error Correction
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="binary_codes.html">
+    <a class="reference internal" href="../classical_error_correction/binary_codes.html">
      Binary codes
     </a>
    </li>
@@ -118,29 +118,29 @@
   ldpc package documentation
  </span>
 </p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../ldpc_package/ldpc.html">
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="current reference internal" href="#">
    ldpc package API
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
   <label for="toctree-checkbox-2">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/bp_decoder.html">
+    <a class="reference internal" href="bp_decoder.html">
      ldpc.bp_decoder module
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/codes.html">
+    <a class="reference internal" href="codes.html">
      ldpc.codes module
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/mod2.html">
+    <a class="reference internal" href="mod2.html">
      ldpc.mod2 module
     </a>
    </li>
@@ -187,7 +187,7 @@
         <!-- ipynb file if we had a myst markdown file -->
         
         <!-- Download raw file -->
-        <a class="dropdown-buttons" href="../_sources/classical_error_correction/classical_error_correction.md"><button type="button"
+        <a class="dropdown-buttons" href="../_sources/ldpc_package/ldpc.md"><button type="button"
                 class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
                 data-placement="left">.md</button></a>
         <!-- Download PDF via print -->
@@ -212,6 +212,29 @@
         <!-- Table of contents -->
         <div class="d-none d-md-block col-md-2 bd-toc show">
             
+            <div class="tocsection onthispage pt-5 pb-3">
+                <i class="fas fa-list"></i> Contents
+            </div>
+            <nav id="bd-toc-nav">
+                <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#installation-from-pypi">
+   Installation from PyPi
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#installation-from-source">
+   Installation (from source)
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#demo-scripts">
+   Demo Scripts
+  </a>
+ </li>
+</ul>
+
+            </nav>
         </div>
     </div>
 </div>
@@ -220,8 +243,28 @@
         
               <div>
                 
-  <div class="section" id="classical-error-correction">
-<h1>Classical Error Correction<a class="headerlink" href="#classical-error-correction" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="ldpc-package-api">
+<h1>ldpc package API<a class="headerlink" href="#ldpc-package-api" title="Permalink to this headline">¶</a></h1>
+<p>This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic and a fast implementation of the belief propagation decoder.</p>
+<div class="section" id="installation-from-pypi">
+<h2>Installation from PyPi<a class="headerlink" href="#installation-from-pypi" title="Permalink to this headline">¶</a></h2>
+<p>Installtion from PyPi requires Python&gt;=3.6.
+To install via pip, run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">ldpc</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation-from-source">
+<h2>Installation (from source)<a class="headerlink" href="#installation-from-source" title="Permalink to this headline">¶</a></h2>
+<p>Installation from sources requires Python&gt;=3.6 and a local C compiler (eg. ‘gcc’ in Linux or ‘clang’ in Windows). Once these requirements have been met, navigate to the repository root and install using pip:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="n">ldpc</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="demo-scripts">
+<h2>Demo Scripts<a class="headerlink" href="#demo-scripts" title="Permalink to this headline">¶</a></h2>
+<p>To check whether the package is working run one of the demo scripts in the examples folder.</p>
+</div>
 <div class="toctree-wrapper compound">
 </div>
 </div>
@@ -239,7 +282,7 @@
         },
         kernelOptions: {
             kernelName: "python3",
-            path: "./classical_error_correction"
+            path: "./ldpc_package"
         },
         predefinedOutput: true
     }
@@ -251,8 +294,8 @@
         
         <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="../intro.html" title="previous page">Welcome to your Jupyter Book</a>
-    <a class='right-next' id="next-link" href="binary_codes.html" title="next page">Binary codes</a>
+    <a class='left-prev' id="prev-link" href="../classical_error_correction/binary_codes.html" title="previous page">Binary codes</a>
+    <a class='right-next' id="next-link" href="bp_decoder.html" title="next page">ldpc.bp_decoder module</a>
 
         </div>
         

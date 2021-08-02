@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Classical Error Correction &#8212; Classical &amp; Quantum Error Correction</title>
+    <title>ldpc.codes module &#8212; Classical &amp; Quantum Error Correction</title>
     
   <link href="../_static/css/theme.css" rel="stylesheet" />
   <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
@@ -51,8 +51,8 @@
     <script async="async" src="../_static/sphinx-thebe.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Binary codes" href="binary_codes.html" />
-    <link rel="prev" title="Welcome to your Jupyter Book" href="../intro.html" />
+    <link rel="next" title="ldpc.mod2 module" href="mod2.html" />
+    <link rel="prev" title="ldpc.bp_decoder module" href="bp_decoder.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="en" />
     
@@ -94,19 +94,19 @@
   Classical error correction
  </span>
 </p>
-<ul class="current nav bd-sidenav">
- <li class="toctree-l1 current active has-children">
-  <a class="current reference internal" href="#">
+<ul class="nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../classical_error_correction/classical_error_correction.html">
    Classical Error Correction
   </a>
-  <input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
   <label for="toctree-checkbox-1">
    <i class="fas fa-chevron-down">
    </i>
   </label>
   <ul>
    <li class="toctree-l2">
-    <a class="reference internal" href="binary_codes.html">
+    <a class="reference internal" href="../classical_error_correction/binary_codes.html">
      Binary codes
     </a>
    </li>
@@ -118,29 +118,29 @@
   ldpc package documentation
  </span>
 </p>
-<ul class="nav bd-sidenav">
- <li class="toctree-l1 has-children">
-  <a class="reference internal" href="../ldpc_package/ldpc.html">
+<ul class="current nav bd-sidenav">
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="ldpc.html">
    ldpc package API
   </a>
-  <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
   <label for="toctree-checkbox-2">
    <i class="fas fa-chevron-down">
    </i>
   </label>
-  <ul>
+  <ul class="current">
    <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/bp_decoder.html">
+    <a class="reference internal" href="bp_decoder.html">
      ldpc.bp_decoder module
     </a>
    </li>
-   <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/codes.html">
+   <li class="toctree-l2 current active">
+    <a class="current reference internal" href="#">
      ldpc.codes module
     </a>
    </li>
    <li class="toctree-l2">
-    <a class="reference internal" href="../ldpc_package/mod2.html">
+    <a class="reference internal" href="mod2.html">
      ldpc.mod2 module
     </a>
    </li>
@@ -187,9 +187,9 @@
         <!-- ipynb file if we had a myst markdown file -->
         
         <!-- Download raw file -->
-        <a class="dropdown-buttons" href="../_sources/classical_error_correction/classical_error_correction.md"><button type="button"
+        <a class="dropdown-buttons" href="../_sources/ldpc_package/codes.rst"><button type="button"
                 class="btn btn-secondary topbarbtn" title="Download source file" data-toggle="tooltip"
-                data-placement="left">.md</button></a>
+                data-placement="left">.rst</button></a>
         <!-- Download PDF via print -->
         <button type="button" id="download-print" class="btn btn-secondary topbarbtn" title="Print to PDF"
             onClick="window.print()" data-toggle="tooltip" data-placement="left">.pdf</button>
@@ -220,10 +220,84 @@
         
               <div>
                 
-  <div class="section" id="classical-error-correction">
-<h1>Classical Error Correction<a class="headerlink" href="#classical-error-correction" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+  <div class="section" id="module-ldpc.codes">
+<span id="ldpc-codes-module"></span><h1>ldpc.codes module<a class="headerlink" href="#module-ldpc.codes" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="ldpc.codes.hamming_code">
+<code class="sig-prename descclassname"><span class="pre">ldpc.codes.</span></code><code class="sig-name descname"><span class="pre">hamming_code</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rank</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.codes.hamming_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs a Hamming code parity check matrix given its rank.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rank</strong> (<em>int</em>) – The rank of of the Hamming code parity check matrix.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The Hamming code parity check matrix in numpy.ndarray format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">hamming_code</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[[0 0 0 1 1 1 1]</span>
+<span class="go"> [0 1 1 0 0 1 1]</span>
+<span class="go"> [1 0 1 0 1 0 1]]</span>
+</pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.codes.rep_code">
+<code class="sig-prename descclassname"><span class="pre">ldpc.codes.</span></code><code class="sig-name descname"><span class="pre">rep_code</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.codes.rep_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs repetition code parity check matrix for specified distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>distance</strong> (<em>int</em>) – The distance of the repetition code.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The repetition code parity check matrix in numpy.ndarray format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">rep_code</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">[[1 1 0 0 0]</span>
+<span class="go"> [0 1 1 0 0]</span>
+<span class="go"> [0 0 1 1 0]</span>
+<span class="go"> [0 0 0 1 1]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ldpc.codes.ring_code">
+<code class="sig-prename descclassname"><span class="pre">ldpc.codes.</span></code><code class="sig-name descname"><span class="pre">ring_code</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">distance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ldpc.codes.ring_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs ring code (closed-loop repetion code) parity check matrix
+for a specified distance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>distance</strong> (<em>int</em>) – The distance of the repetition code.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The repetition code parity check matrix in numpy.ndarray format.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">ring_code</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">[[1 1 0 0 0]</span>
+<span class="go"> [0 1 1 0 0]</span>
+<span class="go"> [0 0 1 1 0]</span>
+<span class="go"> [0 0 0 1 1]</span>
+<span class="go"> [1 0 0 0 1]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </div>
 
     <script type="text/x-thebe-config">
@@ -239,7 +313,7 @@
         },
         kernelOptions: {
             kernelName: "python3",
-            path: "./classical_error_correction"
+            path: "./ldpc_package"
         },
         predefinedOutput: true
     }
@@ -251,8 +325,8 @@
         
         <div class='prev-next-bottom'>
             
-    <a class='left-prev' id="prev-link" href="../intro.html" title="previous page">Welcome to your Jupyter Book</a>
-    <a class='right-next' id="next-link" href="binary_codes.html" title="next page">Binary codes</a>
+    <a class='left-prev' id="prev-link" href="bp_decoder.html" title="previous page">ldpc.bp_decoder module</a>
+    <a class='right-next' id="next-link" href="mod2.html" title="next page">ldpc.mod2 module</a>
 
         </div>
         
