@@ -1,0 +1,2 @@
+include src/ldpc/*.pxd
+include src/ldpc/include/*.h
