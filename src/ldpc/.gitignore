@@ -1,9 +1,7 @@
 .ipynb_checkpoints
 build
 *egg-info
-bp_decoder.c
-mod2sparse.c
-c_util.c
+*.c
 *.o
 *.so
 __pycache__
