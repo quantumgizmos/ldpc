@@ -345,6 +345,23 @@ def inverse(matrix):
         raise ValueError("This matrix is not invertible. Please provide either a full-rank square\
         matrix or a rectangular matrix with full column rank.")
 
+def row_basis(matrix):
+    """
+    Outputs a basis for the rows of the matrix.
+
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        The input matrix
+
+    Returns
+    -------
+    numpy.ndarray
+        A numpy.ndarray matrix where each row is a basis element.
+    """
+    return matrix[row_echelon(matrix.T)[3]]
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=True)   
