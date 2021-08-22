@@ -99,7 +99,7 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
-    cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
+    cpdef np.ndarray[np.int_t, ndim=1] decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
         """
         Runs the BP decoder for a given syndrome.
 

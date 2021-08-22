@@ -76,7 +76,7 @@ def classical_decode_sim(
 
         syndrome=pcm@error%2
 
-        bp_decoding=bpd.bp_decode(syndrome)
+        bp_decoding=bpd.decode(syndrome)
 
         if bpd.converge:
             bp_converge_count+=1
