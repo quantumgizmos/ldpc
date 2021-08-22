@@ -254,7 +254,7 @@ cdef class bp_decoder:
                         temp=1.0
                     e=mod2sparse_next_in_col(e)
 
-                # self.log_prob_ratios[j]=1/temp)
+                self.log_prob_ratios[j]=log(1/temp)
                 if temp >= 1:
                     self.bp_decoding[j]=1
                 else: self.bp_decoding[j]=0
@@ -420,20 +420,20 @@ cdef class bp_decoder:
 
         return probs
 
-    @property
-    def bp_probs(self):
-        """
-        Getter fo the soft-decision probabilities from the last round of BP decoding
+    # @property
+    # def bp_probs(self):
+    #     """
+    #     Getter fo the soft-decision probabilities from the last round of BP decoding
         
-        Returns
-        -------
-        numpy.ndarray
-        """
-        probs=np.zeros(self.n).astype("float")
-        for j in range(self.n):
-            probs[j]=self.log_prob_ratios[j]
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #     """
+    #     probs=np.zeros(self.n).astype("float")
+    #     for j in range(self.n):
+    #         probs[j]=self.log_prob_ratios[j]
 
-        return probs
+    #     return probs
 
     @property
     def bp_method(self):

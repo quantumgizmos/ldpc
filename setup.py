@@ -33,7 +33,7 @@ extension3 = Extension(
 setup(
     python_requires='>=3.6',
     name='ldpc',
-    version='0.0.8',
+    version='0.0.9',
     description='Python tools for low density parity check (LDPC) codes',
     long_description='This module provides a suite of tools for building and\
         benmarking low density parity check (LDPC) codes. Features include\
