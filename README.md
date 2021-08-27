@@ -1,3 +1,5 @@
+![Build](https://github.com/quantumgizmos/ldpc/workflows/Build/badge.svg)
+
 # LDPC
 This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic and a fast implementation of the belief propagation decoder.
 
@@ -23,7 +25,7 @@ pip install -e ldpc
 ## Dependencies
 This package makes use of the `mod2sparse` data structure from Radford Neal's [Software for Low Density Parity Check Codes](https://www.cs.toronto.edu/~radford/ftp/LDPC-2012-02-11/index.html) C package.
 
-## Basic usage
+## Quick start
 
 ### Parity check matrices
 
@@ -129,7 +131,7 @@ print(f"Decoding: {decoding}")
     Decoding: [1 0 1]
 
 
-## Example error correction over the binary symmetric channel
+## Example: error correction over the binary symmetric channel
 
 
 ```python
@@ -180,8 +182,3 @@ for _ in range(runs):
     Decoding: [0 0 0 0 0 0 0 0 1 1 0 0 0]
     
 
-
-
-```python
-
-```
