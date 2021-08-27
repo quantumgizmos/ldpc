@@ -5,6 +5,7 @@ zscratch
 .vscode
 
 #extra python ignores
+.ipynb_checkpoints
 .idea
  build
  wheelhouse
