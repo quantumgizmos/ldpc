@@ -59,15 +59,15 @@ cdef class bp_decoder:
         #BP method
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
             bp_method=0
-        elif str(bp_method).lower() in ['min_sum','mininum_sum','ms','1','mininum sum','min sum']:
+        elif str(bp_method).lower() in ['min_sum','minimum_sum','ms','1','minimum sum','min sum']:
             bp_method=3 # method 1 is not working (see issue 1). Defaulting to the log version of bp.
         elif str(bp_method).lower() in ['prod_sum_log','product_sum_log','ps_log','2','psl']:
             bp_method=2
-        elif str(bp_method).lower() in ['min_sum_log','mininum_sum_log','ms_log','3','mininum sum_log','msl']:
+        elif str(bp_method).lower() in ['min_sum_log','minimum_sum_log','ms_log','3','minimum sum_log','msl']:
             bp_method=3
         else: raise ValueError(f"BP method '{bp_method}' is invalid.\
                             Please choose from the following methods:'product_sum',\
-                            'mininum_sum', 'product_sum_log' or 'mininum_sum_log'")
+                            'minimum_sum', 'product_sum_log' or 'minimum_sum_log'")
         
         if channel_probs[0]!=None:
             if len(channel_probs)!=self.n:
@@ -445,9 +445,9 @@ cdef class bp_decoder:
         str
         """
         if self.bp_method==0: return "product_sum"
-        elif self.bp_method==1: return "mininum_sum"
+        elif self.bp_method==1: return "minimum_sum"
         elif self.bp_method==2: return "product_sum_log"
-        elif self.bp_method==3: return "mininum_sum_log"
+        elif self.bp_method==3: return "minimum_sum_log"
 
     @property
     def iter(self):

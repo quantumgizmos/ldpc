@@ -53,7 +53,7 @@ def classical_decode_sim(
     np.random.seed(seed)
     print(f"RNG Seed: {seed}")
 
-    if bpd.bp_method=="mininum_sum":
+    if bpd.bp_method=="minimum_sum":
         output_dict['ms_scaling_factor']=ms_scaling_factor
 
 

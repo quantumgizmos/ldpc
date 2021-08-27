@@ -56,7 +56,7 @@ def codewords(H):
 def compute_code_distance(H):
     '''
     Computes the distance of the code given by parity check matrix H.
-    -- The code distance is given by the mininum weight of a nonzero codeword
+    -- The code distance is given by the minimum weight of a nonzero codeword
     '''
 
     ker=nullspace(H)
