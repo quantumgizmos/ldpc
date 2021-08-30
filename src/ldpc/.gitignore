@@ -5,6 +5,8 @@ build
 *.o
 *.so
 __pycache__
+README.md
+LICENCE
 
 
 

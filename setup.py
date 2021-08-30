@@ -3,6 +3,11 @@ from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy
 
+from shutil import copyfile
+files=["README.md","LICENCE"]
+for f in files:
+    copyfile(f,"src/ldpc/"+f)
+
 extension = Extension(
     name="ldpc.bp_decoder",
     sources=["src/ldpc/include/mod2sparse.c","src/ldpc/bp_decoder.pyx"],
@@ -33,7 +38,7 @@ extension3 = Extension(
 setup(
     python_requires='>=3.6',
     name='ldpc',
-    version='0.0.12',
+    version='0.0.13',
     description='Python tools for low density parity check (LDPC) codes',
     long_description='This module provides a suite of tools for building and\
         benmarking low density parity check (LDPC) codes. Features include\
