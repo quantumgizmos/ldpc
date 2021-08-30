@@ -6,7 +6,7 @@ build
 *.so
 __pycache__
 README.md
-LICENCE
+LICENSE
 
 
 

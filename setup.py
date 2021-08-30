@@ -4,7 +4,7 @@ from Cython.Build import cythonize
 import numpy
 
 from shutil import copyfile
-files=["README.md","LICENCE"]
+files=["README.md","LICENSE"]
 for f in files:
     copyfile(f,"src/ldpc/"+f)
 
@@ -48,7 +48,6 @@ setup(
     author='Joschka Roffe',
     packages=["ldpc"],
     package_dir={'':'src'},
-    # package_data = {'ldpc': ['*.pxd']},
     ext_modules=cythonize([extension,extension2,extension3]),
     classifiers=['Development Status :: 1 - Planning'],
     install_requires=["tqdm","scipy"],

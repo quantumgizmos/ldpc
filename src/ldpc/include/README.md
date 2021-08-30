@@ -1,6 +1,6 @@
 # Software for LDPC codes
 
-The `mod2parse.h` and `mod2sparse.c` are adapted from Radford Neal's [Software for Low Density Parity Check Codes](https://www.cs.toronto.edu/~radford/ftp/LDPC-2012-02-11/index.html) package which was published under an MIT open source licence (see COPYRIGHT file).
+The `mod2parse.h` and `mod2sparse.c` are adapted from Radford Neal's [Software for Low Density Parity Check Codes](https://www.cs.toronto.edu/~radford/ftp/LDPC-2012-02-11/index.html) package which was published under an MIT open source license (see COPYRIGHT file).
 
 The following changes have been made to the origin files:
 
