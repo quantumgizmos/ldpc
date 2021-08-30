@@ -1,3 +1,5 @@
 include src/ldpc/*.pxd
 include src/ldpc/include/*.h
 include src/ldpc/include/*.c
+include src/ldpc/include/COPYRIGHT
+include src/ldpc/include/README.md
