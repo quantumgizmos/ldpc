@@ -42,7 +42,7 @@ extension3 = Extension(
 setup(
     python_requires='>=3.6',
     name='ldpc',
-    version='0.0.13',
+    version='0.0.14',
     description='Python tools for low density parity check (LDPC) codes',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -52,7 +52,7 @@ setup(
     package_dir={'':'src'},
     ext_modules=cythonize([extension,extension2,extension3]),
     classifiers=['Development Status :: 1 - Planning'],
-    install_requires=["tqdm","scipy","numpy>=1.19.0"],
+    install_requires=["tqdm","scipy",f"numpy=={numpy.__version__}"],
     include_package_data=True,
     zip_safe=False
 )
