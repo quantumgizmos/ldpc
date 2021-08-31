@@ -2,6 +2,10 @@ from setuptools import setup, Extension
 # from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 
 from shutil import copyfile
 files=["README.md","LICENSE"]
@@ -40,17 +44,15 @@ setup(
     name='ldpc',
     version='0.0.13',
     description='Python tools for low density parity check (LDPC) codes',
-    long_description='This module provides a suite of tools for building and\
-        benmarking low density parity check (LDPC) codes. Features include\
-        functions for mod2 (binary) arithmatic, tools for constructing quasi-cyclic\
-        codes and a fast implementation of the belief propagation decoder ',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://roffe.eu',
     author='Joschka Roffe',
     packages=["ldpc"],
     package_dir={'':'src'},
     ext_modules=cythonize([extension,extension2,extension3]),
     classifiers=['Development Status :: 1 - Planning'],
-    install_requires=["tqdm","scipy"],
+    install_requires=["tqdm","scipy","numpy>=1.19.0"],
     include_package_data=True,
     zip_safe=False
 )

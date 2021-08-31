@@ -153,7 +153,6 @@ for _ in range(runs):
         if np.random.random()<error_rate:
             error[i]=1
         else: error[i]=0
-    error[np.random.randint(n)]=1 #error inserted on a random bit
     syndrome=H@error %2 #calculates the error syndrome
     print(f"Error: {error}")
     print(f"Syndrome: {syndrome}")
@@ -161,24 +160,29 @@ for _ in range(runs):
     print(f"Decoding: {error}\n")
 ```
 
-    Error: [1 0 0 1 0 1 0 0 1 1 0 0 0]
-    Syndrome: [1 0 1 1 1 1 0 1 0 1 0 0]
-    Decoding: [1 0 0 1 0 1 0 0 1 1 0 0 0]
+    Error: [1 0 1 0 1 0 1 1 0 0 1 0 0]
+    Syndrome: [1 1 1 1 1 1 0 1 0 1 1 0]
+    Decoding: [1 0 1 0 1 0 1 1 0 0 1 0 0]
     
-    Error: [0 0 0 1 1 0 0 0 0 0 0 1 1]
-    Syndrome: [0 0 1 0 1 0 0 0 0 0 1 0]
-    Decoding: [0 0 0 1 1 0 0 0 0 0 0 1 1]
+    Error: [1 0 0 0 0 0 1 1 0 0 0 0 0]
+    Syndrome: [1 0 0 0 0 1 0 1 0 0 0 0]
+    Decoding: [1 0 0 0 0 0 1 1 0 0 0 0 0]
     
-    Error: [1 0 0 1 0 0 1 0 1 0 1 0 0]
-    Syndrome: [1 0 1 1 0 1 1 1 1 1 1 0]
-    Decoding: [1 0 0 1 0 0 1 0 1 0 1 0 0]
+    Error: [0 0 0 0 1 0 0 0 0 0 1 0 0]
+    Syndrome: [0 0 0 1 1 0 0 0 0 1 1 0]
+    Decoding: [0 0 0 0 1 0 0 0 0 0 1 0 0]
     
-    Error: [0 0 1 1 0 0 0 1 1 0 1 1 0]
-    Syndrome: [0 1 0 1 0 0 1 0 1 1 0 1]
-    Decoding: [0 0 1 1 0 0 0 1 1 0 1 1 0]
+    Error: [0 1 1 1 1 0 0 1 1 1 0 1 1]
+    Syndrome: [1 0 0 0 1 0 1 0 0 1 1 0]
+    Decoding: [0 1 1 1 1 0 0 1 1 1 0 1 1]
     
-    Error: [0 0 0 0 0 0 0 0 1 1 0 0 0]
-    Syndrome: [0 0 0 0 0 0 0 1 0 1 0 0]
-    Decoding: [0 0 0 0 0 0 0 0 1 1 0 0 0]
+    Error: [1 0 0 0 0 0 1 0 0 0 0 0 0]
+    Syndrome: [1 0 0 0 0 1 1 0 0 0 0 0]
+    Decoding: [1 0 0 0 0 0 1 0 0 0 0 0 0]
     
 
+
+
+```python
+
+```
