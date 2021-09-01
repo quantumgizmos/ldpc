@@ -6,6 +6,10 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+VERSION="0.0.14"
+f=open("src/ldpc/VERSION","w+")
+f.write(VERSION)
+f.close()
 
 from shutil import copyfile
 files=["README.md","LICENSE"]
@@ -42,7 +46,7 @@ extension3 = Extension(
 setup(
     python_requires='>=3.6',
     name='ldpc',
-    version='0.0.14',
+    version=VERSION,
     description='Python tools for low density parity check (LDPC) codes',
     long_description=long_description,
     long_description_content_type='text/markdown',

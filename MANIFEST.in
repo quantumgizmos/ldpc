@@ -1,5 +1,6 @@
 include src/ldpc/README.md
 include src/ldpc/LICENSE
+include src/ldpc/VERSION
 include src/ldpc/*.pxd
 include src/ldpc/include/*.h
 include src/ldpc/include/*.c
