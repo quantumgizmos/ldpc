@@ -20,7 +20,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.0
         env:
-          CIBW_SKIP: '*_i686 *musllinux* pp* cp27-* cp33-* cp34-* cp35-*'
+          CIBW_SKIP: '*_i686 *musllinux* pp* cp27-* cp33-* cp34-* cp35-* cp310-*'
 
       - uses: actions/upload-artifact@v2
         with:
