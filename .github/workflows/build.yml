@@ -20,11 +20,11 @@ jobs:
       - uses: actions/setup-python@v2
         name: Install Python
         with:
-          python-version: '3.7'
+          python-version: '3.9'
 
       - name: Install cibuildwheel and twine
         run: |
-          python -m pip install cibuildwheel==1.7.4 twine
+          python -m pip install cibuildwheel>=2.3.0 twine
 
       - name: Build wheels
         env:
