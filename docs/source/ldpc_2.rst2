@@ -1,0 +1,77 @@
+ldpc package
+============
+
+Submodules
+----------
+
+ldpc.alist module
+-----------------
+
+.. automodule:: ldpc.alist
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.bp\_decode\_sim module
+---------------------------
+
+.. automodule:: ldpc.bp_decode_sim
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.bp\_decoder module
+-----------------------
+
+.. automodule:: ldpc.bp_decoder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.c\_util module
+-------------------
+
+.. automodule:: ldpc.c_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.code\_util module
+----------------------
+
+.. automodule:: ldpc.code_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.codes module
+-----------------
+
+.. automodule:: ldpc.codes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.mod2 module
+----------------
+
+.. automodule:: ldpc.mod2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ldpc.mod2sparse module
+----------------------
+
+.. automodule:: ldpc.mod2sparse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: ldpc
+   :members:
+   :undoc-members:
+   :show-inheritance:

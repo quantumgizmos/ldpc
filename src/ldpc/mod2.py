@@ -89,6 +89,22 @@ def row_echelon(matrix, full=False):
             The transformation matrix such that (transform_matrix@matrix)=row_ech_form
         pivot_cols: list
             List of the indices of pivot num_cols found during Gaussian elimination
+
+    Examples
+    --------
+    >>> H=np.array([[1, 1, 1],[1, 1, 1],[0, 1, 0]])
+    >>> re_matrix=row_echelon(H)[0]
+    >>> print(re_matrix)
+    [[1 1 1]
+     [0 1 0]
+     [0 0 0]]
+
+    >>> re_matrix=row_echelon(H,full=True)[0]
+    >>> print(re_matrix)
+    [[1 0 1]
+     [0 1 0]
+     [0 0 0]]
+
     """
 
     num_rows, num_cols = np.shape(matrix)
@@ -171,6 +187,17 @@ def rank(matrix):
     int
         The rank of the matrix
     
+
+    Examples
+    --------
+    >>> H=np.array([[1,0,0],[0,1,0],[0,0,1]])
+    >>> print(rank(H))
+    3
+
+    >>> H=np.array([[1,1,0],[0,1,1],[1,0,1]])
+    >>> print(rank(H))
+    2
+
     """
     return row_echelon(matrix)[1]
 
@@ -195,6 +222,16 @@ def reduced_row_echelon(matrix):
         The transformation matrix for row permutations
     transform_matrix_cols: numpy.ndarray
         The transformation matrix for the columns
+
+    Examples
+    --------
+    >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
+    >>> rre=reduced_row_echelon(H)[0]
+    >>> print(rre)
+    [[1 0 0 1 1 0 1]
+     [0 1 0 1 0 1 1]
+     [0 0 1 0 1 1 1]]
+
     """
 
     num_rows, num_cols = matrix.shape
@@ -216,17 +253,18 @@ def nullspace(matrix):
     """
     Computes the nullspace of the matrix M. Also sometimes referred to as the kernel.
 
-    All vectors x in the nullspace of M satisfy the following condition:
+    All vectors x in the nullspace of M satisfy the following condition::
 
-    Mx=0 \forall x \in nullspace(M)
-
+        Mx=0 \forall x \in nullspace(M)
+   
     Notes
     -----
     Why does this work?
 
-    The transformation matrix, P, transforms the matrix M into row echelon form, ReM:
+    The transformation matrix, P, transforms the matrix M into row echelon form, ReM::
 
-    P@M=ReM=[A,0]^T,
+        P@M=ReM=[A,0]^T,
+    
 
     where the width of A is equal to the rank. This means the bottom n-k rows of P
     must produce a zero vector when applied to M. For a more formal definition see
@@ -287,18 +325,18 @@ def inverse(matrix):
     -----
 
     The `left inverse' is computed when the number of rows in the matrix
-    exceeds the matrix rank. The left inverse is defined as follows:
+    exceeds the matrix rank. The left inverse is defined as follows::
 
-    Inverse(M.T@M)@M.T
+        Inverse(M.T@M)@M.T
 
     We can make a further simplification by noting that the row echelon form matrix
-    with full column rank has the form:
+    with full column rank has the form::
 
-    row_echelon_form=P@M=vstack[I,A]
+        row_echelon_form=P@M=vstack[I,A]
 
-    In this case the left inverse simplifies to:
+    In this case the left inverse simplifies to::
 
-    Inverse(M^T@P^T@P@M)@M^T@P^T@P=M^T@P^T@P=row_echelon_form.T@P
+        Inverse(M^T@P^T@P@M)@M^T@P^T@P=M^T@P^T@P=row_echelon_form.T@P
 
     Parameters
     ----------
@@ -364,5 +402,17 @@ def row_basis(matrix):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod(verbose=True)   
+    doctest.testmod(verbose=True)
+
+    from ldpc.mod2 import rank, row_echelon,reduced_row_echelon
+    from ldpc.codes import ring_code,hamming_code
+
+    # H=ring_code(3)
+    # H=hamming_code(3)
+    # print([0,H])
+    # H=np.array([[0, 0, 0, 1, 1, 1, 1],
+    #             [0, 1, 1, 0, 0, 1, 1],
+    #             [1, 0, 1, 0, 1, 0, 1]])
+
+    # print(reduced_row_echelon(H)[0])
 
