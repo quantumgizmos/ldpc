@@ -61,10 +61,10 @@ html_theme_options = {
 }
 
 html_context = {
-  'display_github': False,
+  'display_github': True,
   'github_user': 'quantumgizmos',
   'github_repo': 'ldpc',
-  'github_version': 'main/',
+  'github_version': 'main/docs/',
 }
 
 

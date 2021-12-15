@@ -16,6 +16,7 @@ cdef class bp_decoder:
     cdef char* synd
     cdef char* bp_decoding_synd
     cdef char* bp_decoding
+    cdef char* received_codeword
     cdef char* decoding
     cdef int iter
     cdef int converge

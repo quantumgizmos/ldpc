@@ -84,6 +84,7 @@ cdef class bp_decoder:
         assert self.m==self.H.n_rows #validate number of checks in mod2sparse format
         self.error=<char*>calloc(self.n,sizeof(char)) #error string
         self.synd=<char*>calloc(self.m,sizeof(char)) #syndrome string
+        self.received_codeword=<char*>calloc(self.n,sizeof(char)) #received codeword
         self.bp_decoding_synd=<char*>calloc(self.m,sizeof(char)) #decoded syndrome string
         self.bp_decoding=<char*>calloc(self.n,sizeof(char)) #BP decoding
         self.channel_probs=<double*>calloc(self.n,sizeof(double)) #channel probs
@@ -99,14 +100,14 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
+    cpdef np.ndarray[np.int_t, ndim=1] decode(self, np.ndarray[np.int_t, ndim=1] input_vector):
         """
-        Runs the BP decoder for a given syndrome.
+        Runs the BP decoder for a given input_vector.
 
         Parameters
         ----------
-        syndrome: numpy.ndarray
-            The syndrome to be decoded.
+        input_vector: numpy.ndarray
+            Either a code syndrome or a received codeword.
 
         Returns
         -------
@@ -114,8 +115,23 @@ cdef class bp_decoder:
             The belief propagation decoding in numpy.ndarray format.
 
         """
-        self.synd=numpy2char(syndrome,self.synd)
-        self.bp_decode_cy()
+        cdef int input_length = input_vector.shape[0]
+        cdef int i
+
+        if input_length==self.n:
+            self.received_codeword=numpy2char(input_vector,self.received_codeword)
+            mod2sparse_mulvec(self.H,self.received_codeword,self.synd)
+            self.bp_decode_cy()
+            for i in range(self.n):
+                self.bp_decoding[i]=self.bp_decoding[i]^self.received_codeword[i]
+        
+        elif input_length ==self.m:
+            self.synd=numpy2char(input_vector,self.synd)
+            self.bp_decode_cy()
+        
+        else:
+            raise ValueError(f"The input to the ldpc.bp_decoder.decode must be either a received codeword (of length={self.n}) or a syndrome (of length={self.m}). The inputted vector has length={input_length}.")
+        
         return char2numpy(self.bp_decoding,self.n)
 
     def update_channel_probs(self,channel):
@@ -536,6 +552,7 @@ cdef class bp_decoder:
                 free(self.channel_probs)
                 free(self.bp_decoding)
                 free(self.log_prob_ratios)
+                free(self.received_codeword)
                 mod2sparse_free(self.H)
 
         
