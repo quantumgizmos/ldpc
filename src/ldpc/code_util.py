@@ -1,10 +1,8 @@
 import numpy as np
 from itertools import combinations
-from math import factorial as fact
 from ldpc.mod2 import reduced_row_echelon, nullspace, row_span, rank
+from scipy.special import comb as nCr
 
-#nCr combinations function
-def nCr(n,r): return int(fact(n) // fact(r) // fact(n-r))
 
 def construct_generator_matrix(H):
     '''
@@ -243,22 +241,6 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
                 if terminate: return True
                 cycle_count += nCr(two_count, girth // 2)     
 
-    # else:
-    #     for j in range(m):
-    #         for i, combination in enumerate(combinations([k for k in range(j+1,m)], (girth // 2)-1)):
-    #             temp=(j,)+combination
-    #             print(temp)
-    #             row_sum = np.zeros(n).astype(int)
-    #             for _, element in enumerate(temp):
-    #                 # print(j,element)
-    #                 row_sum += H[element]
-
-    #             two_count = np.count_nonzero(row_sum == 2)
-    #             if two_count >= girth // 2:
-    #                 if terminate: return True
-    #                 cycle_count += nCr(two_count, girth // 2)     
-
-
     if terminate: return False #terminates if the code is not cycle free
     return cycle_count
 
@@ -266,9 +248,43 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 
 def compute_column_row_weights(H):
 
+    """
+    Returns the upper bounds on the row and column weights of parity check matrix
+
+    Parameters
+    ----------
+
+    H: numpy.ndarray
+        The parity check matrix
+
+    Returns
+    -------
+    int
+        The maximum column-weight
+    int
+        The maximum row-weight
+    """
+
     return np.sum(H,axis=0), np.sum(H,axis=1)
 
 def get_ldpc_params(H):
+
+    """
+    Returns the upper bounds on the row and column weights of parity check matrix
+
+    Parameters
+    ----------
+
+    H: numpy.ndarray
+        The parity check matrix
+
+    Returns
+    -------
+    int
+        The maximum column-weight
+    int
+        The maximum row-weight
+    """
 
     cols, rows = compute_column_row_weights(H)
 
