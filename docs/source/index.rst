@@ -12,6 +12,7 @@ Welcome to LDPC's documentation!
    :caption: Quickstart
 
    installation.md
+   pcm.ipynb
 
 .. toctree::
    :maxdepth: 1
