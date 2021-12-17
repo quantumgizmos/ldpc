@@ -29,7 +29,6 @@ def mod10_to_mod2(dec, length=0):
     --------
     >>> mod10_to_mod2(2,length=5)
     [0, 0, 0, 1, 0]
-
     """
 
     # Convert dec to a binary string, with <length> leading zeros
@@ -280,6 +279,15 @@ def nullspace(matrix):
     numpy.ndarray
         A binary matrix where each row is a nullspace vector of the inputted binary
         matrix
+    
+    Examples
+    --------
+    >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
+    >>> print(nullspace(H))
+    [[1 1 1 0 0 0 0]
+     [0 1 1 1 1 0 0]
+     [0 1 0 1 0 1 0]
+     [0 0 1 1 0 0 1]]
     """
 
     transpose = matrix.T
@@ -303,6 +311,15 @@ def row_span(matrix):
     numpy.ndarray
         A numpy.ndarray matrix with rows reperesenting all linear combinations of the rows of
         the inputted matrix.
+
+    Examples
+    --------
+    >>> H=np.array([[1,1,0],[0,1,1],[1,0,1]])
+    >>> print(row_span(H))
+    [[0 0 0]
+     [0 1 1]
+     [1 0 1]
+     [1 1 0]]
     """
 
     span = []
@@ -397,6 +414,15 @@ def row_basis(matrix):
     -------
     numpy.ndarray
         A numpy.ndarray matrix where each row is a basis element.
+    
+    Examples
+    --------
+
+    >>> H=np.array([[1,1,0],[0,1,1],[1,0,1]])
+    >>> rb=row_basis(H)
+    >>> print(rb)
+    [[1 1 0]
+     [0 1 1]]
     """
     return matrix[row_echelon(matrix.T)[3]]
 
@@ -404,15 +430,17 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=True)
 
-    from ldpc.mod2 import rank, row_echelon,reduced_row_echelon
+    from ldpc.mod2 import rank, row_echelon,reduced_row_echelon,row_span, nullspace
     from ldpc.codes import ring_code,hamming_code
+    from ldpc.code_util import codewords
 
     # H=ring_code(3)
     # H=hamming_code(3)
     # print([0,H])
-    # H=np.array([[0, 0, 0, 1, 1, 1, 1],
-    #             [0, 1, 1, 0, 0, 1, 1],
-    #             [1, 0, 1, 0, 1, 0, 1]])
+    H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
 
     # print(reduced_row_echelon(H)[0])
 
+    # H=np.array([[1,1,0],[0,1,1],[1,0,1]])
+
+    print(codewords(H))

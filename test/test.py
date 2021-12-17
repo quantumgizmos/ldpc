@@ -3,7 +3,7 @@ from ldpc import codes, mod2
 from ldpc import bp_decoder
 from tqdm import tqdm
 
-N=500
+N=5
 H=codes.rep_code(N)
 error_rate=0.2
 
@@ -20,9 +20,9 @@ for i,_ in enumerate(error):
 print()
 s=H@error%2
 
-# r=bpd.decode(np.array([1,1,0,1,0]))
+r=bpd.decode(np.array([1,1,1,0]))
 
-# print(r)
+print(r)
 
 
 
@@ -33,12 +33,12 @@ for _ in tqdm(range(10000)):
 
     for i,_ in enumerate(error):
         if np.random.random()<error_rate:
-            # error[i]=(error[i]+1 )%2
-            error[i]=1
+            error[i]=(error[i]+1 )%2
+            # error[i]=1
         else:
             error[i]=0
 
-    s=H@error%2
+    # s=H@error%2
     r=bpd.decode(error)
 
     # print(r)
