@@ -43,6 +43,7 @@ cdef extern from "mod2sparse.h":
 
 
 cdef mod2sparse* numpy2mod2sparse(mat)
+cdef mod2sparse* spmatrix2mod2sparse(mat)
 cdef mod2sparse* alist2mod2sparse(fname)
 
 

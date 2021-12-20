@@ -1,5 +1,6 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True, embedsignature=True
 import numpy as np
+from scipy.sparse import spmatrix
 
 cdef class bp_decoder:
     '''
@@ -37,11 +38,10 @@ cdef class bp_decoder:
 
         #check that mat is a numpy array
 
-        if isinstance(mat,np.ndarray):
+        if isinstance(mat, np.ndarray) or isinstance(mat, spmatrix):
             pass
         else:
-            raise TypeError("The input matrix is of an invalid type. Please input a np.ndarray object.")
-        #todo?: allow scipy sparse matrices?    
+            raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(mat)}")
 
 
         self.m=mat.shape[0]
@@ -54,7 +54,7 @@ cdef class bp_decoder:
 
         #BP iterations
         if max_iter<0: raise ValueError('The maximum number of iterations must a positive number')
-        if max_iter==0: max_iter=self.n        
+        if max_iter==0: max_iter=self.n
 
         #BP method
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
@@ -68,7 +68,7 @@ cdef class bp_decoder:
         else: raise ValueError(f"BP method '{bp_method}' is invalid.\
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum', 'product_sum_log' or 'minimum_sum_log'")
-        
+
         if channel_probs[0]!=None:
             if len(channel_probs)!=self.n:
                 raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
@@ -79,7 +79,10 @@ cdef class bp_decoder:
         self.ms_scaling_factor=ms_scaling_factor
 
         #memory allocation
-        self.H=numpy2mod2sparse(mat) #parity check matrix in sparse form
+        if isinstance(mat, np.ndarray):
+            self.H=numpy2mod2sparse(mat) #parity check matrix in sparse form
+        elif isinstance(mat, spmatrix):
+            self.H=spmatrix2mod2sparse(mat)
         assert self.n==self.H.n_cols #validate number of bits in mod2sparse format
         assert self.m==self.H.n_rows #validate number of checks in mod2sparse format
         self.error=<char*>calloc(self.n,sizeof(char)) #error string
@@ -91,7 +94,7 @@ cdef class bp_decoder:
 
         self.MEM_ALLOCATED=True
 
-        #error channel setup        
+        #error channel setup
         if channel_probs[0]!=None:
             for j in range(self.n): self.channel_probs[j]=channel_probs[j]
             self.error_rate=np.mean(channel_probs)
@@ -99,24 +102,30 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
+    cpdef np.ndarray[np.int_t, ndim=1] decode(self, syndrome):
         """
         Runs the BP decoder for a given syndrome.
 
         Parameters
         ----------
-        syndrome: numpy.ndarray
+        syndrome: numpy.ndarray or scipy.sparse.spmatrix
             The syndrome to be decoded.
 
         Returns
         -------
         numpy.ndarray
             The belief propagation decoding in numpy.ndarray format.
-
         """
-        self.synd=numpy2char(syndrome,self.synd)
+        if isinstance(syndrome, np.ndarray) and len(syndrome.shape) == 1:
+            self.synd=numpy2char(syndrome,self.synd)
+        elif isinstance(syndrome, spmatrix) and syndrome.shape[0] == 1:
+            self.synd=spmatrix2char(syndrome,self.synd)
+        else:
+            TypeError(f"Syndrome is expected to be a 1-dim numpy array or (1,n)-scipy sparse matrix, not {type(syndrome)}")
+
         self.bp_decode_cy()
-        return char2numpy(self.bp_decoding,self.n)
+
+        return char2numpy(self.bp_decoding, self.n)
 
     def update_channel_probs(self,channel):
         """
@@ -132,7 +141,7 @@ cdef class bp_decoder:
         NoneType
         """
         cdef j
-        for j in range(self.n): self.channel_probs[j]=channel[j]     
+        for j in range(self.n): self.channel_probs[j]=channel[j]
 
     cdef char* bp_decode_cy(self):
         """
@@ -144,7 +153,6 @@ cdef class bp_decoder:
 
         eg. self.synd=syndrome
         """
-
         if self.bp_method == 0 or self.bp_method == 1:
             self.bp_decode_prob_ratios()
 
@@ -160,9 +168,9 @@ cdef class bp_decoder:
 
         Notes
         -----
-        This function accepts no parameters. The syndrome must be set beforehand. 
+        This function accepts no parameters. The syndrome must be set beforehand.
         """
-   
+
         cdef mod2entry *e
         cdef int i, j, check,equal, iteration
         cdef double bit_to_check0, temp
@@ -212,7 +220,7 @@ cdef class bp_decoder:
 
                     e=mod2sparse_first_in_row(self.H,i)
                     temp=1e308
-                    
+
                     if self.synd[i]==1: sgn=1
                     else: sgn=0
 
@@ -290,7 +298,7 @@ cdef class bp_decoder:
 
         Notes
         -----
-        This function accepts no parameters. The syndrome must be set beforehand. 
+        This function accepts no parameters. The syndrome must be set beforehand.
         """
 
         cdef mod2entry *e
@@ -336,12 +344,12 @@ cdef class bp_decoder:
                 if self.ms_scaling_factor==0:
                     alpha = 1.0 - 2**(-1*iteration/1.0)
                 else: alpha = self.ms_scaling_factor
-                
+
                 for i in range(self.m):
 
                     e=mod2sparse_first_in_row(self.H,i)
                     temp=1e308
-                    
+
                     if self.synd[i]==1: sgn=1
                     else: sgn=0
 
@@ -408,7 +416,7 @@ cdef class bp_decoder:
 
         return 0
 
-  
+
     @property
     def channel_probs(self):
         """
@@ -424,7 +432,7 @@ cdef class bp_decoder:
     # def bp_probs(self):
     #     """
     #     Getter fo the soft-decision probabilities from the last round of BP decoding
-        
+
     #     Returns
     #     -------
     #     numpy.ndarray
@@ -439,7 +447,7 @@ cdef class bp_decoder:
     def bp_method(self):
         """
         Getter for the BP method
-        
+
         Returns
         -------
         str
@@ -453,7 +461,7 @@ cdef class bp_decoder:
     def iter(self):
         """
         Getter. Returns the number of iterations in the last round of BP decoding.
-        
+
         Returns
         -------
         numpy.ndarray
@@ -475,7 +483,7 @@ cdef class bp_decoder:
     def max_iter(self):
         """
         Getter. Returns the maximum interation depth for the BP decoder.
-        
+
         Returns
         -------
         int
@@ -486,7 +494,7 @@ cdef class bp_decoder:
     def converge(self):
         """
         Getter. Returns `1' if the last round of BP succeeded (converged) and `0' if it failed.
-        
+
         Returns
         -------
         int
@@ -498,7 +506,7 @@ cdef class bp_decoder:
         """
         Getter. Returns the soft-decision propbability ratios on each bit from the last round
         of BP decoding.
-        
+
         Returns
         -------
         numpy.ndarray
@@ -510,7 +518,7 @@ cdef class bp_decoder:
         """
         Getter. Returns the soft-decision log probability ratios from the last round of BP
         decoding.
-        
+
         Returns
         -------
         numpy.ndarray
@@ -521,7 +529,7 @@ cdef class bp_decoder:
     # def channel_probs(self):
     #     """
     #     Getter.
-        
+
     #     Returns
     #     -------
     #     numpy.ndarray
@@ -538,7 +546,7 @@ cdef class bp_decoder:
                 free(self.log_prob_ratios)
                 mod2sparse_free(self.H)
 
-        
+
 
 
 
