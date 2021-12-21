@@ -1,5 +1,6 @@
 import os
 from .bp_decoder import bp_decoder
+from .bp_decoder import bposd_decoder
 from . import __file__
 
 def get_include():
