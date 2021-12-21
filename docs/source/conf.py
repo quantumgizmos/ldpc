@@ -37,7 +37,7 @@ version=release
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',"myst_parser"]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon',"myst_parser",'nbsphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -61,10 +61,10 @@ html_theme_options = {
 }
 
 html_context = {
-  'display_github': False,
+  'display_github': True,
   'github_user': 'quantumgizmos',
   'github_repo': 'ldpc',
-  'github_version': 'main/',
+  'github_version': 'main/docs/',
 }
 
 
