@@ -1,5 +1,7 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
 
+from scipy.sparse import spmatrix
+
 cdef mod2sparse* numpy2mod2sparse(mat):
     
     cdef mod2sparse* sparse_mat
@@ -15,6 +17,18 @@ cdef mod2sparse* numpy2mod2sparse(mat):
 
     return sparse_mat
 
+cdef mod2sparse* spmatrix2mod2sparse(mat):
+    
+    cdef mod2sparse* sparse_mat
+    cdef int i,j,n_rows,n_cols
+    m=mat.shape[0]
+    n=mat.shape[1]
+    sparse_mat=mod2sparse_allocate(m, n)
+
+    for i, j in zip(*mat.nonzero()):
+        mod2sparse_insert(sparse_mat, i, j)
+
+    return sparse_mat
 
 cdef mod2sparse* alist2mod2sparse(fname):
 

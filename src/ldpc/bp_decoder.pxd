@@ -7,7 +7,7 @@ from libc.stdlib cimport malloc, calloc, free
 from libc.math cimport log, tanh, isnan, abs
 
 from ldpc.mod2sparse cimport *
-from ldpc.c_util cimport numpy2char, char2numpy, numpy2double, double2numpy
+from ldpc.c_util cimport numpy2char, char2numpy, numpy2double, double2numpy, spmatrix2char
 
 cdef class bp_decoder:
     cdef mod2sparse* H
@@ -28,7 +28,7 @@ cdef class bp_decoder:
     cdef double ms_scaling_factor
     cdef int MEM_ALLOCATED
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, np.ndarray[np.int_t, ndim=1] syndrome)
+    cpdef np.ndarray[np.int_t, ndim=1] decode(self, syndrome)
 
     cdef char* bp_decode_cy(self)
 
