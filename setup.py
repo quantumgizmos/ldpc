@@ -43,6 +43,15 @@ extension3 = Extension(
     extra_compile_args=['-std=c11']
     )
 
+extension3 = Extension(
+    name="ldpc.osd",
+    sources=["src/ldpc/osd.pyx","src/ldpc/include/mod2sparse.c"],
+    libraries=[],
+    library_dirs=[],
+    include_dirs=[numpy.get_include(),'src/ldpc/include'],
+    extra_compile_args=['-std=c11']
+    )
+
 setup(
     python_requires='>=3.6',
     name='ldpc',

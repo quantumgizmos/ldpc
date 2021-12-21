@@ -573,14 +573,14 @@ cdef class bp_decoder:
                 mod2sparse_free(self.H)
 
 
-cdef class bposd_decoder(bp_decoder):
+# cdef class bposd_decoder(bp_decoder):
 
-    def __cinit__(self,parity_check_matrix,**kwargs):
-        self.test=149
-        pass
+#     def __cinit__(self,parity_check_matrix,**kwargs):
+#         self.test=149
+#         pass
 
-    def print_test(self):
-        return self.test
+#     def print_test(self):
+#         return self.test
 
 
 

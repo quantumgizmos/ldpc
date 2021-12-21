@@ -39,8 +39,8 @@ cdef class bp_decoder:
     cdef int bp_decode_log_prob_ratios(self)
 
 
-cdef class bposd_decoder(bp_decoder):
-    cdef int test
-    pass
+# cdef class bposd_decoder(bp_decoder):
+#     cdef int test
+#     pass
 
 

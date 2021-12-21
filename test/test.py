@@ -1,6 +1,6 @@
 import numpy as np
 from ldpc import codes, mod2
-from ldpc import bposd_decoder as bp_decoder
+from ldpc.osd import bposd_decoder as bp_decoder
 from tqdm import tqdm
 from scipy.sparse import csr_matrix
 
