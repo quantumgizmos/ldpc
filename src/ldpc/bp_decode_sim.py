@@ -41,7 +41,7 @@ def classical_decode_sim(
   
     bpd=bp_decoder(
         pcm,
-        error_rate,
+        error_rate=error_rate,
         max_iter=max_iter,
         bp_method=bp_method,
         ms_scaling_factor=ms_scaling_factor

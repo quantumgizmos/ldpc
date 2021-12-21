@@ -7,7 +7,7 @@ cdef class bp_decoder:
 
     Parameters
     ----------
-    mat: numpy.ndarray
+    parity_check_matrix: numpy.ndarray
         The parity check matrix of the binary code in numpy.ndarray format.
     error_rate: float64, optional
         The bit error rate.
@@ -24,28 +24,27 @@ cdef class bp_decoder:
 
     '''
 
-    def __init__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
+    def __cinit__(self,parity_check_matrix,**kwargs):
 
-        pass
-
-    def __cinit__(self,mat, error_rate=None, max_iter=0, bp_method=0, ms_scaling_factor=1.0,channel_probs=[None]):
+        #Load in optional parameters (and set defaults)
+        error_rate=kwargs.get("error_rate",None)
+        max_iter=kwargs.get("max_iter",0)
+        bp_method=kwargs.get("bp_method",0)
+        ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
+        channel_probs=kwargs.get("channel_probs",[None])
 
         self.MEM_ALLOCATED=False
-
         cdef i,j
 
-
-        #check that mat is a numpy array
-
-        if isinstance(mat,np.ndarray):
+        #check that parity_check_matrix is a numpy array
+        if isinstance(parity_check_matrix,np.ndarray):
             pass
         else:
             raise TypeError("The input matrix is of an invalid type. Please input a np.ndarray object.")
         #todo?: allow scipy sparse matrices?    
 
-
-        self.m=mat.shape[0]
-        self.n=mat.shape[1]
+        self.m=parity_check_matrix.shape[0]
+        self.n=parity_check_matrix.shape[1]
 
         #Error rate
         if error_rate!=None:
@@ -79,7 +78,7 @@ cdef class bp_decoder:
         self.ms_scaling_factor=ms_scaling_factor
 
         #memory allocation
-        self.H=numpy2mod2sparse(mat) #parity check matrix in sparse form
+        self.H=numpy2mod2sparse(parity_check_matrix) #parity check matrix in sparse form
         assert self.n==self.H.n_cols #validate number of bits in mod2sparse format
         assert self.m==self.H.n_rows #validate number of checks in mod2sparse format
         self.error=<char*>calloc(self.n,sizeof(char)) #error string
