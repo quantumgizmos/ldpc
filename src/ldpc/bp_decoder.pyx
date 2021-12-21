@@ -8,14 +8,14 @@ cdef class bp_decoder:
 
     Parameters
     ----------
-    parity_check_matrix: numpy.ndarray
-        The parity check matrix of the binary code in numpy.ndarray format.
+    parity_check_matrix: numpy.ndarray or spipy.sparse
+        The parity check matrix of the binary code in numpy.ndarray or spipy.sparse format.
     error_rate: float64, optional
         The bit error rate.
     max_iter: int, optional
         The maximum number of iterations for the BP decoder. If max_iter==0, the BP algorithm
         will iterate n times, where n is the block length of the code.
-    bp_method: str OR int, optional
+    bp_method: str or int, optional
         The BP method. Currently three methods are implemented: 1) "ps": product sum updates;
         2) "ms": min-sum updates; 3) "msl": min-sum log updates
     ms_scaling_factor: float64, optional
@@ -37,12 +37,12 @@ cdef class bp_decoder:
         self.MEM_ALLOCATED=False
         cdef i,j
 
-        #check that mat is a numpy array
+        #check that parity_check_matrix is a numpy.ndarray or scipy.sparse.spmatrix object
 
-        if isinstance(mat, np.ndarray) or isinstance(mat, spmatrix):
+        if isinstance(parity_check_matrix, np.ndarray) or isinstance(parity_check_matrix, spmatrix):
             pass
         else:
-            raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(mat)}")
+            raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(parity_check_matrix)}")
 
         self.m=parity_check_matrix.shape[0]
         self.n=parity_check_matrix.shape[1]
@@ -79,10 +79,10 @@ cdef class bp_decoder:
         self.ms_scaling_factor=ms_scaling_factor
 
         #memory allocation
-        if isinstance(mat, np.ndarray):
-            self.H=numpy2mod2sparse(mat) #parity check matrix in sparse form
-        elif isinstance(mat, spmatrix):
-            self.H=spmatrix2mod2sparse(mat)
+        if isinstance(parity_check_matrix, np.ndarray):
+            self.H=numpy2mod2sparse(parity_check_matrix) #parity check matrix in sparse form
+        elif isinstance(parity_check_matrix, spmatrix):
+            self.H=spmatrix2mod2sparse(parity_check_matrix)
 
         assert self.n==self.H.n_cols #validate number of bits in mod2sparse format
         assert self.m==self.H.n_rows #validate number of checks in mod2sparse format
@@ -104,7 +104,7 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, syndrome):
+    cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector):
 
         """
         Runs the BP decoder for a given input_vector.
@@ -112,9 +112,8 @@ cdef class bp_decoder:
         Parameters
         ----------
 
-        syndrome: numpy.ndarray or scipy.sparse.spmatrix
+        input_vector: numpy.ndarray or scipy.sparse.spmatrix
             The syndrome to be decoded.
-
 
         Returns
         -------
@@ -126,16 +125,29 @@ cdef class bp_decoder:
         cdef int i
 
         if input_length==self.n:
-            self.received_codeword=numpy2char(input_vector,self.received_codeword)
+            if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
+                self.received_codeword=spmatrix2char(input_vector,self.received_codeword)
+            elif isinstance(input_vector,np.ndarray):
+                self.received_codeword=numpy2char(input_vector,self.received_codeword)
+            else:
+                raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
+            
             mod2sparse_mulvec(self.H,self.received_codeword,self.synd)
             self.bp_decode_cy()
             for i in range(self.n):
                 self.bp_decoding[i]=self.bp_decoding[i]^self.received_codeword[i]
+
         elif input_length ==self.m:
-            self.synd=numpy2char(input_vector,self.synd)
+            if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
+                self.synd=spmatrix2char(input_vector,self.synd)
+            elif isinstance(input_vector,np.ndarray):
+                self.synd=numpy2char(input_vector,self.synd)
+            else:
+                raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
             self.bp_decode_cy()
+        
         else:
-            raise ValueError(f"The input to the ldpc.bp_decoder.decode must be either a received codeword (of length={self.n}) or a syndrome (of length={self.m}). The inputted vector has length={input_length}.")
+            raise ValueError(f"The input to the ldpc.bp_decoder.decode must be either a received codeword (of length={self.n}) or a syndrome (of length={self.m}). The inputted vector has length={input_length}. Valid formats are `np.ndarray` or `scipy.sparse.spmatrix`.")
         
         return char2numpy(self.bp_decoding,self.n)
 
