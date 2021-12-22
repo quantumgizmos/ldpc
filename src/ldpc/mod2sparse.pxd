@@ -41,6 +41,25 @@ cdef extern from "mod2sparse.h":
     cdef int mod2sparse_cols(mod2sparse *m)
     cdef int MEM_ALLOCATED
 
+cdef extern from "mod2sparse_extra.h":
+    cdef void mod2sparse_print_terminal (mod2sparse *A)
+    cdef int mod2sparse_rank(mod2sparse *A)
+    
+    cdef void LU_forward_backward_solve(
+        mod2sparse *L,
+        mod2sparse *U,
+        int *rows,
+        int *cols,
+        char *z,
+        char *x)
+
+    cdef int mod2sparse_decomp_osd(
+        mod2sparse *A,
+        int R,
+        mod2sparse *L,
+        mod2sparse *U,
+        int *rows,
+        int *cols)
 
 cdef mod2sparse* numpy2mod2sparse(mat)
 cdef mod2sparse* spmatrix2mod2sparse(mat)

@@ -9,11 +9,11 @@ H=codes.rep_code(N)
 # H=csr_matrix(H)
 error_rate=0.3
 
-bpd=bp_decoder(H,error_rate=error_rate,max_iter=N,bp_method="product_sum")
+bpd=bp_decoder(H,error_rate=error_rate,max_iter=N,bp_method="product_sum",osd_method="osd_e",osd_order=1)
 error=np.ones(N).astype(int)
 print(error.shape[0])
 
-print(bpd.print_test())
+# print(bpd.print_test())
 
 # for i,_ in enumerate(error):
 #     if np.random.random()<error_rate:

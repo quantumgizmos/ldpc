@@ -20,6 +20,7 @@ Welcome to LDPC's documentation!
    :caption: LDPC Python API
 
    ldpc/ldpc_decoder
+   ldpc/osd_decoder
    ldpc/codes.md
    ldpc/code_util.md
    ldpc/ldpc_mod2

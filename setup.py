@@ -27,7 +27,7 @@ extension = Extension(
 
 extension2 = Extension(
     name="ldpc.mod2sparse",
-    sources=["src/ldpc/include/mod2sparse.c","src/ldpc/mod2sparse.pyx"],
+    sources=["src/ldpc/include/mod2sparse.c","src/ldpc/include/mod2sparse_extra.c","src/ldpc/mod2sparse.pyx"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
@@ -36,16 +36,16 @@ extension2 = Extension(
 
 extension3 = Extension(
     name="ldpc.c_util",
-    sources=["src/ldpc/c_util.pyx","src/ldpc/include/mod2sparse.c"],
+    sources=["src/ldpc/c_util.pyx","src/ldpc/include/mod2sparse.c","src/ldpc/include/binary_char.c","src/ldpc/include/sort.c"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
     extra_compile_args=['-std=c11']
     )
 
-extension3 = Extension(
+extension4 = Extension(
     name="ldpc.osd",
-    sources=["src/ldpc/osd.pyx","src/ldpc/include/mod2sparse.c"],
+    sources=["src/ldpc/osd.pyx","src/ldpc/include/mod2sparse.c","src/ldpc/include/mod2sparse_extra.c","src/ldpc/include/binary_char.c","src/ldpc/include/sort.c"],
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
@@ -63,7 +63,7 @@ setup(
     author='Joschka Roffe',
     packages=["ldpc"],
     package_dir={'':'src'},
-    ext_modules=cythonize([extension,extension2,extension3]),
+    ext_modules=cythonize([extension,extension2,extension3,extension4]),
     classifiers=['Development Status :: 1 - Planning'],
     install_requires=["tqdm","scipy",f"numpy=={numpy.__version__}"],
     include_package_data=True,
