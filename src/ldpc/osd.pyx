@@ -136,6 +136,9 @@ cdef class bposd_decoder(bp_decoder):
     cdef char* decode_cy(self, char* syndrome):
 
         self.synd=syndrome
+
+        # print(char2numpy(self.synd,self.m))
+
         self.bp_decode_cy()
 
         # print(double2numpy(self.log_prob_ratios,self.n))
@@ -185,7 +188,8 @@ cdef class bposd_decoder(bp_decoder):
                 self.synd=numpy2char(input_vector,self.synd)
             else:
                 raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
-            self.bp_decode_cy()
+            
+            self.decode_cy(self.synd)
         
         else:
             raise ValueError(f"The input to the ldpc.bp_decoder.decode must be a syndrome (of length={self.m}). The inputted vector has length={input_length}. Valid formats are `np.ndarray` or `scipy.sparse.spmatrix`.")

@@ -1,27 +1,19 @@
 import numpy as np
 from scipy.sparse import coo, coo_matrix,csr_matrix
+from ldpc import bposd_decoder
+from ldpc.codes import hamming_code
 
-def test(c,**kwargs):
+H=hamming_code(6)
+m,n=H.shape
+bpd=bposd_decoder(H,error_rate=0.1,osd_order=2)
 
-    a=kwargs.get("a",0)
-    b=kwargs.get("b",1)
+error=np.zeros(n).astype(int)
 
-    print(a,b,c)
+error[0]=1
 
-test(3,b=6)
+s=H@error%2
+print(s)
+bpd.decode(s)
 
+print(bpd.osdw_decoding)
 
-z=np.zeros(4)
-
-b=csr_matrix([[1,1],[1,0]])
-a=csr_matrix(np.array([1,1])).T
-
-print(a.shape)
-
-b=np.array([[1,1],[1,0]])
-
-a=np.array([1,1])
-
-print(b@a)
-
-print(a.shape[0])
