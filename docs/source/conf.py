@@ -77,6 +77,7 @@ rst_prolog = """
 
 html_context = {
   'display_github': True,
+  'github_url': "https://github.com/quantumgizmos/ldpc"
   }
 
 
