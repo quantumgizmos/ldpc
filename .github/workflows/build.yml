@@ -18,9 +18,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.0
+        uses: pypa/cibuildwheel@v2.3.1
         env:
-          CIBW_SKIP: '*musllinux* pp* cp36-*'
+          CIBW_SKIP: '*musllinux* pp*'
           #CIBW_SKIP: '*_i686 *musllinux* pp* cp27-* cp33-* cp34-* cp35-* cp36-* cp37-* cp38-*'
       - uses: actions/upload-artifact@v2
         with:
