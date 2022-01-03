@@ -26,7 +26,7 @@ sys.path.insert(0, ldpc.get_include())
 # -- Project information -----------------------------------------------------
 
 project = 'LDPC'
-copyright = '2021, Joschka Roffe'
+copyright = '2022, Joschka Roffe'
 author = 'Joschka Roffe'
 
 # The full version, including alpha/beta/rc tags

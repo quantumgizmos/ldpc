@@ -3,13 +3,17 @@
 # LDPC
 This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic and a fast implementation of the belief propagation decoder.
 
+## Documentation
+
+The full documentation can be found [here](https://roffe.eu/software/ldpc).
+
 ## Installation from PyPi (recommended method)
 
 Installtion from [PyPi](https://pypi.org/project/ldpc/) requires Python>=3.6.
 To install via pip, run:
 
 ```
-pip install ldpc
+pip install -U ldpc
 ```
 
 ## Installation (from source)
