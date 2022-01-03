@@ -13,6 +13,7 @@ Welcome to LDPC's documentation!
 
    installation.md
    pcm.ipynb
+   bp_decoding_example.ipynb
 
 .. toctree::
    :maxdepth: 1
