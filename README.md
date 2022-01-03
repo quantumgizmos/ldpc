@@ -1,4 +1,4 @@
-![Build](https://github.com/quantumgizmos/ldpc/workflows/Build/badge.svg)
+![](https://github.com/quantumgizmos/ldpc/workflows/Build/badge.svg)
 
 # LDPC
 This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic and a fast implementation of the belief propagation decoder.
@@ -181,8 +181,3 @@ for _ in range(runs):
     Decoding: [1 0 0 0 0 0 1 0 0 0 0 0 0]
     
 
-
-
-```python
-
-```

@@ -59,7 +59,7 @@ setup(
     description='Python tools for low density parity check (LDPC) codes',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://roffe.eu',
+    url='https://roffe.eu/software/ldpc',
     author='Joschka Roffe',
     packages=["ldpc"],
     package_dir={'':'src'},
