@@ -4,13 +4,6 @@ from ldpc.bp_decoder import bp_decoder
 from scipy.sparse import spmatrix
 from scipy.special import comb as nCr
 
-cdef class test1:
-    """
-    A test class
-    """
-    def __cinit__(self):
-        self.a=149
-
 cdef class bposd_decoder(bp_decoder):
     '''
     A class implementing a belief propagation plus ordered statistics decoding for LDPC codes
@@ -175,7 +168,7 @@ cdef class bposd_decoder(bp_decoder):
         Returns
         -------
         numpy.ndarray
-            The belief propagation decoding in numpy.ndarray format.
+            The BP+OSD decoding in numpy.ndarray format.
         """
 
         cdef int input_length = input_vector.shape[0]
