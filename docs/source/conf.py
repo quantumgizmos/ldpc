@@ -18,7 +18,9 @@ import os
 import sys
 import ldpc
 import shutil
-shutil.rmtree('../build')
+
+try: shutil.rmtree('../build')
+except FileNotFoundError: pass
 sys.path.insert(0, ldpc.get_include())
 
 # -- Project information -----------------------------------------------------
@@ -60,12 +62,22 @@ html_theme_options = {
     'style_nav_header_background': '#800020'
 }
 
+# html_context = {
+#   'display_github': True,
+#   'github_user': 'quantumgizmos',
+#   'github_repo': 'ldpc',
+#   'github_version': 'main/docs/',
+# }
+
+rst_prolog = """
+:github_url: https://github.com/quantumgizmos/ldpc
+"""
+
+
+
 html_context = {
   'display_github': True,
-  'github_user': 'quantumgizmos',
-  'github_repo': 'ldpc',
-  'github_version': 'main/docs/',
-}
+  }
 
 
 # Sidebars
