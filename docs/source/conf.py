@@ -62,23 +62,20 @@ html_theme_options = {
     'style_nav_header_background': '#800020'
 }
 
-# html_context = {
-#   'display_github': True,
-#   'github_user': 'quantumgizmos',
-#   'github_repo': 'ldpc',
-#   'github_version': 'main/docs/',
-# }
+html_context = {
+  'display_github': True,
+  'github_repo': 'ldpc',
+  'github_user': 'quantumgizmos',
+  'github_url': 'https://github.com/quantumgizmos/ldpc'
+}
 
 rst_prolog = """
 :github_url: https://github.com/quantumgizmos/ldpc
 """
 
-
-
-html_context = {
-  'display_github': True,
-  'github_url': "https://github.com/quantumgizmos/ldpc"
-  }
+nbsphinx_prolog = """
+:github_url: https://github.com/quantumgizmos/ldpc
+"""
 
 
 # Sidebars
