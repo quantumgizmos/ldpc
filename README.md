@@ -36,10 +36,8 @@ If you use this software in your research please cite as follows:
 ```
 @software{Roffe_LDPC_Python_tools_2022,
 author = {Roffe, Joschka},
-month = {1},
 title = {{LDPC: Python tools for low density parity check codes}},
 url = {https://pypi.org/project/ldpc/},
-version = {0.1.0},
 year = {2022}
 }
 ```
@@ -47,7 +45,7 @@ year = {2022}
 If you have used the BP+OSD class for quantum error correction, please also cite the following paper:
 
 ```
-@article{2020,
+@article{roffe_decoding_2020,
    title={Decoding across the quantum low-density parity-check code landscape},
    volume={2},
    ISSN={2643-1564},
@@ -61,5 +59,3 @@ If you have used the BP+OSD class for quantum error correction, please also cite
    month={Dec}
 }
 ```
-
-
