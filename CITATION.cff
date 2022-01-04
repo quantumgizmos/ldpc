@@ -6,5 +6,5 @@ authors:
   orcid: "https://orcid.org/0000-0001-9202-1156"
 title: "LDPC: Python tools for low density parity check codes"
 version: 0.1.0
-date-released: 2022-04-01
+date-released: 2022-01-04
 url: "https://pypi.org/project/ldpc/"
