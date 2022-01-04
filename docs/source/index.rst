@@ -15,8 +15,7 @@ Welcome to LDPC's documentation!
    pcm.ipynb
 
 .. toctree::
-   :maxdepth: 1
-   :titlesonly:
+   :maxdepth: 4
    :caption: Belief propagation (BP) decoding
 
    bp_decoding_example.ipynb

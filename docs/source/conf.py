@@ -59,7 +59,8 @@ html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
     'display_version': True,
-    'style_nav_header_background': '#800020'
+    'style_nav_header_background': '#800020',
+      'includehidden': True,
 }
 
 html_context = {
