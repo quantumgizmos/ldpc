@@ -23,5 +23,6 @@ def test_addition_RingOfCirculants():
     assert (a+c) == [1, 2]
     assert (d+c) != [1, 2]
 
+
 def test_len():
     assert len(a) == 2
