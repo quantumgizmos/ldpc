@@ -23,11 +23,12 @@ def test_addition_RingOfCirculants():
     assert a+b == e
     assert (a+c) == [1, 2]
     assert (d+c) != [1, 2]
+    assert (d+d+d) == [1]
+    assert (e+e) == []
     assert (a+a) == []
     assert (b+b) == []
     assert (f+f) == []
     assert (f+f) == e
-
     assert (f+d) == [1]
 
     # assert (f+d) == [1]
@@ -38,5 +39,6 @@ def test_len():
 
 if __name__ == "__main__":
     test_addition_RingOfCirculants()
+
 
 

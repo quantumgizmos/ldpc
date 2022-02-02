@@ -42,6 +42,10 @@ class RingOfCirculantsF2():
             raise TypeError(
                 "The input to RingOfCirculantsF2 must be a one-dimensional list")
 
+        #coefficient simplification
+        coefficients, counts = np.unique(self.coefficients, return_counts=True)
+        self.coefficients=coefficients[counts % 2 == 1]
+
     def __type__(self):
         return(RingOfCirculantsF2)
 
@@ -59,8 +63,7 @@ class RingOfCirculantsF2():
         -------
         RingOfCirculantsF2
         '''
-        return RingOfCirculantsF2(list(set(self.coefficients) ^
-                                       set(other.coefficients)))
+        return RingOfCirculantsF2(np.concatenate([self.coefficients,other.coefficients]))
 
     def __repr__(self):
         return f"\u03BB{self.__str__()}"
