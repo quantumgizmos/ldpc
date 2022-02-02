@@ -65,10 +65,10 @@ class RingOfCirculantsF2():
         '''
         return RingOfCirculantsF2(np.concatenate([self.coefficients,other.coefficients]))
 
-    def __repr__(self):
-        return f"\u03BB{self.__str__()}"
-
     def __str__(self):
+        return f"\u03BB{self.__repr__()}"
+
+    def __repr__(self):
         '''
         What we see when we print()
         '''
@@ -213,6 +213,50 @@ class array(np.ndarray):
         Copies a protograph
         '''
         return cp.deepcopy(a)
+
+    def __str__(self):
+        '''
+        Generates what we see when we print
+        '''
+
+        m,n=self.shape
+        out="[["
+
+        for i in range(m):
+            if i!=0:
+                out+=" ["
+            for j in range(n):
+                out+=str(self[i,j])
+                if j!=n-1:
+                    out+=" "
+            if i!=m-1:
+                out+="]\n"
+            else:
+                out+="]]"
+
+        return out
+
+    def __compact_str__(self):
+        '''
+        Generates what we see when we print
+        '''
+
+        m,n=self.shape
+        out="[["
+
+        for i in range(m):
+            if i!=0:
+                out+=" ["
+            for j in range(n):
+                out+=repr(self[i,j])
+                if j!=n-1:
+                    out+=" "
+            if i!=m-1:
+                out+="]\n"
+            else:
+                out+="]]"
+
+        return out
 
 def identity(size):
     '''

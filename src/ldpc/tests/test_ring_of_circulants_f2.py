@@ -40,5 +40,8 @@ def test_len():
 if __name__ == "__main__":
     test_addition_RingOfCirculants()
 
+    a=RingOfCirculantsF2([0,1,1,1,1,2,3,3,3,-3,-1])
+    print(a)
+
 
 
