@@ -192,18 +192,24 @@ class array(np.ndarray):
 
         return temp.T.view(type(self))
 
-    @staticmethod
-    def to_binary(protograph, lift_parameter):
+    def to_binary(self, lift_parameter):
         '''
         Converts the protograph to binary
         '''
         L = lift_parameter
-        m, n = protograph.shape
+        m, n = self.shape
         mat = np.zeros((m*L, n*L)).astype(int)
         for i in range(m):
             for j in range(n):
-                mat[i*L:(i+1)*L, j*L:(j+1)*L] = protograph[i, j].to_binary(L)
+                mat[i*L:(i+1)*L, j*L:(j+1)*L] = self[i, j].to_binary(L)
         return mat
+
+    @property
+    def copy(a):
+        '''
+        Copies a protograph
+        '''
+        return cp.deepcopy(a)
 
     def identity(size):
         '''
@@ -231,23 +237,14 @@ class array(np.ndarray):
                 proto_array[i, j] = RingOfCirculantsF2([])
         return array(proto_array)
 
-    @staticmethod
     def hstack(proto_list):
         '''
         hstack funciton for protographs
         '''
         return np.hstack(proto_list).view(array)
 
-    @staticmethod
     def vstack(proto_list):
         '''
         vstack function for protographs
         '''
         return np.vstack(proto_list).view(array)
-
-    @property
-    def copy(a):
-        '''
-        Copies a protograph
-        '''
-        return cp.deepcopy(a)
