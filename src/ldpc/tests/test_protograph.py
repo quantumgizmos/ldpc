@@ -1,6 +1,7 @@
-from ldpc.protograph import array
+from ldpc.protograph import array, identity, hstack, vstack, RingOfCirculantsF2
+
 import numpy as np
-from ldpc.protograph import RingOfCirculantsF2
+
 
 pt_a = array([[(1)]])
 pt_b = array([[(1), (2), (3)]])
@@ -35,8 +36,8 @@ def test_T():
 
 
 def test_hstack():
-    assert (np.hstack([pt_a, pt_e]) == pt_b).all()
-    assert (np.hstack([pt_c, pt_d]) == pt_f).all()
+    assert (hstack([pt_a, pt_e]) == pt_b).all()
+    assert (hstack([pt_c, pt_d]) == pt_f).all()
 
 
 def test_kron():
@@ -48,7 +49,7 @@ def test_kron():
 
 
 def test_vstack():
-    assert (np.vstack([pt_a, pt_g]) == array([[1], [2]])).all()
+    assert (vstack([pt_a, pt_g]) == array([[1], [2]])).all()
 
 
 def test_to_binary():
@@ -57,5 +58,5 @@ def test_to_binary():
 
 
 def test_identity():
-    assert(array.identity(2) == array(
+    assert(identity(2) == array(
         [[(0), RingOfCirculantsF2([])], [RingOfCirculantsF2([]), (0)]])).all()
