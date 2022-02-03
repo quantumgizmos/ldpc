@@ -60,3 +60,9 @@ def test_to_binary():
 def test_identity():
     assert(identity(2) == array(
         [[(0), RingOfCirculantsF2([])], [RingOfCirculantsF2([]), (0)]])).all()
+
+
+if __name__ == "__main__":
+
+    a=array([[(1,2),0,1],[(),(4),(3)]])
+    print(a.__compact_str__())
