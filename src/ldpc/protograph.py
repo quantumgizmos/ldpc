@@ -66,11 +66,14 @@ class RingOfCirculantsF2():
         return RingOfCirculantsF2(np.concatenate([self.coefficients,other.coefficients]))
 
     def __str__(self):
+        '''
+        What we see when we print
+        '''
         return f"\u03BB{self.__repr__()}"
 
     def __repr__(self):
         '''
-        What we see when we print()
+        Re-usable output. Ie. Is valid code
         '''
         length = self.len()
         out = "("
@@ -114,6 +117,9 @@ class RingOfCirculantsF2():
         Overloads the multiplication operator * between elements of the ring of circulants
         '''
 
+        if isinstance(other,(int,float)):
+            return self.__rmul__(other)
+
         try:
             assert type(self) == type(other)
         except AssertionError:
@@ -128,6 +134,13 @@ class RingOfCirculantsF2():
                 new_coefficients[i*other.len() + j] = a+b
 
         return RingOfCirculantsF2(new_coefficients)
+
+    def __rmul__(self,other):
+        if isinstance(other,int) or isinstance(other,float):
+            if int(other)%2==0:
+                return RingOfCirculantsF2(())
+            else:
+                return self
 
     def len(self):
         return(len(self.coefficients))

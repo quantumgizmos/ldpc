@@ -66,3 +66,11 @@ if __name__ == "__main__":
 
     a=array([[(1,2),0,1],[(),(4),(3)]])
     print(a.__compact_str__())
+    
+    import ldpc.protograph as pt
+
+    a=pt.identity(30)
+    b = pt.identity(30)
+
+    c=np.kron(b,a)
+    print(c.shape)
