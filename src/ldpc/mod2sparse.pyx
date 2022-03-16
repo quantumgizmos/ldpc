@@ -1,6 +1,7 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True
 
 from scipy.sparse import spmatrix
+import numpy as np
 
 cdef mod2sparse* numpy2mod2sparse(mat):
     
@@ -48,6 +49,46 @@ cdef mod2sparse* alist2mod2sparse(fname):
                 mod2sparse_insert(sparse_mat,i,column_index)
 
     return sparse_mat
+
+def lu_decomp(mat):
+
+    cdef mod2sparse* H = numpy2mod2sparse(mat)
+    cdef mod2sparse* L
+    cdef mod2sparse* U
+    cdef m,n,i,rank,submatrix_size,nnf
+    m=mod2sparse_rows(H)
+    n=mod2sparse_cols(H)
+
+    if m==n: submatrix_size=m
+    elif n>m: submatrix_size=m
+    elif m>n: submatrix_size=n
+
+    L=mod2sparse_allocate(m,submatrix_size)
+    U=mod2sparse_allocate(submatrix_size,n)
+    cdef int* cols = <int*>calloc(n,sizeof(int))
+    cdef int* rows = <int*>calloc(m,sizeof(int))
+
+    for i in range(n): cols[i]=i
+    for i in range(m): rows[i]=i
+    
+
+    nnf=mod2sparse_decomp_osd(H,m,L,U,rows,cols)
+    rank=submatrix_size-nnf
+
+    out_rows=np.zeros(m,dtype=int)
+    out_cols=np.zeros(n,dtype=int)
+
+    for i in range(n): out_cols[i]=cols[i]
+    for i in range(m): out_rows[i]=rows[i]
+
+    free(rows)
+    free(cols)
+    mod2sparse_free(H)
+    mod2sparse_free(L)
+    mod2sparse_free(U)
+
+    return [rank,out_rows,out_cols]
+
 
 cdef class pymod2sparse():
 
