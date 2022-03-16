@@ -27,6 +27,7 @@ cdef class bp_decoder:
     cdef int bp_method
     cdef double ms_scaling_factor
     cdef int MEM_ALLOCATED
+    cdef int input_vector_type
 
     cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector)
 

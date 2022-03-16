@@ -33,6 +33,8 @@ cdef class bp_decoder:
         bp_method=kwargs.get("bp_method",0)
         ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
         channel_probs=kwargs.get("channel_probs",[None])
+        input_vector_type=kwargs.get("input_vector_type",-1)
+
 
         self.MEM_ALLOCATED=False
         cdef i,j
@@ -46,6 +48,16 @@ cdef class bp_decoder:
 
         self.m=parity_check_matrix.shape[0]
         self.n=parity_check_matrix.shape[1]
+
+        #input vector type
+        if type(input_vector_type) is int:
+            self.input_vector_type =  input_vector_type
+        elif type(input_vector_type) is str and input_vector_type == "syndrome":
+            self.input_vector_type = 0
+        elif type(input_vector_type) is str and input_vector_type == "received_vector":
+            self.input_vector_type = 1
+        else:
+            raise Exception(f"TypeError: input_vector type must be either 'syndrome' or 'received_vector'. Not {input_vector_type}")
 
         #Error rate
         if error_rate!=None:
@@ -124,7 +136,10 @@ cdef class bp_decoder:
         cdef int input_length = input_vector.shape[0]
         cdef int i
 
-        if input_length==self.n:
+        if self.n == self.m and self.input_vector_type == -1:
+            raise Exception("TypeError: the block length is equal to the syndrome length. Please set the 'input_vector_type' parameter as either: 1) 'syndrome' or 2) 'received_vector'")
+
+        if input_length == self.n and (self.input_vector_type == 1 or self.input_vector_type == -1):
             if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
                 self.received_codeword=spmatrix2char(input_vector,self.received_codeword)
             elif isinstance(input_vector,np.ndarray):
@@ -137,7 +152,8 @@ cdef class bp_decoder:
             for i in range(self.n):
                 self.bp_decoding[i]=self.bp_decoding[i]^self.received_codeword[i]
 
-        elif input_length ==self.m:
+        elif input_length ==self.m and (self.input_vector_type == 0 or self.input_vector_type == -1):
+            self.input_vector_type = 0
             if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
                 self.synd=spmatrix2char(input_vector,self.synd)
             elif isinstance(input_vector,np.ndarray):
