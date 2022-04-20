@@ -3,7 +3,13 @@
 import numpy as np
 from scipy.sparse import spmatrix
 
-cdef char* numpy2char(np.ndarray[np.int_t, ndim=1] np_array,char* char_array):
+# cdef char* numpy2char(np.ndarray[np.int_t, ndim=1] np_array,char* char_array):
+
+#     cdef int n = np_array.shape[0]
+#     for i in range(n): char_array[i]=np_array[i]
+#     return char_array
+
+cdef char* numpy2char(np_array,char* char_array):
 
     cdef int n = np_array.shape[0]
     for i in range(n): char_array[i]=np_array[i]
