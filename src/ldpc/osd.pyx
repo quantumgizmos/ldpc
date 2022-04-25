@@ -28,7 +28,8 @@ cdef class bposd_decoder(bp_decoder):
         Sets the OSD order.
     osd_method: str or int, optional
         The OSD method. Currently three methods are availbe: 1) "osd_0": Zero-oder OSD; 2) "osd_e": exhaustive OSD;
-        3) "osd_cs": combination-sweep OSD.
+        3) "osd_cs": combination-sweep OSD. 4) "osd_cs2": osd_cs with on-the-fly generation of candidate strings (no
+        caching.)
 
     '''
     
@@ -58,6 +59,8 @@ cdef class bposd_decoder(bp_decoder):
                 print("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not recommended. Use the 'osd_cs' method instead.")
         elif str(osd_method).lower() in ['osd_cs','2','osdcs','combination_sweep','combination_sweep','cs']:
             osd_method=2
+        elif str(osd_method).lower() in ['osd_cs2']:
+            osd_method=3
         else:
             raise ValueError(f"ERROR: OSD method '{osd_method}' invalid. Please choose from the following methods: 'OSD_0', 'OSD_E' or 'OSD_CS'.")
 
@@ -72,7 +75,7 @@ cdef class bposd_decoder(bp_decoder):
                 assert self.osd_order<=(self.n - self.rank)
             except AssertionError:
                 self.osd_order=-1
-                raise ValueError(f"For this code, the OSD order should be set in the range 0<=osd_oder<={self.n - self.rank}.")
+                raise ValueError(f"For this code, the OSD order should be set in the range 0<=osd_order<={self.n - self.rank}.")
             self.cols=<int*>calloc(self.n,sizeof(int)) 
             self.orig_cols=<int*>calloc(self.n,sizeof(int))
             self.rows=<int*>calloc(self.m,sizeof(int))
@@ -87,6 +90,7 @@ cdef class bposd_decoder(bp_decoder):
         if osd_order==0: pass
         elif self.osd_order>0 and self.osd_method==1: self.osd_e_setup()
         elif self.osd_order>0 and self.osd_method==2: self.osd_cs_setup()
+        elif self.osd_order>0 and self.osd_method==3: self.osd_cs2_setup()
         elif self.osd_order==-1: pass
         else: raise Exception(f"ERROR: OSD method '{osd_method}' invalid")
 
@@ -124,6 +128,14 @@ cdef class bposd_decoder(bp_decoder):
                     total_count+=1
 
         assert total_count==self.encoding_input_count
+
+    cdef void osd_cs2_setup(self):
+
+        cdef int kset_size=self.n-self.rank
+        self.encoding_input_count = 0
+        assert self.osd_order<=kset_size
+        self.osd_candidate_input = <char*>calloc(kset_size,sizeof(char))
+
 
 
     cdef char* decode_cy(self, char* syndrome):
@@ -196,6 +208,8 @@ cdef class bposd_decoder(bp_decoder):
         cdef long int l
         cdef mod2sparse *L
         cdef mod2sparse *U
+
+        cdef int kset_size=self.n-self.rank
 
         #allocating L and U matrices 
         L=mod2sparse_allocate(self.m,self.rank)
@@ -307,6 +321,78 @@ cdef class bposd_decoder(bp_decoder):
                 for i in range(self.n):
                     self.osdw_decoding[i]=self.y[i]
 
+        if self.osd_method==3:
+
+
+            for bit in range(kset_size):
+
+                self.osd_candidate_input[bit]=1
+                # x=self.osd_candidate_input
+                mod2sparse_mulvec(Ht,self.osd_candidate_input,self.Htx)
+                for i in range(self.m):
+                    self.g[i]=self.synd[i]^self.Htx[i]
+
+                LU_forward_backward_solve(
+                    L,
+                    U,
+                    self.rows,
+                    self.cols,
+                    self.g,
+                    self.y)
+
+                for i in range(self.k):
+                    self.y[self.Ht_cols[i]]=self.osd_candidate_input[i]
+
+                solution_weight=0.0
+                for i in range(self.n):
+                    # solution_weight+=self.y[i]*log(1/self.channel_probs[i])
+                    # solution_weight+=self.y[i]
+                    if self.y[i]==1:
+                        solution_weight+=log(1/self.channel_probs[i])
+
+                if solution_weight<osd_min_weight:
+                    osd_min_weight=solution_weight
+                    for i in range(self.n):
+                        self.osdw_decoding[i]=self.y[i]
+
+                self.osd_candidate_input[bit] = 0
+
+            for bit_i in range(self.osd_order):
+                    for bit_j in range(self.osd_order):
+                        if bit_i<bit_j:
+                            self.osd_candidate_input[bit_i]=1
+                            self.osd_candidate_input[bit_j]=1
+                            mod2sparse_mulvec(Ht,self.osd_candidate_input,self.Htx)
+                            for i in range(self.m):
+                                self.g[i]=self.synd[i]^self.Htx[i]
+
+                            LU_forward_backward_solve(
+                                L,
+                                U,
+                                self.rows,
+                                self.cols,
+                                self.g,
+                                self.y)
+
+                            for i in range(self.k):
+                                self.y[self.Ht_cols[i]]=self.osd_candidate_input[i]
+
+                            solution_weight=0.0
+                            for i in range(self.n):
+                                # solution_weight+=self.y[i]*log(1/self.channel_probs[i])
+                                # solution_weight+=self.y[i]
+                                if self.y[i]==1:
+                                    solution_weight+=log(1/self.channel_probs[i])
+
+                            if solution_weight<osd_min_weight:
+                                osd_min_weight=solution_weight
+                                for i in range(self.n):
+                                    self.osdw_decoding[i]=self.y[i]
+
+                            self.osd_candidate_input[bit_i]=0
+                            self.osd_candidate_input[bit_j]=0
+
+
         mod2sparse_free(Ht)
         mod2sparse_free(U)
         mod2sparse_free(L)
@@ -382,6 +468,9 @@ cdef class bposd_decoder(bp_decoder):
             if self.encoding_input_count!=0:
                 for i in range(self.encoding_input_count):
                     free(self.osdw_encoding_inputs[i])
+
+            if self.osd_method==3:
+                free(self.osd_candidate_input)
 
 
 
