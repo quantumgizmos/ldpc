@@ -25,6 +25,7 @@ cdef class bp_decoder:
     cdef double error_rate
     cdef int max_iter
     cdef int bp_method
+    cdef int schedule
     cdef double ms_scaling_factor
     cdef int MEM_ALLOCATED
     cdef int input_vector_type
@@ -35,6 +36,8 @@ cdef class bp_decoder:
 
     # Belief propagation with probability ratios
     cdef int bp_decode_prob_ratios(self)
+
+    cdef int serial_bp_decode(self)
 
     # Belief propagation with log probability ratios
     cdef int bp_decode_log_prob_ratios(self)

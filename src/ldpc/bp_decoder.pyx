@@ -37,6 +37,7 @@ cdef class bp_decoder:
         ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
         channel_probs=kwargs.get("channel_probs",[None])
         input_vector_type=kwargs.get("input_vector_type",-1)
+        schedule=kwargs.get("schedule", 0)
 
 
         self.MEM_ALLOCATED=False
@@ -84,6 +85,15 @@ cdef class bp_decoder:
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum', 'product_sum_log' or 'minimum_sum_log'")
 
+        #Schedule
+        if str(schedule).lower() in ['parallel','p','0','flooding','fl']:
+            schedule=0
+        elif str(schedule).lower() in ['serial','s','1','sequential']:
+            schedule=1
+        else: raise ValueError(f"Schedule method '{schedule}' is invalid.\
+                            Please choose from the following methods:\
+                            'parallel' or 'serial'")
+
         if channel_probs[0]!=None:
             if len(channel_probs)!=self.n:
                 raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
@@ -92,6 +102,7 @@ cdef class bp_decoder:
         self.max_iter=max_iter
         self.bp_method=bp_method
         self.ms_scaling_factor=ms_scaling_factor
+        self.schedule=schedule
 
         #memory allocation
         if isinstance(parity_check_matrix, np.ndarray):
@@ -197,11 +208,14 @@ cdef class bp_decoder:
 
         eg. self.synd=syndrome
         """
-        if self.bp_method == 0 or self.bp_method == 1:
+        if (self.bp_method == 0 or self.bp_method == 1) and self.schedule==0:
             self.bp_decode_prob_ratios()
 
-        elif self.bp_method == 2 or self.bp_method==3:
+        elif (self.bp_method == 2 or self.bp_method==3) and self.schedule==0:
             self.bp_decode_log_prob_ratios()
+
+        elif(self.schedule==1):
+            self.serial_bp_decode()
 
         else:
             ValueError("Specified BP method is invalid.")
@@ -414,6 +428,7 @@ cdef class bp_decoder:
                         e.sgn+=sgn
 
                         e.check_to_bit*=((-1)**e.sgn)*alpha
+                        # print(f"Check {i}: {e.check_to_bit}")
 
                         if abs(e.bit_to_check)<temp:
                             temp=abs(e.bit_to_check)
@@ -430,6 +445,7 @@ cdef class bp_decoder:
 
                 while not mod2sparse_at_end(e):
                     e.bit_to_check=temp
+                    # print(f"Bit {j}: {e.bit_to_check}")
                     temp+=e.check_to_bit
                     # if isnan(temp): temp=0.0
                     e=mod2sparse_next_in_col(e)
@@ -442,6 +458,7 @@ cdef class bp_decoder:
                 temp=0.0
                 while not mod2sparse_at_end(e):
                     e.bit_to_check+=temp
+
                     temp+=e.check_to_bit
                     # if isnan(temp): temp=0.0
                     e=mod2sparse_prev_in_col(e)
@@ -449,9 +466,139 @@ cdef class bp_decoder:
 
             mod2sparse_mulvec(self.H,self.bp_decoding,self.bp_decoding_synd)
 
+            # print(double2numpy(self.log_prob_ratios,self.n))
+            # print(char2numpy(self.bp_decoding,self.n))
+            # print(log_prob_ratios)
+
             equal=1
             for check in range(self.m):
                 if self.synd[check]!=self.bp_decoding_synd[check]:
+                    equal=0
+                    break
+            if equal==1:
+                self.converge=1
+                return 1
+
+        return 0
+
+
+    # Serial Belief propagation with log probability ratios
+    cdef int serial_bp_decode(self):
+        """
+        Cython function implementing serial belief propagation.
+
+        Notes
+        -----
+        This function accepts no parameters. The syndrome must be set beforehand.
+        """
+
+        cdef mod2entry *e
+        cdef mod2entry *g
+        cdef int i, j, bit_index, check_index,equal, iteration, total_sgn, sgn
+        cdef double bit_to_check0, temp, alpha
+
+        #initialisation
+
+        for j in range(self.n):
+            e=mod2sparse_first_in_col(self.H,j)
+            while not mod2sparse_at_end(e):
+                e.bit_to_check=log((1-self.channel_probs[j])/self.channel_probs[j])
+                e=mod2sparse_next_in_col(e)
+
+        # print("Hello")
+        # exit(22)
+
+        self.converge=0
+        for iteration in range(1,self.max_iter+1):
+            # print(iteration)
+          
+            self.iter=iteration
+
+            for bit_index in range(self.n):
+                # print(bit_index)
+                # print(self.bp_method)
+                
+                self.log_prob_ratios[bit_index]=e.bit_to_check=log((1-self.channel_probs[bit_index])/self.channel_probs[bit_index])
+
+                if self.bp_method==0:
+                    
+                    e = mod2sparse_first_in_col(self.H,bit_index)
+                    while not mod2sparse_at_end(e):
+
+                        check_index=e.row
+                        e.check_to_bit = 1.0
+
+               
+
+                        g = mod2sparse_first_in_row(self.H,check_index)
+                        while not mod2sparse_at_end(g):
+
+                            if g!=e:
+                                e.check_to_bit*=tanh(g.bit_to_check/2)
+
+                            g=mod2sparse_next_in_row(g)
+
+                        e.check_to_bit=((-1)**self.synd[check_index])*log((1+e.check_to_bit)/(1-e.check_to_bit))
+                        e.bit_to_check=self.log_prob_ratios[bit_index]
+                        self.log_prob_ratios[bit_index]+=e.check_to_bit
+                        e=mod2sparse_next_in_col(e)
+
+                elif (self.bp_method==1 or self.bp_method==3):
+
+                    # print("hello ms")
+
+                    # exit(22)
+                    e = mod2sparse_first_in_col(self.H,bit_index)
+                    while not mod2sparse_at_end(e):
+
+                        check_index=e.row
+                        sgn=self.synd[check_index]
+                        temp = 1e308
+                    
+                        # print(check_index)
+
+                        g = mod2sparse_first_in_row(self.H,check_index)
+                        while not mod2sparse_at_end(g):
+
+                            # print("pointer check")
+                            # print(g!=e)
+
+                            if g!=e:
+                                if abs(g.bit_to_check)<temp: temp = abs(g.bit_to_check)
+                                if(g.bit_to_check<=0): sgn+=1
+
+                            g=mod2sparse_next_in_row(g)
+
+                        e.check_to_bit=((-1)**sgn)*temp*alpha
+                        e.bit_to_check=self.log_prob_ratios[bit_index]
+                        self.log_prob_ratios[bit_index]+=e.check_to_bit
+                        e=mod2sparse_next_in_col(e)
+
+
+                # print("hello loop end")
+
+                if self.log_prob_ratios[bit_index]<=0: self.bp_decoding[bit_index] = 1
+                else: self.bp_decoding[bit_index] = 0
+
+                temp = 0
+
+                e = mod2sparse_last_in_col(self.H,bit_index)
+                while not mod2sparse_at_end(e):
+                    e.bit_to_check += temp
+                    temp += e.check_to_bit
+                    e=mod2sparse_prev_in_col(e)
+
+
+
+            mod2sparse_mulvec(self.H,self.bp_decoding,self.bp_decoding_synd)
+
+            # print(double2numpy(self.log_prob_ratios,self.n))
+            # print(char2numpy(self.bp_decoding,self.n))
+            # # print(log_prob_ratios)
+
+            equal=1
+            for check_index in range(self.m):
+                if self.synd[check_index]!=self.bp_decoding_synd[check_index]:
                     equal=0
                     break
             if equal==1:
@@ -568,6 +715,20 @@ cdef class bp_decoder:
         numpy.ndarray
         """
         return double2numpy(self.log_prob_ratios,self.n)
+    
+    @property
+    def schedule(self):
+        """
+        Getter. Returns the BP schedule setting.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
+
+        if self.schedule==0: return "parallel"
+        elif self.schedule==1: return "serial"
+        # else: return "serial"
 
     # @property
     # def channel_probs(self):
