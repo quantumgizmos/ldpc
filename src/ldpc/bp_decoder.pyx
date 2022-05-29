@@ -119,6 +119,7 @@ cdef class bp_decoder:
         self.bp_decoding=<char*>calloc(self.n,sizeof(char)) #BP decoding
         self.channel_probs=<double*>calloc(self.n,sizeof(double)) #channel probs
         self.log_prob_ratios=<double*>calloc(self.n,sizeof(double)) #log probability ratios
+        self.inactivated_checks=<int*>calloc(self.n,sizeof(int)) #inactivated checks
 
         self.MEM_ALLOCATED=True
 
@@ -497,6 +498,9 @@ cdef class bp_decoder:
         cdef int i, j, bit_index, check_index,equal, iteration, total_sgn, sgn
         cdef double bit_to_check0, temp, alpha
 
+        for i in range(self.m):
+            self.synd[i]^=self.inactivated_checks[i]
+
         #initialisation
 
         for j in range(self.n):
@@ -524,7 +528,13 @@ cdef class bp_decoder:
                     
                     e = mod2sparse_first_in_col(self.H,bit_index)
                     while not mod2sparse_at_end(e):
+                        
                         check_index=e.row
+                        if self.inactivated_checks[check_index]==1:
+                            e.check_to_bit = 0
+                            e = mod2sparse_next_in_col(e)
+                            continue
+
                         e.check_to_bit = 1.0
                         g = mod2sparse_first_in_row(self.H,check_index)
                         while not mod2sparse_at_end(g):
@@ -548,6 +558,12 @@ cdef class bp_decoder:
                     while not mod2sparse_at_end(e):
 
                         check_index=e.row
+                        if self.inactivated_checks[check_index]==1:
+                            e.check_to_bit = 0
+                            e = mod2sparse_next_in_col(e)
+                            continue
+
+                        
                         sgn=self.synd[check_index]
                         temp = 1e308
                     
@@ -727,6 +743,28 @@ cdef class bp_decoder:
         elif self.schedule==1: return "serial"
         # else: return "serial"
 
+    @property
+    def inactivated_checks(self):
+        cdef int i
+        out=np.zeros(self.m).astype(int)
+        for i in range(self.m):
+            out[i]=self.inactivated_checks[i]
+        return out
+
+    def reset_inactivated_checks(self):
+        cdef int i
+        for i in range(self.m):
+            self.inactivated_checks[i] = 0
+
+    def set_inactivated_checks(self,inactivated_checks):
+        self.reset_inactivated_checks()
+        for i in inactivated_checks:
+            self.inactivated_checks[i] = 1
+
+
+
+        
+
     # @property
     # def channel_probs(self):
     #     """
@@ -747,6 +785,7 @@ cdef class bp_decoder:
                 free(self.bp_decoding)
                 free(self.log_prob_ratios)
                 free(self.received_codeword)
+                free(self.inactivated_checks)
                 mod2sparse_free(self.H)
 
 
