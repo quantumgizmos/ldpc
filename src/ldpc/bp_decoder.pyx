@@ -623,7 +623,8 @@ cdef class bp_decoder:
 
 
     cpdef np.ndarray[np.int_t, ndim=1] si_decode(self, input_vector):
-        syndrome = input_vector
+        
+        cdef char *orig_synd = <char*>calloc(self.m,sizeof(char))
 
         cdef int input_length = input_vector.shape[0]
         cdef int i, j, check_index
@@ -633,8 +634,10 @@ cdef class bp_decoder:
 
         if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
             self.synd=spmatrix2char(input_vector,self.synd)
+            orig_synd=spmatrix2char(input_vector,orig_synd)
         elif isinstance(input_vector,np.ndarray):
             self.synd=numpy2char(input_vector,self.synd)
+            orig_synd=numpy2char(input_vector,orig_synd)
         else:
             raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
         
@@ -707,11 +710,15 @@ cdef class bp_decoder:
 
 
             si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
-
-            si_solution = mod2.inverse(si)@si_syndrome
+            #force find a solution
+            print("si",si)
+            pivot_cols= mod2.row_echelon(si)[3]
+            si_solution = mod2.inverse(si[:,pivot_cols])@si_syndrome
 
             print(si_solution)
 
+
+        free(orig_synd)
         return char2numpy(self.bp_decoding,self.n)
 
 
