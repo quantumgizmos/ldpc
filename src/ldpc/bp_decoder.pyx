@@ -520,7 +520,7 @@ cdef class bp_decoder:
                 
                 self.log_prob_ratios[bit_index]=log((1-self.channel_probs[bit_index])/self.channel_probs[bit_index])
 
-                if self.bp_method==0:
+                if self.bp_method==0 or self.bp_method==2:
                     
                     e = mod2sparse_first_in_col(self.H,bit_index)
                     while not mod2sparse_at_end(e):
@@ -565,9 +565,10 @@ cdef class bp_decoder:
 
                             g=mod2sparse_next_in_row(g)
 
-                        e.check_to_bit=((-1)**sgn)*temp*alpha
+                        e.check_to_bit=((-1)**sgn)*temp*self.ms_scaling_factor
                         e.bit_to_check=self.log_prob_ratios[bit_index]
                         self.log_prob_ratios[bit_index]+=e.check_to_bit
+                        # print(self.log_prob_ratios[bit_index])
                         e=mod2sparse_next_in_col(e)
 
 
