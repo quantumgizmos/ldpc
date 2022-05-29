@@ -43,6 +43,7 @@ cdef class bp_decoder:
     # Belief propagation with log probability ratios
     cdef int bp_decode_log_prob_ratios(self)
 
+    cpdef np.ndarray[np.int_t, ndim=1] si_decode(self, input_vector)
 
 # cdef class bposd_decoder(bp_decoder):
 #     cdef int test

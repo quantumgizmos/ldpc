@@ -1,6 +1,7 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True, embedsignature=True
 import numpy as np
 from scipy.sparse import spmatrix
+from ldpc import mod2
 
 cdef class bp_decoder:
     '''
@@ -619,6 +620,100 @@ cdef class bp_decoder:
                 return 1
 
         return 0
+
+
+    cpdef np.ndarray[np.int_t, ndim=1] si_decode(self, input_vector):
+        syndrome = input_vector
+
+        cdef int input_length = input_vector.shape[0]
+        cdef int i, j, check_index
+        cdef mod2entry *e
+        cdef mod2entry *g
+        # double temp
+
+        if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
+            self.synd=spmatrix2char(input_vector,self.synd)
+        elif isinstance(input_vector,np.ndarray):
+            self.synd=numpy2char(input_vector,self.synd)
+        else:
+            raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
+        
+        
+        self.bp_decode_cy()
+
+
+        cdef np.ndarray[np.float64_t, ndim=1] check_reliabilities = np.zeros(self.m)
+        cdef np.ndarray[np.int_t, ndim=1] sorted_checks
+
+
+        for check_index in range(self.m):
+            e = mod2sparse_first_in_row(self.H, check_index)
+            check_reliabilities[check_index] = 0
+            while not mod2sparse_at_end(e):
+                check_reliabilities[check_index] += abs(self.log_prob_ratios[e.col])
+                e=mod2sparse_next_in_row(e)
+
+        sorted_checks = np.argsort(check_reliabilities)
+        print(check_reliabilities)
+        print(sorted_checks)
+
+
+
+        for check_index in sorted_checks:
+
+
+            inactivated_checks = [check_index]
+            glue_checks=[]
+            inactivated_bits = []
+            si_edges = []
+
+            e=mod2sparse_first_in_row(self.H,check_index)
+            while not mod2sparse_at_end(e):
+                si_edges.append((check_index,e.col))
+                inactivated_bits.append(e.col)
+                g = mod2sparse_first_in_col(self.H,e.col)
+                while not mod2sparse_at_end(g):
+                    inactivated_checks.append(g.row)
+                    glue_checks.append(g.row)
+                    g=mod2sparse_next_in_col(g)
+
+                e = mod2sparse_next_in_row(e)
+
+            inactivated_checks=list(set(inactivated_checks))
+            inactivated_bits=list(set(inactivated_bits))
+
+            si_m, si_n = len(inactivated_checks), len(inactivated_bits)
+
+            si = np.zeros((si_m,si_n)).astype(int)
+
+            for edge in si_edges:
+
+                i = inactivated_checks.index(edge[0])
+                j = inactivated_bits.index(edge[1])
+
+                si[i,j] = 1
+
+            glue_syndrome=[]
+            for si_check_index in inactivated_checks:
+
+                e = mod2sparse_first_in_row(self.H,si_check_index)
+                while not mod2sparse_at_end(e):
+                    glue_parity=0
+                    if e.col not in inactivated_bits:
+                        glue_parity^=self.bp_decoding[e.col]
+                    glue_syndrome.append(glue_parity)
+
+                    e = mod2sparse_next_in_col(e)
+
+
+            si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
+
+            si_solution = mod2.inverse(si)@si_syndrome
+
+            print(si_solution)
+
+        return char2numpy(self.bp_decoding,self.n)
+
 
 
     @property
