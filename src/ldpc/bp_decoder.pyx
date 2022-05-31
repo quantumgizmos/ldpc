@@ -668,7 +668,7 @@ cdef class bp_decoder:
 
 
 
-        for k,check_index in enumerate(sorted_checks[:10]):
+        for k,check_index in enumerate(sorted_checks):
 
 
             inactivated_checks = [check_index]
@@ -692,9 +692,9 @@ cdef class bp_decoder:
             inactivated_checks=list(set(inactivated_checks))
             inactivated_bits=list(set(inactivated_bits))
 
-            # print(f"Check number {k}, inactivated_checks",inactivated_checks)
+        #     # print(f"Check number {k}, inactivated_checks",inactivated_checks)
 
-            self.reset_inactivated_checks()
+            # self.reset_inactivated_checks()
             self.set_inactivated_checks(inactivated_checks)
             # print("Orig synd",char2numpy(orig_synd,self.m))
             for i in range(self.m):
@@ -708,54 +708,56 @@ cdef class bp_decoder:
             for i in range(self.m):
                 self.synd[i]=orig_synd[i]
             
-            if self.converge==0: continue
+            if self.converge==0:
+                self.reset_inactivated_checks()
+                continue
 
-            # if self.converge==1: print(f"converge after {k} loops")
+            if self.converge==1: print(f"converge after {k} loops")
 
-        #     si_m, si_n = len(inactivated_checks), len(inactivated_bits)
+            si_m, si_n = len(inactivated_checks), len(inactivated_bits)
 
-        #     si = np.zeros((si_m,si_n)).astype(int)
+            si = np.zeros((si_m,si_n)).astype(int)
 
-        #     for edge in si_edges:
+            for edge in si_edges:
 
-        #         i = inactivated_checks.index(edge[0])
-        #         j = inactivated_bits.index(edge[1])
+                i = inactivated_checks.index(edge[0])
+                j = inactivated_bits.index(edge[1])
 
-        #         si[i,j] = 1
+                si[i,j] = 1
 
-        #     glue_syndrome=[]
-        #     for si_check_index in inactivated_checks:
+            glue_syndrome=[]
+            for si_check_index in inactivated_checks:
 
-        #         e = mod2sparse_first_in_row(self.H,si_check_index)
-        #         while not mod2sparse_at_end(e):
-        #             glue_parity=0
-        #             if e.col not in inactivated_bits:
-        #                 glue_parity^=self.bp_decoding[e.col]
+                e = mod2sparse_first_in_row(self.H,si_check_index)
+                while not mod2sparse_at_end(e):
+                    glue_parity=0
+                    if e.col not in inactivated_bits:
+                        glue_parity^=self.bp_decoding[e.col]
 
-        #             e = mod2sparse_next_in_col(e)
-        #         glue_syndrome.append(glue_parity)
-
-
-        #     si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
-        #     #force find a solution
-        #     # print("si")
-        #     # print(si)
-        #     # print("Si solution")
-
-        #     ##Solve via full pivoting
-        #     pivot_cols= mod2.row_echelon(si)[3]
-        #     si_solve = (mod2.inverse(si[:,pivot_cols])@si_syndrome) % 2
-        #     si_solution = np.zeros(si.shape[1]).astype(int)
-        #     for i, bit in enumerate(si_solve):
-        #         si_solution[pivot_cols[i]]=si_solve[i]
-
-        #     # print(si_solution)
+                    e = mod2sparse_next_in_col(e)
+                glue_syndrome.append(glue_parity)
 
 
-        #     for i,bit in enumerate(si_solution):
-        #         self.bp_decoding[inactivated_bits[i]]=bit
+            si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
+            #force find a solution
+            # print("si")
+            # print(si)
+            # print("Si solution")
+
+            ##Solve via full pivoting
+            pivot_cols= mod2.row_echelon(si)[3]
+            si_solve = (mod2.inverse(si[:,pivot_cols])@si_syndrome) % 2
+            si_solution = np.zeros(si.shape[1]).astype(int)
+            for i, bit in enumerate(si_solve):
+                si_solution[pivot_cols[i]]=si_solve[i]
+
+            # print(si_solution)
+
+
+            for i,bit in enumerate(si_solution):
+                self.bp_decoding[inactivated_bits[i]]=bit
             
-        #     break
+            break
 
 
 

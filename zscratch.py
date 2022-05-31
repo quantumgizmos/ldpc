@@ -3,15 +3,15 @@ from ldpc.codes import rep_code, ring_code, hamming_code
 from ldpc import bp_decoder
 from tqdm import tqdm
 
-n=10
-h=ring_code(n)
+n=4
+h=hamming_code(n)
 
 print(h)
 
 bpd = bp_decoder(h,error_rate=0.1, max_iter=n,bp_method="ms",ms_scaling_factor=1.0, schedule=1, input_vector_type='syndrome')
 
 error =np.zeros(h.shape[1]).astype(int)
-error[[0,1,5,6,7]]=1
+error[[0,1,11,6,7,13]]=1
 
 syndrome =  h@error%2
 
