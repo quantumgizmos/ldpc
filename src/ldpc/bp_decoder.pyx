@@ -639,7 +639,7 @@ cdef class bp_decoder:
             raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
         
         
-        print(np.nonzero(char2numpy(self.synd,self.m)))
+        # print(np.nonzero(char2numpy(self.synd,self.m)))
 
         self.bp_decode_cy()
 
@@ -702,7 +702,7 @@ cdef class bp_decoder:
                     self.synd[i] = 0
 
             # print("Modified synd", char2numpy(self.synd,self.m))
-            self.serial_bp_decode()
+            self.bp_decode_cy()
 
             ##reset syndrome to original
             for i in range(self.m):
@@ -710,50 +710,52 @@ cdef class bp_decoder:
             
             if self.converge==0: continue
 
-            si_m, si_n = len(inactivated_checks), len(inactivated_bits)
+            # if self.converge==1: print(f"converge after {k} loops")
 
-            si = np.zeros((si_m,si_n)).astype(int)
+        #     si_m, si_n = len(inactivated_checks), len(inactivated_bits)
 
-            for edge in si_edges:
+        #     si = np.zeros((si_m,si_n)).astype(int)
 
-                i = inactivated_checks.index(edge[0])
-                j = inactivated_bits.index(edge[1])
+        #     for edge in si_edges:
 
-                si[i,j] = 1
+        #         i = inactivated_checks.index(edge[0])
+        #         j = inactivated_bits.index(edge[1])
 
-            glue_syndrome=[]
-            for si_check_index in inactivated_checks:
+        #         si[i,j] = 1
 
-                e = mod2sparse_first_in_row(self.H,si_check_index)
-                while not mod2sparse_at_end(e):
-                    glue_parity=0
-                    if e.col not in inactivated_bits:
-                        glue_parity^=self.bp_decoding[e.col]
+        #     glue_syndrome=[]
+        #     for si_check_index in inactivated_checks:
 
-                    e = mod2sparse_next_in_col(e)
-                glue_syndrome.append(glue_parity)
+        #         e = mod2sparse_first_in_row(self.H,si_check_index)
+        #         while not mod2sparse_at_end(e):
+        #             glue_parity=0
+        #             if e.col not in inactivated_bits:
+        #                 glue_parity^=self.bp_decoding[e.col]
 
-
-            si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
-            #force find a solution
-            # print("si")
-            # print(si)
-            # print("Si solution")
-
-            ##Solve via full pivoting
-            pivot_cols= mod2.row_echelon(si)[3]
-            si_solve = (mod2.inverse(si[:,pivot_cols])@si_syndrome) % 2
-            si_solution = np.zeros(si.shape[1]).astype(int)
-            for i, bit in enumerate(si_solve):
-                si_solution[pivot_cols[i]]=si_solve[i]
-
-            # print(si_solution)
+        #             e = mod2sparse_next_in_col(e)
+        #         glue_syndrome.append(glue_parity)
 
 
-            for i,bit in enumerate(si_solution):
-                self.bp_decoding[inactivated_bits[i]]=bit
+        #     si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
+        #     #force find a solution
+        #     # print("si")
+        #     # print(si)
+        #     # print("Si solution")
+
+        #     ##Solve via full pivoting
+        #     pivot_cols= mod2.row_echelon(si)[3]
+        #     si_solve = (mod2.inverse(si[:,pivot_cols])@si_syndrome) % 2
+        #     si_solution = np.zeros(si.shape[1]).astype(int)
+        #     for i, bit in enumerate(si_solve):
+        #         si_solution[pivot_cols[i]]=si_solve[i]
+
+        #     # print(si_solution)
+
+
+        #     for i,bit in enumerate(si_solution):
+        #         self.bp_decoding[inactivated_bits[i]]=bit
             
-            break
+        #     break
 
 
 
