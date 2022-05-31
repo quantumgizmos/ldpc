@@ -10,7 +10,7 @@ hx=np.loadtxt("hgp_hx.txt").astype(np.uint8)
 from ldpc import bp_decoder as bp_decoder1
 
 er=0.05
-runs=500
+runs=5
 
 converge=0
 
@@ -18,10 +18,10 @@ n=hx.shape[1]
 
 error=np.zeros(n,dtype=np.uint8)
 
-bpd1=bp_decoder1(hx,error_rate=er,bp_method="ps", schedule='serial', max_iter=50,ms_scaling_factor=0.625)
+bpd1=bp_decoder1(hx,error_rate=er,bp_method="ms_log", schedule='serial', max_iter=10,ms_scaling_factor=0.625)
 
 error_channel=er*np.ones(n)
-bpd2=bp_decoder2(hx,error_channel,bp_method=0, max_iter=50,schedule=1,ms_scaling_factor=0.625)
+bpd2=bp_decoder2(hx,error_channel,bp_method=1, max_iter=10,schedule=1,ms_scaling_factor=0.625)
 
 converge=0
 np.random.seed(42)
@@ -52,7 +52,7 @@ for i in tqdm(range(runs)):
 
     syndrome = hx@error%2
 
-    bpd1.decode(syndrome)
+    bpd1.si_decode(syndrome)
     if bpd1.converge ==1: converge+=1
 
 print(1-converge/runs)

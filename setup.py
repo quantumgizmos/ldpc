@@ -22,7 +22,7 @@ extension = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension2 = Extension(
@@ -31,7 +31,7 @@ extension2 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension3 = Extension(
@@ -40,7 +40,7 @@ extension3 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension4 = Extension(
@@ -49,7 +49,7 @@ extension4 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 setup(
