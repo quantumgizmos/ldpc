@@ -607,6 +607,10 @@ cdef class bp_decoder:
             # print(char2numpy(self.bp_decoding,self.n))
             # # print(log_prob_ratios)
 
+            for check_index in range(self.m):
+                if self.inactivated_checks[check_index]==1:
+                    self.bp_decoding_synd[check_index] = 0
+
             equal=1
             for check_index in range(self.m):
                 if self.synd[check_index]!=self.bp_decoding_synd[check_index]:
@@ -645,10 +649,10 @@ cdef class bp_decoder:
 
         print("converge?", self.converge)
 
-        if self.converge:
-            print("Exit conditional")
-            free(orig_synd)
-            return char2numpy(self.bp_decoding,self.n)
+        # if self.converge:
+        #     print("Exit conditional")
+        #     free(orig_synd)
+        #     return char2numpy(self.bp_decoding,self.n)
 
 
         cdef np.ndarray[np.float64_t, ndim=1] check_reliabilities = np.zeros(self.m)
@@ -663,12 +667,14 @@ cdef class bp_decoder:
                 e=mod2sparse_next_in_row(e)
 
         sorted_checks = np.argsort(check_reliabilities)
+        sorted_checks=np.arange(self.m)
+        # sorted_checks=np.flip(sorted_checks)
         # print("check_reliabilities", check_reliabilities)
         # print("sorted checks,", sorted_checks)
 
 
 
-        for k,check_index in enumerate(sorted_checks):
+        for k,check_index in enumerate([0]):
 
 
             inactivated_checks = [check_index]
@@ -692,6 +698,11 @@ cdef class bp_decoder:
             inactivated_checks=list(set(inactivated_checks))
             inactivated_bits=list(set(inactivated_bits))
 
+            print("Inactivated checks", inactivated_checks)
+            print("Inactivated bits", inactivated_bits)
+
+
+
         #     # print(f"Check number {k}, inactivated_checks",inactivated_checks)
 
             # self.reset_inactivated_checks()
@@ -713,6 +724,7 @@ cdef class bp_decoder:
                 continue
 
             if self.converge==1: print(f"converge after {k} loops")
+            print("Decoding not si", self.bp_decoding)
 
             si_m, si_n = len(inactivated_checks), len(inactivated_bits)
 
@@ -734,14 +746,23 @@ cdef class bp_decoder:
                     if e.col not in inactivated_bits:
                         glue_parity^=self.bp_decoding[e.col]
 
-                    e = mod2sparse_next_in_col(e)
+                    e = mod2sparse_next_in_row(e)
                 glue_syndrome.append(glue_parity)
 
 
             si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
             #force find a solution
-            # print("si")
-            # print(si)
+
+
+            print("Si syndrome")
+            print(input_vector[inactivated_checks])
+            print("Glue syndrome")
+            print(np.array(glue_syndrome))
+            print("Total si syndrome")
+            print(si_syndrome)
+
+            print("si")
+            print(si)
             # print("Si solution")
 
             ##Solve via full pivoting

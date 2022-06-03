@@ -3,23 +3,29 @@ from ldpc.codes import rep_code, ring_code, hamming_code
 from ldpc import bp_decoder
 from tqdm import tqdm
 
-n=4
-h=hamming_code(n)
+n=5
+h=rep_code(n)
+
+# h=np.loadtxt("844.txt").astype(int)
 
 print(h)
 
 bpd = bp_decoder(h,error_rate=0.1, max_iter=n,bp_method="ms",ms_scaling_factor=1.0, schedule=1, input_vector_type='syndrome')
 
 error =np.zeros(h.shape[1]).astype(int)
-error[[0,1,11,6,7,13]]=1
+error[[0,1,2]]=1
+
+print(error)
 
 syndrome =  h@error%2
 
 print(syndrome)
 
-# bpd.set_inactivated_checks([0])
+bpd.set_inactivated_checks([0,1])
 
 decoding=bpd.si_decode(syndrome)
+
+print(decoding)
 
 # import time
 # start = time.process_time()

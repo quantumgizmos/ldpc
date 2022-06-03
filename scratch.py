@@ -9,7 +9,7 @@ hx=np.loadtxt("hgp_hx.txt").astype(np.uint8)
 
 from ldpc import bp_decoder as bp_decoder1
 
-er=0.03
+er=0.05
 runs=10
 
 converge=0
