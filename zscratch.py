@@ -19,9 +19,9 @@ print(error)
 
 syndrome =  h@error%2
 
-print(syndrome)
+print("orginal synd", syndrome)
 
-bpd.set_inactivated_checks([0,1])
+# bpd.set_inactivated_checks([0,1])
 
 decoding=bpd.si_decode(syndrome)
 
@@ -41,4 +41,4 @@ print(bpd.bp_decoding)
 print("converge",bpd.converge)
 print("output_synd", h@decoding%2)
 print(h.shape)
-print(bpd.ms_scaling_factor)
+# print(bpd.ms_scaling_factor)

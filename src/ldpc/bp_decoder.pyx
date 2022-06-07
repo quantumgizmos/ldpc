@@ -764,8 +764,8 @@ cdef class bp_decoder:
             # print("Total si syndrome")
             # print(si_syndrome)
 
-            print("si")
-            print(si)
+            # print("si")
+            # print(si)
             # print("Si solution")
 
             ##Solve via full pivoting

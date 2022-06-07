@@ -260,7 +260,11 @@ class css_decode_sim():
         residual_z = (self.error_z+self.bpd_z.bp_decoding) % 2
 
         # check for logical X-error
-        if (self.lz@residual_x % 2).any():
+
+        if not self.bpd_z.converge or not self.bpd_x.converge:
+            pass
+        
+        elif (self.lz@residual_x % 2).any():
             logical_weight = np.sum(residual_x)
             if logical_weight < self.min_logical_weight:
                 self.min_logical_weight = int(logical_weight)
