@@ -65,7 +65,7 @@ setup(
     package_dir={'':'src'},
     ext_modules=cythonize([extension,extension2,extension3,extension4]),
     classifiers=['Development Status :: 4 - Beta'],
-    install_requires=["tqdm","scipy",f"numpy=={numpy.__version__}"],
+    install_requires=["tqdm","scipy","numpy>=1.19.0"],
     include_package_data=True,
     zip_safe=False
 )
