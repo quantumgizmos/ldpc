@@ -25,9 +25,11 @@ cdef class bp_decoder:
     cdef double error_rate
     cdef int max_iter
     cdef int bp_method
+    cdef int schedule
     cdef double ms_scaling_factor
     cdef int MEM_ALLOCATED
     cdef int input_vector_type
+    cdef int* inactivated_checks
 
     cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector)
 
@@ -36,9 +38,12 @@ cdef class bp_decoder:
     # Belief propagation with probability ratios
     cdef int bp_decode_prob_ratios(self)
 
+    cdef int serial_bp_decode(self)
+
     # Belief propagation with log probability ratios
     cdef int bp_decode_log_prob_ratios(self)
 
+    cpdef np.ndarray[np.int_t, ndim=1] si_decode(self, input_vector)
 
 # cdef class bposd_decoder(bp_decoder):
 #     cdef int test

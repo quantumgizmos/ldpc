@@ -2,10 +2,10 @@ import numpy as np
 from ldpc.codes import rep_code
 from ldpc.bp_decode_sim import classical_decode_sim
 
-d=500
+d=1000
 
 pcm=rep_code(d)
-error_rate=0.3
+error_rate=0.1
 
 output_dict={}
 output_dict['code_type']=f"rep_code_{d}"

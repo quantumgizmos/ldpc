@@ -1,6 +1,7 @@
 #cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True, embedsignature=True
 import numpy as np
 from scipy.sparse import spmatrix
+from ldpc import mod2
 
 cdef class bp_decoder:
     '''
@@ -37,6 +38,7 @@ cdef class bp_decoder:
         ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
         channel_probs=kwargs.get("channel_probs",[None])
         input_vector_type=kwargs.get("input_vector_type",-1)
+        schedule=kwargs.get("schedule", 0)
 
 
         self.MEM_ALLOCATED=False
@@ -84,6 +86,15 @@ cdef class bp_decoder:
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum', 'product_sum_log' or 'minimum_sum_log'")
 
+        #Schedule
+        if str(schedule).lower() in ['parallel','p','0','flooding','fl']:
+            schedule=0
+        elif str(schedule).lower() in ['serial','s','1','sequential']:
+            schedule=1
+        else: raise ValueError(f"Schedule method '{schedule}' is invalid.\
+                            Please choose from the following methods:\
+                            'parallel' or 'serial'")
+
         if channel_probs[0]!=None:
             if len(channel_probs)!=self.n:
                 raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
@@ -92,6 +103,7 @@ cdef class bp_decoder:
         self.max_iter=max_iter
         self.bp_method=bp_method
         self.ms_scaling_factor=ms_scaling_factor
+        self.schedule=schedule
 
         #memory allocation
         if isinstance(parity_check_matrix, np.ndarray):
@@ -108,6 +120,7 @@ cdef class bp_decoder:
         self.bp_decoding=<char*>calloc(self.n,sizeof(char)) #BP decoding
         self.channel_probs=<double*>calloc(self.n,sizeof(double)) #channel probs
         self.log_prob_ratios=<double*>calloc(self.n,sizeof(double)) #log probability ratios
+        self.inactivated_checks=<int*>calloc(self.n,sizeof(int)) #inactivated checks
 
         self.MEM_ALLOCATED=True
 
@@ -197,11 +210,14 @@ cdef class bp_decoder:
 
         eg. self.synd=syndrome
         """
-        if self.bp_method == 0 or self.bp_method == 1:
+        if (self.bp_method == 0 or self.bp_method == 1) and self.schedule==0:
             self.bp_decode_prob_ratios()
 
-        elif self.bp_method == 2 or self.bp_method==3:
+        elif (self.bp_method == 2 or self.bp_method==3) and self.schedule==0:
             self.bp_decode_log_prob_ratios()
+
+        elif(self.schedule==1):
+            self.serial_bp_decode()
 
         else:
             ValueError("Specified BP method is invalid.")
@@ -414,6 +430,7 @@ cdef class bp_decoder:
                         e.sgn+=sgn
 
                         e.check_to_bit*=((-1)**e.sgn)*alpha
+                        # print(f"Check {i}: {e.check_to_bit}")
 
                         if abs(e.bit_to_check)<temp:
                             temp=abs(e.bit_to_check)
@@ -430,6 +447,7 @@ cdef class bp_decoder:
 
                 while not mod2sparse_at_end(e):
                     e.bit_to_check=temp
+                    # print(f"Bit {j}: {e.bit_to_check}")
                     temp+=e.check_to_bit
                     # if isnan(temp): temp=0.0
                     e=mod2sparse_next_in_col(e)
@@ -442,12 +460,17 @@ cdef class bp_decoder:
                 temp=0.0
                 while not mod2sparse_at_end(e):
                     e.bit_to_check+=temp
+
                     temp+=e.check_to_bit
                     # if isnan(temp): temp=0.0
                     e=mod2sparse_prev_in_col(e)
 
 
             mod2sparse_mulvec(self.H,self.bp_decoding,self.bp_decoding_synd)
+
+            # print(double2numpy(self.log_prob_ratios,self.n))
+            # print(char2numpy(self.bp_decoding,self.n))
+            # print(log_prob_ratios)
 
             equal=1
             for check in range(self.m):
@@ -459,6 +482,315 @@ cdef class bp_decoder:
                 return 1
 
         return 0
+
+
+    # Serial Belief propagation with log probability ratios
+    cdef int serial_bp_decode(self):
+        """
+        Cython function implementing serial belief propagation.
+
+        Notes
+        -----
+        This function accepts no parameters. The syndrome must be set beforehand.
+        """
+
+        cdef mod2entry *e
+        cdef mod2entry *g
+        cdef int i, j, bit_index, check_index,equal, iteration, total_sgn, sgn
+        cdef double bit_to_check0, temp, alpha
+
+        #initialisation
+
+        for j in range(self.n):
+            e=mod2sparse_first_in_col(self.H,j)
+            while not mod2sparse_at_end(e):
+                e.bit_to_check=log((1-self.channel_probs[j])/self.channel_probs[j])
+                e=mod2sparse_next_in_col(e)
+
+        # print("Hello")
+        # exit(22)
+
+        self.converge=0
+        for iteration in range(1,self.max_iter+1):
+            # print(iteration)
+          
+            self.iter=iteration
+
+            for bit_index in range(self.n):
+                # print(bit_index)
+                # print(self.bp_method)
+                
+                self.log_prob_ratios[bit_index]=log((1-self.channel_probs[bit_index])/self.channel_probs[bit_index])
+
+                if self.bp_method==0 or self.bp_method==2:
+                    
+                    e = mod2sparse_first_in_col(self.H,bit_index)
+                    while not mod2sparse_at_end(e):
+                        
+                        check_index=e.row
+                        if self.inactivated_checks[check_index]==1:
+                            e.check_to_bit = 0
+                            e = mod2sparse_next_in_col(e)
+                            continue
+
+                        e.check_to_bit = 1.0
+                        g = mod2sparse_first_in_row(self.H,check_index)
+                        while not mod2sparse_at_end(g):
+
+                            if g!=e:
+                                e.check_to_bit*=tanh(g.bit_to_check/2)
+
+                            g=mod2sparse_next_in_row(g)
+
+                        e.check_to_bit=((-1)**self.synd[check_index])*log((1+e.check_to_bit)/(1-e.check_to_bit))
+                        e.bit_to_check=self.log_prob_ratios[bit_index]
+                        self.log_prob_ratios[bit_index]+=e.check_to_bit
+                        e=mod2sparse_next_in_col(e)
+
+                elif (self.bp_method==1 or self.bp_method==3):
+
+                    # print("hello ms")
+
+                    # exit(22)
+                    e = mod2sparse_first_in_col(self.H,bit_index)
+                    while not mod2sparse_at_end(e):
+
+                        check_index=e.row
+                        if self.inactivated_checks[check_index]==1:
+                            e.check_to_bit = 0
+                            e = mod2sparse_next_in_col(e)
+                            continue
+
+                        
+                        sgn=self.synd[check_index]
+                        temp = 1e308
+                    
+                        # print(check_index)
+
+                        g = mod2sparse_first_in_row(self.H,check_index)
+                        while not mod2sparse_at_end(g):
+
+                            # print("pointer check")
+                            # print(g!=e)
+
+                            if g!=e:
+                                if abs(g.bit_to_check)<temp: temp = abs(g.bit_to_check)
+                                if g.bit_to_check<=0: sgn+=1
+
+                            g=mod2sparse_next_in_row(g)
+
+                        e.check_to_bit=((-1)**sgn)*temp*self.ms_scaling_factor
+                        e.bit_to_check=self.log_prob_ratios[bit_index]
+                        self.log_prob_ratios[bit_index]+=e.check_to_bit
+                        # print(self.log_prob_ratios[bit_index])
+                        e=mod2sparse_next_in_col(e)
+
+
+                # print("hello loop end")
+
+                if self.log_prob_ratios[bit_index]<=0: self.bp_decoding[bit_index] = 1
+                else: self.bp_decoding[bit_index] = 0
+
+                temp = 0
+
+                e = mod2sparse_last_in_col(self.H,bit_index)
+                while not mod2sparse_at_end(e):
+                    e.bit_to_check += temp
+                    temp += e.check_to_bit
+                    e=mod2sparse_prev_in_col(e)
+
+
+
+            mod2sparse_mulvec(self.H,self.bp_decoding,self.bp_decoding_synd)
+
+            # print(double2numpy(self.log_prob_ratios,self.n))
+            # print(char2numpy(self.bp_decoding,self.n))
+            # # print(log_prob_ratios)
+
+            for check_index in range(self.m):
+                if self.inactivated_checks[check_index]==1:
+                    self.bp_decoding_synd[check_index] = 0
+
+            equal=1
+            for check_index in range(self.m):
+                if self.synd[check_index]!=self.bp_decoding_synd[check_index]:
+                    equal=0
+                    break
+            if equal==1:
+                self.converge=1
+                return 1
+
+        return 0
+
+
+    cpdef np.ndarray[np.int_t, ndim=1] si_decode(self, input_vector):
+        
+        self.reset_inactivated_checks()
+
+        cdef char *orig_synd = <char*>calloc(self.m,sizeof(char))
+
+        cdef int input_length = input_vector.shape[0]
+        cdef int i, j, check_index
+        cdef mod2entry *e
+        cdef mod2entry *g
+        # double temp
+
+        if isinstance(input_vector,spmatrix) and input_vector.shape[1]==1:
+            self.synd=spmatrix2char(input_vector,self.synd)
+            orig_synd=spmatrix2char(input_vector,orig_synd)
+        elif isinstance(input_vector,np.ndarray):
+            self.synd=numpy2char(input_vector,self.synd)
+            orig_synd=numpy2char(input_vector,orig_synd)
+        else:
+            raise ValueError("The input to ldpc.decode must either be of type `np.ndarray` or `scipy.sparse.spmatrix`.")
+        
+        
+        # print(np.nonzero(char2numpy(self.synd,self.m)))
+
+        self.bp_decode_cy()
+
+        # print("converge?", self.converge)
+
+        if self.converge:
+            # print("Exit conditional")
+            free(orig_synd)
+            return char2numpy(self.bp_decoding,self.n)
+
+
+        cdef np.ndarray[np.float64_t, ndim=1] check_reliabilities = np.zeros(self.m)
+        cdef np.ndarray[np.int_t, ndim=1] sorted_checks
+
+
+        for check_index in range(self.m):
+            e = mod2sparse_first_in_row(self.H, check_index)
+            check_reliabilities[check_index] = 0
+            while not mod2sparse_at_end(e):
+                check_reliabilities[check_index] += abs(self.log_prob_ratios[e.col])
+                e=mod2sparse_next_in_row(e)
+
+        sorted_checks = np.argsort(check_reliabilities)
+        # sorted_checks = np.flip(sorted_checks)
+        # sorted_checks=np.arange(self.m)
+        # sorted_checks=np.flip(sorted_checks)
+        # print("check_reliabilities", check_reliabilities)
+        # print("sorted checks,", sorted_checks)
+
+
+
+        for k,check_index in enumerate(sorted_checks[:10]):
+
+
+            inactivated_checks = [check_index]
+            glue_checks=[]
+            inactivated_bits = []
+            si_edges = []
+
+            e=mod2sparse_first_in_row(self.H,check_index)
+            while not mod2sparse_at_end(e):
+                si_edges.append((check_index,e.col))
+                inactivated_bits.append(e.col)
+                g = mod2sparse_first_in_col(self.H,e.col)
+                while not mod2sparse_at_end(g):
+                    si_edges.append((g.row,e.col))
+                    inactivated_checks.append(g.row)
+                    glue_checks.append(g.row)
+                    g=mod2sparse_next_in_col(g)
+
+                e = mod2sparse_next_in_row(e)
+
+            inactivated_checks=list(set(inactivated_checks))
+            inactivated_bits=list(set(inactivated_bits))
+
+            # print("Inactivated checks", inactivated_checks)
+            # print("Inactivated bits", inactivated_bits)
+
+
+
+        #     # print(f"Check number {k}, inactivated_checks",inactivated_checks)
+
+            # self.reset_inactivated_checks()
+            self.set_inactivated_checks(inactivated_checks)
+            # print("Orig synd",char2numpy(orig_synd,self.m))
+            for i in range(self.m):
+                if self.inactivated_checks[i] == 1:
+                    self.synd[i] = 0
+
+            # print("Modified synd", char2numpy(self.synd,self.m))
+            self.bp_decode_cy()
+
+            ##reset syndrome to original
+            for i in range(self.m):
+                self.synd[i]=orig_synd[i]
+            
+            if self.converge==0:
+                self.reset_inactivated_checks()
+                continue
+
+            if self.converge==1: print(f"converge after {k} loops")
+            # print("Decoding not si", self.bp_decoding)
+
+            si_m, si_n = len(inactivated_checks), len(inactivated_bits)
+
+            si = np.zeros((si_m,si_n)).astype(int)
+
+            for edge in si_edges:
+
+                i = inactivated_checks.index(edge[0])
+                j = inactivated_bits.index(edge[1])
+
+                si[i,j] = 1
+
+            glue_syndrome=[]
+            for si_check_index in inactivated_checks:
+
+                e = mod2sparse_first_in_row(self.H,si_check_index)
+                while not mod2sparse_at_end(e):
+                    glue_parity=0
+                    if e.col not in inactivated_bits:
+                        glue_parity^=self.bp_decoding[e.col]
+
+                    e = mod2sparse_next_in_row(e)
+                glue_syndrome.append(glue_parity)
+
+
+            si_syndrome = (input_vector[inactivated_checks] + np.array(glue_syndrome)) %2
+            #force find a solution
+
+
+            # print("Si syndrome")
+            # print(input_vector[inactivated_checks])
+            # print("Glue syndrome")
+            # print(np.array(glue_syndrome))
+            # print("Total si syndrome")
+            # print(si_syndrome)
+
+            # print("si")
+            # print(si)
+            # print("Si solution")
+
+            ##Solve via full pivoting
+            pivot_cols= mod2.row_echelon(si)[3]
+            si_solve = (mod2.inverse(si[:,pivot_cols])@si_syndrome) % 2
+            si_solution = np.zeros(si.shape[1]).astype(int)
+            for i, bit in enumerate(si_solve):
+                si_solution[pivot_cols[i]]=si_solve[i]
+
+            # print(si_solution)
+
+
+            for i,bit in enumerate(si_solution):
+                self.bp_decoding[inactivated_bits[i]]=bit
+            
+            break
+
+
+
+
+
+
+        free(orig_synd)
+        return char2numpy(self.bp_decoding,self.n)
+
 
 
     @property
@@ -567,6 +899,42 @@ cdef class bp_decoder:
         numpy.ndarray
         """
         return double2numpy(self.log_prob_ratios,self.n)
+    
+    @property
+    def schedule(self):
+        """
+        Getter. Returns the BP schedule setting.
+
+        Returns
+        -------
+        numpy.ndarray
+        """
+
+        if self.schedule==0: return "parallel"
+        elif self.schedule==1: return "serial"
+        # else: return "serial"
+
+    @property
+    def inactivated_checks(self):
+        cdef int i
+        out=np.zeros(self.m).astype(int)
+        for i in range(self.m):
+            out[i]=self.inactivated_checks[i]
+        return out
+
+    def reset_inactivated_checks(self):
+        cdef int i
+        for i in range(self.m):
+            self.inactivated_checks[i] = 0
+
+    def set_inactivated_checks(self,inactivated_checks):
+        self.reset_inactivated_checks()
+        for i in inactivated_checks:
+            self.inactivated_checks[i] = 1
+
+
+
+        
 
     # @property
     # def channel_probs(self):
@@ -588,6 +956,7 @@ cdef class bp_decoder:
                 free(self.bp_decoding)
                 free(self.log_prob_ratios)
                 free(self.received_codeword)
+                free(self.inactivated_checks)
                 mod2sparse_free(self.H)
 
 

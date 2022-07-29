@@ -6,7 +6,7 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-VERSION="0.1.4"
+VERSION="0.1.5"
 f=open("src/ldpc/VERSION","w+")
 f.write(VERSION)
 f.close()
@@ -22,7 +22,7 @@ extension = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension2 = Extension(
@@ -31,7 +31,7 @@ extension2 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension3 = Extension(
@@ -40,7 +40,7 @@ extension3 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 extension4 = Extension(
@@ -49,7 +49,7 @@ extension4 = Extension(
     libraries=[],
     library_dirs=[],
     include_dirs=[numpy.get_include(),'src/ldpc/include'],
-    extra_compile_args=['-std=c11']
+    extra_compile_args=['-std=c11', '-O3']
     )
 
 setup(

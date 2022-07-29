@@ -31,6 +31,7 @@ cdef class bposd_decoder(bp_decoder):
     cdef char* osd0_decoding
     cdef char* osdw_decoding
     cdef char** osdw_encoding_inputs
+    cdef char* osd_candidate_input
     cdef long int encoding_input_count
     cdef int osd_order
     cdef int osd_method
@@ -46,5 +47,7 @@ cdef class bposd_decoder(bp_decoder):
 
     cdef void osd_e_setup(self)
     cdef void osd_cs_setup(self)
+    cdef void osd_cs2_setup(self)
+
     cdef int osd(self)
     cdef char* decode_cy(self, char* syndrome)
