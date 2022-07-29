@@ -548,8 +548,7 @@ cdef class bp_decoder:
     @property
     def bp_decoding(self):
         """
-        Getter. Returns the soft-decision propbability ratios on each bit from the last round
-        of BP decoding.
+        Getter. Returns the output from the last round of BP decoding.
 
         Returns
         -------
