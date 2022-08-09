@@ -21,6 +21,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.3.1
         env:
           CIBW_SKIP: '*musllinux* pp*'
+          CIBW_ARCHS_MACOS: x86_64 arm64
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
