@@ -7,7 +7,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - Openmp support the BP decoder.
 - An implementation of weighted union find (with Peeling and inversion solvers).
 - An implementation of belief-find (https://arxiv.org/abs/2203.04948)
-- An implementation of the Kuo and Lai (https://arxiv.org/abs/2104.13659)
+- An implementation of the Kuo and Lai memory belief propagation decoder (https://arxiv.org/abs/2104.13659)
 
 ## ToDos
 
