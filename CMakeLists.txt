@@ -8,6 +8,6 @@ add_library(ldpc2 INTERFACE)
 target_include_directories(ldpc2 INTERFACE src_cpp include/robin_map)  
 
 project(main)
-add_executable(main cpp_test/main.cpp)
+add_executable(main cpp_example/main.cpp)
 target_link_libraries(main ldpc2) 
 
