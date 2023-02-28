@@ -18,6 +18,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - Proper test coverage is required.
 - The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
 - Soft syndrome BP (https://arxiv.org/abs/2205.02341)
+- Layered schedules (hybrid serial + parallel)
 
 ## Dependencies
 
@@ -133,7 +134,7 @@ logical_error_rate = mc_sim(toric_code,error_rate = 0.07,runs=10000,seed=42, DEC
 print(f"Logical error rate: {logical_error_rate}")
 ```
 
-    100%|██████████| 10000/10000 [00:02<00:00, 4438.02it/s]
+    100%|██████████| 10000/10000 [00:01<00:00, 5069.38it/s]
 
     Logical error rate: 0.0031999999999999806
 
@@ -154,7 +155,7 @@ logical_error_rate = mc_sim(toric_code,error_rate = 0.07,runs=10000,seed=42, DEC
 print(f"Logical error rate: {logical_error_rate}")
 ```
 
-    100%|██████████| 10000/10000 [00:06<00:00, 1547.70it/s]
+    100%|██████████| 10000/10000 [00:06<00:00, 1652.06it/s]
 
     Logical error rate: 0.13319999999999999
 
@@ -173,7 +174,7 @@ logical_error_rate = mc_sim(toric_code,error_rate = 0.07,runs=10000,seed=42, DEC
 print(f"Logical error rate: {logical_error_rate}")
 ```
 
-    100%|██████████| 10000/10000 [00:08<00:00, 1188.08it/s]
+    100%|██████████| 10000/10000 [00:08<00:00, 1215.60it/s]
 
     Logical error rate: 0.0026000000000000467
 
@@ -194,7 +195,7 @@ logical_error_rate = mc_sim(toric_code,error_rate = 0.07,runs=10000,seed=42, DEC
 print(f"Logical error rate: {logical_error_rate}")
 ```
 
-    100%|██████████| 10000/10000 [00:04<00:00, 2208.53it/s]
+    100%|██████████| 10000/10000 [00:04<00:00, 2375.46it/s]
 
     Logical error rate: 0.0026000000000000467
 
