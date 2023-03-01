@@ -2,21 +2,21 @@
 # distutils: language = c++
 import numpy as np
 import scipy.sparse
-from typing import Tuple
+from typing import Tuple, Union
 
 cdef class gf2sparse:
     """
     Test test test test
     """
 
-    def __init__(self, pcm: Tuple[np.ndarray,scipy.sparse.csr_matrix] = None, empty: bool = False):
+    def __init__(self, pcm = Union[np.ndarray, scipy.sparse.csr_matrix], empty: bool = False):
         """
         Test test test test
         """
 
         pass
 
-    def __cinit__(self, pcm=None, empty=False):
+    def __cinit__(self, pcm = Union[np.ndarray, scipy.sparse.csr_matrix], empty: bool = False):
 
         self.PCM_ALLOCATED = False
 
@@ -31,7 +31,7 @@ cdef class gf2sparse:
                     for j in range(self.n):
                         if pcm[i,j]!=0:
                             self.pcm.insert_entry(i,j,pcm[i,j])
-            if isinstance(pcm, scipy.sparse.csr_matrix):
+            elif isinstance(pcm, scipy.sparse.csr_matrix):
                 rows, cols = pcm.nonzero()
                 for i in range(len(rows)):
                     self.pcm.insert_entry(rows[i], cols[i], pcm[rows[i], cols[i]])
