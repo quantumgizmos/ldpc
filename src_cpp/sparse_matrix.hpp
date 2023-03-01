@@ -110,7 +110,8 @@ class sparse_matrix_entry: public entry_base<sparse_matrix_entry<T>> {
 template <class ENTRY_OBJ>
 class sparse_matrix_base {
   public:
-    int m,n; //m: check-count; n: bit-count        
+    int m,n; //m: check-count; n: bit-count
+    int node_count;        
     ENTRY_OBJ** row_heads; //starting point for each row
     ENTRY_OBJ** column_heads; //starting point for each column
     entry_block<ENTRY_OBJ>* sparse_matrix_entries;

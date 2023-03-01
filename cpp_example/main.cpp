@@ -72,6 +72,13 @@ int main()
     cout<<"Syndrome: ";
     print_vector(syndrome);
 
+    auto coords = pcm->nonzero_coordinates();
+
+    for(auto x: coords){
+        cout<<x[0]<<","<<x[1]<<endl;
+    }
+
+
 
     return 0;
 
