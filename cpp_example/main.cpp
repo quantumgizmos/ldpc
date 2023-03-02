@@ -96,6 +96,27 @@ int main()
 
     print_sparse_matrix(*matrix);
 
+    matrix->row_reduce(true,true);
+
+
+    // print_sparse_matrix(*matrix);
+
+    cout<<endl;
+
+    print_sparse_matrix(*matrix->L);
+
+    cout<<endl;
+
+    auto output = matrix->L->matmul(matrix);
+
+    print_sparse_matrix(*output);
+
+    cout<<endl;
+
+    print_sparse_matrix(*matrix->U);
+
+    print_vector(matrix->cols);
+
 
     return 0;
 

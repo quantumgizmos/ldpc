@@ -25,7 +25,7 @@ using namespace std;
             typedef sparse_matrix_base<ENTRY_OBJ> BASE;
             using BASE::row_heads; using BASE::column_heads; using BASE::m; using BASE::n;
             using BASE::swap_rows; using BASE::get_entry; using BASE::iterate_column;
-            using BASE::iterate_row;
+            using BASE::iterate_row; using BASE::remove;
             gf2sparse<gf2entry>* L;
             gf2sparse<gf2entry>* U;
             vector<int> rows;
@@ -85,29 +85,24 @@ using namespace std;
             }
 
 
-            gf2sparse* matmul(gf2sparse *mat_right, gf2sparse *output_mat){
+            gf2sparse<ENTRY_OBJ>* matmul(gf2sparse *mat_right){
             
-                if( n!=mat_right->m || m!=output_mat->m || mat_right->n!=output_mat->n){
+                if( n!=mat_right->m){
                     throw invalid_argument("Input matrices have invalid dimensions!");
                 }
 
-                delete output_mat->sparse_matrix_entries;
-                delete[] output_mat->row_heads;
-                delete[] output_mat->column_heads;
-                output_mat->allocate();
-
-                int sum = 0;
-                for(int i = 0; i < m; i++){
-                    for(int j = 0; j < n; j++){
-                        sum=0;
-                        for(auto e: BASE::iterate_row(i)){
-                            for(auto g: mat_right->iterate_column(j)){
-                                if(g->row_index==e->col_index) sum^=(e->value*g->value);
+                auto output_mat = new gf2sparse<ENTRY_OBJ>(m,mat_right->n);
+  
+                
+                for(int i = 0; i<mat_right->m; i++){
+                    for(int j = 0; j<mat_right->n; j++){
+                        int sum = 0;
+                        for(auto e: mat_right->iterate_column(j)){
+                            for(auto g: BASE::iterate_row(i)){
+                                if(g->col_index == e->row_index) sum^=(g->value*e->value);
                             }
                         }
-                        if(sum==1){
-                            output_mat->insert_entry(i,j,1);
-                        }
+                        if(sum) output_mat->insert_entry(i,j,1);
                     }
                 }
 
@@ -124,7 +119,7 @@ using namespace std;
                     for(auto e: BASE::iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
-                            if(e->value == 0) this->remove(e);
+                            if(e->value == 0) BASE::remove(e);
                             intersection=true;
                             break;
                         }
@@ -167,27 +162,24 @@ using namespace std;
                 U=new gf2sparse<gf2entry>(m,n);
                 U_allocated=true;
                 L=new gf2sparse<gf2entry>(m,m);
+                
                 L_allocated=true;
-                vector<int> col_tracker;
                 vector<int> pivot_cols;
                 vector<int> not_pivot_cols;
 
 
                 if(reset_cols){
                     for(int i=0; i<n;i++) {
-                        col_tracker.push_back(i);
                         cols[i] = i;
                         inv_cols[cols[i]] = i;
                     }
                 }
                 else{
                     for(int i=0; i<n;i++) {
-                        col_tracker.push_back(i);
                         inv_cols[cols[i]] = i;
                     }
                 }
 
-                
                 for(int i=0;i<m;i++){
                     rows[i] = i;
                     inv_rows[rows[i]] = i;
@@ -212,20 +204,67 @@ using namespace std;
 
                 int max_rank = min(m,n);
 
-                for(int pivot_column = 0; pivot_column < max_rank; pivot_column++){
-                    auto e = U->get_entry(pivot_count,pivot_column);
-                    if(!e->at_end()) goto PIVOT_FOUND;
 
+                for(int pivot_column = 0; pivot_column < n; pivot_column++){
+                    if(pivot_count == max_rank){
+                        for(int i = pivot_column; i<n; i++) not_pivot_cols.push_back(i);
+                        break;
+                    }
+                    bool PIVOT_FOUND = false;
+                    vector<int> rows_above_pivot;
+                    for(auto e: U->iterate_column(pivot_column)){
+                        int row = e->row_index;
 
-                    PIVOT_FOUND:
+                        if(e->value == 0) continue;
+
+                        if(!PIVOT_FOUND){
+                            if(row<pivot_count){
+                                rows_above_pivot.push_back(row);
+                                continue;
+                            }
+                            else if(row > pivot_count){
+                                PIVOT_FOUND = true;
+                                U->swap_rows(pivot_count, row);
+                                L->swap_rows(pivot_count, row);
+                                rows[pivot_count] = row;
+                                rows[row] = pivot_count;
+                                row = pivot_count;
+                            }
+                            else if(row == pivot_count) PIVOT_FOUND = true;
+                            else continue;
+                        }
+                        if(PIVOT_FOUND){
+                            if(row > pivot_count){
+                                U->add_rows(row,pivot_count);
+                                L->add_rows(row,pivot_count);
+                            }
+                            else if(row<pivot_count) rows_above_pivot.push_back(row);
+                        }
+
+                    }
+
+                    if(full_reduce){
+                        for(auto row: rows_above_pivot){
+                            U->add_rows(row,pivot_count);
+                            L->add_rows(row,pivot_count);
+                        }
+                    }
+
+                    if(PIVOT_FOUND){
                         pivot_count++;
                         pivot_cols.push_back(pivot_column);
-                        int a = 0;
-                }
-                
-                return 0;
+                    }
+                    else not_pivot_cols.push_back(pivot_column);
 
                 }
+
+                pivot_cols.insert(pivot_cols.end(), not_pivot_cols.begin(), not_pivot_cols.end());
+                cols = pivot_cols;
+                rank = pivot_count;
+                
+                return rank;
+
+            }
 
 
             

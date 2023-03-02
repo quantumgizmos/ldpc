@@ -199,6 +199,8 @@ class sparse_matrix_base {
         }
     }
 
+ 
+
 
     ENTRY_OBJ* insert_entry(int j, int i){
         if(j>=m || i>=n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
