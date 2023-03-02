@@ -181,6 +181,10 @@ class sparse_matrix_base {
 
     void remove_entry(int i, int j){
         auto e = get_entry(i,j);
+        this->remove(e);
+    }
+
+    void remove(ENTRY_OBJ* e){
         if(!e->at_end()){
             auto e_left = e->left;
             auto e_right = e-> right;
@@ -190,10 +194,8 @@ class sparse_matrix_base {
             e_right->left = e_left;
             e_up ->down = e_down;
             e_down -> up = e_up;
-
             e->reset();
             sparse_matrix_entries->removed_entries.push_back(e);
-
         }
     }
 

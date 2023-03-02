@@ -70,6 +70,7 @@ using namespace std;
                 return output_vector;
             }
 
+
             vector<uint8_t>& mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
                 #pragma omp for
                 for(int i = 0; i<m; i++) output_vector[i] = 0;
@@ -123,6 +124,7 @@ using namespace std;
                     for(auto e: BASE::iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
+                            if(e->value == 0) this->remove(e);
                             intersection=true;
                             break;
                         }
@@ -153,6 +155,78 @@ using namespace std;
                     }
                 }
             }
+
+
+            int row_reduce(bool reset_cols = true, bool full_reduce = false){
+
+                int temp1,temp2;
+                int pivot_count=0;
+
+                if(U_allocated) delete U;
+                if(L_allocated) delete L;
+                U=new gf2sparse<gf2entry>(m,n);
+                U_allocated=true;
+                L=new gf2sparse<gf2entry>(m,m);
+                L_allocated=true;
+                vector<int> col_tracker;
+                vector<int> pivot_cols;
+                vector<int> not_pivot_cols;
+
+
+                if(reset_cols){
+                    for(int i=0; i<n;i++) {
+                        col_tracker.push_back(i);
+                        cols[i] = i;
+                        inv_cols[cols[i]] = i;
+                    }
+                }
+                else{
+                    for(int i=0; i<n;i++) {
+                        col_tracker.push_back(i);
+                        inv_cols[cols[i]] = i;
+                    }
+                }
+
+                
+                for(int i=0;i<m;i++){
+                    rows[i] = i;
+                    inv_rows[rows[i]] = i;
+                }
+
+                for(int i=0;i<m;i++){
+                    for(auto e: iterate_row(i)){
+                        if(e->value==1){
+                            U->insert_entry(i,e->col_index,1);
+                        }
+                    }
+                    L->insert_entry(i,i,1);
+                }
+
+
+                for(int i=0;i<m;i++){
+                    rows[i] = i;
+                    inv_rows[rows[i]]=i;
+                }
+
+
+
+                int max_rank = min(m,n);
+
+                for(int pivot_column = 0; pivot_column < max_rank; pivot_column++){
+                    auto e = U->get_entry(pivot_count,pivot_column);
+                    if(!e->at_end()) goto PIVOT_FOUND;
+
+
+                    PIVOT_FOUND:
+                        pivot_count++;
+                        pivot_cols.push_back(pivot_column);
+                        int a = 0;
+                }
+                
+                return 0;
+
+                }
+
 
             
 
