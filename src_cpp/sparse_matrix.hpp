@@ -170,6 +170,19 @@ class sparse_matrix_base {
         for(auto e: iterate_row(j)) e->row_index=j;
     }
 
+    void reorder_rows(vector<int> rows){
+
+        vector<ENTRY_OBJ*> temp_row_heads;
+        for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
+        for(int i = 0; i<m; i++){
+            row_heads[i] = temp_row_heads[rows[i]];
+            for(auto e: iterate_row(i)){
+                e->row_index = i;
+            }
+        }
+
+    }
+
     void swap_columns(int i, int j){
         auto tmp1 = column_heads[i];
         auto tmp2 = column_heads[j];

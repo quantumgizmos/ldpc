@@ -122,7 +122,7 @@ using namespace std;
                     for(auto e: BASE::iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
-                            if(e->value == 0) BASE::remove(e);
+                            // if(e->value == 0) BASE::remove(e);
                             intersection=true;
                             break;
                         }
@@ -206,10 +206,10 @@ using namespace std;
                 int max_rank = min(m,n);
 
 
-                for(int pivot_column = 0; pivot_column < n; pivot_column++){
-                    // cout<<"Pivot column: "<<pivot_column<<endl;
+                for(int pivot_index = 0; pivot_index < n; pivot_index++){
+                    // cout<<"Pivot column: "<<pivot_index<<endl;
                     if(pivot_count == max_rank){
-                        for(int i = pivot_column; i<n; i++) not_pivot_cols.push_back(i);
+                        for(int i = pivot_index; i<n; i++) not_pivot_cols.push_back(cols[i]);
                         break;
                     }
 
@@ -218,7 +218,7 @@ using namespace std;
                     vector<int> rows_above_pivot;
                     vector<int> rows_below_pivot;
 
-                    for(auto e: U->iterate_column(pivot_column)){
+                    for(auto e: U->iterate_column(cols[pivot_index])){
 
                         // cout<<"ROW: "<<e->row_index<<endl;
 
@@ -226,20 +226,20 @@ using namespace std;
                         if(e->value == 0) continue;
 
                         
-                        if(row<pivot_count){
+                        if(inv_rows[row]<pivot_count){
                             rows_above_pivot.push_back(row);
                             continue;
                         }
-                        else if(row == pivot_count){
+                        else if(inv_rows[row] == pivot_count){
                             PIVOT_FOUND = true;
                             pivot_swap_row = row;
                         }
-                        else if(row > pivot_count && !PIVOT_FOUND){
+                        else if(inv_rows[row] > pivot_count && !PIVOT_FOUND){
                             // cout<<"Pivot found: "<<row<<endl;
                             PIVOT_FOUND = true;
                             pivot_swap_row = row;
                         }
-                        else if(row > pivot_count){
+                        else if(inv_rows[row] > pivot_count){
                             rows_below_pivot.push_back(row);
                         }
                         else{
@@ -250,10 +250,15 @@ using namespace std;
 
                     if(PIVOT_FOUND){
 
-                        if(pivot_swap_row!=pivot_count){
-                            U->swap_rows(pivot_count,pivot_swap_row);
-                            rows[pivot_count] = pivot_swap_row;
-                            rows[pivot_swap_row] = pivot_count;
+                        if(inv_rows[pivot_swap_row]!=pivot_count){
+                            //this implements a virtual row swap
+                            temp1=rows[pivot_count];
+                            temp2=rows[inv_rows[pivot_swap_row]];
+                            rows[pivot_count] = temp2;
+                            rows[inv_rows[pivot_swap_row]] = temp1;
+                            inv_rows[temp1]=inv_rows[pivot_swap_row];
+                            inv_rows[temp2]=pivot_count;
+                            
                         }
 
                         for(auto row: rows_below_pivot){
@@ -262,8 +267,11 @@ using namespace std;
                         }
                         
                         pivot_count++;
-                        pivot_cols.push_back(pivot_column);
+                        pivot_cols.push_back(cols[pivot_index]);
                     
+                    }
+                    else{
+                        not_pivot_cols.push_back(cols[pivot_index]);
                     }
 
                 }
@@ -447,6 +455,7 @@ using namespace std;
                 return pivot_count;
 
             }
+
 
 
         void display_L(){

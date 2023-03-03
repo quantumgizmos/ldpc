@@ -147,8 +147,13 @@ int main()
 
     cout<<endl;
 
-    print_sparse_matrix(*matrix->U);
 
+    matrix->display_U();
+    // matrix->U->reorder_rows(matrix->rows);
+
+    // print_sparse_matrix(*matrix->U);
+
+    print_vector(matrix->rows);
     print_vector(matrix->cols);
 
 
