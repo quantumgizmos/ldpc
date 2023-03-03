@@ -28,6 +28,7 @@ using namespace std;
             using BASE::iterate_row; using BASE::remove;
             gf2sparse<gf2entry>* L;
             gf2sparse<gf2entry>* U;
+            gf2sparse<gf2entry>* P;
             vector<int> rows;
             vector<int> cols;
             vector<int> orig_cols;
@@ -35,6 +36,7 @@ using namespace std;
             vector<int> inv_cols;
             bool L_allocated=false;
             bool U_allocated=false;
+            bool P_allocated=false;
             bool LU_indices_allocated=false;
             int rank;
             
@@ -50,6 +52,7 @@ using namespace std;
                 // cout<<"L allcoated "<<L_allocated<<" U_allocated "<<U_allocated<<endl;
                 if(L_allocated==true){ delete L; }
                 if(U_allocated==true){ delete U; }
+                if(P_allocated==true){ delete P; }
             }
 
             ENTRY_OBJ* insert_entry(int i, int j, uint8_t val = uint8_t(1)){
@@ -159,14 +162,15 @@ using namespace std;
 
                 if(U_allocated) delete U;
                 if(L_allocated) delete L;
+                if(P_allocated) delete P;
                 U=new gf2sparse<gf2entry>(m,n);
                 U_allocated=true;
                 L=new gf2sparse<gf2entry>(m,m);
-                
                 L_allocated=true;
+                P=new gf2sparse<gf2entry>(m,m);
+                P_allocated=true;
                 vector<int> pivot_cols;
                 vector<int> not_pivot_cols;
-
 
                 if(reset_cols){
                     for(int i=0; i<n;i++) {
@@ -194,67 +198,73 @@ using namespace std;
                     L->insert_entry(i,i,1);
                 }
 
-
                 for(int i=0;i<m;i++){
                     rows[i] = i;
                     inv_rows[rows[i]]=i;
                 }
 
-
-
                 int max_rank = min(m,n);
 
 
                 for(int pivot_column = 0; pivot_column < n; pivot_column++){
+                    // cout<<"Pivot column: "<<pivot_column<<endl;
                     if(pivot_count == max_rank){
                         for(int i = pivot_column; i<n; i++) not_pivot_cols.push_back(i);
                         break;
                     }
-                    bool PIVOT_FOUND = false;
-                    vector<int> rows_above_pivot;
-                    for(auto e: U->iterate_column(pivot_column)){
-                        int row = e->row_index;
 
+                    bool PIVOT_FOUND = false;
+                    int pivot_swap_row;
+                    vector<int> rows_above_pivot;
+                    vector<int> rows_below_pivot;
+
+                    for(auto e: U->iterate_column(pivot_column)){
+
+                        // cout<<"ROW: "<<e->row_index<<endl;
+
+                        int row = e->row_index;
                         if(e->value == 0) continue;
 
-                        if(!PIVOT_FOUND){
-                            if(row<pivot_count){
-                                rows_above_pivot.push_back(row);
-                                continue;
-                            }
-                            else if(row > pivot_count){
-                                PIVOT_FOUND = true;
-                                U->swap_rows(pivot_count, row);
-                                L->swap_rows(pivot_count, row);
-                                rows[pivot_count] = row;
-                                rows[row] = pivot_count;
-                                row = pivot_count;
-                            }
-                            else if(row == pivot_count) PIVOT_FOUND = true;
-                            else continue;
+                        
+                        if(row<pivot_count){
+                            rows_above_pivot.push_back(row);
+                            continue;
                         }
-                        if(PIVOT_FOUND){
-                            if(row > pivot_count){
-                                U->add_rows(row,pivot_count);
-                                L->add_rows(row,pivot_count);
-                            }
-                            else if(row<pivot_count) rows_above_pivot.push_back(row);
+                        else if(row == pivot_count){
+                            PIVOT_FOUND = true;
+                            pivot_swap_row = row;
+                        }
+                        else if(row > pivot_count && !PIVOT_FOUND){
+                            // cout<<"Pivot found: "<<row<<endl;
+                            PIVOT_FOUND = true;
+                            pivot_swap_row = row;
+                        }
+                        else if(row > pivot_count){
+                            rows_below_pivot.push_back(row);
+                        }
+                        else{
+                            continue;
                         }
 
-                    }
-
-                    if(full_reduce){
-                        for(auto row: rows_above_pivot){
-                            U->add_rows(row,pivot_count);
-                            L->add_rows(row,pivot_count);
-                        }
                     }
 
                     if(PIVOT_FOUND){
+
+                        if(pivot_swap_row!=pivot_count){
+                            U->swap_rows(pivot_count,pivot_swap_row);
+                            rows[pivot_count] = pivot_swap_row;
+                            rows[pivot_swap_row] = pivot_count;
+                        }
+
+                        for(auto row: rows_below_pivot){
+                            U->add_rows(row,pivot_count);
+                            L->insert_entry(row,pivot_count);
+                        }
+                        
                         pivot_count++;
                         pivot_cols.push_back(pivot_column);
+                    
                     }
-                    else not_pivot_cols.push_back(pivot_column);
 
                 }
 

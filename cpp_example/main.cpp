@@ -83,6 +83,8 @@ int main()
 
 
     matrix->insert_entry(0, 0, 1);
+    matrix->insert_entry(2,1,1);
+    matrix->insert_entry(3,1,1);
     matrix->insert_entry(0, 1, 1);
     matrix->insert_entry(0, 4, 1);
 
@@ -96,7 +98,39 @@ int main()
 
     print_sparse_matrix(*matrix);
 
-    matrix->row_reduce(true,true);
+
+    // // create a new gf2sparse matrix object
+    // auto matrix = new gf2sparse(4, 7);
+
+    // // insert entries into the matrix, reversing the order of the columns
+    // matrix->insert_entry(0, 6, 1);
+    // matrix->insert_entry(0, 5, 1);
+    // matrix->insert_entry(0, 4, 1);
+    // matrix->insert_entry(0, 2, 1);
+    // matrix->insert_entry(0, 1, 1);
+
+    // matrix->insert_entry(1, 6, 1);
+    // matrix->insert_entry(1, 4, 1);
+    // matrix->insert_entry(1, 3, 1);
+    // matrix->insert_entry(1, 1, 1);
+    // matrix->insert_entry(1, 0, 1);
+
+    // matrix->insert_entry(2, 5, 1);
+    // matrix->insert_entry(2, 4, 1);
+    // matrix->insert_entry(2, 3, 1);
+    // matrix->insert_entry(2, 0, 1);
+
+    // matrix->insert_entry(3, 6, 1);
+    // matrix->insert_entry(3, 3, 1);
+    // matrix->insert_entry(3, 2, 1);
+    // matrix->insert_entry(3, 1, 1);
+
+    print_sparse_matrix(*matrix);
+
+    // exit(22);
+
+
+    matrix->row_reduce(true,false);
 
 
     // print_sparse_matrix(*matrix);
