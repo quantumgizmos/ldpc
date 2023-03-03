@@ -157,6 +157,14 @@ int main()
     print_vector(matrix->cols);
 
 
+    cout<<endl;
+
+    print_sparse_matrix(*matrix);
+    matrix->add_rows(1,0);
+    cout<<endl;
+    print_sparse_matrix(*matrix);
+
+
     return 0;
 
 

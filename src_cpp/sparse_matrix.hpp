@@ -258,6 +258,7 @@ class sparse_matrix_base {
 
         ENTRY_OBJ* e;
         e = sparse_matrix_entries->get_entry();
+        node_count++;
         e->row_index = j;
         e->col_index = i;
         e->right = right_entry;
