@@ -13,16 +13,16 @@
 using namespace std;
 
 
-    class gf2entry: public entry_base<gf2entry>{ 
+    class gf2entry: public EntryBase<gf2entry>{ 
         public: 
             uint8_t value;
             ~gf2entry(){};
     };
 
     template <class ENTRY_OBJ = gf2entry>
-    class gf2sparse: public sparse_matrix_base<ENTRY_OBJ>{
+    class gf2sparse: public SparseMatrixBase<ENTRY_OBJ>{
         public:
-            typedef sparse_matrix_base<ENTRY_OBJ> BASE;
+            typedef SparseMatrixBase<ENTRY_OBJ> BASE;
             using BASE::row_heads; using BASE::column_heads; using BASE::m; using BASE::n;
             using BASE::swap_rows; using BASE::get_entry; using BASE::iterate_column;
             using BASE::iterate_row; using BASE::remove;
@@ -40,7 +40,7 @@ using namespace std;
             bool LU_indices_allocated=false;
             int rank;
             
-            gf2sparse(int m, int n): BASE::sparse_matrix_base(m,n){
+            gf2sparse(int m, int n): BASE::SparseMatrixBase(m,n){
                 L_allocated=false;
                 U_allocated=false;
                 cols.resize(n);

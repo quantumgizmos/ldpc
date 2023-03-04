@@ -18,7 +18,7 @@ using namespace std;
 
 const vector<int> NULL_INT_VECTOR = {};
 
-class bp_entry: public entry_base<bp_entry>{ 
+class bp_entry: public EntryBase<bp_entry>{ 
     public:  
         double bit_to_check_msg=0.0;
         double check_to_bit_msg=0.0;

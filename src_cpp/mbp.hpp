@@ -14,7 +14,7 @@ using namespace std;
 
 //This is the data structure at every non-zero location in the sparse matrix
 template <class T = uint8_t>
-class mbp_entry: public entry_base<mbp_entry<T>>{ 
+class mbp_entry: public EntryBase<mbp_entry<T>>{ 
     public:
         double qubit_to_stab_msgs[3]={0.0,0.0,0.0};
         double stab_to_qubit_msgs=0.0;
@@ -24,12 +24,12 @@ class mbp_entry: public entry_base<mbp_entry<T>>{
 
 typedef mbp_entry<uint8_t> cymbp_entry;
 
-class mbp_sparse: public sparse_matrix<uint8_t,mbp_entry>{
+class mbp_sparse: public SparseMatrix<uint8_t,mbp_entry>{
     public:
-        typedef sparse_matrix<uint8_t,mbp_entry> BASE;
+        typedef SparseMatrix<uint8_t,mbp_entry> BASE;
         using BASE::row_heads; using BASE::column_heads; using BASE::m; using BASE::n;
         // using BASE::lu_decomposition;
-        mbp_sparse(int m, int n): BASE::sparse_matrix(m,n){}
+        mbp_sparse(int m, int n): BASE::SparseMatrix(m,n){}
         ~mbp_sparse(){}
 
         //Calculates the Pauli syndrome. Can we make use of the extra information in the GF4 syndrome?

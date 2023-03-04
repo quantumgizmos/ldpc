@@ -9,7 +9,7 @@ using namespace std;
 
 // Define a custom node type. eg. Here I define a node type that
 // would be useful for BP.
-class example_node: public entry_base<example_node>{ //inherit from the node parent class in <sparse_matrix.hpp>. 
+class example_node: public EntryBase<example_node>{ //inherit from the node parent class in <sparse_matrix.hpp>. 
     public:  
         double bit_to_check_msg=0.0; //you can put whatever data type you like in here.
         double check_to_bit_msg=0.0;
@@ -176,6 +176,8 @@ int main()
     pcm->insert_entry(1,2,1);
     cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
     print_sparse_matrix(*pcm);
+
+    delete pcm;
 
 
     

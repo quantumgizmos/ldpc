@@ -9,7 +9,7 @@ using namespace std;
 
 // A container for each matrix element
 template <class DERIVED>
-class entry_base {
+class EntryBase {
     public:
         int row_index=-100; //row index
         int col_index=-100; //col_index index
@@ -33,19 +33,19 @@ class entry_base {
             else return false;
         }
 
-    ~entry_base(){};
+    ~EntryBase(){};
 };
 
 
 template <class T>
-class sparse_matrix_entry: public entry_base<sparse_matrix_entry<T>> {
+class SparseMatrixEntry: public EntryBase<SparseMatrixEntry<T>> {
     public:
         T value = T(0); // the value structure we are storing at each matrix location. We can define this as any object, and overload operators.
-    ~sparse_matrix_entry(){};
+    ~SparseMatrixEntry(){};
 };
 
 template <class ENTRY_OBJ>
-class sparse_matrix_base {
+class SparseMatrixBase {
   public:
     int m,n; //m: check-count; n: bit-count
     int node_count;
@@ -57,7 +57,7 @@ class sparse_matrix_base {
 
     // vector<ENTRY_OBJ*> matrix_entries;
     
-    sparse_matrix_base(int const check_count, int bit_count){
+    SparseMatrixBase(int const check_count, int bit_count){
         m=check_count;
         n=bit_count;
         this->entry_block_size = int(m+n);
@@ -65,7 +65,7 @@ class sparse_matrix_base {
         allocate();
     }
 
-    ~sparse_matrix_base(){
+    ~SparseMatrixBase(){
         this->entries.clear();
     }
 
@@ -78,8 +78,8 @@ class sparse_matrix_base {
         if(this->released_entry_count==this->entries.size()){
             this->entries.resize(this->entries.size()+this->entry_block_size);
         }
-        auto e = &this->entries[released_entry_count];
-        released_entry_count++;
+        auto e = &this->entries[this->released_entry_count];
+        this->released_entry_count++;
         return e;
     }
 
@@ -90,11 +90,11 @@ class sparse_matrix_base {
 
     //this function allocates space for an mxn matrix.
     void allocate(){
-        
-        row_heads.resize(m);
-        column_heads.resize(n);
+            
+        this->row_heads.resize(this->m);
+        this->column_heads.resize(this->n);
 
-        for(int i=0;i<m;i++){
+        for(int i=0; i<this->m; i++){
             ENTRY_OBJ* row_entry;
             row_entry = this->allocate_new_entry();
             row_entry->row_index = -100; //we set the row head index to -100 to indicate is not a value element
@@ -103,10 +103,10 @@ class sparse_matrix_base {
             row_entry->left = row_entry;
             row_entry->up = row_entry;
             row_entry->down = row_entry;
-            row_heads[i]=row_entry;
+            this->row_heads[i] = row_entry;
         }
 
-        for(int i=0;i<n;i++){
+        for(int i=0; i<this->n; i++){
             ENTRY_OBJ* column_entry; 
             column_entry = this->allocate_new_entry();
             column_entry->row_index = -100;
@@ -115,9 +115,10 @@ class sparse_matrix_base {
             column_entry->left = column_entry;
             column_entry->up = column_entry;
             column_entry->down = column_entry;
-            column_heads[i]=column_entry;
+            this->column_heads[i] = column_entry;
         }
-    }
+    }   
+
 
     void swap_rows(int i, int j){
         auto tmp1 = row_heads[i];
@@ -248,11 +249,11 @@ class sparse_matrix_base {
         public:
             using iterator_category = std::forward_iterator_tag;
             using difference_type   = std::ptrdiff_t;
-            sparse_matrix_base<ENTRY_OBJ>* matrix;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
             ENTRY_OBJ* e;
             ENTRY_OBJ* head;
             // int index = -1;
-            Iterator(sparse_matrix_base<ENTRY_OBJ>* mat){
+            Iterator(SparseMatrixBase<ENTRY_OBJ>* mat){
                 matrix = mat;
             }
             ~Iterator(){};
@@ -268,7 +269,7 @@ class sparse_matrix_base {
         public:
             typedef Iterator<RowIterator> BASE;
             using BASE::e; using BASE::matrix; using BASE::head;
-            RowIterator(sparse_matrix_base<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
+            RowIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
 
             RowIterator begin(){
                 e=head->right;
@@ -290,7 +291,7 @@ class sparse_matrix_base {
         public:
             typedef Iterator<ReverseRowIterator> BASE;
             using BASE::e; using BASE::matrix;  using BASE::head;
-            ReverseRowIterator(sparse_matrix_base<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
+            ReverseRowIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
 
             ReverseRowIterator begin(){
                 e=head->left;
@@ -312,7 +313,7 @@ class sparse_matrix_base {
         public:
             typedef Iterator<ColumnIterator> BASE;
             using BASE::e; using BASE::matrix;  using BASE::head;
-            ColumnIterator(sparse_matrix_base<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
+            ColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
 
             ColumnIterator begin(){
                 e=head->down;
@@ -333,7 +334,7 @@ class sparse_matrix_base {
         public:
             typedef Iterator<ReverseColumnIterator> BASE;
             using BASE::e; using BASE::matrix;  using BASE::head;
-            ReverseColumnIterator(sparse_matrix_base<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
+            ReverseColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
 
             ReverseColumnIterator begin(){
                 e=head->up;
@@ -374,18 +375,18 @@ class sparse_matrix_base {
 };
 
 
-template <class T, template<class> class ENTRY_OBJ=sparse_matrix_entry>
-class sparse_matrix: public sparse_matrix_base<ENTRY_OBJ<T>> {
-  typedef sparse_matrix_base<ENTRY_OBJ<T>> BASE;
+template <class T, template<class> class ENTRY_OBJ=SparseMatrixEntry>
+class SparseMatrix: public SparseMatrixBase<ENTRY_OBJ<T>> {
+  typedef SparseMatrixBase<ENTRY_OBJ<T>> BASE;
   public:
-    sparse_matrix(int m, int n): BASE::sparse_matrix_base(m,n){};
+    SparseMatrix(int m, int n): BASE::SparseMatrixBase(m,n){};
     ENTRY_OBJ<T>* insert_entry(int i, int j, T val = T(1)){
         auto e = BASE::insert_entry(i,j);
         e->value = val;
         return e;
     }
 
-    ~sparse_matrix(){};
+    ~SparseMatrix(){};
 };
 
 
