@@ -240,7 +240,14 @@ class SparseMatrixBase {
         }
         return column_heads[i];
         
+    }
+
+    ENTRY_OBJ* insert_row(int row_index, vector<int>& col_indices){
+        for(auto j: col_indices){
+            this->insert_entry(row_index,j);
         }
+        return this->row_heads[row_index];
+    }
 
 
 
@@ -386,8 +393,20 @@ class SparseMatrix: public SparseMatrixBase<ENTRY_OBJ<T>> {
         return e;
     }
 
+    ENTRY_OBJ<T>* insert_row(int row_index, vector<int>& col_indices, vector<T>& values){
+        BASE::insert_row(row_index,col_indices);
+        int i = 0;
+        for(auto e: BASE::iterate_row(row_index)){
+            e->value = values[i];
+            i++; 
+        }
+        return BASE::row_heads[row_index];
+    }
+
     ~SparseMatrix(){};
 };
+
+
 
 
 #endif

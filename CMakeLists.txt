@@ -18,12 +18,14 @@ project(cpp_test)
 include(GoogleTest)
 find_package(GTest REQUIRED)
 
-# Add test executable
+# Add test executables
 add_executable(TestSparseMatrix cpp_test/TestSparseMatrix.cpp)
-target_link_libraries(TestSparseMatrix GTest::GTest GTest::Main ldpc2)
-# target_link_libraries(main ldpc2) 
+add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
 
+target_link_libraries(TestSparseMatrix GTest::GTest GTest::Main ldpc2)
+target_link_libraries(TestSparseMatrixUtil GTest::GTest GTest::Main ldpc2)
 
 # Discover and run tests
 enable_testing()
 gtest_discover_tests(TestSparseMatrix)
+gtest_discover_tests(TestSparseMatrixUtil)

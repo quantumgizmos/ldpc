@@ -9,21 +9,30 @@
 
 using namespace std;
 
+#include <sstream>
+
 template <class SPARSE_MATRIX_CLASS>
-void print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix){
+std::stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix,bool SILENT = false){
+    std::stringstream ss;
     int m = matrix.m;
     int n = matrix.n;
     for(int j=0; j<m;j++){
         for(int i=0; i<n;i++){
             auto e = matrix.get_entry(j,i);
-                if(e==matrix.row_heads[j]) cout<<unsigned(0);
-                else cout<<unsigned(e->value);
-            cout<<"  ";
+            if(e == matrix.row_heads[j]) {
+                ss << unsigned(0);
+            } else {
+                ss << unsigned(e->value);
+            }
+            if(i!=(n-1)) ss << " ";
         }
-        cout<<endl;
+        if(j!=(m-1)) ss << "\n";
     }
-        
+    if(!SILENT) cout<<ss.str()<<endl;
+    return ss;
 }
+
+
 
 
 template <class SPARSE_MATRIX_CLASS>
