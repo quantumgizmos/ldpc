@@ -79,24 +79,24 @@ int main()
     // }
 
 
-    auto matrix = new gf2sparse(4,7);
+    // auto matrix = new gf2sparse(4,7);
 
 
-    matrix->insert_entry(0, 0, 1);
-    matrix->insert_entry(2,1,1);
-    matrix->insert_entry(3,1,1);
-    matrix->insert_entry(0, 1, 1);
-    matrix->insert_entry(0, 4, 1);
+    // matrix->insert_entry(0, 0, 1);
+    // matrix->insert_entry(2,1,1);
+    // matrix->insert_entry(3,1,1);
+    // matrix->insert_entry(0, 1, 1);
+    // matrix->insert_entry(0, 4, 1);
 
-    matrix->insert_entry(1, 4, 1);
+    // matrix->insert_entry(1, 4, 1);
 
-    matrix->insert_entry(2, 2, 1);
-    matrix->insert_entry(2, 5, 1);
+    // matrix->insert_entry(2, 2, 1);
+    // matrix->insert_entry(2, 5, 1);
 
-    matrix->insert_entry(3, 3, 1);
-    matrix->insert_entry(3, 6, 1);
+    // matrix->insert_entry(3, 3, 1);
+    // matrix->insert_entry(3, 6, 1);
 
-    print_sparse_matrix(*matrix);
+    // print_sparse_matrix(*matrix);
 
 
     // // create a new gf2sparse matrix object
@@ -125,45 +125,60 @@ int main()
     // matrix->insert_entry(3, 2, 1);
     // matrix->insert_entry(3, 1, 1);
 
-    print_sparse_matrix(*matrix);
-
-    // exit(22);
-
-
-    matrix->row_reduce(true,false);
-
-
     // print_sparse_matrix(*matrix);
 
-    cout<<endl;
-
-    print_sparse_matrix(*matrix->L);
-
-    cout<<endl;
-
-    auto output = matrix->L->matmul(matrix);
-
-    print_sparse_matrix(*output);
-
-    cout<<endl;
+    // // exit(22);
 
 
-    matrix->display_U();
-    // matrix->U->reorder_rows(matrix->rows);
-
-    // print_sparse_matrix(*matrix->U);
-
-    print_vector(matrix->rows);
-    print_vector(matrix->cols);
+    // matrix->row_reduce(true,false);
 
 
-    cout<<endl;
+    // // print_sparse_matrix(*matrix);
 
-    print_sparse_matrix(*matrix);
-    matrix->add_rows(1,0);
-    cout<<endl;
-    print_sparse_matrix(*matrix);
+    // cout<<endl;
 
+    // print_sparse_matrix(*matrix->L);
+
+    // cout<<endl;
+
+    // auto output = matrix->L->matmul(matrix);
+
+    // print_sparse_matrix(*output);
+
+    // cout<<endl;
+
+
+    // matrix->display_U();
+    // // matrix->U->reorder_rows(matrix->rows);
+
+    // // print_sparse_matrix(*matrix->U);
+
+    // print_vector(matrix->rows);
+    // print_vector(matrix->cols);
+
+
+    // cout<<endl;
+
+    // print_sparse_matrix(*matrix);
+    // matrix->add_rows(1,0);
+    // cout<<endl;
+    // print_sparse_matrix(*matrix);
+
+
+    auto pcm = new gf2sparse(3,4);
+    auto e = pcm->insert_entry(1,1,1);
+    print_sparse_matrix(*pcm);
+    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
+    pcm->remove(e);
+    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
+    pcm->insert_entry(1,0,1);
+    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
+    pcm->insert_entry(1,2,1);
+    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
+    print_sparse_matrix(*pcm);
+
+
+    
 
     return 0;
 

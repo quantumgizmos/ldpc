@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include <iterator>
-// #include "sparse_matrix_base.hpp"
 
 using namespace std;
 
@@ -20,7 +19,7 @@ class entry_base {
         DERIVED* up = static_cast<DERIVED*>(this); //pointer to previous column element
         DERIVED* down = static_cast<DERIVED*>(this); //pointer to next column element
        
-        DERIVED* reset(){
+        void reset(){
             row_index=-100;
             col_index=-100;
             left = static_cast<DERIVED*>(this);
@@ -37,68 +36,6 @@ class entry_base {
     ~entry_base(){};
 };
 
-template <class T>
-class entry_block{
-    public:
-        int block_size;
-        int free_count;
-        int block_count=0;
-        T *block;
-        entry_block<T> *next_block;
-        vector<T*> removed_entries;
-
-    public:
-        entry_block(int size){
-            block = new T[size];
-            free_count=size;
-            block_size=size;
-            next_block = NULL;
-            // block_count = 0;
-        }
-
-        ~entry_block(){
-            // cout<<"Deleting sparse matrix entries: "<<this<<"; Next block: "<<next_block<<endl;
-            delete[] block;
-            if(next_block!=NULL){
-                delete next_block;
-            }
-            // cout<<"Exiting: "<<this<<endl;
-
-        }
-
-        T* get_entry(){
-
-            bool from_removed_buffer=false;
-            T *g;
-            for(T *f : removed_entries){
-                g=f;
-                from_removed_buffer=true;
-                break;
-            }
-            if(from_removed_buffer){
-                removed_entries.erase(removed_entries.begin()+0);
-                // cout<<"Realeasing freed entry"<<endl;
-                from_removed_buffer = false;
-                return g;
-            }
-
-            if(free_count ==0){
-                if(next_block==nullptr){
-                    next_block = new entry_block(block_size);
-                    return next_block->get_entry();
-                }
-                else{
-                    return next_block->get_entry();
-                }
-            }
-
-            T* e = &block[block_size-free_count];
-            free_count-=1;
-            return e;
-
-        }
-    
-};
 
 template <class T>
 class sparse_matrix_entry: public entry_base<sparse_matrix_entry<T>> {
@@ -111,37 +48,58 @@ template <class ENTRY_OBJ>
 class sparse_matrix_base {
   public:
     int m,n; //m: check-count; n: bit-count
-    int node_count;        
-    ENTRY_OBJ** row_heads; //starting point for each row
-    ENTRY_OBJ** column_heads; //starting point for each column
-    entry_block<ENTRY_OBJ>* sparse_matrix_entries;
+    int node_count;
+    int entry_block_size, released_entry_count;
+    vector<ENTRY_OBJ> entries;
+    vector<ENTRY_OBJ*> removed_entries;       
+    vector<ENTRY_OBJ*> row_heads; //starting point for each row
+    vector<ENTRY_OBJ*> column_heads; //starting point for each column
 
     // vector<ENTRY_OBJ*> matrix_entries;
     
     sparse_matrix_base(int const check_count, int bit_count){
         m=check_count;
         n=bit_count;
+        this->entry_block_size = int(m+n);
+        this->released_entry_count=0;
         allocate();
     }
 
-    // virtual int insert_entry();
-    // virtual int get_entry();
+    ~sparse_matrix_base(){
+        this->entries.clear();
+    }
+
+    ENTRY_OBJ* allocate_new_entry(){
+        if(this->removed_entries.size()!=0){
+            auto e = this->removed_entries.back();
+            this->removed_entries.pop_back();
+            return e; 
+        }
+        if(this->released_entry_count==this->entries.size()){
+            this->entries.resize(this->entries.size()+this->entry_block_size);
+        }
+        auto e = &this->entries[released_entry_count];
+        released_entry_count++;
+        return e;
+    }
+
+    int entry_count(){
+        return this->released_entry_count - this->n - this->m - this->removed_entries.size();
+    }
 
 
     //this function allocates space for an mxn matrix.
     void allocate(){
-
-        sparse_matrix_entries = new entry_block<ENTRY_OBJ>(int((m+n)/2));
         
-        row_heads = new ENTRY_OBJ*[m];
-        column_heads = new ENTRY_OBJ*[n];
+        row_heads.resize(m);
+        column_heads.resize(n);
 
         for(int i=0;i<m;i++){
             ENTRY_OBJ* row_entry;
-            row_entry = sparse_matrix_entries->get_entry();
+            row_entry = this->allocate_new_entry();
             row_entry->row_index = -100; //we set the row head index to -100 to indicate is not a value element
             row_entry->col_index = -100;
-            row_entry->right = row_entry; //at first the headelements point to themselves
+            row_entry->right = row_entry; //at first the head elements point to themselves
             row_entry->left = row_entry;
             row_entry->up = row_entry;
             row_entry->down = row_entry;
@@ -150,7 +108,7 @@ class sparse_matrix_base {
 
         for(int i=0;i<n;i++){
             ENTRY_OBJ* column_entry; 
-            column_entry = sparse_matrix_entries->get_entry();
+            column_entry = this->allocate_new_entry();
             column_entry->row_index = -100;
             column_entry->col_index = -100;
             column_entry->right = column_entry;
@@ -208,12 +166,9 @@ class sparse_matrix_base {
             e_up ->down = e_down;
             e_down -> up = e_up;
             e->reset();
-            sparse_matrix_entries->removed_entries.push_back(e);
+            this->removed_entries.push_back(e);
         }
     }
-
- 
-
 
     ENTRY_OBJ* insert_entry(int j, int i){
         if(j>=m || i>=n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
@@ -257,7 +212,7 @@ class sparse_matrix_base {
         }
 
         ENTRY_OBJ* e;
-        e = sparse_matrix_entries->get_entry();
+        e = this->allocate_new_entry();
         node_count++;
         e->row_index = j;
         e->col_index = i;
@@ -286,14 +241,7 @@ class sparse_matrix_base {
         
         }
 
-    ~sparse_matrix_base(){
-        delete sparse_matrix_entries;
-        // cout<<"Sparse matrix entries delete succesful"<<endl;
-        delete[] row_heads;
-        delete[] column_heads;
-        // cout<<"Row/column head delete succesful"<<endl;
 
-    }
 
     template <class DERIVED>
     class Iterator{
