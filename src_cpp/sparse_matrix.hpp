@@ -81,13 +81,10 @@ class SparseMatrixBase {
         }
         if(this->released_entry_count==this->entries.size()){
             int new_size = this->entries.size()+this->entry_block_size;
-            // this->entries.resize(new_size);
             for(int i = 0; i<this->entry_block_size; i++){
-                auto e = new ENTRY_OBJ();
-                this->entries.push_back(e);
+                this->entries.push_back(new ENTRY_OBJ());
             }
         }
-
 
         auto e = this->entries[this->released_entry_count];
         this->released_entry_count++;
