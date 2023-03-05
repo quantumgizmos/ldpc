@@ -13,22 +13,22 @@
 using namespace std;
 
 
-    class gf2entry: public EntryBase<gf2entry>{ 
+    class GF2Entry: public EntryBase<GF2Entry>{ 
         public: 
             uint8_t value;
-            ~gf2entry(){};
+            ~GF2Entry(){};
     };
 
-    template <class ENTRY_OBJ = gf2entry>
-    class gf2sparse: public SparseMatrixBase<ENTRY_OBJ>{
+    template <class ENTRY_OBJ = GF2Entry>
+    class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
         public:
             typedef SparseMatrixBase<ENTRY_OBJ> BASE;
             using BASE::row_heads; using BASE::column_heads; using BASE::m; using BASE::n;
             using BASE::swap_rows; using BASE::get_entry; using BASE::iterate_column;
             using BASE::iterate_row; using BASE::remove;
-            gf2sparse<gf2entry>* L;
-            gf2sparse<gf2entry>* U;
-            gf2sparse<gf2entry>* P;
+            GF2Sparse<GF2Entry>* L;
+            GF2Sparse<GF2Entry>* U;
+            GF2Sparse<GF2Entry>* P;
             vector<int> rows;
             vector<int> cols;
             vector<int> orig_cols;
@@ -40,7 +40,7 @@ using namespace std;
             bool LU_indices_allocated=false;
             int rank;
             
-            gf2sparse(int m, int n): BASE::SparseMatrixBase(m,n){
+            GF2Sparse(int m, int n): BASE::SparseMatrixBase(m,n){
                 L_allocated=false;
                 U_allocated=false;
                 cols.resize(n);
@@ -48,7 +48,7 @@ using namespace std;
                 rows.resize(m);
                 inv_rows.resize(m);
             }
-            ~gf2sparse(){
+            ~GF2Sparse(){
                 // cout<<"L allcoated "<<L_allocated<<" U_allocated "<<U_allocated<<endl;
                 if(L_allocated==true){ delete L; }
                 if(U_allocated==true){ delete U; }
@@ -59,6 +59,20 @@ using namespace std;
                 auto e = BASE::insert_entry(i,j);
                 e->value = val;
                 return e;
+            }
+
+            void csr_row_insert(int row_index, vector<int>& column_indices){
+                for(int col_index: column_indices){
+                    this->insert_entry(row_index,col_index,1);
+                }
+            }
+
+            void csr_insert(vector<vector<int>>& csr_matrix){
+                int i = 0;
+                for(auto row: csr_matrix){
+                    this->csr_row_insert(i, row);
+                    i++;
+                }
             }
 
             vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
@@ -88,13 +102,13 @@ using namespace std;
             }
 
 
-            gf2sparse<ENTRY_OBJ>* matmul(gf2sparse *mat_right){
+            GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse *mat_right){
             
                 if( n!=mat_right->m){
                     throw invalid_argument("Input matrices have invalid dimensions!");
                 }
 
-                auto output_mat = new gf2sparse<ENTRY_OBJ>(m,mat_right->n);
+                auto output_mat = new GF2Sparse<ENTRY_OBJ>(m,mat_right->n);
   
                 
                 for(int i = 0; i<mat_right->m; i++){
@@ -163,11 +177,11 @@ using namespace std;
                 if(U_allocated) delete U;
                 if(L_allocated) delete L;
                 if(P_allocated) delete P;
-                U=new gf2sparse<gf2entry>(m,n);
+                U=new GF2Sparse<GF2Entry>(m,n);
                 U_allocated=true;
-                L=new gf2sparse<gf2entry>(m,m);
+                L=new GF2Sparse<GF2Entry>(m,m);
                 L_allocated=true;
-                P=new gf2sparse<gf2entry>(m,m);
+                P=new GF2Sparse<GF2Entry>(m,m);
                 P_allocated=true;
                 vector<int> pivot_cols;
                 vector<int> not_pivot_cols;
@@ -294,9 +308,9 @@ using namespace std;
 
                 if(U_allocated) delete U;
                 if(L_allocated) delete L;
-                U=new gf2sparse<gf2entry>(m,n);
+                U=new GF2Sparse<GF2Entry>(m,n);
                 U_allocated=true;
-                L=new gf2sparse<gf2entry>(m,m);
+                L=new GF2Sparse<GF2Entry>(m,m);
                 L_allocated=true;
                 vector<int> col_tracker;
                 vector<int> pivot_cols;
@@ -525,15 +539,15 @@ using namespace std;
        
         }
 
-        gf2sparse<ENTRY_OBJ>* transpose(){
-            gf2sparse<ENTRY_OBJ>* pcmT = new gf2sparse<ENTRY_OBJ>(n,m);
+        GF2Sparse<ENTRY_OBJ>* transpose(){
+            GF2Sparse<ENTRY_OBJ>* pcmT = new GF2Sparse<ENTRY_OBJ>(n,m);
             for(int i = 0; i<m; i++){
                 for(auto e: BASE::iterate_row(i)) pcmT->insert_entry(e->col_index,e->row_index, 1);
             }
             return pcmT;
         }
 
-        gf2sparse<ENTRY_OBJ>* kernel(){
+        GF2Sparse<ENTRY_OBJ>* kernel(){
 
             auto pcmT=this;
 
@@ -548,7 +562,7 @@ using namespace std;
 
             int dimension = pcmT->m-rank;
 
-            gf2sparse<ENTRY_OBJ>* kern = new gf2sparse<ENTRY_OBJ>(dimension,pcmT->m);
+            GF2Sparse<ENTRY_OBJ>* kern = new GF2Sparse<ENTRY_OBJ>(dimension,pcmT->m);
 
             for(int i = rank; i<pcmT->L->m; i++){
                 for(auto e: pcmT->L->iterate_row(pcmT->rows[i])){
@@ -605,7 +619,7 @@ using namespace std;
 
 
 
-typedef gf2entry cygf2_entry;
-typedef gf2sparse<gf2entry> cygf2_sparse;
+typedef GF2Entry cygf2_entry;
+typedef GF2Sparse<GF2Entry> cygf2_sparse;
 
 #endif

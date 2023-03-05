@@ -27,7 +27,7 @@ class bp_entry: public EntryBase<bp_entry>{
 };
 
 
-typedef gf2sparse<bp_entry> bp_sparse;
+typedef GF2Sparse<bp_entry> bp_sparse;
 
 
 class bp_decoder{

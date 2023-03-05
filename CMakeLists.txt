@@ -21,11 +21,15 @@ find_package(GTest REQUIRED)
 # Add test executables
 add_executable(TestSparseMatrix cpp_test/TestSparseMatrix.cpp)
 add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
+add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
 
 target_link_libraries(TestSparseMatrix GTest::GTest GTest::Main ldpc2)
 target_link_libraries(TestSparseMatrixUtil GTest::GTest GTest::Main ldpc2)
+target_link_libraries(TestGF2Sparse GTest::GTest GTest::Main ldpc2)
 
 # Discover and run tests
 enable_testing()
 gtest_discover_tests(TestSparseMatrix)
 gtest_discover_tests(TestSparseMatrixUtil)
+gtest_discover_tests(TestGF2Sparse)
+

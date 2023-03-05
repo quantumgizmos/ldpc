@@ -16,7 +16,7 @@ class example_node: public EntryBase<example_node>{ //inherit from the node pare
         uint8_t value = uint8_t(0); //you should always specify a value field.
 };
 
-typedef gf2sparse<example_node> gf2custom; //The custom node can then be passed as a template paremeter to `gf2sparse<T>`
+typedef GF2Sparse<example_node> gf2custom; //The custom node can then be passed as a template paremeter to `gf2sparse<T>`
 
 int main()
 {
@@ -165,7 +165,7 @@ int main()
     // print_sparse_matrix(*matrix);
 
 
-    auto pcm = new gf2sparse(3,4);
+    auto pcm = new GF2Sparse(3,4);
     auto e = pcm->insert_entry(1,1,1);
     print_sparse_matrix(*pcm);
     cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
@@ -176,6 +176,8 @@ int main()
     pcm->insert_entry(1,2,1);
     cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
     print_sparse_matrix(*pcm);
+
+    vector<vector<int>> a = {{0},{0},{1}};
 
     delete pcm;
 
