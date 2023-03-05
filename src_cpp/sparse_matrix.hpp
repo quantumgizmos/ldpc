@@ -92,12 +92,6 @@ class SparseMatrixBase {
         auto e = this->entries[this->released_entry_count];
         this->released_entry_count++;
 
-
-        // cout<<"Released: "<<this->released_entry_count<<" ";
-        // cout<<"Allocated: "<<this->entries.size()<<" ";
-        // cout<<"Removed: "<<this->removed_entries.size()<<" ";
-        // cout<<"Block size: "<<this->entry_block_size<<endl;
-
         return e;
     }
 
@@ -139,10 +133,10 @@ class SparseMatrixBase {
 
 
     void swap_rows(int i, int j){
-        auto tmp1 = row_heads[i];
-        auto tmp2 = row_heads[j];
-        row_heads[j] = tmp1;
-        row_heads[i] = tmp2;
+        auto tmp1 = this->row_heads[i];
+        auto tmp2 = this->row_heads[j];
+        this->row_heads[j] = tmp1;
+        this->row_heads[i] = tmp2;
         for(auto e: iterate_row(i)) e->row_index=i;
         for(auto e: iterate_row(j)) e->row_index=j;
     }
@@ -152,8 +146,8 @@ class SparseMatrixBase {
         vector<ENTRY_OBJ*> temp_row_heads;
         for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
         for(int i = 0; i<m; i++){
-            row_heads[i] = temp_row_heads[rows[i]];
-            for(auto e: iterate_row(i)){
+            this->row_heads[i] = temp_row_heads[rows[i]];
+            for(auto e: this->iterate_row(i)){
                 e->row_index = i;
             }
         }
@@ -161,12 +155,12 @@ class SparseMatrixBase {
     }
 
     void swap_columns(int i, int j){
-        auto tmp1 = column_heads[i];
-        auto tmp2 = column_heads[j];
-        column_heads[j] = tmp1;
-        column_heads[i] = tmp2;
-        for(auto e: iterate_column(i)) e->col_index=i;
-        for(auto e: iterate_column(j)) e->col_index=j;
+        auto tmp1 = this->column_heads[i];
+        auto tmp2 = this->column_heads[j];
+        this->column_heads[j] = tmp1;
+        this->column_heads[i] = tmp2;
+        for(auto e: this->iterate_column(i)) e->col_index=i;
+        for(auto e: this->iterate_column(j)) e->col_index=j;
     }
 
     int get_row_weight(int row){
@@ -178,7 +172,7 @@ class SparseMatrixBase {
     }
 
     void remove_entry(int i, int j){
-        auto e = get_entry(i,j);
+        auto e = this->get_entry(i,j);
         this->remove(e);
     }
 
@@ -213,19 +207,12 @@ class SparseMatrixBase {
     }
 
     ENTRY_OBJ* insert_entry(int j, int i){
-        if(j>=m || i>=n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
-        ENTRY_OBJ* entry;
-        ENTRY_OBJ* right_entry;
-        ENTRY_OBJ* left_entry;
-        ENTRY_OBJ* up_entry;
-        ENTRY_OBJ* down_entry;
+        if(j>=this->m || i>=this->n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
         
-        entry = row_heads[j];
-        left_entry = row_heads[j];
-        right_entry = row_heads[j];
+        auto left_entry = this->row_heads[j];
+        auto right_entry = this->row_heads[j];
         
-        entry=entry->right;
-        for(entry; entry!=row_heads[j];entry=entry->right){
+        for(auto entry: iterate_row(j)){
             
             if(entry->col_index == i){
                 return entry;
@@ -240,12 +227,10 @@ class SparseMatrixBase {
         
         }
 
-        entry = column_heads[i];
-        up_entry = column_heads[i];
-        down_entry = column_heads[i];
+        auto up_entry = this->column_heads[i];
+        auto down_entry = this->column_heads[i];
 
-        entry = entry->down;
-        for(entry; entry!=column_heads[i];entry=entry->down){
+        for(auto entry: this->iterate_column(i)){
             if(entry->row_index < j) up_entry = entry;
             if(entry->row_index > j) {
                 down_entry = entry;
@@ -253,8 +238,7 @@ class SparseMatrixBase {
             }
         }
 
-        ENTRY_OBJ* e;
-        e = this->allocate_new_entry();
+        auto e = this->allocate_new_entry();
         node_count++;
         e->row_index = j;
         e->col_index = i;
@@ -281,13 +265,11 @@ class SparseMatrixBase {
     }
 
     ENTRY_OBJ* get_entry(int j, int i){
-        if(j>=m || i>=n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
-        ENTRY_OBJ* e;
-        e = column_heads[i]->down;
-        for(e;e!=column_heads[i];e=e->down){
+        if(j>=this->m || i>=this->n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
+        for(auto e: this->iterate_column(i)){
             if(e->row_index==j) return e;
         }
-        return column_heads[i];
+        return this->column_heads[i];
         
     }
 
@@ -445,11 +427,11 @@ class SparseMatrix: public SparseMatrixBase<ENTRY_OBJ<T>> {
     ENTRY_OBJ<T>* insert_row(int row_index, vector<int>& col_indices, vector<T>& values){
         BASE::insert_row(row_index,col_indices);
         int i = 0;
-        for(auto e: BASE::iterate_row(row_index)){
+        for(auto e: this->iterate_row(row_index)){
             e->value = values[i];
             i++; 
         }
-        return BASE::row_heads[row_index];
+        return this->row_heads[row_index];
     }
 
     ~SparseMatrix(){};
