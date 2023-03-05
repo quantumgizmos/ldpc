@@ -4,6 +4,8 @@ SET(CMAKE_CXX_FLAGS  "-fopenmp")
 set (CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
+
 ### The following two lines define an interface library (A header-only library)
 add_library(ldpc2 INTERFACE)
 target_include_directories(ldpc2 INTERFACE src_cpp include/robin_map include/rapidcsv)  

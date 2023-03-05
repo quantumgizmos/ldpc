@@ -168,33 +168,20 @@ int main()
     // print_sparse_matrix(*matrix);
 
 
-    auto pcm = new GF2Sparse(3,4);
-    auto e = pcm->insert_entry(1,1,1);
-    print_sparse_matrix(*pcm);
-    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
-    pcm->remove(e);
-    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
-    pcm->insert_entry(1,0,1);
-    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
-    pcm->insert_entry(1,2,1);
-    cout<<"Matrix Entries: "<<pcm->entry_count()<<" Allocation count; "<<pcm->released_entry_count<<endl;
-    print_sparse_matrix(*pcm);
-
-    vector<vector<int>> a = {{0},{0},{1}};
-
-    delete pcm;
+    auto matrix = GF2Sparse(1,1000);
+    matrix.insert_entry(0,0,1);
+    matrix.add_rows(0,0);
+    matrix.insert_entry(0,0,1);
+    matrix.insert_entry(0,0,1);
+    print_sparse_matrix(matrix);
 
 
-    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_add_test.csv");
-    cout<<csv_path<<endl;
-    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+   
 
-    std::vector<string> row = doc.GetRow<string>(0);
+    // delete pcm;
 
-    auto input_csr_vector = io::string_to_csr_vector(row[0]);
-    auto target_row = stoi(row[1]);
-    auto add_row = stoi(row[2]);
-    auto output_csr_vector = io::string_to_csr_vector(row[3]);
+
+
 
     
 

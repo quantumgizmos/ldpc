@@ -37,7 +37,7 @@ bool TEST_WITH_CSR(GF2Sparse<GF2Entry>& matrix, vector<vector<int>> csr_matrix){
 TEST(GF2Sparse, init){
     auto matrix = GF2Sparse(100,100);
     matrix.add_rows(1,4);
-    print_sparse_matrix(matrix);
+    // print_sparse_matrix(matrix);
 }
 
 TEST(GF2Sparse, csr_insert){
@@ -157,33 +157,38 @@ TEST(GF2Sparse, string_io2){
 
 }
 
-// TEST(GF2Sparse, string_io3){
-
-//     auto matrix = GF2Sparse(26,25);
-
-//     string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
-//     // cout<<csr_string<<endl;
-//     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
-//     // for(auto a: csr_input) print_vector(a);
-//     vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
-
-//     ASSERT_EQ(matrix.m,26);
-//     ASSERT_EQ(matrix.n,25);
-//     ASSERT_EQ(csr_input.size(),matrix.m);
-//     matrix.csr_insert(csr_input);
-//     cout<<matrix.entry_count()<<endl;
-//     // print_sparse_matrix(matrix);
-//     // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
-//     // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
-
-//     matrix.add_rows(0,0);
 
 
+TEST(GF2Sparse, string_io3){
 
-//     // print_sparse_matrix(matrix);
+    auto matrix = GF2Sparse(26,25);
+
+    string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
+   
+    // cout<<csr_string<<endl;
+    vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
+    // for(auto a: csr_input) print_vector(a);
+    vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
 
 
-// }
+    // ASSERT_EQ(matrix.m,26);
+    // ASSERT_EQ(matrix.n,25);
+    // ASSERT_EQ(csr_input.size(),matrix.m);
+    matrix.csr_insert(csr_input);
+    // // cout<<matrix.entry_count()<<endl;
+    // print_sparse_matrix(matrix);
+    // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
+    // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
+
+
+    ASSERT_EQ(1,1);
+
+
+
+    // print_sparse_matrix(matrix);
+
+
+}
 
 
 

@@ -61,4 +61,7 @@ def add_rows_tests():
 
 if __name__ == "__main__":
 
-    add_rows_tests()
+    # add_rows_tests()
+    a = np.array([[1,0,0],[0,0,0],[0,0,0]])
+    a_csr=to_csr(a)
+    print(a_csr)
