@@ -6,23 +6,27 @@
 #include <memory>
 #include <iterator>
 #include "sparse_matrix.hpp"
+#include <sstream>      
+#include <string>
 
 using namespace std;
 
-#include <sstream>
-
 template <class SPARSE_MATRIX_CLASS>
-std::stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix,bool SILENT = false){
-    std::stringstream ss;
+stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix,bool SILENT = false){
+    stringstream ss;
     int m = matrix.m;
     int n = matrix.n;
     for(int j=0; j<m;j++){
         for(int i=0; i<n;i++){
+            // cout<<j<<" "<<i<<endl;
             auto e = matrix.get_entry(j,i);
-            if(e == matrix.row_heads[j]) {
+            
+            if(e->at_end()) {
                 ss << unsigned(0);
-            } else {
+            } 
+            else {
                 ss << unsigned(e->value);
+                // cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
             }
             if(i!=(n-1)) ss << " ";
         }

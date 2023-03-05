@@ -23,10 +23,11 @@ def to_csr(mat: np.ndarray):
         first = True
         for j in range(n):
             if mat[i,j] == 1:
-                if j!=(n-1) and first!=True: csr_string+=","
+                if first!=True: csr_string+=","
                 first = False
                 csr_string+=f"{j}"
-                
+
+        # if(!first): csr_string+="\b"   
         csr_string+="}"
         if i!=(m-1): csr_string+=","
     csr_string += "}"
@@ -42,7 +43,7 @@ def add_rows_tests():
         for i in np.arange(0,10,0.5):
             height = np.random.randint(1,40)
             width = np.random.randint(1, 40)
-            pcm = random_binary_matrix(height=height,width=height,sparsity=0.1*i)
+            pcm = random_binary_matrix(height=height,width=width,sparsity=0.1*i)
             
             orig_pcm = to_csr(pcm)
             

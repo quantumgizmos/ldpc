@@ -63,6 +63,7 @@ using namespace std;
 
             void csr_row_insert(int row_index, vector<int>& column_indices){
                 for(int col_index: column_indices){
+                    // cout<<row_index<<" "<<col_index<<endl;
                     this->insert_entry(row_index,col_index,1);
                 }
             }
@@ -130,13 +131,15 @@ using namespace std;
             void add_rows(int i, int j){
                 //row i is the row that will be overwritten
                 bool intersection;
+                vector<ENTRY_OBJ*> entries_to_remove;
+
                 for(auto g: BASE::iterate_row(j)){
                     if(g->value==0) continue;
                     intersection=false;
                     for(auto e: BASE::iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
-                            if(e->value == 0) BASE::remove(e);
+                            if(e->value == 0) entries_to_remove.push_back(e);
                             intersection=true;
                             break;
                         }
@@ -146,6 +149,9 @@ using namespace std;
                         ne->value = g->value;
                     }
                 }
+
+                for(auto e: entries_to_remove) BASE::remove(e); //delete all zero values
+
             }
 
             void add_columns(int i, int j){

@@ -4,25 +4,27 @@
 namespace io{
 
 
-    std::vector<std::vector<int>> string_to_csr_vector(const std::string& str) {
-        std::vector<std::vector<int>> result;
-        std::stringstream ss(str);
-
-        char c;
-        int val;
-        while (ss >> c && c == '{') {
-            std::vector<int> v;
-            while (ss >> val) {
-                v.push_back(val);
-                if (ss >> c && c == '}') {
-                    break;
-                }
+std::vector<std::vector<int>> string_to_csr_vector(std::string str) {
+    std::vector<std::vector<int>> result;
+    std::stringstream ss(str);
+    char c;
+    int num;
+    while (ss >> c) {
+        std::vector<int> row;
+        bool left_bracket_observed = false;
+        while (ss >> c && c != '}') {
+            if (isdigit(c)) {
+                ss.putback(c);
+                ss >> num;
+                row.push_back(num);
             }
-            result.push_back(v);
+            if(c=='{') left_bracket_observed = true;
         }
-
-        return result;
+        if(!left_bracket_observed) break;
+        result.push_back(row);
     }
+    return result;
+}
 
 
     std::string getFullPath(const std::string& localPath) {
