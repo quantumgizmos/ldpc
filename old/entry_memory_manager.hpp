@@ -4,6 +4,7 @@ class EntryMemoryManager{
         int entry_block_size;
         int released_entry_count;
         int current_entry_block;
+        int allocated_entry_count;
         vector<vector<ENTRY_OBJ>> entries;
         vector<ENTRY_OBJ*> removed_entries;
 
@@ -14,12 +15,14 @@ class EntryMemoryManager{
             this->entry_block_size = entry_block_size;
             vector<ENTRY_OBJ> initial_block;
             initial_block.resize(initial_entry_count);
+            this->allocated_entry_count+=initial_entry_count;
             entries.push_back(initial_block);
 
         }
 
         ~EntryMemoryManager(){
-            entries.clear();
+            for(auto block: this->entries) block.clear();
+            this->entries.clear();
         }
 
         ENTRY_OBJ* get_new_entry(){
@@ -32,18 +35,12 @@ class EntryMemoryManager{
             if(this->released_entry_count==this->entries[this->current_entry_block].size()){
                 vector<ENTRY_OBJ> new_entry_block;
                 new_entry_block.resize(this->entry_block_size);
-                
-                
-                // int new_size = this->entries.size()+this->entry_block_size;
-                // // this->entries.resize(new_size);
-                // for(int i = 0; i<this->entry_block_size; i++){
-                //     auto e = new ENTRY_OBJ();
-                //     this->entries.push_back(e);
-                // }
+                this->allocated_entry_count+=this->entry_block_size;
+                entries.push_back(new_entry_block);
             }
 
         
-            auto e = this->entries[this->current_entry_block][this->released_entry_count];
+            auto e = &this->entries[this->current_entry_block][this->released_entry_count];
             this->released_entry_count++;
 
             return e;
