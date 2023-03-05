@@ -51,7 +51,7 @@ class SparseMatrixBase {
     int node_count;
     int entry_block_size;
     int released_entry_count;
-    vector<ENTRY_OBJ> entries;
+    vector<ENTRY_OBJ*> entries;
     vector<ENTRY_OBJ*> removed_entries;       
     vector<ENTRY_OBJ*> row_heads; //starting point for each row
     vector<ENTRY_OBJ*> column_heads; //starting point for each column
@@ -61,13 +61,16 @@ class SparseMatrixBase {
     SparseMatrixBase(int check_count, int bit_count){
         this->m=check_count;
         this->n=bit_count;
-        this->entry_block_size = 1;
+        this->entry_block_size = this->m+this->n;
         this->released_entry_count=0;
         allocate();
     }
 
     ~SparseMatrixBase(){
+        for(auto e: this->entries) delete e;
         this->entries.clear();
+
+
     }
 
     ENTRY_OBJ* allocate_new_entry(){
@@ -78,18 +81,22 @@ class SparseMatrixBase {
         }
         if(this->released_entry_count==this->entries.size()){
             int new_size = this->entries.size()+this->entry_block_size;
-            this->entries.resize(new_size);
+            // this->entries.resize(new_size);
+            for(int i = 0; i<this->entry_block_size; i++){
+                auto e = new ENTRY_OBJ();
+                this->entries.push_back(e);
+            }
         }
 
 
-        auto e = &this->entries[this->released_entry_count];
+        auto e = this->entries[this->released_entry_count];
         this->released_entry_count++;
 
 
-        cout<<"Released: "<<this->released_entry_count<<" ";
-        cout<<"Allocated: "<<this->entries.size()<<" ";
-        cout<<"Removed: "<<this->removed_entries.size()<<" ";
-        cout<<"Block size: "<<this->entry_block_size<<endl;
+        // cout<<"Released: "<<this->released_entry_count<<" ";
+        // cout<<"Allocated: "<<this->entries.size()<<" ";
+        // cout<<"Removed: "<<this->removed_entries.size()<<" ";
+        // cout<<"Block size: "<<this->entry_block_size<<endl;
 
         return e;
     }

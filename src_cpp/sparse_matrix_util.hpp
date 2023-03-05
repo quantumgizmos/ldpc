@@ -28,7 +28,7 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = fals
                 ss << unsigned(e->value);
                 // cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
             }
-            // if(i!=(n-1)) ss << " ";
+            if(i!=(n-1)) ss << " ";
         }
         if(j!=(m-1)) ss << "\n";
     }

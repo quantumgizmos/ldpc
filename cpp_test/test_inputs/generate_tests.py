@@ -39,7 +39,7 @@ def add_rows_tests():
 
     output_file = open("gf2_add_test.csv", "w+")
 
-    for j in range(10):
+    for j in range(100):
         for i in np.arange(0,10,0.5):
             height = np.random.randint(1,40)
             width = np.random.randint(1, 40)
@@ -61,7 +61,7 @@ def add_rows_tests():
 
 if __name__ == "__main__":
 
-    # add_rows_tests()
+    add_rows_tests()
     a = np.array([[1,0,0],[0,0,0],[0,0,0]])
     a_csr=to_csr(a)
     print(a_csr)

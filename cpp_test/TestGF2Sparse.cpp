@@ -164,87 +164,79 @@ TEST(GF2Sparse, string_io3){
     auto matrix = GF2Sparse(26,25);
 
     string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
-   
-    // cout<<csr_string<<endl;
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
-    // for(auto a: csr_input) print_vector(a);
     vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
 
-
-    // ASSERT_EQ(matrix.m,26);
-    // ASSERT_EQ(matrix.n,25);
-    // ASSERT_EQ(csr_input.size(),matrix.m);
+    ASSERT_EQ(matrix.m,26);
+    ASSERT_EQ(matrix.n,25);
+    ASSERT_EQ(csr_input.size(),matrix.m);
     matrix.csr_insert(csr_input);
     // // cout<<matrix.entry_count()<<endl;
     // print_sparse_matrix(matrix);
-    // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
-    // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
+    ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
+    ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
 
 
     ASSERT_EQ(1,1);
-
-
-
-    // print_sparse_matrix(matrix);
 
 
 }
 
 
 
-// TEST(GF2Sparse, add_rows_batch){
-//     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_add_test.csv");
-//     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+TEST(GF2Sparse, add_rows_batch){
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_add_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
 
-//     int row_count = doc.GetColumn<string>(0).size();
+    int row_count = doc.GetColumn<string>(0).size();
 
-//     for(int i = 1; i<2; i++){
+    for(int i = 1; i<row_count; i++){
 
-//         cout<<i<<endl;
-//         std::vector<string> row = doc.GetRow<string>(i);
+        // cout<<i<<endl;
+        std::vector<string> row = doc.GetRow<string>(i);
 
-//         int m = stoi(row[0]);
-//         int n = stoi(row[1]);
-//         auto input_csr_vector = io::string_to_csr_vector(row[2]);
-//         auto target_row = stoi(row[3]);
-//         auto add_row = stoi(row[4]);
-//         auto output_csr_vector = io::string_to_csr_vector(row[5]);
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+        auto target_row = stoi(row[3]);
+        auto add_row = stoi(row[4]);
+        auto output_csr_vector = io::string_to_csr_vector(row[5]);
 
-//         ASSERT_EQ(input_csr_vector.size(),m);
-//         ASSERT_EQ(output_csr_vector.size(),m);
-//         auto matrix = GF2Sparse(m,n);
+        ASSERT_EQ(input_csr_vector.size(),m);
+        ASSERT_EQ(output_csr_vector.size(),m);
+        auto matrix = GF2Sparse(m,n);
 
-//         cout<<row[2]<<endl;
-//         for(auto a: input_csr_vector) print_vector(a);
+        // cout<<row[2]<<endl;
+        // for(auto a: input_csr_vector) print_vector(a);
 
-//         print_sparse_matrix(matrix);
+        // print_sparse_matrix(matrix);
 
 
-//         matrix.csr_insert(input_csr_vector);
+        matrix.csr_insert(input_csr_vector);
 
         
 
-//         print_sparse_matrix(matrix);
+        // print_sparse_matrix(matrix);
 
-//         ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
+        ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
 
-//         int node_count_initial = matrix.entry_count();
+        int node_count_initial = matrix.entry_count();
 
-//         matrix.add_rows(target_row,add_row);
+        matrix.add_rows(target_row,add_row);
 
-//         ASSERT_EQ(TEST_WITH_CSR(matrix,output_csr_vector),true);
+        ASSERT_EQ(TEST_WITH_CSR(matrix,output_csr_vector),true);
 
-//         // //Adding the rows again should reverse the initial operation.
-//         if(target_row!=add_row){
-//             matrix.add_rows(target_row,add_row);
-//             ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
-//             int node_count_final = matrix.entry_count();
-//             ASSERT_EQ(node_count_initial,node_count_final);
-//         }
-//     }
+        // //Adding the rows again should reverse the initial operation.
+        if(target_row!=add_row){
+            matrix.add_rows(target_row,add_row);
+            ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
+            int node_count_final = matrix.entry_count();
+            ASSERT_EQ(node_count_initial,node_count_final);
+        }
+    }
 
-// }
+}
 
 int main(int argc, char **argv)
 {
