@@ -34,6 +34,12 @@ def to_csr(mat: np.ndarray):
 
     return csr_string
 
+def vector_to_string(vec):
+    out=""
+    for i in range(len(vec)):
+        out+=f"{vec[i]}"
+    return out
+
 
 def add_rows_tests():
 
@@ -57,11 +63,39 @@ def add_rows_tests():
             csv_string = f"{height};{width};{orig_pcm};{target_row};{add_row};{final_pcm}"
             print(csv_string, file=output_file)
 
+def mulvec_tests():
+
+    output_file = open("gf2_mulvec_test.csv", "w+")
+
+    for j in range(100):
+        for i in np.arange(0,10,0.5):
+            
+            height = np.random.randint(1,40)
+            width = np.random.randint(1, 40)
+            pcm = random_binary_matrix(height=height,width=width,sparsity=0.1*np.random.randint(10))
+
+
+
+            vector = np.zeros(width).astype(int)
+            for k in range(width):
+                if np.random.random()<0.1*(10-np.random.randint(10)):
+                    vector[k] = 1
+
+            output_vector = pcm@vector % 2
+
+            pcm = to_csr(pcm)
+            vector = vector_to_string(vector)
+            output_vector = vector_to_string(output_vector)
+
+
+            # final_pcm = to_csr(pcm)
+
+            csv_string = f"{height};{width};{pcm};{vector};{output_vector}"
+            print(csv_string, file=output_file)
+
 
 
 if __name__ == "__main__":
 
-    add_rows_tests()
-    a = np.array([[1,0,0],[0,0,0],[0,0,0]])
-    a_csr=to_csr(a)
-    print(a_csr)
+    # add_rows_tests()
+    mulvec_tests()

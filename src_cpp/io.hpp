@@ -3,6 +3,19 @@
 
 namespace io{
 
+std::vector<uint8_t> binaryStringToVector(std::string binaryString) {
+    std::vector<uint8_t> result;
+    for (char c : binaryString) {
+        if (c == '0') {
+            result.push_back(0);
+        } else if (c == '1') {
+            result.push_back(1);
+        } else {
+            throw std::invalid_argument("Input string contains non-binary characters");
+        }
+    }
+    return result;
+}
 
 std::vector<std::vector<int>> string_to_csr_vector(std::string str) {
     std::vector<std::vector<int>> result;

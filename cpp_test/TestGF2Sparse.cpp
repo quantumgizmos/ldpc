@@ -227,6 +227,49 @@ TEST(GF2Sparse, add_rows_batch){
 
 }
 
+TEST(GF2Sparse, mulvec_batch){
+
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_mulvec_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 1; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+        auto input_vector = io::binaryStringToVector(row[3]);
+        auto actual_output_vector = io::binaryStringToVector(row[4]);
+
+        ASSERT_EQ(input_vector.size(),n);
+        ASSERT_EQ(actual_output_vector.size(),m);
+
+        auto matrix = GF2Sparse(m,n);
+        matrix.csr_insert(input_csr_vector);
+
+        vector<uint8_t> output_vector;
+        output_vector.resize(m);
+        matrix.mulvec(input_vector,output_vector);
+
+        bool equal = true;
+        for(int j = 0; j<m; j++){
+            if(output_vector[j]!=actual_output_vector[j]){
+                equal = false;
+                break;
+            }
+        }
+
+        ASSERT_EQ(equal, true);
+
+    }
+
+}
+
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
