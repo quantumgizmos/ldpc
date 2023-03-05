@@ -12,7 +12,7 @@ template <class DERIVED>
 class EntryBase {
     public:
         int row_index=-100; //row index
-        int col_index=-100; //col_index index
+        int col_index=-100; //col_index
         
         DERIVED* left = static_cast<DERIVED*>(this); //pointer to previous row element
         DERIVED* right = static_cast<DERIVED*>(this); //pointer to next row element
@@ -105,6 +105,14 @@ class SparseMatrixBase {
         return this->released_entry_count - this->n - this->m - this->removed_entries.size();
     }
 
+    // void set_row_weight(int row, int weight){
+    //     this->row_heads[row]->col_index = weight;
+    // }
+
+    // int get_row_weight(int row){
+    //     return this->row_heads[row]->col_index;
+    // }
+
 
     //this function allocates space for an mxn matrix.
     void allocate(){
@@ -122,6 +130,7 @@ class SparseMatrixBase {
             row_entry->up = row_entry;
             row_entry->down = row_entry;
             this->row_heads[i] = row_entry;
+
         }
 
         for(int i=0; i<this->n; i++){
@@ -169,6 +178,14 @@ class SparseMatrixBase {
         for(auto e: iterate_column(j)) e->col_index=j;
     }
 
+    int get_row_weight(int row){
+        return abs(this->row_heads[row]->col_index)-100;
+    }
+
+    int get_col_weight(int col){
+        return abs(this->column_heads[col]->col_index)-100;
+    }
+
     void remove_entry(int i, int j){
         auto e = get_entry(i,j);
         this->remove(e);
@@ -184,8 +201,23 @@ class SparseMatrixBase {
             e_right->left = e_left;
             e_up ->down = e_down;
             e_down -> up = e_up;
+
+
+            /*updates the row/column weights. Note this information is stored in the
+            `ENTRY_OBJ.col_index` field as a negative number (to avoid confusion with
+             an actual col index. To get the row/column weights use the `get_row_weight()` and
+            `get_col_weight()` functions.)*/
+            this->row_heads[e->row_index]->col_index++;
+            this->column_heads[e->col_index]->col_index++;
+
+            //Reset the entry to default values before pushing to the buffer.
             e->reset();
             this->removed_entries.push_back(e);
+
+          
+
+          
+
         }
     }
 
@@ -244,6 +276,14 @@ class SparseMatrixBase {
         right_entry->left = e;
         up_entry->down = e;
         down_entry->up = e;
+
+        /*updates the row/column weights. Note this information is stored in the
+        `ENTRY_OBJ.col_index` field as a negative number (to avoid confusion with
+        an actual col index. To get the row/column weights use the `get_row_weight()` and
+        `get_col_weight()` functions.)*/
+
+        this->row_heads[e->row_index]->col_index--;
+        this->column_heads[e->col_index]->col_index--;
 
         // matrix_entries.push_back(e);
         return e;     

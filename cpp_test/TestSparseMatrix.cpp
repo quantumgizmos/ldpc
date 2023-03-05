@@ -60,6 +60,45 @@ TEST(TestSparseMatrix, InitialisationAndAllocation)
     delete pcm;
 }
 
+TEST(SparseMatrix, row_and_column_weights){
+
+    SparseMatrix<int> matrix(3, 3);
+    for(int i = 0; i<3; i++){
+        ASSERT_EQ(matrix.get_row_weight(i),0);
+        ASSERT_EQ(matrix.get_col_weight(i),0);
+    }
+
+    matrix.insert_entry(0,0,10);
+    matrix.insert_entry(0,1,10);
+    ASSERT_EQ(matrix.get_row_weight(0),2);
+    ASSERT_EQ(matrix.get_col_weight(0),1);
+    ASSERT_EQ(matrix.get_col_weight(1),1);
+
+    matrix.remove_entry(0,0);
+
+    ASSERT_EQ(matrix.get_row_weight(0),1);
+    ASSERT_EQ(matrix.get_col_weight(0),0);
+    ASSERT_EQ(matrix.get_col_weight(1),1);
+
+    matrix.insert_entry(0, 0, 5);
+    matrix.insert_entry(0, 1, 3);
+    matrix.insert_entry(0, 2, 2);
+    matrix.insert_entry(1, 0, 8);
+    matrix.insert_entry(1, 1, 1);
+    matrix.insert_entry(2, 0, 9);
+    matrix.insert_entry(2, 2, 4);
+
+    int rc = 0;
+    int cc = 0;
+    for(int i = 0; i<3; i++){
+        rc+=matrix.get_row_weight(i);
+        cc+=matrix.get_col_weight(i);
+    }
+    ASSERT_EQ(rc,cc);
+    ASSERT_EQ(rc,matrix.entry_count());
+
+}
+
 
 TEST(SparseMatrixTest, RowIterateTest)
 {

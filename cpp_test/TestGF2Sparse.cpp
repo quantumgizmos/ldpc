@@ -193,7 +193,6 @@ TEST(GF2Sparse, add_rows_batch){
 
     for(int i = 1; i<row_count; i++){
 
-        // cout<<i<<endl;
         std::vector<string> row = doc.GetRow<string>(i);
 
         int m = stoi(row[0]);
@@ -207,17 +206,7 @@ TEST(GF2Sparse, add_rows_batch){
         ASSERT_EQ(output_csr_vector.size(),m);
         auto matrix = GF2Sparse(m,n);
 
-        // cout<<row[2]<<endl;
-        // for(auto a: input_csr_vector) print_vector(a);
-
-        // print_sparse_matrix(matrix);
-
-
         matrix.csr_insert(input_csr_vector);
-
-        
-
-        // print_sparse_matrix(matrix);
 
         ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
 
