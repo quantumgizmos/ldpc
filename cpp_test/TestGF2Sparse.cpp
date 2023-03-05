@@ -7,7 +7,7 @@
 #include "io.hpp"
 #include <string>
 
-bool TEST_WITH_CSR(GF2Sparse<GF2Entry> matrix, vector<vector<int>>& csr_matrix){
+bool TEST_WITH_CSR(GF2Sparse<GF2Entry>& matrix, vector<vector<int>> csr_matrix){
 
     int i = 0;
     for(vector<int> row: csr_matrix){
@@ -34,6 +34,11 @@ bool TEST_WITH_CSR(GF2Sparse<GF2Entry> matrix, vector<vector<int>>& csr_matrix){
 
 }
 
+TEST(GF2Sparse, init){
+    auto matrix = GF2Sparse(100,100);
+    matrix.add_rows(1,4);
+    print_sparse_matrix(matrix);
+}
 
 TEST(GF2Sparse, csr_insert){
 
@@ -173,17 +178,9 @@ TEST(GF2Sparse, string_io2){
 
 //     matrix.add_rows(0,0);
 
-//     // for(int i = 0; i<matrix.n; i++){
-//     //     for(auto e: matrix.iterate_column(i)){
-//     //         cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
-//     //     }
-//     // }
-
-//     // csr_test = {{}};
-//     // ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
 
 
-//     print_sparse_matrix(matrix);
+//     // print_sparse_matrix(matrix);
 
 
 // }

@@ -12,13 +12,13 @@
 using namespace std;
 
 template <class SPARSE_MATRIX_CLASS>
-stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix,bool SILENT = false){
+stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = false){
     stringstream ss;
     int m = matrix.m;
     int n = matrix.n;
     for(int j=0; j<m;j++){
         for(int i=0; i<n;i++){
-            // cout<<j<<" "<<i<<endl;
+        //     // cout<<j<<" "<<i<<endl;
             auto e = matrix.get_entry(j,i);
             
             if(e->at_end()) {
@@ -28,7 +28,7 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS &matrix,bool SILENT = false
                 ss << unsigned(e->value);
                 // cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
             }
-            if(i!=(n-1)) ss << " ";
+            // if(i!=(n-1)) ss << " ";
         }
         if(j!=(m-1)) ss << "\n";
     }
