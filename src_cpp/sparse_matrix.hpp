@@ -105,15 +105,6 @@ class SparseMatrixBase {
         return this->released_entry_count - this->n - this->m - this->removed_entries.size();
     }
 
-    // void set_row_weight(int row, int weight){
-    //     this->row_heads[row]->col_index = weight;
-    // }
-
-    // int get_row_weight(int row){
-    //     return this->row_heads[row]->col_index;
-    // }
-
-
     //this function allocates space for an mxn matrix.
     void allocate(){
             
