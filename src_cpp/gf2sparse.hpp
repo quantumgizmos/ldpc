@@ -105,18 +105,18 @@ using namespace std;
 
             GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse *mat_right){
             
-                if( n!=mat_right->m){
+                if( this->n!=mat_right->m){
                     throw invalid_argument("Input matrices have invalid dimensions!");
                 }
 
-                auto output_mat = new GF2Sparse<ENTRY_OBJ>(m,mat_right->n);
+                auto output_mat = new GF2Sparse<ENTRY_OBJ>(this->m,mat_right->n);
   
                 
-                for(int i = 0; i<mat_right->m; i++){
-                    for(int j = 0; j<mat_right->n; j++){
+                for(int i = 0; i<output_mat->m; i++){
+                    for(int j = 0; j<output_mat->n; j++){
                         int sum = 0;
                         for(auto e: mat_right->iterate_column(j)){
-                            for(auto g: BASE::iterate_row(i)){
+                            for(auto g: this->iterate_row(i)){
                                 if(g->col_index == e->row_index) sum^=(g->value*e->value);
                             }
                         }

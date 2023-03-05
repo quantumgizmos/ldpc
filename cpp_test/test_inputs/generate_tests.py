@@ -93,9 +93,39 @@ def mulvec_tests():
             csv_string = f"{height};{width};{pcm};{vector};{output_vector}"
             print(csv_string, file=output_file)
 
+def matmul_tests():
+
+    output_file = open("gf2_matmul_test.csv", "w+")
+
+    for j in range(10):
+        for i in np.arange(0,10,0.5):
+            
+            height = np.random.randint(1,40)
+            width = np.random.randint(1, 40)
+            width2 = np.random.randint(1, 40)
+            
+            pcm1 = random_binary_matrix(height=height,width=width,sparsity=0.1*np.random.randint(10))
+            height = width
+            pcm2 = random_binary_matrix(height=height,width=width2,sparsity=0.1*np.random.randint(10))
+
+            pcm3 = pcm1@pcm2%2
+
+
+            pcms = [pcm1,pcm2,pcm3]
+
+            csv_string=""
+            for pcm in pcms:
+                m,n =pcm.shape
+                csr = to_csr(pcm)
+
+                csv_string+=f"{m};{n};{csr};"
+
+            print(csv_string, file=output_file)
+
 
 
 if __name__ == "__main__":
 
-    # add_rows_tests()
+    add_rows_tests()
     mulvec_tests()
+    matmul_tests()

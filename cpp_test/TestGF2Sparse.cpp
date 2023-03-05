@@ -270,6 +270,57 @@ TEST(GF2Sparse, mulvec_batch){
 }
 
 
+TEST(GF2Sparse, matmul){
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+        int m1 = stoi(row[0]);
+        int n1 = stoi(row[1]);
+        auto s1 = io::string_to_csr_vector(row[2]);
+        auto matrix1 = GF2Sparse(m1,n1);
+        matrix1.csr_insert(s1);
+
+        // print_sparse_matrix(matrix1);
+
+        int m2 = stoi(row[3]);
+        int n2 = stoi(row[4]);
+        auto s2 = io::string_to_csr_vector(row[5]);
+        auto matrix2 = GF2Sparse(m2,n2);
+        matrix2.csr_insert(s2);
+
+        // cout<<endl;
+        // print_sparse_matrix(matrix2);
+
+
+        int m3 = stoi(row[6]);
+        int n3 = stoi(row[7]);
+        auto s3 = io::string_to_csr_vector(row[8]);
+        auto matrix3 = GF2Sparse(m3,n3);
+        matrix3.csr_insert(s3);
+
+        // cout<<endl;
+        // print_sparse_matrix(matrix3);
+
+
+        auto actual_matrix3 = matrix1.matmul(&matrix2);
+
+        ASSERT_EQ(print_sparse_matrix(matrix3,true).str(), print_sparse_matrix(*actual_matrix3,true).str());
+        ASSERT_EQ(TEST_WITH_CSR(*actual_matrix3,s3),true);
+
+
+
+    }
+
+}
+
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
