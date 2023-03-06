@@ -39,9 +39,9 @@ def add_rows_tests():
     output_file = open("gf2_add_test.csv", "w+")
 
     for j in range(10):
-        for i in range(10):
-            height = np.random.randint(1,100)
-            width = np.random.randint(1, 100)
+        for i in np.arange(0,10,0.5):
+            height = np.random.randint(1,40)
+            width = np.random.randint(1, 40)
             pcm = random_binary_matrix(height=height,width=height,sparsity=0.1*i)
             
             orig_pcm = to_csr(pcm)
