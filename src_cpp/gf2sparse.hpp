@@ -136,7 +136,7 @@ using namespace std;
                     for(auto e: BASE::iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
-                            // if(e->value == 0) BASE::remove(e);
+                            if(e->value == 0) BASE::remove(e);
                             intersection=true;
                             break;
                         }

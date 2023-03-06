@@ -38,22 +38,23 @@ def add_rows_tests():
 
     output_file = open("gf2_add_test.csv", "w+")
 
-    for i in range(10):
-        height = np.random.randint(1,10)
-        width = np.random.randint(1, 10)
-        pcm = random_binary_matrix(height=height,width=height,sparsity=0.4)
-        
-        orig_pcm = to_csr(pcm)
-        
-        target_row = np.random.randint(height)
-        add_row = np.random.randint(height)
+    for j in range(10):
+        for i in range(10):
+            height = np.random.randint(1,100)
+            width = np.random.randint(1, 100)
+            pcm = random_binary_matrix(height=height,width=height,sparsity=0.1*i)
+            
+            orig_pcm = to_csr(pcm)
+            
+            target_row = np.random.randint(height)
+            add_row = np.random.randint(height)
 
-        pcm[target_row] = (pcm[target_row] + pcm[add_row]) % 2
+            pcm[target_row] = (pcm[target_row] + pcm[add_row]) % 2
 
-        final_pcm = to_csr(pcm)
+            final_pcm = to_csr(pcm)
 
-        csv_string = f"{orig_pcm};{target_row};{add_row};{final_pcm}"
-        print(csv_string, file=output_file)
+            csv_string = f"{height};{width};{orig_pcm};{target_row};{add_row};{final_pcm}"
+            print(csv_string, file=output_file)
 
 
 

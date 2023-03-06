@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
 #include "gf2sparse.hpp"
 #include "sparse_matrix_util.hpp"
+#include "rapidcsv.h"
+#include <iostream>
 #include <set>
+#include "io.hpp"
+#include <string>
 
 bool TEST_WITH_CSR(GF2Sparse<GF2Entry> matrix, vector<vector<int>>& csr_matrix){
 
@@ -52,6 +56,53 @@ TEST(GF2Sparse, csr_insert){
 
     //check the entry counts
     ASSERT_EQ(matrix.entry_count(),4);
+
+}
+
+TEST(GF2Sparse, add_rows){
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_add_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+        int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+        auto target_row = stoi(row[3]);
+        auto add_row = stoi(row[4]);
+        auto output_csr_vector = io::string_to_csr_vector(row[5]);
+
+        auto matrix = GF2Sparse(m,n);
+        matrix.csr_insert(input_csr_vector);
+
+        int node_count_initial = matrix.entry_count();
+
+        ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
+
+
+        matrix.add_rows(target_row,add_row);
+
+        ASSERT_EQ(TEST_WITH_CSR(matrix,output_csr_vector),true);
+        // ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),false);
+
+        //Adding the rows again should reverse the initial operation.
+        matrix.add_rows(target_row,add_row);
+        ASSERT_EQ(TEST_WITH_CSR(matrix,input_csr_vector),true);
+
+        int node_count_final = matrix.entry_count();
+
+        ASSERT_EQ(node_count_initial,node_count_final);
+
+
+    }
+    
+    // ASSERT_EQ(1,1);
 
 }
 

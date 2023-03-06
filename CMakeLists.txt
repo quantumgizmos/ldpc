@@ -23,6 +23,16 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(GoogleTest)
 
+
+# ##copy test files
+# # Generate a list of CSV files in the test input directory
+# file(GLOB CSV_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cpp_test/test_inputs/*.csv)
+
+# # Copy CSV files to build directory
+# foreach(CSV_FILE ${CSV_FILES})
+#     file(COPY ${CSV_FILE} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/cpp_test/test_inputs/)
+# endforeach()
+
 project(cpp_test)
 
 # Include GoogleTest

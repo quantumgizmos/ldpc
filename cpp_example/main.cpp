@@ -2,6 +2,9 @@
 #include <sparse_matrix.hpp>
 #include "gf2sparse.hpp"
 #include "sparse_matrix_util.hpp"
+#include "rapidcsv.h"
+#include "io.hpp"
+#include <string>
 
 
 using namespace std;
@@ -182,7 +185,22 @@ int main()
     delete pcm;
 
 
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_add_test.csv");
+    cout<<csv_path<<endl;
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+    std::vector<string> row = doc.GetRow<string>(0);
+
+    auto input_csr_vector = io::string_to_csr_vector(row[0]);
+    auto target_row = stoi(row[1]);
+    auto add_row = stoi(row[2]);
+    auto output_csr_vector = io::string_to_csr_vector(row[3]);
+
     
+
+
+    // long long volume = doc.GetCell<long long>(4, 2);
+    // std::cout << "Volume " << volume << " on 2017-02-22." << std::endl;
 
     return 0;
 
