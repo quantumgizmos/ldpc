@@ -10,6 +10,7 @@
 #include <string>
 
 using namespace std;
+using namespace sparse_matrix;
 
 template <class SPARSE_MATRIX_CLASS>
 stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = false){

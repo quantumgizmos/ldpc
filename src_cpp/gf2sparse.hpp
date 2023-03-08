@@ -11,6 +11,7 @@
 #include "sparse_matrix_util.hpp"
 
 using namespace std;
+using namespace sparse_matrix;
 
 
     class GF2Entry: public EntryBase<GF2Entry>{ 
