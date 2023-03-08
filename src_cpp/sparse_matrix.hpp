@@ -160,11 +160,11 @@ class SparseMatrixBase {
         for(auto e: this->iterate_column(j)) e->col_index=j;
     }
 
-    int get_row_weight(int row){
+    int get_row_degree(int row){
         return abs(this->row_heads[row]->col_index)-100;
     }
 
-    int get_col_weight(int col){
+    int get_col_degree(int col){
         return abs(this->column_heads[col]->col_index)-100;
     }
 
