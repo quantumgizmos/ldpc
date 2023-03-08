@@ -76,16 +76,28 @@ using namespace std;
                 }
             }
 
+            // vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
+            //     for(int i = 0; i<m; i++) output_vector[i] = 0;
+            //     for(int i = 0; i < n; i++){
+            //         if(input_vector[i]){
+            //             for(auto e: BASE::iterate_column(i)){
+            //                 output_vector[e->row_index] ^= 1;
+            //             }
+            //         }
+            //     }
+            //     return output_vector;
+            // }
+
             vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
-                for(int i = 0; i<m; i++) output_vector[i] = 0;
-                for(int i = 0; i < n; i++){
-                    if(input_vector[i]){
-                        for(auto e: BASE::iterate_column(i)){
-                            output_vector[e->row_index] ^= 1;
-                        }
+                
+                for(int i = 0; i<this->m; i++) output_vector[i] = 0;
+                for(int i = 0; i < this->m; i++){
+                    for(auto e: this->iterate_row(i)){
+                        output_vector[i] ^= input_vector[e->col_index];
                     }
                 }
                 return output_vector;
+
             }
 
 
@@ -133,10 +145,10 @@ using namespace std;
                 bool intersection;
                 vector<ENTRY_OBJ*> entries_to_remove;
 
-                for(auto g: BASE::iterate_row(j)){
+                for(auto g: this->iterate_row(j)){
                     if(g->value==0) continue;
                     intersection=false;
-                    for(auto e: BASE::iterate_row(i)){
+                    for(auto e: this->iterate_row(i)){
                         if(g->col_index==e->col_index){
                             e->value = (e->value + g->value)%2;
                             if(e->value == 0) entries_to_remove.push_back(e);
@@ -145,12 +157,12 @@ using namespace std;
                         }
                     }
                     if(!intersection){
-                        auto ne = BASE::insert_entry(i,g->col_index);
+                        auto ne = this->insert_entry(i,g->col_index,1);
                         ne->value = g->value;
                     }
                 }
 
-                for(auto e: entries_to_remove) BASE::remove(e); //delete all zero values
+                for(auto e: entries_to_remove) this->remove(e); //delete all zero values
 
             }
 
