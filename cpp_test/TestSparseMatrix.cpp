@@ -100,7 +100,7 @@ TEST(SparseMatrix, row_and_column_weights){
 }
 
 
-TEST(SparseMatrixTest, RowIterateTest)
+TEST(SparseMatrix, RowIterateTest)
 {
     SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
@@ -137,7 +137,7 @@ TEST(SparseMatrixTest, RowIterateTest)
     }
 }
 
-TEST(SparseMatrixTest, ReverseRowIterateTest)
+TEST(SparseMatrix, ReverseRowIterateTest)
 {
     SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
@@ -174,7 +174,7 @@ TEST(SparseMatrixTest, ReverseRowIterateTest)
     }
 }
 
-TEST(SparseMatrixTest, IterateColTest)
+TEST(SparseMatrix, IterateColTest)
 {
     SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
@@ -214,7 +214,7 @@ TEST(SparseMatrixTest, IterateColTest)
     }
 }
 
-TEST(SparseMatrixTest, ReverseIterateColTest)
+TEST(SparseMatrix, ReverseIterateColTest)
 {
     SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
@@ -251,7 +251,7 @@ TEST(SparseMatrixTest, ReverseIterateColTest)
     }
 }
 
-TEST(SparseMatrixTest, SwapRowsTest)
+TEST(SparseMatrix, SwapRowsTest)
 {
     SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 1);
@@ -277,7 +277,7 @@ TEST(SparseMatrixTest, SwapRowsTest)
     EXPECT_EQ(matrix.get_entry(2, 2)->value, 3);
 }
 
-TEST(SparseMatrixTest, InsertRowTest)
+TEST(SparseMatrix, InsertRowTest)
 {
     SparseMatrix<int> matrix(8, 7);
     vector<int> col_indices = {1, 3, 4, 6};
@@ -303,6 +303,50 @@ TEST(SparseMatrixTest, InsertRowTest)
             EXPECT_EQ(matrix.get_entry(i, j)->value, 0);
         }
     }
+}
+
+TEST(DISABLED_SparseMatrix, iterator_timing_test){
+
+    int n =500;
+    int m =500;
+    auto matrix = SparseMatrix<int>(m,n);
+    for(int i = 0; i<m; i++){
+        for(int j = 0; j<n; j++){
+            matrix.insert_entry(i,j,1);
+        }
+    }
+
+    for(int k = 0; k<1000; k++){
+
+        for(int i = 0; i<m; i++){
+
+            for(auto e: matrix.iterate_column(i)){
+                e->value =2;
+            }
+
+            for(auto e: matrix.reverse_iterate_column(i)){
+                e->value =3;
+            }
+
+        }
+
+        for(int j = 0; j<n; j++){
+        
+            for(auto e: matrix.iterate_row(j)){
+                e->value = 4;
+            }
+
+            for(auto e: matrix.reverse_iterate_row(j)){
+                e->value = 5;
+            }
+        
+        }
+
+    }
+
+    ASSERT_EQ(1,1);
+
+
 }
 
 int main(int argc, char **argv)
