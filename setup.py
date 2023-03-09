@@ -27,7 +27,7 @@ for module in cpp_modules:
         sources=[f"src/ldpc2/{module}/_{module}.pyx"],
         libraries=[],
         library_dirs=[],
-        include_dirs=[numpy.get_include(),'src_cpp', 'include/robin_map'],
+        include_dirs=[numpy.get_include(),'src_cpp', 'src_cpp/include/robin_map'],
         extra_compile_args=['-std=c++2a', '-O3','-fopenmp'],
         extra_link_args=['-lgomp','-fopenmp'],
         language="c++"

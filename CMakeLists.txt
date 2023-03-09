@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### The following two lines define an interface library (A header-only library)
 add_library(ldpc2 INTERFACE)
-target_include_directories(ldpc2 INTERFACE src_cpp include/robin_map include/rapidcsv)  
+target_include_directories(ldpc2 INTERFACE src_cpp src_cpp/include/rapidcsv src_cpp/include/robin_map)  
 
 project(main)
 add_executable(main cpp_example/main.cpp)
