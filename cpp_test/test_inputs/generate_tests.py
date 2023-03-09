@@ -67,11 +67,11 @@ def mulvec_tests():
 
     output_file = open("gf2_mulvec_test.csv", "w+")
 
-    for j in range(100):
+    for j in range(10000):
         for i in np.arange(0,10,0.5):
             
-            height = np.random.randint(1,40)
-            width = np.random.randint(1, 40)
+            height = np.random.randint(1,500)
+            width = np.random.randint(1, 500)
             pcm = random_binary_matrix(height=height,width=width,sparsity=0.1*np.random.randint(10))
 
 
@@ -126,6 +126,6 @@ def matmul_tests():
 
 if __name__ == "__main__":
 
-    add_rows_tests()
+    # add_rows_tests()
     mulvec_tests()
-    matmul_tests()
+    # matmul_tests()
