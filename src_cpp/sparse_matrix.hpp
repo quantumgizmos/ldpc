@@ -98,6 +98,10 @@ namespace sparse_matrix{
             return this->released_entry_count - this->n - this->m - this->removed_entries.size();
         }
 
+        double sparsity(){
+            return this->entry_count()/(this->m*this->n);
+        }
+
         //this function allocates space for an mxn matrix.
         void allocate(){
                 

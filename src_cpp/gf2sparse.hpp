@@ -64,6 +64,22 @@ using namespace sparse_matrix;
             }
 
 
+            vector<uint8_t> mulvec2(vector<uint8_t>& input_vector){
+                
+                vector<uint8_t> output_vector;
+                output_vector.resize(this->m,0);
+
+                for(int i = 0; i < this->m; i++){
+                    for(auto e: this->iterate_row(i)){
+                        output_vector[i] ^= input_vector[e->col_index];
+                    }
+                }
+                return std::move(output_vector);
+
+            }
+
+
+
             vector<uint8_t>& mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
                 #pragma omp for
                 for(int i = 0; i<this->m; i++) output_vector[i] = 0;

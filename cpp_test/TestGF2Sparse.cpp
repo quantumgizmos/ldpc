@@ -269,6 +269,52 @@ TEST(GF2Sparse, mulvec_batch){
 
 }
 
+TEST(GF2Sparse,mulvec_timing){
+    
+    //Make sure to run this test in release mode.
+
+    cout<<"Hello"<<endl;
+
+    auto matrix = GF2Sparse(100,100);
+    for(int i = 0; i<100;i++) matrix.insert_entry(i,i,1);
+    vector<uint8_t> input_vector;
+    vector<uint8_t> output_vector;
+    input_vector.resize(matrix.n,0);
+    output_vector.resize(matrix.m,0);
+
+    const auto start_time = std::chrono::high_resolution_clock::now();
+
+    for(int i = 0; i<100000; i++){
+        input_vector[2]^=1;
+        matrix.mulvec(input_vector,output_vector);
+    }
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+    cout<<"Duration orig: "<<duration<<endl;
+
+
+    input_vector.resize(matrix.n,0);
+
+
+    const auto start_time2 = std::chrono::high_resolution_clock::now(); 
+
+    for(int i = 0; i<1000000; i++){
+        input_vector[2]^=1;
+        auto output = matrix.mulvec2(input_vector);
+    }
+
+    const auto end_time2 = std::chrono::high_resolution_clock::now();
+    auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time2 - start_time2).count();
+
+    cout<<"Duration new: "<<duration2<<endl;
+
+    SUCCEED();
+
+
+}
+
 
 TEST(GF2Sparse, matmul){
     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");

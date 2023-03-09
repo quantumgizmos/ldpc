@@ -99,6 +99,26 @@ TEST(SparseMatrix, row_and_column_weights){
 
 }
 
+TEST(SparseMatrix, sparsity){
+
+    auto matrix = SparseMatrix<int>(5,5);
+    auto e = matrix.insert_entry(1,1,5);
+    ASSERT_EQ(matrix.entry_count(),1);
+    ASSERT_EQ(matrix.sparsity(),1/25);
+    matrix.remove(e);
+    ASSERT_EQ(matrix.entry_count(),0);
+    ASSERT_EQ(matrix.sparsity(),0);
+
+    for(int j = 0; j<5; j++){
+        for(int i = 0; i<5; i++){
+            matrix.insert_entry(i,j,1);
+        }
+    }
+
+    ASSERT_EQ(matrix.sparsity(),1);
+
+}
+
 
 TEST(SparseMatrix, RowIterateTest)
 {

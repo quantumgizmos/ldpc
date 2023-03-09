@@ -1,4 +1,5 @@
 import numpy as np
+from tqdm import tqdm
 
 def random_binary_matrix(height: int = 10, width:int = 10, sparsity: float = 0.4, random_size: bool = False):
 
@@ -67,11 +68,11 @@ def mulvec_tests():
 
     output_file = open("gf2_mulvec_test.csv", "w+")
 
-    for j in range(10000):
+    for j in tqdm(range(1000)):
         for i in np.arange(0,10,0.5):
             
-            height = np.random.randint(1,500)
-            width = np.random.randint(1, 500)
+            height = np.random.randint(1,40)
+            width = np.random.randint(1, 40)
             pcm = random_binary_matrix(height=height,width=width,sparsity=0.1*np.random.randint(10))
 
 
@@ -91,6 +92,38 @@ def mulvec_tests():
             # final_pcm = to_csr(pcm)
 
             csv_string = f"{height};{width};{pcm};{vector};{output_vector}"
+            print(csv_string, file=output_file)
+
+def mulvec_timing():
+
+    output_file = open("gf2_mulvec_timing.csv", "w+")
+
+
+    height = np.random.randint(1,500)
+    width = np.random.randint(1,500)
+    pcm = random_binary_matrix(height=height,width=width,sparsity=0.1*np.random.randint(10))
+    pcm_csr = to_csr(pcm)
+
+    csv_string = f"{height};{width};{pcm_csr}"
+    print(csv_string, file=output_file)
+
+
+    for j in tqdm(range(100)):
+        for i in np.arange(0,10,0.5):
+            
+            vector = np.zeros(width).astype(int)
+            for k in range(width):
+                if np.random.random()<0.1*(10-np.random.randint(10)):
+                    vector[k] = 1
+
+            output_vector = pcm@vector % 2
+
+            vector = vector_to_string(vector)
+            output_vector = vector_to_string(output_vector)
+
+            # final_pcm = to_csr(pcm)
+
+            csv_string = f"{vector};{output_vector}"
             print(csv_string, file=output_file)
 
 def matmul_tests():
@@ -127,5 +160,6 @@ def matmul_tests():
 if __name__ == "__main__":
 
     # add_rows_tests()
-    mulvec_tests()
+    # mulvec_tests()
     # matmul_tests()
+    mulvec_timing()
