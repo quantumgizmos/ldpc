@@ -172,27 +172,7 @@ using namespace sparse_matrix;
             return pcmT;
         }
 
-        vector<vector<int>> nonzero_coordinates(){
 
-            vector<vector<int>> nonzero;
-
-            this->node_count = 0;
-
-            for(int i = 0; i<this->m; i++){
-                for(auto e: this->iterate_row(i)){
-                    if(e->value == 1){
-                        this->node_count += 1;
-                        vector<int> coord;
-                        coord.push_back(e->row_index);
-                        coord.push_back(e->col_index);
-                        nonzero.push_back(coord);
-                    }
-                }
-            }
-
-            return nonzero;
-
-        }
 
 
     };

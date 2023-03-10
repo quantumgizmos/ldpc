@@ -127,6 +127,23 @@ TEST(GF2Sparse, string_io){
     ASSERT_EQ(matrix.get_entry(2,2)->value, 0);
     ASSERT_EQ(matrix.get_entry(2,0)->value, 0);
 
+    vector<vector<int>> non_zero_row_coords = matrix.nonzero_rows();
+    // for(auto row: non_zero_row_coords){
+    //     print_vector(row);
+    // }
+    auto matrix2=GF2Sparse(3,3);
+    matrix2.csr_insert(non_zero_row_coords);
+    ASSERT_EQ(TEST_WITH_CSR(matrix2,csr_input),true);
+
+    auto test_io = io::csr_vector_to_string(non_zero_row_coords);
+    // cout<<test_io<<endl;
+    auto test_io2 = io::string_to_csr_vector(test_io);
+    auto matrix3 = GF2Sparse(3,3);
+    matrix3.csr_insert(test_io2);
+    ASSERT_EQ(TEST_WITH_CSR(matrix3,csr_input),true);
+
+
+
 }
 
 TEST(GF2Sparse, string_io2){
@@ -175,6 +192,47 @@ TEST(GF2Sparse, string_io3){
     // print_sparse_matrix(matrix);
     ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
     ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
+
+    vector<vector<int>> non_zero_row_coords = matrix.nonzero_rows();
+    // for(auto row: non_zero_row_coords){
+    //     print_vector(row);
+    // }
+    auto matrix2=GF2Sparse(26,25);
+    matrix2.csr_insert(non_zero_row_coords);
+    ASSERT_EQ(TEST_WITH_CSR(matrix2,csr_input),true);
+
+    auto test_io = io::csr_vector_to_string(non_zero_row_coords);
+    // cout<<test_io<<endl;
+    auto test_io2 = io::string_to_csr_vector(test_io);
+    auto matrix3 = GF2Sparse(26,25);
+    matrix3.csr_insert(test_io2);
+    ASSERT_EQ(TEST_WITH_CSR(matrix3,csr_input),true);
+
+    ASSERT_EQ(1,1);
+
+
+}
+
+
+TEST(GF2Sparse, string_io4){
+
+    auto matrix = GF2Sparse(26,25);
+
+    string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
+    vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
+    vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
+
+    ASSERT_EQ(matrix.m,26);
+    ASSERT_EQ(matrix.n,25);
+    ASSERT_EQ(csr_input.size(),matrix.m);
+    matrix.csr_insert(csr_input);
+    // // cout<<matrix.entry_count()<<endl;
+    // print_sparse_matrix(matrix);
+    ASSERT_EQ(TEST_WITH_CSR(matrix,csr_test),true);
+    ASSERT_EQ(TEST_WITH_CSR(matrix,csr_input),true);
+
+
+
 
 
     ASSERT_EQ(1,1);
@@ -269,11 +327,11 @@ TEST(GF2Sparse, mulvec_batch){
 
 }
 
-TEST(GF2Sparse,mulvec_timing){
+TEST(DISABLED_GF2Sparse,mulvec_timing){
     
     //Make sure to run this test in release mode.
 
-    cout<<"Hello"<<endl;
+    // cout<<"Hello"<<endl;
 
     auto matrix = GF2Sparse(100,100);
     for(int i = 0; i<100;i++) matrix.insert_entry(i,i,1);

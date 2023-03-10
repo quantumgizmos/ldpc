@@ -39,6 +39,27 @@ std::vector<std::vector<int>> string_to_csr_vector(std::string str) {
     return result;
 }
 
+std::string csr_vector_to_string(const std::vector<std::vector<int>>& vec) {
+    std::stringstream ss;
+    ss << "{";
+    // cout<<vec.size()<<endl;
+    for (size_t i = 0; i < vec.size(); i++) {
+        ss << "{";
+        if(vec[i].size()!=0){
+            for (size_t j = 0; j < vec[i].size(); j++) {
+                ss << vec[i][j] << ",";
+            }
+            ss.seekp(-1, std::ios_base::cur); // Remove the trailing comma
+        }
+        ss << "}";
+        if (i != vec.size() - 1) { // Check if this is the last row
+            ss << ",";
+        }
+    }
+    ss << "}";
+    return ss.str();
+}
+
 
     std::string getFullPath(const std::string& localPath) {
         // Get the current working directory
