@@ -94,8 +94,9 @@ using namespace sparse_matrix;
             }
 
 
-            GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse *mat_right){
-            
+            template<typename ENTRY_OBJ2>
+            GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse<ENTRY_OBJ2>* mat_right) {
+
                 if( this->n!=mat_right->m){
                     throw invalid_argument("Input matrices have invalid dimensions!");
                 }
@@ -118,6 +119,33 @@ using namespace sparse_matrix;
                 return output_mat;    
 
             }
+
+
+            // template<class ENTRY_OBJ2 = ENTRY_OBJ>
+            // GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse<ENTRY_OBJ2> *mat_right){
+            
+            //     if( this->n!=mat_right->m){
+            //         throw invalid_argument("Input matrices have invalid dimensions!");
+            //     }
+
+            //     auto output_mat = new GF2Sparse<ENTRY_OBJ>(this->m,mat_right->n);
+  
+                
+            //     for(int i = 0; i<output_mat->m; i++){
+            //         for(int j = 0; j<output_mat->n; j++){
+            //             int sum = 0;
+            //             for(auto e: mat_right->iterate_column(j)){
+            //                 for(auto g: this->iterate_row(i)){
+            //                     if(g->col_index == e->row_index) sum^=(g->value*e->value);
+            //                 }
+            //             }
+            //             if(sum) output_mat->insert_entry(i,j,1);
+            //         }
+            //     }
+
+            //     return output_mat;    
+
+            // }
 
             void add_rows(int i, int j){
                 //row i is the row that will be overwritten
