@@ -16,7 +16,6 @@ using namespace sparse_matrix;
 
     class GF2Entry: public EntryBase<GF2Entry>{ 
         public: 
-            uint8_t value;
             ~GF2Entry(){};
     };
 
@@ -24,22 +23,12 @@ using namespace sparse_matrix;
     class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
         public:
             typedef SparseMatrixBase<ENTRY_OBJ> BASE;
-            using BASE::remove;
-            using BASE::insert_entry;
-
             GF2Sparse(int m, int n): BASE::SparseMatrixBase(m,n){}
             ~GF2Sparse(){}
 
-            ENTRY_OBJ* insert_entry(int i, int j, uint8_t val = uint8_t(1)){
-                auto e = BASE::insert_entry(i,j);
-                e->value = val;
-                return e;
-            }
-
             void csr_row_insert(int row_index, vector<int>& column_indices){
                 for(int col_index: column_indices){
-                    // cout<<row_index<<" "<<col_index<<endl;
-                    this->insert_entry(row_index,col_index,1);
+                    this->insert_entry(row_index,col_index);
                 }
             }
 
@@ -109,10 +98,10 @@ using namespace sparse_matrix;
                         int sum = 0;
                         for(auto e: mat_right->iterate_column(j)){
                             for(auto g: this->iterate_row(i)){
-                                if(g->col_index == e->row_index) sum^=(g->value*e->value);
+                                if(g->col_index == e->row_index) sum^=1;
                             }
                         }
-                        if(sum) output_mat->insert_entry(i,j,1);
+                        if(sum) output_mat->insert_entry(i,j);
                     }
                 }
 
@@ -153,18 +142,16 @@ using namespace sparse_matrix;
                 vector<ENTRY_OBJ*> entries_to_remove;
 
                 for(auto g: this->iterate_row(j)){
-                    if(g->value==0) continue;
                     intersection=false;
                     for(auto e: this->iterate_row(i)){
                         if(g->col_index==e->col_index){
-                            e->value = (e->value + g->value)%2;
-                            if(e->value == 0) entries_to_remove.push_back(e);
+                            entries_to_remove.push_back(e);
                             intersection=true;
                             break;
                         }
                     }
                     if(!intersection){
-                        auto ne = this->insert_entry(i,g->col_index,g->value);
+                        auto ne = this->insert_entry(i,g->col_index);
                     }
                 }
 
@@ -172,30 +159,29 @@ using namespace sparse_matrix;
 
             }
 
-            void add_columns(int i, int j){
-                //row i is the row that will be overwritten
-                bool intersection;
-                for(auto g: this->iterate_column(j)){
-                    if(g->value==0) continue;
-                    intersection=false;
-                    for(auto e: this->iterate_column(i)){
-                        if(g->row_index==e->row_index){
-                            e->value = (e->value + g->value)%2;
-                            intersection=true;
-                            break;
-                        }
-                    }
-                    if(!intersection){
-                        auto ne = this->insert_entry(g->row_index,i,g->value);
-                    }
-                }
-            }
+            // void add_columns(int i, int j){
+            //     //row i is the row that will be overwritten
+            //     bool intersection;
+            //     for(auto g: this->iterate_column(j)){
+            //         intersection=false;
+            //         for(auto e: this->iterate_column(i)){
+            //             if(g->row_index==e->row_index){
+            //                 e->value = (e->value + g->value)%2;
+            //                 intersection=true;
+            //                 break;
+            //             }
+            //         }
+            //         if(!intersection){
+            //             auto ne = this->insert_entry(g->row_index);
+            //         }
+            //     }
+            // }
 
 
         GF2Sparse<ENTRY_OBJ>* transpose(){
             GF2Sparse<ENTRY_OBJ>* pcmT = new GF2Sparse<ENTRY_OBJ>(this->n,this->m);
             for(int i = 0; i<this->m; i++){
-                for(auto e: this->iterate_row(i)) pcmT->insert_entry(e->col_index,e->row_index, 1);
+                for(auto e: this->iterate_row(i)) pcmT->insert_entry(e->col_index,e->row_index);
             }
             return pcmT;
         }

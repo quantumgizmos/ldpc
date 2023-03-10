@@ -35,6 +35,10 @@ namespace sparse_matrix{
                 else return false;
             }
 
+            string str(){
+                return "1";
+            }
+
         ~EntryBase(){};
     };
 
@@ -44,6 +48,11 @@ namespace sparse_matrix{
         public:
             T value = T(0); // the value structure we are storing at each matrix location. We can define this as any object, and overload operators.
         ~SparseMatrixEntry(){};
+        
+        string str(){
+            return std::to_string(this->value);
+        }
+
     };
 
     template <class ENTRY_OBJ>
@@ -314,10 +323,8 @@ namespace sparse_matrix{
             for(int i = 0; i<this->m; i++){
                 vector<int> row;
                 for(auto e: this->iterate_row(i)){
-                    if(e->value == 1){
-                        this->node_count += 1;
-                        row.push_back(e->col_index);
-                    }
+                    this->node_count += 1;
+                    row.push_back(e->col_index);
                 }
                 nonzero.push_back(row);
             }

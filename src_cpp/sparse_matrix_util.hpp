@@ -26,16 +26,11 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = fals
                 ss << unsigned(0);
             } 
             else {
-                if(is_same<decltype(e->value), uint8_t>::value){
-                    ss << unsigned(e->value);
-                }
-                else{
-                    ss << e->value;
-                }
+                ss<<e->str();
                 // cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
             }
             
-            if(i!=(n-1)&& !is_same<decltype(e->value), uint8_t>::value) ss << " ";
+            if(i!=(n-1)) ss << " ";
         }
         if(j!=(m-1)) ss << "\n";
     }

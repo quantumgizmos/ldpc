@@ -4,14 +4,6 @@ SET(CMAKE_CXX_FLAGS  "-fopenmp")
 set (CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
-
-# set(CMAKE_BUILD_TYPE "-O3")
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
-
 ### The following two lines define an interface library (A header-only library)
 add_library(ldpc2 INTERFACE)
 target_include_directories(ldpc2 INTERFACE src_cpp src_cpp/include/rapidcsv src_cpp/include/robin_map)  

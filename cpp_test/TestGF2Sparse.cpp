@@ -16,7 +16,6 @@ bool TEST_WITH_CSR(GF2Sparse<GF2Entry>& matrix, vector<vector<int>> csr_matrix){
         for(auto col : row) row_set.insert(col);
         for(auto e: matrix.iterate_row(i)){
 
-            if(!e->value==1) return false;
             if(!e->row_index==i) return false;
             if(row_set.contains(e->col_index)){
                 row_set.erase(e->col_index); //this ensures there a no duplicates.
@@ -47,11 +46,11 @@ TEST(GF2Sparse, csr_insert){
     matrix.csr_insert(csr_mat);
     // print_sparse_matrix(matrix);
 
-    ASSERT_EQ(matrix.get_entry(0,0)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,1)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,2)->value, 1);
-    ASSERT_EQ(matrix.get_entry(2,2)->value, 1);
-    ASSERT_EQ(matrix.get_entry(2,0)->value, 0);
+    ASSERT_EQ(matrix.get_entry(0,0)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,1)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,2)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(2,2)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(2,0)->at_end(), true);
 
     //test using the TEST_WITH_CSR function
     ASSERT_EQ(TEST_WITH_CSR(matrix,csr_mat),true);
@@ -71,11 +70,11 @@ TEST(GF2Sparse, csr_insert_empty){
     matrix.csr_insert(csr_mat);
     // print_sparse_matrix(matrix);
 
-    ASSERT_EQ(matrix.get_entry(0,0)->value, 0);
-    ASSERT_EQ(matrix.get_entry(1,1)->value, 0);
-    ASSERT_EQ(matrix.get_entry(1,2)->value, 0);
-    ASSERT_EQ(matrix.get_entry(2,2)->value, 0);
-    ASSERT_EQ(matrix.get_entry(2,0)->value, 0);
+    ASSERT_EQ(matrix.get_entry(0,0)->at_end(), true);
+    ASSERT_EQ(matrix.get_entry(1,1)->at_end(), true);
+    ASSERT_EQ(matrix.get_entry(1,2)->at_end(), true);
+    ASSERT_EQ(matrix.get_entry(2,2)->at_end(), true);
+    ASSERT_EQ(matrix.get_entry(2,0)->at_end(), true);
 
     //test using the TEST_WITH_CSR function
     ASSERT_EQ(TEST_WITH_CSR(matrix,csr_mat),true);
@@ -96,11 +95,11 @@ TEST(GF2Sparse, add_rows){
     auto p1 = print_sparse_matrix(matrix,true);
     matrix.add_rows(1,0);
 
-    ASSERT_EQ(matrix.get_entry(0,0)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,1)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,2)->value, 1);
-    ASSERT_EQ(matrix.get_entry(2,2)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,0)->value, 1);
+    ASSERT_EQ(matrix.get_entry(0,0)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,1)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,2)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(2,2)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,0)->at_end(), false);
 
 
     vector<vector<int>> csr_mat2 = {{0},{0,1,2},{2}};
@@ -121,11 +120,11 @@ TEST(GF2Sparse, string_io){
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
     
     matrix.csr_insert(csr_input);
-    ASSERT_EQ(matrix.get_entry(0,0)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,1)->value, 1);
-    ASSERT_EQ(matrix.get_entry(1,2)->value, 1);
-    ASSERT_EQ(matrix.get_entry(2,2)->value, 0);
-    ASSERT_EQ(matrix.get_entry(2,0)->value, 0);
+    ASSERT_EQ(matrix.get_entry(0,0)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,1)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(1,2)->at_end(), false);
+    ASSERT_EQ(matrix.get_entry(2,2)->at_end(), true);
+    ASSERT_EQ(matrix.get_entry(2,0)->at_end(), true);
 
     vector<vector<int>> non_zero_row_coords = matrix.nonzero_rows();
     // for(auto row: non_zero_row_coords){
@@ -334,7 +333,7 @@ TEST(DISABLED_GF2Sparse,mulvec_timing){
     // cout<<"Hello"<<endl;
 
     auto matrix = GF2Sparse(100,100);
-    for(int i = 0; i<100;i++) matrix.insert_entry(i,i,1);
+    for(int i = 0; i<100;i++) matrix.insert_entry(i,i);
     vector<uint8_t> input_vector;
     vector<uint8_t> output_vector;
     input_vector.resize(matrix.n,0);

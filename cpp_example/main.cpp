@@ -169,10 +169,10 @@ int main()
 
 
     auto matrix = GF2Sparse(1,1000);
-    matrix.insert_entry(0,0,1);
+    matrix.insert_entry(0,0);
     matrix.add_rows(0,0);
-    matrix.insert_entry(0,0,1);
-    matrix.insert_entry(0,0,1);
+    matrix.insert_entry(0,0);
+    matrix.insert_entry(0,0);
     print_sparse_matrix(matrix);
 
 
