@@ -25,13 +25,13 @@ std::vector<std::vector<int>> string_to_csr_vector(std::string str) {
     while (ss >> c) {
         std::vector<int> row;
         bool left_bracket_observed = false;
-        while (ss >> c && c != '}') {
+        while (ss >> c && c != ']') {
             if (isdigit(c)) {
                 ss.putback(c);
                 ss >> num;
                 row.push_back(num);
             }
-            if(c=='{') left_bracket_observed = true;
+            if(c=='[') left_bracket_observed = true;
         }
         if(!left_bracket_observed) break;
         result.push_back(row);
@@ -41,22 +41,22 @@ std::vector<std::vector<int>> string_to_csr_vector(std::string str) {
 
 std::string csr_vector_to_string(const std::vector<std::vector<int>>& vec) {
     std::stringstream ss;
-    ss << "{";
+    ss << "[";
     // cout<<vec.size()<<endl;
     for (size_t i = 0; i < vec.size(); i++) {
-        ss << "{";
+        ss << "[";
         if(vec[i].size()!=0){
             for (size_t j = 0; j < vec[i].size(); j++) {
                 ss << vec[i][j] << ",";
             }
             ss.seekp(-1, std::ios_base::cur); // Remove the trailing comma
         }
-        ss << "}";
+        ss << "]";
         if (i != vec.size() - 1) { // Check if this is the last row
             ss << ",";
         }
     }
-    ss << "}";
+    ss << "]";
     return ss.str();
 }
 

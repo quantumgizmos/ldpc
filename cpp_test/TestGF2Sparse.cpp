@@ -116,7 +116,7 @@ TEST(GF2Sparse, add_rows){
 TEST(GF2Sparse, string_io){
 
     auto matrix = GF2Sparse(3,3);
-    string csr_string = " {{0},{1, 2}, {}} ";
+    string csr_string = " [[0],[1, 2], []] ";
     // cout<<csr_string<<endl;
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
     
@@ -150,7 +150,7 @@ TEST(GF2Sparse, string_io2){
 
     auto matrix = GF2Sparse(1,1);
 
-    string csr_string = "{{0}}";
+    string csr_string = "[[0]]";
     // cout<<csr_string<<endl;
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
     // for(auto a: csr_input) print_vector(a);
@@ -180,7 +180,7 @@ TEST(GF2Sparse, string_io3){
 
     auto matrix = GF2Sparse(26,25);
 
-    string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
+    string csr_string = "[[5,8],[],[13,20],[10,17],[2],[9,12],[9,17],[],[7,20,24],[],[],[],[],[],[19,23,24],[10,14],[13,20],[16],[],[3,5],[],[12],[],[20],[18],[16,24]]";
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
     vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
 
@@ -218,7 +218,7 @@ TEST(GF2Sparse, string_io4){
 
     auto matrix = GF2Sparse(26,25);
 
-    string csr_string = "{{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}}";
+    string csr_string = "[[5,8],[],[13,20],[10,17],[2],[9,12],[9,17],[],[7,20,24],[],[],[],[],[],[19,23,24],[10,14],[13,20],[16],[],[3,5],[],[12],[],[20],[18],[16,24]]";
     vector<vector<int>> csr_input = io::string_to_csr_vector(csr_string);
     vector<vector<int>> csr_test = {{5,8},{},{13,20},{10,17},{2},{9,12},{9,17},{},{7,20,24},{},{},{},{},{},{19,23,24},{10,14},{13,20},{16},{},{3,5},{},{12},{},{20},{18},{16,24}};
 

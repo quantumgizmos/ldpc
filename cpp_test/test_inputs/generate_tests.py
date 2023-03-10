@@ -18,9 +18,9 @@ def to_csr(mat: np.ndarray):
 
     m,n = mat.shape
 
-    csr_string ="{"
+    csr_string ="["
     for i in range(m):
-        csr_string+="{"
+        csr_string+="["
         first = True
         for j in range(n):
             if mat[i,j] == 1:
@@ -29,9 +29,9 @@ def to_csr(mat: np.ndarray):
                 csr_string+=f"{j}"
 
         # if(!first): csr_string+="\b"   
-        csr_string+="}"
+        csr_string+="]"
         if i!=(m-1): csr_string+=","
-    csr_string += "}"
+    csr_string += "]"
 
     return csr_string
 
@@ -159,7 +159,7 @@ def matmul_tests():
 
 if __name__ == "__main__":
 
-    # add_rows_tests()
-    # mulvec_tests()
-    # matmul_tests()
+    add_rows_tests()
+    mulvec_tests()
+    matmul_tests()
     mulvec_timing()
