@@ -141,6 +141,26 @@ namespace gf2sparse{
             return pcmT;
         }
 
+
+        template <typename ENTRY_OBJ2>
+        bool gf2_equal(GF2Sparse<ENTRY_OBJ2>* matrix2){
+
+            if(this->n!=matrix2->n || this->m!=matrix2->m) return false;
+            for(int i = 0; i<this->n; i++){
+                for(auto e: this->iterate_row(i)){
+                    auto g = matrix2->get_entry(e->row_index,e->col_index);
+                    if(g->at_end()) return false;
+                }
+                for(auto e: matrix2->iterate_row(i)){
+                    auto g = this->get_entry(e->row_index,e->col_index);
+                    if(g->at_end()) return false;
+                }
+            }
+
+            return true;
+
+        }
+
     };
 
     vector<int> NULL_INT_VECTOR = {};
@@ -241,10 +261,11 @@ namespace gf2sparse{
 
             GF2_MATRIX* rref(bool full_reduce = false, bool lower_triangular = false){
 
-                // int max_rank = min(this->U->m,this->U->n);
-                // this->rank = 0;
-
-                // std::fill(this->pivots.begin(),this->pviots.end(), false);
+                this->set_column_row_orderings(cols,rows);
+                this->initiliase_LU();
+                int max_rank = min(this->U->m,this->U->n);
+                this->rank = 0;
+                std::fill(this->pivots.begin(),this->pivots.end(), false);
 
                 // for(int pivot_index = 0; pivot_index<this->U->n; pivot_index++){
 
@@ -303,6 +324,8 @@ namespace gf2sparse{
             }
 
     };
+
+
 
 }
 

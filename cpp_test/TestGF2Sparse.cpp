@@ -241,6 +241,32 @@ TEST(GF2Sparse, string_io4){
 
 }
 
+TEST(GF2Sparse, gf2_equal1){
+
+    auto mat1 = new GF2Sparse(4,3);
+    auto mat2 = new GF2Sparse(3,4);
+    ASSERT_EQ(mat1->gf2_equal(mat2),false);
+
+}
+
+TEST(GF2Sparse, gf2_equal2){
+
+    auto mat1 = new GF2Sparse(3,3);
+    auto mat2 = new GF2Sparse(3,3);
+    ASSERT_EQ(mat1->gf2_equal(mat2),true);
+
+    for(int i = 0; i<3; i++){
+        mat1->insert_entry(i,i);
+        mat2->insert_entry(i,i);
+    }
+
+    ASSERT_EQ(mat1->gf2_equal(mat2),true);
+    mat2->insert_entry(1,0);
+    ASSERT_EQ(mat1->gf2_equal(mat2),false);
+    mat1->insert_entry(1,0);
+    ASSERT_EQ(mat1->gf2_equal(mat2),true);
+
+}
 
 
 TEST(GF2Sparse, add_rows_batch){

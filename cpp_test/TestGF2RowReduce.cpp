@@ -116,7 +116,18 @@ TEST(RowReduce, set_column_row_orderings2){
 }
 
 
+TEST(RowReduce, rref){
 
+    
+    auto matrix = GF2Sparse(3,3);
+    for(int i =0; i<3; i++) matrix.insert_entry(i,i);
+    matrix.insert_entry(1,0);
+
+    auto rr = RowReduce(&matrix);
+    rr.rref();
+
+
+}
 
 
 int main(int argc, char **argv)
