@@ -8,6 +8,7 @@
 
 
 using namespace std;
+using namespace gf2sparse;
 
 
 // Define a custom node type. eg. Here I define a node type that
