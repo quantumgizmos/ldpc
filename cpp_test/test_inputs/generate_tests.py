@@ -156,10 +156,29 @@ def matmul_tests():
             print(csv_string, file=output_file)
 
 
+def invert_tests():
+
+    output_file = open("gf2_invert_test.csv", "w+")
+
+    for j in range(100):
+        
+        n = np.random.randint(1,40)
+        
+        pcm = np.identity(n)
+
+        for _ in range(100):
+            row1 = np.random.randint(n)
+            row2 = np.random.randint(n)
+            if not np.array_equal(pcm[row1],pcm[row2]):
+                pcm[row1] = (pcm[row1] + pcm[row2]) % 2
+
+        csv_string=""
+        m,n =pcm.shape
+        csr = to_csr(pcm)
+        csv_string+=f"{m};{n};{csr};"
+        print(csv_string, file=output_file)
+
 
 if __name__ == "__main__":
 
-    add_rows_tests()
-    mulvec_tests()
-    matmul_tests()
-    mulvec_timing()
+    invert_tests()

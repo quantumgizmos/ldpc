@@ -6,6 +6,7 @@
 #include <memory>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 #include <omp.h>
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
@@ -163,6 +164,14 @@ namespace gf2sparse{
 
     };
 
+    template <class ENTRY_OBJ = GF2Entry>
+    GF2Sparse<ENTRY_OBJ>* identity(int n){
+        auto matrix = new GF2Sparse<ENTRY_OBJ>(n,n);
+        for(int i = 0; i<n; i++) matrix->insert_entry(i,i);
+        return matrix;
+    }
+
+
     vector<int> NULL_INT_VECTOR = {};
 
 
@@ -259,7 +268,7 @@ namespace gf2sparse{
 
 
 
-            GF2_MATRIX* rref(bool full_reduce = false, bool lower_triangular = false){
+            GF2_MATRIX* rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
                 this->set_column_row_orderings(cols,rows);
                 this->initiliase_LU();
@@ -267,59 +276,67 @@ namespace gf2sparse{
                 this->rank = 0;
                 std::fill(this->pivots.begin(),this->pivots.end(), false);
 
-                // for(int pivot_index = 0; pivot_index<this->U->n; pivot_index++){
+                for(int pivot_index = 0; pivot_index<this->U->n; pivot_index++){
 
-                //     if(this->rank == max_rank) break;
+                    if(this->rank == max_rank) break;
 
-                //     bool PIVOT_FOUND = false;
-                //     int max_row_weight = 1e99;
-                //     int swap_index;
-                //     for(auto e: this->U->iterate_column(pivot_index)){
-                //         if(e->row_index >= this->rank && this->U->get_row_degree(e->row_index)<max_row_weight){
-                //             swap_index = e->row_index;
-                //         }
-                //         PIVOT_FOUND=true;
-                //         this->pivots[pivot_index] = true;
-                //     }
+
+                    bool PIVOT_FOUND = false;
+                    int max_row_weight = std::numeric_limits<int>::max();
+                    int swap_index;
+                    for(auto e: this->U->iterate_column(pivot_index)){
+                        int row_index = e->row_index;
+                        int row_weight = this->U->get_row_degree(row_index);
+                        if(row_index >= this->rank && row_weight<max_row_weight){
+                            swap_index = e->row_index;
+                            max_row_weight = row_weight;
+                        }
+                        PIVOT_FOUND=true;
+                        this->pivots[pivot_index] = true;
+                    }
                     
-                //     if(!PIVOT_FOUND) continue;
+                    if(!PIVOT_FOUND) continue;
 
-                //     if(swap_index!=this->rank){
-                //         U->swap_rows(swap_index,this->rank);
-                //         L->swap_rows(swap_index,this->rank);
-                //     }
-
-                //     for(auto e: this->U->iterate_column(pivot_index)){
-                //         int row_index = this->e->row_index;
-                //         if(row_index>this->rank || (row_index<this->rank && full_reduce==true)){
-                //             this->U->add_rows(row_index,this->rank);
-                //             this->L->add_rows(row_index,this->rank);
-                //         }
-                //     }
+                    if(swap_index!=this->rank){
+                        U->swap_rows(swap_index,this->rank);
+                        L->swap_rows(swap_index,this->rank);
+                    }
 
 
-                //     this->rank++;
+                    vector<int> add_rows;
+                    for(auto e: this->U->iterate_column(pivot_index)){
+                        int row_index = e->row_index;
+                        if(row_index>this->rank || row_index<this->rank && full_reduce==true){
+                            add_rows.push_back(row_index);
+                        }
+                    }
 
-                // }
+                    for(int row: add_rows){
+                        this->U->add_rows(row,this->rank);
+                        this->L->add_rows(row,this->rank);
+                    }
 
-                // int pivot_count = 0;
-                // int non_pivot_count = 0;
-                // for(int i=0; i<this->U->n; i++){
-                //     if(this->pivots[i]){
-                //         this->cols[pivot_count] = i;
-                //         this->inv_cols[i] = pivot_count;
-                //         pivot_count++;
-                //     }
-                //     else{
-                //         this->cols[this->rank + non_pivot_count] = i;
-                //         this->inv_cols[i] = this->rank + non_pivot_count;
-                //         non_pivot_count++; 
-                //     }
-                // }
+
+                    this->rank++;
+
+                }
+
+                int pivot_count = 0;
+                int non_pivot_count = 0;
+                for(int i=0; i<this->U->n; i++){
+                    if(this->pivots[i]){
+                        this->cols[pivot_count] = i;
+                        this->inv_cols[i] = pivot_count;
+                        pivot_count++;
+                    }
+                    else{
+                        this->cols[this->rank + non_pivot_count] = i;
+                        this->inv_cols[i] = this->rank + non_pivot_count;
+                        non_pivot_count++; 
+                    }
+                }
 
                 return this->U;
-
-
 
             }
 

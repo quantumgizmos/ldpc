@@ -116,18 +116,70 @@ TEST(RowReduce, set_column_row_orderings2){
 }
 
 
-TEST(RowReduce, rref){
+TEST(RowReduce, rref1){
 
     
     auto matrix = GF2Sparse(3,3);
     for(int i =0; i<3; i++) matrix.insert_entry(i,i);
     matrix.insert_entry(1,0);
+    matrix.insert_entry(2,0);
 
     auto rr = RowReduce(&matrix);
-    rr.rref();
-
+    auto U = rr.rref();
+    auto B = rr.L->matmul(&matrix);
+    auto I = identity(3);
+    ASSERT_EQ(B->gf2_equal(I),true);
+    // print_sparse_matrix(*B);
 
 }
+
+TEST(RowReduce, rref2){
+
+    auto matrix = identity(3);
+    matrix->insert_entry(0,1);
+    auto rr = RowReduce(matrix);
+    auto U = rr.rref(true);
+    auto B = rr.L->matmul(matrix);
+    auto I = identity(3);
+    ASSERT_EQ(B->gf2_equal(I),true);
+
+}
+
+TEST(GF2Sparse, rref_batch){
+
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_invert_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+
+        auto matrix = new GF2Sparse(m,n);
+        matrix->csr_insert(input_csr_vector);
+
+        auto I = identity(n);
+
+        auto rr = new RowReduce(matrix);
+        rr->rref(true);
+        auto B = rr->L->matmul(matrix);
+
+        ASSERT_EQ(B->gf2_equal(I),true);
+
+        delete matrix;
+        delete rr;
+        delete I;
+        delete B;
+
+        }
+
+    }
 
 
 int main(int argc, char **argv)
