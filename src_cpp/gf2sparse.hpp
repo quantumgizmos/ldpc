@@ -28,6 +28,10 @@ namespace gf2sparse{
             GF2Sparse(int m, int n): BASE::SparseMatrixBase(m,n){}
             ~GF2Sparse(){}
 
+            static shared_ptr<GF2Sparse<ENTRY_OBJ>> New(int m, int n){
+                return make_shared<GF2Sparse<ENTRY_OBJ>>(m,n);
+            }
+
             void csr_row_insert(int row_index, vector<int>& column_indices){
                 for(int col_index: column_indices){
                     this->insert_entry(row_index,col_index);
@@ -86,13 +90,13 @@ namespace gf2sparse{
 
 
             template<typename ENTRY_OBJ2>
-            GF2Sparse<ENTRY_OBJ>* matmul(GF2Sparse<ENTRY_OBJ2>* mat_right) {
+            shared_ptr<GF2Sparse<ENTRY_OBJ>> matmul(shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right) {
 
                 if( this->n!=mat_right->m){
                     throw invalid_argument("Input matrices have invalid dimensions!");
                 }
 
-                auto output_mat = new GF2Sparse<ENTRY_OBJ>(this->m,mat_right->n);
+                auto output_mat = GF2Sparse<ENTRY_OBJ>::New(this->m,mat_right->n);
   
                 
                 for(int i = 0; i<output_mat->m; i++){
@@ -134,8 +138,8 @@ namespace gf2sparse{
 
             }
 
-        GF2Sparse<ENTRY_OBJ>* transpose(){
-            GF2Sparse<ENTRY_OBJ>* pcmT = new GF2Sparse<ENTRY_OBJ>(this->n,this->m);
+        shared_ptr<GF2Sparse<ENTRY_OBJ>> transpose(){
+            shared_ptr<GF2Sparse<ENTRY_OBJ>> pcmT = GF2Sparse<ENTRY_OBJ>::New(this->n,this->m);
             for(int i = 0; i<this->m; i++){
                 for(auto e: this->iterate_row(i)) pcmT->insert_entry(e->col_index,e->row_index);
             }
@@ -144,7 +148,7 @@ namespace gf2sparse{
 
 
         template <typename ENTRY_OBJ2>
-        bool gf2_equal(GF2Sparse<ENTRY_OBJ2>* matrix2){
+        bool gf2_equal(shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
 
             if(this->n!=matrix2->n || this->m!=matrix2->m) return false;
             for(int i = 0; i<this->n; i++){
@@ -165,8 +169,8 @@ namespace gf2sparse{
     };
 
     template <class ENTRY_OBJ = GF2Entry>
-    GF2Sparse<ENTRY_OBJ>* gf2_identity(int n){
-        auto matrix = new GF2Sparse<ENTRY_OBJ>(n,n);
+    shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n){
+        auto matrix = GF2Sparse<ENTRY_OBJ>::New(n,n);
         for(int i = 0; i<n; i++) matrix->insert_entry(i,i);
         return matrix;
     }

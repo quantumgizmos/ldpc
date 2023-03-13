@@ -169,14 +169,17 @@ int main()
     // print_sparse_matrix(*matrix);
 
 
-    auto matrix = GF2Sparse(1,1000);
-    matrix.insert_entry(0,0);
-    matrix.add_rows(0,0);
-    matrix.insert_entry(0,0);
-    matrix.insert_entry(0,0);
-    print_sparse_matrix(matrix);
+    // auto matrix = GF2Sparse(1,1000);
+    // matrix.insert_entry(0,0);
+    // matrix.add_rows(0,0);
+    // matrix.insert_entry(0,0);
+    // matrix.insert_entry(0,0);
+    // print_sparse_matrix(matrix);
 
+    auto mat = GF2Sparse<>::New(3,4);
 
+    cout<<mat->n<<endl;
+    print_sparse_matrix(*mat);
    
 
     // delete pcm;

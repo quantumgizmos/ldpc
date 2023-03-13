@@ -243,16 +243,16 @@ TEST(GF2Sparse, string_io4){
 
 TEST(GF2Sparse, gf2_equal1){
 
-    auto mat1 = new GF2Sparse(4,3);
-    auto mat2 = new GF2Sparse(3,4);
+    auto mat1 = GF2Sparse<>::New(4,3);
+    auto mat2 = GF2Sparse<>::New(3,4);
     ASSERT_EQ(mat1->gf2_equal(mat2),false);
 
 }
 
 TEST(GF2Sparse, gf2_equal2){
 
-    auto mat1 = new GF2Sparse(3,3);
-    auto mat2 = new GF2Sparse(3,3);
+    auto mat1 = GF2Sparse<>::New(3,3);
+    auto mat2 = GF2Sparse<>::New(3,3);
     ASSERT_EQ(mat1->gf2_equal(mat2),true);
 
     for(int i = 0; i<3; i++){
@@ -415,16 +415,16 @@ TEST(GF2Sparse, matmul){
         int m1 = stoi(row[0]);
         int n1 = stoi(row[1]);
         auto s1 = io::string_to_csr_vector(row[2]);
-        auto matrix1 = GF2Sparse(m1,n1);
-        matrix1.csr_insert(s1);
+        auto matrix1 = GF2Sparse<>::New(m1,n1);
+        matrix1->csr_insert(s1);
 
         // print_sparse_matrix(matrix1);
 
         int m2 = stoi(row[3]);
         int n2 = stoi(row[4]);
         auto s2 = io::string_to_csr_vector(row[5]);
-        auto matrix2 = GF2Sparse(m2,n2);
-        matrix2.csr_insert(s2);
+        auto matrix2 = GF2Sparse<>::New(m2,n2);
+        matrix2->csr_insert(s2);
 
         // cout<<endl;
         // print_sparse_matrix(matrix2);
@@ -433,16 +433,12 @@ TEST(GF2Sparse, matmul){
         int m3 = stoi(row[6]);
         int n3 = stoi(row[7]);
         auto s3 = io::string_to_csr_vector(row[8]);
-        auto matrix3 = GF2Sparse(m3,n3);
-        matrix3.csr_insert(s3);
+        auto matrix3 = GF2Sparse<>::New(m3,n3);
+        matrix3->csr_insert(s3);
 
-        // cout<<endl;
-        // print_sparse_matrix(matrix3);
+        auto actual_matrix3 = matrix1->matmul(matrix2);
 
-
-        auto actual_matrix3 = matrix1.matmul(&matrix2);
-
-        ASSERT_EQ(print_sparse_matrix(matrix3,true).str(), print_sparse_matrix(*actual_matrix3,true).str());
+        ASSERT_EQ(print_sparse_matrix(*matrix3,true).str(), print_sparse_matrix(*actual_matrix3,true).str());
         ASSERT_EQ(TEST_WITH_CSR(*actual_matrix3,s3),true);
 
 
