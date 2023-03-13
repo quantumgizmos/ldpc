@@ -208,27 +208,14 @@ TEST(GF2Sparse, lu1){
 
     mat1->insert_entry(1,0);
     mat1->insert_entry(0,1);
-
-    // print_sparse_matrix(*mat1);
-
     auto rr = new RowReduce(mat1);
     rr->rref(false,true);
-
-    // cout<<endl;
-
-    // print_sparse_matrix(*rr->U);
-
-    // cout<<endl;
     auto LU = rr->L->matmul(rr->U);
-    // print_sparse_matrix(*LU);
-
-    // cout<<endl;
-
     mat1->reorder_rows(rr->rows);
-    // print_vector(rr->rows);
-
-
     ASSERT_EQ(mat1->gf2_equal(LU),true);
+
+    delete mat1;
+    delete rr;  
 
 }
 
