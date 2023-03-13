@@ -301,7 +301,13 @@ namespace gf2sparse{
 
                     if(swap_index!=this->rank){
                         U->swap_rows(swap_index,this->rank);
-                        L->swap_rows(swap_index,this->rank);
+                        if(!lower_triangular){
+                            L->swap_rows(swap_index,this->rank);
+                        }
+                        auto temp1 = this->rows[swap_index];
+                        auto temp2 = this->rows[this->rank];
+                        this->rows[swap_index] = temp2;
+                        this->rows[this->rank] = temp1;
                     }
 
 
@@ -315,7 +321,8 @@ namespace gf2sparse{
 
                     for(int row: add_rows){
                         this->U->add_rows(row,this->rank);
-                        this->L->add_rows(row,this->rank);
+                        if(lower_triangular) this->L->insert_entry(row,pivot_index);
+                        else this->L->add_rows(row,this->rank);
                     }
 
 

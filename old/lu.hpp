@@ -401,7 +401,6 @@ using namespace sparse_matrix;
 
                                 rows[pivot_count] = temp2;
                                 rows[inv_rows[g->row_index]] = temp1;
-
                                 inv_rows[temp1]=inv_rows[g->row_index];
                                 inv_rows[temp2]=pivot_count;
                                 // U->swap_rows(pivot_index,g->row_index);

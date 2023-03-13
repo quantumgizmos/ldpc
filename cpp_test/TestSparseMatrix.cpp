@@ -369,6 +369,32 @@ TEST(DISABLED_SparseMatrix, iterator_timing_test){
 
 }
 
+TEST(SparseMatrix,reorder_rows){
+    SparseMatrix<int> matrix(3, 3);
+    matrix.insert_entry(0, 0, 1);
+    matrix.insert_entry(0, 1, 2);
+    matrix.insert_entry(0, 2, 3);
+    matrix.insert_entry(1, 0, 4);
+    matrix.insert_entry(1, 1, 5);
+    matrix.insert_entry(1, 2, 6);
+    matrix.insert_entry(2, 0, 7);
+    matrix.insert_entry(2, 1, 8);
+    matrix.insert_entry(2, 2, 9);
+
+    vector<int> new_order = {2,0,1};
+    matrix.reorder_rows(new_order);
+
+    EXPECT_EQ(matrix.get_entry(0, 0)->value, 7);
+    EXPECT_EQ(matrix.get_entry(0, 1)->value, 8);
+    EXPECT_EQ(matrix.get_entry(0, 2)->value, 9);
+    EXPECT_EQ(matrix.get_entry(1, 0)->value, 1);
+    EXPECT_EQ(matrix.get_entry(1, 1)->value, 2);
+    EXPECT_EQ(matrix.get_entry(1, 2)->value, 3);
+    EXPECT_EQ(matrix.get_entry(2, 0)->value, 4);
+    EXPECT_EQ(matrix.get_entry(2, 1)->value, 5);
+    EXPECT_EQ(matrix.get_entry(2, 2)->value, 6);
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

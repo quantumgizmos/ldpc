@@ -155,8 +155,8 @@ namespace sparse_matrix{
 
         void reorder_rows(vector<int> rows){
 
-            vector<ENTRY_OBJ*> temp_row_heads;
-            for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
+            vector<ENTRY_OBJ*> temp_row_heads = this->row_heads;
+            // for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
             for(int i = 0; i<m; i++){
                 this->row_heads[i] = temp_row_heads[rows[i]];
                 for(auto e: this->iterate_row(i)){
