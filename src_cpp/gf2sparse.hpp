@@ -168,6 +168,11 @@ namespace gf2sparse{
 
     };
 
+    template <typename ENTRY_OBJ1, typename ENTRY_OBJ2>
+    bool operator==(shared_ptr<GF2Sparse<ENTRY_OBJ1>> matrix1, shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
+        return matrix1->gf2_equal(matrix2);
+    }
+
     template <class ENTRY_OBJ = GF2Entry>
     shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n){
         auto matrix = GF2Sparse<ENTRY_OBJ>::New(n,n);
@@ -184,11 +189,9 @@ namespace gf2sparse{
 
         public:
         
-            GF2_MATRIX* A;
-            GF2Sparse<GF2Entry>* L;
-            GF2Sparse<GF2Entry>* U;
-            bool L_ALLOCATED;
-            bool U_ALLOCATED;
+            GF2_MATRIX A;
+            shared_ptr<GF2Sparse<GF2Entry>> L;
+            shared_ptr<GF2Sparse<GF2Entry>> U;
             vector<int> rows;
             vector<int> cols;
             vector<int> inv_rows;
@@ -197,7 +200,7 @@ namespace gf2sparse{
             bool FULL_REDUCE;
             int rank;
 
-            RowReduce(GF2_MATRIX* A){
+            RowReduce(GF2_MATRIX A){
 
                 this->A = A;
                 this->pivots.resize(this->A->n,false);
@@ -205,24 +208,14 @@ namespace gf2sparse{
                 this->rows.resize(this->A->m);
                 this->inv_cols.resize(this->A->n);
                 this->inv_rows.resize(this->A->m);
-
-                this->L_ALLOCATED = false;
-                this->U_ALLOCATED = false;
     
             }
 
-            ~RowReduce(){
-                if(this->L_ALLOCATED) delete this->L;
-                if(this->U_ALLOCATED) delete this->U;
-            }
+            ~RowReduce(){}
 
             void initiliase_LU(){
-                if(this->L_ALLOCATED) delete this->L;
-                if(this->U_ALLOCATED) delete this->U;
-                this->U = new GF2Sparse<GF2Entry>(this->A->m,this->A->n);
-                this->L = new GF2Sparse<GF2Entry>(this->A->m,this->A->m);
-                this->L_ALLOCATED = true;
-                this->U_ALLOCATED = true;
+                this->U = GF2Sparse<GF2Entry>::New(this->A->m,this->A->n);
+                this->L = GF2Sparse<GF2Entry>::New(this->A->m,this->A->m);
 
                 for(int i = 0; i<this->A->m; i++){
                     for(auto e: this->A->iterate_row(i)){
@@ -272,7 +265,7 @@ namespace gf2sparse{
 
 
 
-            GF2_MATRIX* rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+            GF2_MATRIX rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
                 this->set_column_row_orderings(cols,rows);
                 this->initiliase_LU();
