@@ -276,7 +276,9 @@ namespace gf2sparse{
                 this->rank = 0;
                 std::fill(this->pivots.begin(),this->pivots.end(), false);
 
-                for(int pivot_index = 0; pivot_index<this->U->n; pivot_index++){
+                for(int j = 0; j<this->U->n; j++){
+
+                    int pivot_index = this->cols[j];
 
                     if(this->rank == max_rank) break;
 
@@ -292,7 +294,7 @@ namespace gf2sparse{
                             max_row_weight = row_weight;
                         }
                         PIVOT_FOUND=true;
-                        this->pivots[pivot_index] = true;
+                        this->pivots[j] = true;
                     }
                     
                     if(!PIVOT_FOUND) continue;
@@ -323,15 +325,16 @@ namespace gf2sparse{
 
                 int pivot_count = 0;
                 int non_pivot_count = 0;
+                auto orig_cols = this->cols;
                 for(int i=0; i<this->U->n; i++){
                     if(this->pivots[i]){
-                        this->cols[pivot_count] = i;
-                        this->inv_cols[i] = pivot_count;
+                        this->cols[pivot_count] = orig_cols[i];
+                        this->inv_cols[this->cols[pivot_count]] = pivot_count;
                         pivot_count++;
                     }
                     else{
-                        this->cols[this->rank + non_pivot_count] = i;
-                        this->inv_cols[i] = this->rank + non_pivot_count;
+                        this->cols[this->rank + non_pivot_count] = orig_cols[i];
+                        this->inv_cols[this->cols[this->rank + non_pivot_count]] = this->rank + non_pivot_count;
                         non_pivot_count++; 
                     }
                 }

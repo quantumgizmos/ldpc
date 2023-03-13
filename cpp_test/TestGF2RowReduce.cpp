@@ -181,6 +181,23 @@ TEST(GF2Sparse, rref_batch){
 
     }
 
+TEST(GF2Sparse, reverse_cols){
+
+    auto mat1 = new GF2Sparse(3,3);
+    auto mat2 = new GF2Sparse(3,3);
+
+    for(int i = 0; i<3; i++){
+        mat1->insert_entry(i,3-1-i);
+    }
+
+    auto rr = new RowReduce(mat1);
+    vector<int> cols = {2,1,0};
+    rr->rref(false,false,cols);
+
+    ASSERT_EQ(mat1->gf2_equal(rr->U),true);
+
+}
+
 
 int main(int argc, char **argv)
 {
