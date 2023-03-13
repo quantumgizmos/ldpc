@@ -6,6 +6,7 @@
 #include <set>
 #include "io.hpp"
 #include <string>
+#include "sparse_matrix.hpp"
 
 using namespace gf2sparse;
 
@@ -410,6 +411,12 @@ TEST(GF2Sparse, matmul){
     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
+    class EntryTest: public sparse_matrix::EntryBase<EntryTest>{
+        public:
+            double extra_variable;
+            uint8_t value;
+    };
+
 
     int row_count = doc.GetColumn<string>(0).size();
 
@@ -428,7 +435,7 @@ TEST(GF2Sparse, matmul){
         int m2 = stoi(row[3]);
         int n2 = stoi(row[4]);
         auto s2 = io::string_to_csr_vector(row[5]);
-        auto matrix2 = GF2Sparse<>::New(m2,n2);
+        auto matrix2 = GF2Sparse<EntryTest>::New(m2,n2);
         matrix2->csr_insert(s2);
 
         // cout<<endl;

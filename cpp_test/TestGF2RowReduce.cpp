@@ -15,7 +15,6 @@ TEST(RowReduce, init1){
     auto matrix = GF2Sparse<>::New(3,3);
     for(int i =0; i<3; i++) matrix->insert_entry(i,i);
     matrix->insert_entry(1,0);
-
     auto rr = RowReduce(matrix);
 
 
