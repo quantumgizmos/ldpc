@@ -127,7 +127,7 @@ TEST(RowReduce, rref1){
     auto rr = RowReduce(&matrix);
     auto U = rr.rref();
     auto B = rr.L->matmul(&matrix);
-    auto I = identity(3);
+    auto I = gf2_identity(3);
     ASSERT_EQ(B->gf2_equal(I),true);
     // print_sparse_matrix(*B);
 
@@ -135,12 +135,12 @@ TEST(RowReduce, rref1){
 
 TEST(RowReduce, rref2){
 
-    auto matrix = identity(3);
+    auto matrix = gf2_identity(3);
     matrix->insert_entry(0,1);
     auto rr = RowReduce(matrix);
     auto U = rr.rref(true);
     auto B = rr.L->matmul(matrix);
-    auto I = identity(3);
+    auto I = gf2_identity(3);
     ASSERT_EQ(B->gf2_equal(I),true);
 
 }
@@ -164,7 +164,7 @@ TEST(GF2Sparse, rref_batch){
         auto matrix = new GF2Sparse(m,n);
         matrix->csr_insert(input_csr_vector);
 
-        auto I = identity(n);
+        auto I = gf2_identity(n);
 
         auto rr = new RowReduce(matrix);
         rr->rref(true);
@@ -197,6 +197,7 @@ TEST(GF2Sparse, reverse_cols){
     ASSERT_EQ(mat1->gf2_equal(rr->U),true);
 
 }
+
 
 
 int main(int argc, char **argv)

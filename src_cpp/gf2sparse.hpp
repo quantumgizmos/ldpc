@@ -165,7 +165,7 @@ namespace gf2sparse{
     };
 
     template <class ENTRY_OBJ = GF2Entry>
-    GF2Sparse<ENTRY_OBJ>* identity(int n){
+    GF2Sparse<ENTRY_OBJ>* gf2_identity(int n){
         auto matrix = new GF2Sparse<ENTRY_OBJ>(n,n);
         for(int i = 0; i<n; i++) matrix->insert_entry(i,i);
         return matrix;
