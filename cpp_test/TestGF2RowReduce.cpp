@@ -191,18 +191,14 @@ TEST(RowReduce, lu2){
     for(int i = 5; i>=3; i--){
         mat1->insert_entry(abs(i-5)+1,i);
     }
-
-    print_sparse_matrix(*mat1);
-
     mat1->insert_entry(4,5);
     mat1->insert_entry(4,3);
 
-    auto x = vector<uint8_t>{0,0,0,1,1,1};
-    auto y = vector<uint8_t>(mat1->n,0);
-    mat1->mulvec(x,y);
-
     auto rr = RowReduce(mat1);
     rr.rref(false, true);
+    auto LU = rr.L->matmul(rr.U);    
+    mat1->reorder_rows(rr.rows);
+    ASSERT_EQ(mat1==LU,true);
 
 }
 
@@ -211,38 +207,35 @@ TEST(RowReduce, lu2){
 TEST(GF2Sparse, lu_solve1){
 
 
-    auto mat1 = GF2Sparse<>::New(5,6);
+    auto mat1 = GF2Sparse<>::New(5,8);
     for(int i = 5; i>=3; i--){
         mat1->insert_entry(abs(i-5)+1,i);
     }
 
-    print_sparse_matrix(*mat1);
+    // print_sparse_matrix(*mat1);
 
     mat1->insert_entry(4,5);
     mat1->insert_entry(4,3);
 
-    auto x = vector<uint8_t>{0,0,0,1,1,1};
-    auto y = vector<uint8_t>(mat1->n,0);
+    auto x = vector<uint8_t>{0,0,0,1,1,1,0,0};
+    auto y = vector<uint8_t>(mat1->m,0);
     mat1->mulvec(x,y);
 
-    cout<<endl;
-
-    cout<<"x"<<endl;
-    print_vector(x);
-    cout<<"y"<<endl;
-    print_vector(y);
-
     auto rr = RowReduce(mat1);
-
     rr.rref(false,true);
+
+    auto incorrect_length = vector<uint8_t>(mat1->m+1,0);
+    EXPECT_THROW(rr.lu_solve(incorrect_length),std::invalid_argument);
 
     auto xe = rr.lu_solve(y);
 
-    cout<<"xe"<<endl;
-    print_vector(xe);
+    auto y2 = vector<uint8_t>(mat1->m,0);
 
-    // cout<<(1^1^1^1^0)<<endl;
+    mat1->mulvec(xe,y2);
 
+    for(int i = 0; i<mat1->m; i++){
+        ASSERT_EQ(y2[i] == y[i],true);
+    }
 
 }
 
