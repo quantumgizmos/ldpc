@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sparse_matrix.hpp>
 #include "gf2sparse.hpp"
+#include "gf2sparse_linalg.hpp"
 #include "sparse_matrix_util.hpp"
 #include "rapidcsv.h"
 #include "io.hpp"
@@ -212,7 +213,7 @@ int main()
     auto y = vector<uint8_t>(mat1->n,0);
     mat1->mulvec(x,y);
 
-    auto rr = RowReduce(mat1);
+    auto rr = gf2sparse_linalg::RowReduce(mat1);
     rr.rref(false, true);
 
     return 0;

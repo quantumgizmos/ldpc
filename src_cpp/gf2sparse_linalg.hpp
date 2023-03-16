@@ -1,5 +1,5 @@
-#ifndef GF2SPARSE_H
-#define GF2SPARSE_H
+#ifndef GF2LINALG_H
+#define GF2LINALG_H
 
 #include <iostream>
 #include <vector>
@@ -14,7 +14,7 @@ using namespace std;
 // using namespace sparse_matrix;
 using namespace gf2sparse;
 
-namespace gf2linalg{
+namespace gf2sparse_linalg{
 
 vector<int> NULL_INT_VECTOR = {};
 
@@ -63,7 +63,7 @@ class RowReduce{
                 for(auto e: this->A->iterate_row(i)){
                     this->U->insert_entry(e->row_index, e->col_index);
                 }
-                this->L->insert_entry(i,i);
+                if(!this->LOWER_TRIANGULAR) this->L->insert_entry(i,i);
             }
 
             this->LU_ALLOCATED = true;
@@ -143,14 +143,14 @@ class RowReduce{
 
                 if(swap_index!=this->rank){
                     U->swap_rows(swap_index,this->rank);
-                    if(!lower_triangular){
-                        L->swap_rows(swap_index,this->rank);
-                    }
+                    L->swap_rows(swap_index,this->rank);
                     auto temp1 = this->rows[swap_index];
                     auto temp2 = this->rows[this->rank];
                     this->rows[swap_index] = temp2;
                     this->rows[this->rank] = temp1;
                 }
+
+                if(this->LOWER_TRIANGULAR) this->L->insert_entry(this->rank,this->rank);
 
                 vector<int> add_rows;
                 for(auto e: this->U->iterate_column(pivot_index)){

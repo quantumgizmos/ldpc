@@ -178,6 +178,39 @@ def invert_tests():
         csv_string+=f"{m};{n};{csr};"
         print(csv_string, file=output_file)
 
+def invert_tests():
+
+    output_file = open("gf2_lu_solve_test.csv", "w+")
+
+    for j in range(100):
+        
+        n = np.random.randint(1,10)
+        m = np.random.randint(1,10)
+        
+        pcm = random_binary_matrix(height=m,width=n,sparsity=0.1*np.random.randint(10))
+
+        for _ in range(np.random.randint(10)):
+            pcm[np.random.randint(0,m)] = pcm[np.random.randint(0,m)]
+            pcm[:,np.random.randint(0,n)] = np.zeros(m).astype(int)
+        
+
+
+        vector = np.zeros(n).astype(int)
+        for k in range(n):
+            if np.random.random()<0.8*(10-np.random.randint(10)):
+                vector[k] = 1
+
+        output_vector = pcm@vector % 2
+
+        vector = vector_to_string(vector)
+        output_vector = vector_to_string(output_vector)
+
+        csv_string=""
+        m,n =pcm.shape
+        csr = to_csr(pcm)
+        csv_string+=f"{m};{n};{csr};{output_vector}"
+        print(csv_string, file=output_file)
+
 
 if __name__ == "__main__":
 

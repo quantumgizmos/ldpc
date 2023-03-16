@@ -15,6 +15,8 @@
 
 
 using namespace std;
+using namespace sparse_matrix;
+using namespace gf2sparse;
 
 const vector<int> NULL_INT_VECTOR = {};
 

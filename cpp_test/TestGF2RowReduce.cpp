@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "gf2sparse.hpp"
+#include "gf2sparse_linalg.hpp"
 #include "sparse_matrix_util.hpp"
 #include "rapidcsv.h"
 #include <iostream>
@@ -8,6 +9,7 @@
 #include <string>
 
 using namespace gf2sparse;
+using namespace gf2sparse_linalg;
 
 TEST(RowReduce, init1){
 
@@ -235,6 +237,125 @@ TEST(GF2Sparse, lu_solve1){
 
     for(int i = 0; i<mat1->m; i++){
         ASSERT_EQ(y2[i] == y[i],true);
+    }
+
+}
+
+
+TEST(GF2Sparse, lu_solve2){
+
+
+    auto mat1 = GF2Sparse<>::New(5,5);
+ 
+    auto csr_vector = io::string_to_csr_vector("[[0,2,3],[1,2,3],[2,3,4],[3,4],[0]]");
+
+    mat1->csr_insert(csr_vector);
+
+    // print_sparse_matrix(*mat1);
+
+    auto ys = io::binaryStringToVector("00011");
+
+    auto rr = RowReduce(mat1);
+
+    rr.rref(false,true);
+    vector<uint8_t> x ={1,1,1,0,1};
+    auto y = vector<uint8_t>(mat1->m,0);
+    mat1->mulvec(x,y); 
+
+    auto xe = rr.lu_solve(y);
+    vector<uint8_t> ye = vector<uint8_t>(mat1->m,0);
+    mat1->mulvec(xe,ye);
+    for(int i=0; i<mat1->m; i++){
+        ASSERT_EQ(ye[i]==y[i],true);
+    }
+
+    auto LU = rr.L->matmul(rr.U);
+    mat1->reorder_rows(rr.rows);
+    ASSERT_EQ(mat1==LU,true);
+
+}
+
+
+TEST(GF2Sparse, lu_solve3){
+
+
+    auto mat1 = GF2Sparse<>::New(6,7);
+ 
+    auto csr_vector = io::string_to_csr_vector("[[3],[2,3,6],[],[2,3,6],[2,3,6],[]]");
+
+    mat1->csr_insert(csr_vector);
+
+    print_sparse_matrix(*mat1);
+
+    auto y = io::binaryStringToVector("110110");
+
+    auto rr = RowReduce(mat1);
+
+    rr.rref(false,true);
+
+    cout<<endl;
+    print_sparse_matrix(*rr.L);
+    cout<<endl;
+    print_sparse_matrix(*rr.U);
+
+    cout<<rr.rank<<endl;
+
+    auto xe = rr.lu_solve(y);
+    vector<uint8_t> ye = vector<uint8_t>(mat1->m,0);
+    mat1->mulvec(xe,ye);
+    for(int i=0; i<mat1->m; i++){
+        ASSERT_EQ(ye[i]==y[i],true);
+    }
+
+
+
+
+    auto LU = rr.L->matmul(rr.U);
+    mat1->reorder_rows(rr.rows);
+    ASSERT_EQ(mat1==LU,true);
+
+}
+
+
+
+TEST(DISABLED_GF2Sparse, lu_solve_batch){
+
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        cout<<"row: "<<i+1<<endl;
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+        auto input_vector = io::binaryStringToVector(row[3]);
+
+        ASSERT_EQ(input_vector.size(),m);
+
+        auto matrix = GF2Sparse<>::New(m,n);
+        matrix->csr_insert(input_csr_vector);
+
+        auto rr = RowReduce(matrix);
+        rr.rref(false,true);
+        auto x = rr.lu_solve(input_vector);
+
+        vector<uint8_t> output_vector(m,0);
+
+        matrix->mulvec(x,output_vector);
+
+        print_sparse_matrix(*matrix);
+
+        for(auto i = 0; i<m; i++){
+            ASSERT_EQ(output_vector[i] == input_vector[i],true);
+        }
+
     }
 
 }
