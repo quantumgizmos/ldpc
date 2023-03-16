@@ -285,7 +285,7 @@ TEST(GF2Sparse, lu_solve3){
 
     mat1->csr_insert(csr_vector);
 
-    print_sparse_matrix(*mat1);
+    // print_sparse_matrix(*mat1);
 
     auto y = io::binaryStringToVector("110110");
 
@@ -293,12 +293,12 @@ TEST(GF2Sparse, lu_solve3){
 
     rr.rref(false,true);
 
-    cout<<endl;
-    print_sparse_matrix(*rr.L);
-    cout<<endl;
-    print_sparse_matrix(*rr.U);
+    // cout<<endl;
+    // print_sparse_matrix(*rr.L);
+    // cout<<endl;
+    // print_sparse_matrix(*rr.U);
 
-    cout<<rr.rank<<endl;
+    // cout<<rr.rank<<endl;
 
     auto xe = rr.lu_solve(y);
     vector<uint8_t> ye = vector<uint8_t>(mat1->m,0);
@@ -318,7 +318,7 @@ TEST(GF2Sparse, lu_solve3){
 
 
 
-TEST(DISABLED_GF2Sparse, lu_solve_batch){
+TEST(GF2Sparse, lu_solve_batch){
 
     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
@@ -327,8 +327,6 @@ TEST(DISABLED_GF2Sparse, lu_solve_batch){
     int row_count = doc.GetColumn<string>(0).size();
 
     for(int i = 0; i<row_count; i++){
-
-        cout<<"row: "<<i+1<<endl;
 
         std::vector<string> row = doc.GetRow<string>(i);
 
@@ -349,8 +347,6 @@ TEST(DISABLED_GF2Sparse, lu_solve_batch){
         vector<uint8_t> output_vector(m,0);
 
         matrix->mulvec(x,output_vector);
-
-        print_sparse_matrix(*matrix);
 
         for(auto i = 0; i<m; i++){
             ASSERT_EQ(output_vector[i] == input_vector[i],true);

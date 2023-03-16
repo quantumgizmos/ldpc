@@ -180,12 +180,12 @@ def invert_tests():
 
 def invert_tests():
 
-    output_file = open("gf2_lu_solve_test.csv", "w+")
+    output_file = open("gf2_lu_solve_test.csv", "a")
 
     for j in range(100):
         
-        n = np.random.randint(1,10)
-        m = np.random.randint(1,10)
+        n = np.random.randint(1,150)
+        m = np.random.randint(1,20)
         
         pcm = random_binary_matrix(height=m,width=n,sparsity=0.1*np.random.randint(10))
 

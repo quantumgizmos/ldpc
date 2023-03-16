@@ -130,6 +130,9 @@ class RowReduce{
                 int swap_index;
                 for(auto e: this->U->iterate_column(pivot_index)){
                     int row_index = e->row_index;
+
+                    if(row_index<this->rank) continue;
+
                     int row_weight = this->U->get_row_degree(row_index);
                     if(row_index >= this->rank && row_weight<max_row_weight){
                         swap_index = e->row_index;
@@ -166,7 +169,7 @@ class RowReduce{
                     else this->L->add_rows(row,this->rank);
                 }
 
-                this->rank++;
+                this->rank++;  
 
             }
 
