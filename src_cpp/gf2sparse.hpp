@@ -209,7 +209,11 @@ class RowReduce{
         vector<int> inv_rows;
         vector<int> inv_cols;
         vector<bool> pivots;
+        vector<uint8_t> x;
+        vector<uint8_t> b;
         bool FULL_REDUCE;
+        bool LU_ALLOCATED;
+        bool LOWER_TRIANGULAR;
         int rank;
 
         RowReduce(GF2_MATRIX A){
@@ -220,6 +224,10 @@ class RowReduce{
             this->rows.resize(this->A->m);
             this->inv_cols.resize(this->A->n);
             this->inv_rows.resize(this->A->m);
+            this->x.resize(this->A->n);
+            this->b.resize(this->A->m);
+            this->LU_ALLOCATED = false;
+            this->LOWER_TRIANGULAR = false;
 
         }
 
@@ -235,6 +243,8 @@ class RowReduce{
                 }
                 this->L->insert_entry(i,i);
             }
+
+            this->LU_ALLOCATED = true;
 
         }
         
@@ -279,6 +289,7 @@ class RowReduce{
 
         GF2_MATRIX rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
+            if(lower_triangular) this->LOWER_TRIANGULAR = true;
             this->set_column_row_orderings(cols,rows);
             this->initiliase_LU();
             int max_rank = min(this->U->m,this->U->n);
@@ -288,7 +299,7 @@ class RowReduce{
             for(int j = 0; j<this->U->n; j++){
 
                 int pivot_index = this->cols[j];
-
+       
                 if(this->rank == max_rank) break;
 
 
@@ -319,7 +330,6 @@ class RowReduce{
                     this->rows[this->rank] = temp1;
                 }
 
-
                 vector<int> add_rows;
                 for(auto e: this->U->iterate_column(pivot_index)){
                     int row_index = e->row_index;
@@ -330,10 +340,9 @@ class RowReduce{
 
                 for(int row: add_rows){
                     this->U->add_rows(row,this->rank);
-                    if(lower_triangular) this->L->insert_entry(row,pivot_index);
+                    if(lower_triangular) this->L->insert_entry(row,this->rank);
                     else this->L->add_rows(row,this->rank);
                 }
-
 
                 this->rank++;
 
@@ -357,6 +366,59 @@ class RowReduce{
 
             return this->U;
 
+        }
+
+        vector<uint8_t>& lu_solve(vector<uint8_t>& y){
+
+            /*
+            Equation: Ax = y
+ 
+            We use LU decomposition to arrange the above into the form:
+            LU(Qx) = PAQ^T(Qx)=Py
+
+            We can then solve for x using forward-backward substitution:
+            1. Forward substitution: Solve Lb = Py for b
+            2. Backward subsitution: Solve UQx = b for x
+            */
+
+
+            if(!this->LU_ALLOCATED || !this->LOWER_TRIANGULAR){
+                this->rref(false,true);
+            }
+
+            std::fill(this->x.begin(),this->x.end(), 0);
+            std::fill(this->b.begin(),this->b.end(), 0);
+
+            //Solves LUx=y
+            int row_sum;
+
+
+
+            //First we solve Lb = y, where b = Ux
+            //Solve Lb=y with forwared substitution
+            for(int row_index=0;row_index<this->L->m;row_index++){
+                row_sum=0;
+                for(auto e: L->iterate_row(row_index)){
+                    row_sum^=b[e->col_index];
+                }
+                b[row_index]=row_sum^y[this->rows[row_index]];
+            }
+
+
+
+
+
+            //Solve Ux = b with backwards substitution
+            for(int row_index=(rank-1);row_index>=0;row_index--){
+                row_sum=0;
+                for(auto e: U->iterate_row(row_index)){
+                    row_sum^=x[e->col_index];
+                }
+                x[this->cols[row_index]] = row_sum^b[row_index];
+            }
+
+            return x;
+       
         }
 
 

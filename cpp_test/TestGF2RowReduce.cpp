@@ -185,6 +185,67 @@ TEST(GF2Sparse, lu1){
 
 }
 
+TEST(RowReduce, lu2){
+
+    auto mat1 = GF2Sparse<>::New(5,6);
+    for(int i = 5; i>=3; i--){
+        mat1->insert_entry(abs(i-5)+1,i);
+    }
+
+    print_sparse_matrix(*mat1);
+
+    mat1->insert_entry(4,5);
+    mat1->insert_entry(4,3);
+
+    auto x = vector<uint8_t>{0,0,0,1,1,1};
+    auto y = vector<uint8_t>(mat1->n,0);
+    mat1->mulvec(x,y);
+
+    auto rr = RowReduce(mat1);
+    rr.rref(false, true);
+
+}
+
+
+
+TEST(GF2Sparse, lu_solve1){
+
+
+    auto mat1 = GF2Sparse<>::New(5,6);
+    for(int i = 5; i>=3; i--){
+        mat1->insert_entry(abs(i-5)+1,i);
+    }
+
+    print_sparse_matrix(*mat1);
+
+    mat1->insert_entry(4,5);
+    mat1->insert_entry(4,3);
+
+    auto x = vector<uint8_t>{0,0,0,1,1,1};
+    auto y = vector<uint8_t>(mat1->n,0);
+    mat1->mulvec(x,y);
+
+    cout<<endl;
+
+    cout<<"x"<<endl;
+    print_vector(x);
+    cout<<"y"<<endl;
+    print_vector(y);
+
+    auto rr = RowReduce(mat1);
+
+    rr.rref(false,true);
+
+    auto xe = rr.lu_solve(y);
+
+    cout<<"xe"<<endl;
+    print_vector(xe);
+
+    // cout<<(1^1^1^1^0)<<endl;
+
+
+}
+
 
 
 

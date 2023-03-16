@@ -176,10 +176,10 @@ int main()
     // matrix.insert_entry(0,0);
     // print_sparse_matrix(matrix);
 
-    auto mat = GF2Sparse<>::New(3,4);
+    // auto mat = GF2Sparse<>::New(3,4);
 
-    cout<<mat->n<<endl;
-    print_sparse_matrix(*mat);
+    // cout<<mat->n<<endl;
+    // print_sparse_matrix(*mat);
    
 
     // delete pcm;
@@ -192,6 +192,28 @@ int main()
 
     // long long volume = doc.GetCell<long long>(4, 2);
     // std::cout << "Volume " << volume << " on 2017-02-22." << std::endl;
+
+
+
+        auto mat1 = GF2Sparse<>::New(5,6);
+    for(int i = 5; i>=3; i--){
+        mat1->insert_entry(abs(i-5)+1,i);
+    }
+
+
+    mat1->insert_entry(4,5);
+    mat1->insert_entry(4,3);
+
+
+        print_sparse_matrix(*mat1);
+
+
+    auto x = vector<uint8_t>{0,0,0,1,1,1};
+    auto y = vector<uint8_t>(mat1->n,0);
+    mat1->mulvec(x,y);
+
+    auto rr = RowReduce(mat1);
+    rr.rref(false, true);
 
     return 0;
 
