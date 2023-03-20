@@ -1,10 +1,12 @@
 /**
- * @file gf2sparse.h
- * @brief A C++ library for sparse matrices in GF(2)
+ * @file gf2linalg.h
+ * @brief Header file for the gf2sparse_linalg namespace, which provides algorithms for performing linear algebra over GF(2).
+ * @author [Your Name]
+ * @date [Date]
  */
 
-#ifndef GF2SPARSE_H
-#define GF2SPARSE_H
+#ifndef GF2LINALG_H
+#define GF2LINALG_H
 
 #include <iostream>
 #include <vector>
@@ -12,146 +14,161 @@
 #include <iterator>
 #include <algorithm>
 #include <limits>
-#include <omp.h>
-#include "sparse_matrix.hpp"
+#include "gf2sparse.hpp"
 #include "sparse_matrix_util.hpp"
 
 using namespace std;
-using namespace sparse_matrix;
+// using namespace sparse_matrix;
+using namespace gf2sparse;
 
-namespace gf2sparse{
+namespace gf2sparse_linalg{
 
-/**
- * @brief An entry in a sparse matrix over GF(2)
- */
-class GF2Entry: public EntryBase<GF2Entry>{ 
-    public: 
-        ~GF2Entry(){};
-};
+vector<int> NULL_INT_VECTOR = {};
 
 /**
- * @brief A sparse matrix over GF(2)
+ * @brief Class for performing row reduction of a sparse GF(2) matrix.
+ * 
+ * @tparam GF2_MATRIX A sparse GF(2) matrix type.
  */
-template <class ENTRY_OBJ = GF2Entry>
-class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
+template <class GF2_MATRIX>
+class RowReduce{
+
     public:
-        typedef SparseMatrixBase<ENTRY_OBJ> BASE;
+    
+        GF2_MATRIX A; /**< Input sparse GF(2) matrix. */
+        shared_ptr<GF2Sparse<GF2Entry>> L; /**< Lower triangular matrix resulting from LU decomposition of A. */
+        shared_ptr<GF2Sparse<GF2Entry>> U; /**< Upper triangular matrix resulting from LU decomposition of A. */
+        vector<int> rows; /**< Vector of row indices corresponding to the rows of A in the desired order. */
+        vector<int> cols; /**< Vector of column indices corresponding to the columns of A in the desired order. */
+        vector<int> inv_rows; /**< Inverse of the rows vector. */
+        vector<int> inv_cols; /**< Inverse of the cols vector. */
+        vector<bool> pivots; /**< Boolean vector indicating whether each column of A is a pivot column or not. */
+        vector<uint8_t> x; /**< Solution to the linear system Ax = y. */
+        vector<uint8_t> b; /**< Intermediate vector used in solving the linear system Ax = y. */
+        bool FULL_REDUCE; /**< Boolean indicating whether full row reduction was performed or not. */
+        bool LU_ALLOCATED; /**< Boolean indicating whether the L and U matrices have been allocated or not. */
+        bool LOWER_TRIANGULAR; /**< Boolean indicating whether the L matrix is a lower triangular matrix or not. */
+        int rank; /**< Rank of the matrix A. */
 
         /**
-         * @brief Constructor for creating a new GF2Sparse object with the given dimensions
-         * @param m The number of rows in the matrix
-         * @param n The number of columns in the matrix
+         * @brief Construct a new RowReduce object from a sparse GF(2) matrix.
+         * 
+         * @param A Input sparse GF(2) matrix.
          */
-        GF2Sparse(int m, int n): BASE::SparseMatrixBase(m,n){}
+        RowReduce(GF2_MATRIX A){
 
-        /**
-         * @brief Destructor for GF2Sparse object
-         */
-        ~GF2Sparse(){}
+            this->A = A;
+            this->pivots.resize(this->A->n,false);
+            this->cols.resize(this->A->n);
+            this->rows.resize(this->A->m);
+            this->inv_cols.resize(this->A->n);
+            this->inv_rows.resize(this->A->m);
+            this->x.resize(this->A->n);
+            this->b.resize(this->A->m);
+            this->LU_ALLOCATED = false;
+            this->LOWER_TRIANGULAR = false;
 
-        /**
-         * @brief Creates a new GF2Sparse object with the given dimensions
-         * @param m The number of rows in the matrix
-         * @param n The number of columns in the matrix
-         * @return A shared pointer to the new GF2Sparse object
-         */
-        static shared_ptr<GF2Sparse<ENTRY_OBJ>> New(int m, int n){
-            return make_shared<GF2Sparse<ENTRY_OBJ>>(m,n);
         }
 
+        ~RowReduce(){}
+
         /**
-         * @brief Inserts a row of entries in compressed sparse row (CSR) format
-         * @param row_index The index of the row to insert
-         * @param column_indices The indices of the non-zero entries in the row
+         * @brief Allocate memory for the L and U matrices.
          */
-        void csr_row_insert(int row_index, vector<int>& column_indices);
+        void initiliase_LU(){
+            this->U = GF2Sparse<GF2Entry>::New(this->A->m,this->A->n);
+            this->L = GF2Sparse<GF2Entry>::New(this->A->m,this->A->m);
 
-        /**
-         * @brief Inserts a matrix in CSR format
-         * @param csr_matrix The matrix to insert
-         */
-        void csr_insert(vector<vector<int>>& csr_matrix);
+            for(int i = 0; i<this->A->m; i++){
+                for(auto e: this->A->iterate_row(i)){
+                    this->U->insert_entry(e->row_index, e->col_index);
+                }
+                if(!this->LOWER_TRIANGULAR) this->L->insert_entry(i,i);
+            }
+            this->LU_ALLOCATED = true;
 
-        /**
-         * @brief Multiplies the matrix by a vector and stores the result in another vector
-         * @param input_vector The vector to multiply the matrix with
-         * @param output_vector The vector to store the result in
-         * @return A reference to the output vector
-         */
-        vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector);
+        }
 
-        /**
-         * @brief Multiplies the matrix by a vector and returns the result as a new vector
-         * @param input_vector The vector to multiply the matrix with
-         * @return The resulting vector
-         */
-        vector<uint8_t> mulvec2(vector<uint8_t>& input_vector);
+    /**
+     * @brief Set the order of the columns and rows of the matrix.
+     * 
+     * @param cols Vector of column indices corresponding to the columns of A in the desired order.
+     * @param rows Vector of row indices corresponding to the rows of A in the desired order.
+     */
+    void set_column_row_orderings(vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        
+        if(cols==NULL_INT_VECTOR){
+            for(int i = 0; i<this->A->n; i++){
+                this->cols[i] = i;
+                this->inv_cols[this->cols[i]] = i;
+            }
+        }
+        else{
+            if(cols.size()!=this->A->n) throw invalid_argument("Input parameter `cols`\
+            describing the row ordering is of the incorrect length");
+            // this->cols=cols;
+            for(int i = 0; i<this->A->n; i++){
+                this->cols[i] = cols[i];
+                inv_cols[cols[i]] = i;
+            }
+        }
 
-        /**
-         * @brief Multiplies the matrix by a vector with parallel execution using OpenMP and stores the result in another vector
-         * @param input_vector The vector to multiply the matrix with
-         * @param output_vector The vector to store the result in
-         * @return A reference to the output vector
-         */
-        vector<uint8_t>& mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector);
+        if(rows==NULL_INT_VECTOR){
+            for(int i = 0; i<this->A->m; i++){
+                this->rows[i] = i;
+                this->inv_rows[this->rows[i]] = i;
+            }
+        }
+        else{
+            if(rows.size()!=this->A->m) throw invalid_argument("Input parameter `rows`\
+            describing the row ordering is of the incorrect length");
+            // this->rows=rows;
+            for(int i = 0; i<this->A->m; i++){
+                this->rows[i] = rows[i];
+                this->inv_rows[rows[i]] = i;
+            }
+        }
 
-        /**
-         * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
-         * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
-         * @param
-         * @param mat_right The matrix to multiply with
-        * @return The resulting matrix
-        */
-        template<typename ENTRY_OBJ2>
-        shared_ptr<GF2Sparse<ENTRY_OBJ>> matmul(shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right);
+    }
 
-        /**
-         * @brief Adds two rows together
-         * @param i The row to overwrite
-         * @param j The row to add to row i
-         */
-        void add_rows(int i, int j);
+    /**
+     * @brief Perform row reduction on the input matrix.
+     * 
+     * @param full_reduce Boolean indicating whether to perform full row reduction or not.
+     * @param lower_triangular Boolean indicating whether to compute the L matrix as a lower triangular matrix or not.
+     * @param cols Vector of column indices corresponding to the columns of A in the desired order.
+     * @param rows Vector of row indices corresponding to the rows of A in the desired order.
+     * @return GF2_MATRIX The upper triangular matrix resulting from the row reduction of A.
+     */
+    GF2_MATRIX rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
-        /**
-         * @brief Transposes the matrix
-         * @return A shared pointer to the transposed matrix
-         */
-        shared_ptr<GF2Sparse<ENTRY_OBJ>> transpose();
+        if(lower_triangular) this->LOWER_TRIANGULAR = true;
+        this->set_column_row_orderings(cols,rows);
+        this->initiliase_LU();
+        int max_rank = min(this->U->m,this->U->n);
+        this->rank = 0;
+        std::fill(this->pivots.begin(),this->pivots.end(), false);
 
-        /**
-         * @brief Compares two matrices for equality
-         * @tparam ENTRY_OBJ2 The type of entries in the matrix to compare with
-         * @param matrix2 The matrix to compare with
-         * @return True if the matrices are equal, false otherwise
-         */
-        template <typename ENTRY_OBJ2>
-        bool gf2_equal(shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2);
+        for(int j = 0; j<this->U->n; j++){
 
-};
+            int pivot_index = this->cols[j];
+   
+            if(this->rank == max_rank) break;
 
-/**
 
-    @brief Creates an identity matrix of the given size
-    @tparam ENTRY_OBJ The type of entries in the matrix
-    @param n The size of the identity matrix
-    @return A shared pointer to the identity matrix
-    */
-    template <class ENTRY_OBJ = GF2Entry>
-    shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n);
+            bool PIVOT_FOUND = false;
+            int max_row_weight = std::numeric_limits<int>::max();
+            int swap_index;
+            for(auto e: this->U->iterate_column(pivot_index)){
+                int row_index = e->row_index;
 
-}
+                if(row_index<this->rank) continue;
 
-/**
-
-    @brief Alias for GF2Entry
-    */
-    typedef gf2sparse::GF2Entry cygf2_entry;
-
-/**
-
-    @brief Alias for GF2Sparse
-    */
-    typedef gf2sparse::GF2Sparsegf2sparse::GF2Entry cygf2_sparse;
-
-#endif
-
+                int row_weight = this->U->get_row_degree(row_index);
+                if(row_index >= this->rank && row_weight<max_row_weight){
+                    swap_index = e->row_index;
+                    max_row_weight = row_weight;
+                    }
+                    PIVOT_FOUND=true;
+                    this->pivots[j] = true;
+                    }
