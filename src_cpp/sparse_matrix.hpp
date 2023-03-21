@@ -117,6 +117,16 @@ namespace sparse_matrix{
 
         }
 
+        /**
+         * @brief Allocates a new entry object and returns a pointer to it.
+         *
+         * If there are any entries that have been removed from the matrix, the function returns the last 
+         * removed entry. Otherwise, if there is space in the entries vector, a new entry is allocated at 
+         * the end of the vector. If the entries vector is full, the function allocates a new block of
+         * entries and returns the first entry in the new block.
+         *
+         * @return A pointer to a new entry object.
+         */
         ENTRY_OBJ* allocate_new_entry(){
             if(this->removed_entries.size()!=0){
                 auto e = this->removed_entries.back();
@@ -136,15 +146,36 @@ namespace sparse_matrix{
             return e;
         }
 
+        /**
+         * @brief Returns the number of non-zero entries in the matrix.
+         *
+         * @return The number of non-zero entries in the matrix.
+         */
         int entry_count(){
             return this->released_entry_count - this->n - this->m - this->removed_entries.size();
         }
 
+        /**
+         * @brief Computes the sparsity of the matrix
+         *
+         * The sparsity of a matrix is defined as the ratio of the number of zero elements in the
+         * matrix to the total number of elements in the matrix. This function computes the
+         * sparsity of the matrix represented by this object, and returns the result as a double value.
+         *
+         * @return The sparsity of the matrix as a double value.
+         */
         double sparsity(){
             return this->entry_count()/(this->m*this->n);
         }
 
-        //this function allocates space for an mxn matrix.
+        /**
+         * @brief Allocate space for an mxn matrix and initialize the row and column headers.
+         * 
+         * @details This function allocates space for an mxn matrix, and initializes the row and column headers 
+         * to self-referential values with row and column indices of -100, respectively, to indicate that they 
+         * are not value elements. This function must be called before any entries can be inserted into the matrix.
+         * 
+         */
         void allocate(){
                 
             this->row_heads.resize(this->m);
