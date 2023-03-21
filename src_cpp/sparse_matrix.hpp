@@ -561,6 +561,16 @@ public:
             friend bool operator!= (const Iterator& a, const Iterator& b) { return a.e != b.head; };
     };
 
+
+    /**
+     * @brief An iterator class that iterates over rows of a sparse matrix in a doubly linked list format.
+     * 
+     * This class inherits from the Iterator class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the rows of a sparse matrix in a doubly linked list format.
+     * 
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
     class RowIterator: public Iterator<RowIterator>{
         public:
             typedef Iterator<RowIterator> BASE;
@@ -583,6 +593,18 @@ public:
             }
     };
 
+    /**
+     * @brief A reverse iterator for iterating over the rows of a SparseMatrixBase
+     * 
+     * This iterator inherits from the `Iterator` base class using the CRTP pattern.
+     * It is designed to be used with a SparseMatrixBase object to iterate over the rows
+     * of the matrix in reverse order. It iterates over the rows in reverse order by
+     * starting at the `head->left` entry and moving to the left using the `operator++()`
+     * method. It can be indexed to start at any row of the matrix using the `operator[]`
+     * method.
+     * 
+     * @tparam ENTRY_OBJ The entry object class that the iterator will use for its entries.
+     */
     class ReverseRowIterator: public Iterator<ReverseRowIterator>{
         public:
             typedef Iterator<ReverseRowIterator> BASE;
@@ -605,6 +627,16 @@ public:
             }
     };
 
+
+    /**
+     * @brief A forward iterator class that iterates over columns of a sparse matrix in a doubly linked list format.
+     *
+     * This class inherits from the Iterator class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the columns of a sparse matrix in a doubly linked list format.
+     *
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
     class ColumnIterator: public Iterator<ColumnIterator>{
         public:
             typedef Iterator<ColumnIterator> BASE;
@@ -626,6 +658,16 @@ public:
             }
     };
 
+    /**
+     * @brief A reverse iterator class that iterates over rows of a sparse matrix in a doubly linked list format.
+     *
+     * This class inherits from the Iterator class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the rows of a sparse matrix in a doubly linked list format
+     * starting from the rightmost element in the row.
+     *
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
     class ReverseColumnIterator: public Iterator<ReverseColumnIterator>{
         public:
             typedef Iterator<ReverseColumnIterator> BASE;
@@ -648,21 +690,49 @@ public:
     };
 
 
+    /**
+     * @brief Returns an iterator that iterates over the given row of the sparse matrix in a forward direction
+     * 
+     * @param i The row index of the matrix to iterate over
+     * @throws invalid_argument If the given index is out of bounds
+     * @return RowIterator An iterator object that iterates over the given row
+     */
     RowIterator iterate_row(int i){
         if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
         return RowIterator(this)[i];
     }
 
+    /**
+     * @brief Returns an iterator that iterates over the given row of the sparse matrix in a reverse direction
+     * 
+     * @param i The row index of the matrix to iterate over
+     * @throws invalid_argument If the given index is out of bounds
+     * @return ReverseRowIterator An iterator object that iterates over the given row in reverse
+     */
     ReverseRowIterator reverse_iterate_row(int i){
         if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
         return ReverseRowIterator(this)[i];
     }
 
+    /**
+     * @brief Returns an iterator that iterates over the given column of the sparse matrix in a forward direction
+     * 
+     * @param i The column index of the matrix to iterate over
+     * @throws invalid_argument If the given index is out of bounds
+     * @return ColumnIterator An iterator object that iterates over the given column
+     */
     ColumnIterator iterate_column(int i){
         if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
         return ColumnIterator(this)[i];
     }
 
+    /**
+     * @brief Returns an iterator that iterates over the given column of the sparse matrix in a reverse direction
+     * 
+     * @param i The column index of the matrix to iterate over
+     * @throws invalid_argument If the given index is out of bounds
+     * @return ReverseColumnIterator An iterator object that iterates over the given column in reverse
+     */
     ReverseColumnIterator reverse_iterate_column(int i){
         if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
         return ReverseColumnIterator(this)[i];
