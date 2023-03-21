@@ -9,18 +9,32 @@ using namespace std;
 
 namespace sparse_matrix{
 
-    // A container for each matrix element
+    /**
+     * @brief Base class for defining the node types for Sparse Matrices
+     * 
+     * This class defines the basic properties of a node in a sparse matrix such as its row index, column index,
+     * and pointers to its neighboring nodes in the same row and column. Each node class that derives from this
+     * base class will inherit these properties and add any additional properties as required by the specific
+     * sparse matrix implementation.
+     * 
+     * @tparam DERIVED The derived class from EntryBase.
+     */
     template <class DERIVED>
     class EntryBase {
         public:
-            int row_index=-100; //row index
-            int col_index=-100; //col_index
-            
-            DERIVED* left = static_cast<DERIVED*>(this); //pointer to previous row element
-            DERIVED* right = static_cast<DERIVED*>(this); //pointer to next row element
-            DERIVED* up = static_cast<DERIVED*>(this); //pointer to previous column element
-            DERIVED* down = static_cast<DERIVED*>(this); //pointer to next column element
-        
+            int row_index=-100; /**< The row index of the matrix element */
+            int col_index=-100; /**< The column index of the matrix element */
+            DERIVED* left = static_cast<DERIVED*>(this); /**< Pointer to the previous element in the row */
+            DERIVED* right = static_cast<DERIVED*>(this); /**< Pointer to the next element in the row */
+            DERIVED* up = static_cast<DERIVED*>(this); /**< Pointer to the previous element in the column */
+            DERIVED* down = static_cast<DERIVED*>(this); /**< Pointer to the next element in the column */
+
+            /**
+             * @brief Resets the values of the entry to their default values.
+             * 
+             * This function resets the values of the entry to their default values. This is useful for when an 
+             * entry is removed from the matrix and needs to be returned to its default state for re-use.
+             */
             void reset(){
                 row_index=-100;
                 col_index=-100;
@@ -30,17 +44,36 @@ namespace sparse_matrix{
                 down = static_cast<DERIVED*>(this);
             }
 
+            /**
+             * @brief Checks if the entry is at the end of the list
+             * 
+             * This function checks if the entry is at the end of the list by checking if its row index is equal
+             * to -100. If it is, then the function returns true to indicate that the entry is at the end of the
+             * list.
+             * 
+             * @return True if the entry is at the end, false otherwise
+             */
             bool at_end(){
                 if(row_index==-100) return true;
                 else return false;
             }
 
+            /**
+             * @brief Returns a string representation of the entry
+             * 
+             * This function returns a string representation of the entry. In this implementation, the function
+             * always returns "1", but in other implementations, this function could be used to return the value
+             * stored in the entry or some other useful information.
+             * 
+             * @return The string representation of the entry
+             */
             string str(){
                 return "1";
             }
 
         ~EntryBase(){};
     };
+
 
 
     template <class T>
