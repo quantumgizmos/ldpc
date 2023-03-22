@@ -1,3 +1,34 @@
 [build-system]
-requires = ["cython","setuptools","wheel","numpy>=1.19.0"]
+requires = ["cython","setuptools>=61","numpy>=1.19.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "ldpc"
+description = "Python tools for low density parity check (LDPC) codes"
+readme = "README.md"
+authors = [
+    { name = "Joschka Roffe", email = "joschka@roffe.eu" }
+]
+license = { file = "LICENSE" }
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+]
+requires-python = ">=3.6"
+dependencies = [
+    "numpy>=1.19.0",
+    "scipy",
+    "tqdm",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/quantumgizmos/ldpc"
+Documentation = "https://ldpc.readthedocs.io/en/latest/"
+
+[tool.cibuildwheel]
+build = "cp3*"
+skip = "*-musllinux*"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
