@@ -9,7 +9,7 @@ The full documentation can be found [here](https://roffe.eu/software/ldpc/index.
 
 ## Installation from PyPi (recommended method)
 
-Installtion from [PyPi](https://pypi.org/project/ldpc/) requires Python>=3.6.
+Installtion from [PyPi](https://pypi.org/project/ldpc/) requires Python>=3.8.
 To install via pip, run:
 
 ```
