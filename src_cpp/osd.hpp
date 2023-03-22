@@ -37,14 +37,14 @@ class osd_decoder{
         int osd_method;
         int osd_order;
         int k, bit_count, check_count;
-        bp_sparse* pcm;
+        BpSparse* pcm;
         vector<uint8_t> osd0_decoding;
         vector<uint8_t> osdw_decoding;
         vector<uint8_t> bp_decoding;
         vector<vector<uint8_t>> osd_candidate_strings;
         vector<double> channel_probs;
         
-        osd_decoder(bp_sparse* parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
+        osd_decoder(BpSparse* parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
 
             this->pcm = parity_check_matrix;
             this->bit_count = pcm->n;

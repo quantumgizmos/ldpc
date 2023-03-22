@@ -18,23 +18,24 @@ using namespace std;
 using namespace sparse_matrix;
 using namespace gf2sparse;
 
+namespace bp{
+
 const vector<int> NULL_INT_VECTOR = {};
 
-class bp_entry: public EntryBase<bp_entry>{ 
+class BpEntry: public EntryBase<BpEntry>{ 
     public:  
         double bit_to_check_msg=0.0;
         double check_to_bit_msg=0.0;
-        uint8_t value = uint8_t(0);
-        ~bp_entry(){};
+        ~BpEntry(){};
 };
 
 
-typedef GF2Sparse<bp_entry> bp_sparse;
+typedef GF2Sparse<BpEntry> BpSparse;
 
 
-class bp_decoder{
+class BpDecoder{
     public:
-        bp_sparse* pcm;
+        BpSparse* pcm;
         int check_count,max_iter,decoding_method, schedule;
         int bit_count;
         double alpha;
@@ -51,8 +52,8 @@ class bp_decoder{
         bool converge;
         unsigned seed;
 
-        bp_decoder(
-            bp_sparse *matrix,
+        BpDecoder(
+            BpSparse *matrix,
             vector<double>& channel_probabilities,
             int maximum_iterations,
             int bp_method=1,
@@ -367,10 +368,12 @@ class bp_decoder{
 
         }
 
-        ~bp_decoder(){};
+        ~BpDecoder(){};
 
 };
 
-typedef bp_entry cybp_entry;
+} // end namespace bp
+
+typedef bp::BpEntry cybp_entry;
 
 #endif
