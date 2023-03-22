@@ -1,20 +1,11 @@
 from setuptools import setup, Extension
-# from distutils.extension import Extension
 from Cython.Build import cythonize
 import numpy
-from pathlib import Path
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
 
 VERSION="0.1.45"
 f=open("src/ldpc/VERSION","w+")
 f.write(VERSION)
 f.close()
-
-from shutil import copyfile
-files=["README.md","LICENSE"]
-for f in files:
-    copyfile(f,"src/ldpc/"+f)
 
 extension = Extension(
     name="ldpc.bp_decoder",
@@ -53,20 +44,6 @@ extension4 = Extension(
     )
 
 setup(
-    python_requires='>=3.6',
-    name='ldpc',
     version=VERSION,
-    description='Python tools for low density parity check (LDPC) codes',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/quantumgizmos/ldpc',
-    author='Joschka Roffe',
-    packages=["ldpc"],
-    package_dir={'':'src'},
     ext_modules=cythonize([extension,extension2,extension3,extension4]),
-    classifiers=['Development Status :: 4 - Beta'],
-    install_requires=["tqdm","scipy","numpy>=1.19.0"],
-    include_package_data=True,
-    zip_safe=False
 )
-

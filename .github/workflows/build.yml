@@ -6,7 +6,6 @@ on:
       - release
 
 jobs:
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -15,30 +14,39 @@ jobs:
         os: [ubuntu-latest,windows-latest,macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
-
+      - uses: actions/checkout@v3
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.3.1
-        env:
-          CIBW_SKIP: '*musllinux* pp*'
-          CIBW_ARCHS_MACOS: x86_64 arm64
-      - uses: actions/upload-artifact@v2
+        uses: pypa/cibuildwheel@v2.12.1
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
-      - uses: actions/setup-python@v2
-        name: Install Python
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.7'
+          python-version: "3.8"
+      - name: Build sdist
+        run: pipx run build --sdist
+      - name: Install sdist
+        run: python -m pip install --verbose dist/*.tar.gz
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
 
-      - name: Install twine
-        run: |
-          python -m pip install twine
-
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          twine upload ./wheelhouse/*
-
+  upload_pypi:
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_PASSWORD }}
+          skip_existing: true
+          verbose: true
