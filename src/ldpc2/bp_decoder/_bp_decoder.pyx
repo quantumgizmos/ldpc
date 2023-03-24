@@ -86,7 +86,7 @@ cdef class bp_decoder_base:
 
 
         #MEMORY ALLOCATION
-        self.pcm = new bp_sparse(self.m,self.n) #createst the C++ sparse matrix object
+        self.pcm = make_shared[bp_sparse](self.m,self.n,0) #createst the C++ sparse matrix object
         self.error_channel.resize(self.n) #C vector for the error channel
         self.syndrome.resize(self.m) #C vector for the syndrome
 
@@ -112,11 +112,11 @@ cdef class bp_decoder_base:
             for i in range(self.m):
                 for j in range(self.n):
                     if pcm[i,j]==1:
-                        self.pcm.insert_entry(i,j,1)
+                        self.pcm.get().insert_entry(i,j)
         elif isinstance(pcm,spmatrix):
             rows, cols = pcm.nonzero()
             for i in range(len(rows)):
-                self.pcm.insert_entry(rows[i], cols[i], pcm[rows[i], cols[i]])
+                self.pcm.get().insert_entry(rows[i], cols[i])
         else:
             raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
 
@@ -154,6 +154,64 @@ cdef class bp_decoder_base:
     @property
     def iter(self):
         return self.bpd.iterations
+
+    @property
+    def m(self):
+        """Returns the number of rows of the parity check matrix"""
+        return self.pcm.get().m
+
+    @property
+    def n(self):
+        """Returns the number of columns of the parity check matrix"""
+        return self.pcm.get().n
+    @property
+    def max_iter(self):
+        """Returns the maximum number of iterations"""
+        return self.max_iter
+
+    @max_iter.setter
+    def max_iter(self, value):
+        """Sets the maximum number of iterations"""
+        if not isinstance(value,int):
+            raise ValueError("max_iter input parameter is invalid. This must be specified as a positive int.")
+        if value<0:
+            raise ValueError(f"max_iter input parameter must be a postive int. Not {value}.")
+        self.max_iter = value if value != 0 else self.n
+
+    @property
+    def bp_method(self):
+        """Returns the belief propagation method used"""
+        return self.bp_method
+
+    @bp_method.setter
+    def bp_method(self, value):
+        """Sets the belief propagation method used"""
+        if str(value).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
+            self.bp_method = 0
+        elif str(value).lower() in ['min_sum','minimum_sum','ms','1','minimum sum','min sum']:
+            self.bp_method = 1
+        else:
+            raise ValueError(f"BP method '{value}' is invalid. \
+                    Please choose from the following methods: \
+                    'product_sum', 'minimum_sum'")
+
+    @property
+    def schedule(self):
+        """Returns the scheduling method used"""
+        return self.schedule
+
+    @schedule.setter
+    def schedule(self, value):
+        """Sets the scheduling method used"""
+        if str(value).lower() in ['parallel','p','0']:
+            self.schedule = 0
+        elif str(value).lower() in ['serial','s','1']:
+            self.schedule = 1
+        else:
+            raise ValueError(f"The BP schedule method '{value}' is invalid. \
+                    Please choose from the following methods: \
+                    'schedule=parallel', 'schedule=serial'")
+
         
 
 cdef class bp_decoder(bp_decoder_base):
