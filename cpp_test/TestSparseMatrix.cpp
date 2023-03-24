@@ -395,6 +395,69 @@ TEST(SparseMatrix,reorder_rows){
     EXPECT_EQ(matrix.get_entry(2, 2)->value, 6);
 }
 
+TEST(SparseMatrix,block_allocate){
+
+    auto pcm = SparseMatrix<int>::New(3,3,5);
+    ASSERT_EQ( pcm->entry_count(),0);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,6);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,6);
+    
+    pcm->insert_entry(0,0,1);
+    ASSERT_EQ( pcm->entry_count(),1);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,7);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,7);
+    
+    pcm->remove_entry(0,0);
+    
+    ASSERT_EQ( pcm->entry_count(),0);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,7);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,7);
+
+    pcm->insert_entry(1,1,99);
+
+    ASSERT_EQ( pcm->entry_count(),1);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,7);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,7);
+
+    pcm->insert_entry(1,2,99);
+
+    ASSERT_EQ( pcm->entry_count(),2);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,8);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,8);
+
+    pcm->insert_entry(2,0,99);
+    pcm->insert_entry(2,1,99);
+    pcm->insert_entry(2,2,99);
+
+    ASSERT_EQ( pcm->entry_count(),5);
+    ASSERT_EQ(pcm->allocated_entry_count,11);
+    ASSERT_EQ(pcm->released_entry_count,11);
+    ASSERT_EQ(pcm->block_idx,0);
+    ASSERT_EQ(pcm->block_position,11);
+
+
+    pcm->insert_entry(0,0,99);
+
+    ASSERT_EQ( pcm->entry_count(),6);
+    ASSERT_EQ(pcm->allocated_entry_count,17);
+    ASSERT_EQ(pcm->released_entry_count,12);
+    ASSERT_EQ(pcm->block_idx,1);
+    ASSERT_EQ(pcm->block_position,1);
+
+
+
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

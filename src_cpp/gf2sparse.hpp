@@ -42,7 +42,7 @@ class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
          * @param m The number of rows in the matrix
          * @param n The number of columns in the matrix
          */
-        GF2Sparse(int m, int n): BASE::SparseMatrixBase(m,n){}
+        GF2Sparse(int m, int n, int entry_count = 0): BASE::SparseMatrixBase(m,n,entry_count){}
 
         /**
          * @brief Destructor for GF2Sparse object
@@ -55,8 +55,8 @@ class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
          * @param n The number of columns in the matrix
          * @return A shared pointer to the new GF2Sparse object
          */
-        static shared_ptr<GF2Sparse<ENTRY_OBJ>> New(int m, int n){
-            return make_shared<GF2Sparse<ENTRY_OBJ>>(m,n);
+        static shared_ptr<GF2Sparse<ENTRY_OBJ>> New(int m, int n, int entry_count = 0){
+            return make_shared<GF2Sparse<ENTRY_OBJ>>(m,n,entry_count);
         }
 
         /**

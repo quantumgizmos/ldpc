@@ -75,19 +75,6 @@ class EntryBase {
 };
 
 
-
-template <class T>
-class SparseMatrixEntry: public EntryBase<SparseMatrixEntry<T>> {
-    public:
-        T value = T(0); // the value structure we are storing at each matrix location. We can define this as any object, and overload operators.
-    ~SparseMatrixEntry(){};
-    
-    string str(){
-        return std::to_string(this->value);
-    }
-
-};
-
 /**
  * @brief Template base class for implementing sparse matrices in a doubly linked list format
  * 
@@ -125,14 +112,15 @@ public:
      * @param check_count The number of rows in the matrix
      * @param bit_count The number of columns in the matrix
      */
-    SparseMatrixBase(int check_count, int bit_count){
+    SparseMatrixBase(int check_count, int bit_count, int entry_count = 0){
         this->m=check_count;
         this->n=bit_count;
-        this->entry_block_size = this->m+this->n;
         this->block_idx=-1;
         this->released_entry_count=0;
         this->allocated_entry_count=0;
+        this->entry_block_size = this->m+this->n + entry_count;
         allocate();
+        this->entry_block_size = this->m+this->n;
     }
 
     /**
@@ -748,15 +736,32 @@ public:
 };
 
 
+
+template <class T>
+class SparseMatrixEntry: public EntryBase<SparseMatrixEntry<T>> {
+    public:
+        T value = T(0); // the value structure we are storing at each matrix location. We can define this as any object, and overload operators.
+    ~SparseMatrixEntry(){};
+    
+    string str(){
+        return std::to_string(this->value);
+    }
+
+};
+
 template <class T, template<class> class ENTRY_OBJ=SparseMatrixEntry>
 class SparseMatrix: public SparseMatrixBase<ENTRY_OBJ<T>> {
 typedef SparseMatrixBase<ENTRY_OBJ<T>> BASE;
 public:
-    SparseMatrix(int m, int n): BASE::SparseMatrixBase(m,n){};
+    SparseMatrix(int m, int n, int entry_count = 0): BASE::SparseMatrixBase(m,n,entry_count){};
     ENTRY_OBJ<T>* insert_entry(int i, int j, T val = T(1)){
         auto e = BASE::insert_entry(i,j);
         e->value = val;
         return e;
+    }
+
+    static shared_ptr<SparseMatrix<T,ENTRY_OBJ>> New(int m, int n, int entry_count = 0){
+        return make_shared<SparseMatrix<T,ENTRY_OBJ>>(m,n,entry_count);
     }
 
     ENTRY_OBJ<T>* insert_row(int row_index, vector<int>& col_indices, vector<T>& values){
