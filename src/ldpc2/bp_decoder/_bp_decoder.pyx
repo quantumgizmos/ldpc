@@ -181,7 +181,7 @@ cdef class bp_decoder_base:
     @property
     def max_iter(self):
         """Returns the maximum number of iterations"""
-        return self.max_iter
+        return self.bpd.max_iter
 
     @max_iter.setter
     def max_iter(self, value):
@@ -190,25 +190,25 @@ cdef class bp_decoder_base:
             raise ValueError("max_iter input parameter is invalid. This must be specified as a positive int.")
         if value<0:
             raise ValueError(f"max_iter input parameter must be a postive int. Not {value}.")
-        self.max_iter = value if value != 0 else self.n
+        self.bpd.max_iter = value if value != 0 else self.n
 
     @property
     def bp_method(self):
         """Returns the belief propagation method used"""
-        if self.bp_method == 0:
+        if self.bpd.bp_method == 0:
             return 'product_sum'
-        elif self.bp_method == 1:
+        elif self.bpd.bp_method == 1:
             return 'minimum_sum'
         else:
-            return self.bp_method
+            return self.bpd.bp_method
 
     @bp_method.setter
     def bp_method(self, value):
         """Sets the belief propagation method used"""
         if str(value).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
-            self.bp_method = 0
+            self.bpd.bp_method = 0
         elif str(value).lower() in ['min_sum','minimum_sum','ms','1','minimum sum','min sum']:
-            self.bp_method = 1
+            self.bpd.bp_method = 1
         else:
             raise ValueError(f"BP method '{value}' is invalid. \
                     Please choose from the following methods: \
@@ -217,20 +217,20 @@ cdef class bp_decoder_base:
     @property
     def schedule(self):
         """Returns the scheduling method used"""
-        if self.schedule == 0:
+        if self.bpd.schedule == 0:
             return 'parallel'
-        elif self.schedule == 1:
+        elif self.bpd.schedule == 1:
             return 'serial'
         else:
-            return self.schedule
+            return self.bpd.schedule
 
     @schedule.setter
     def schedule(self, value):
         """Sets the scheduling method used"""
         if str(value).lower() in ['parallel','p','0']:
-            self.schedule = 0
+            self.bpd.schedule = 0
         elif str(value).lower() in ['serial','s','1']:
-            self.schedule = 1
+            self.bpd.schedule = 1
         else:
             raise ValueError(f"The BP schedule method '{value}' is invalid. \
                     Please choose from the following methods: \
@@ -256,45 +256,46 @@ cdef class bp_decoder_base:
         if not len(value) == self.n:
             raise Exception("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
         for i in range(self.n):
-            if not isinstance(value[i], int) or value[i] < 0 or value[i] >= self.n:
+            if not isinstance(value[i], (int, np.int64, np.int32)) or value[i] < 0 or value[i] >= self.n:
+                print(type(value[i]),"Value:", value[i], "i:", i, "n:", self.n)
                 raise ValueError(f"serial_schedule_order[{i}] is invalid. It must be a non-negative integer less than {self.n}.")
             self.bpd.serial_schedule_order[i] = value[i]
 
     @property
     def ms_scaling_factor(self):
         """Returns the ms_scaling_factor used"""
-        return self.ms_scaling_factor
+        return self.bpd.ms_scaling_factor
 
     @ms_scaling_factor.setter
     def ms_scaling_factor(self, value):
         """Sets the ms_scaling_factor used"""
         if not isinstance(value, float):
             raise ValueError("The ms_scaling factor must be specified as a float")
-        self.ms_scaling_factor = value
+        self.bpd.ms_scaling_factor = value
 
     @property
     def omp_thread_count(self):
         """Returns the omp_thread_count used"""
-        return self.omp_thread_count
+        return self.bpd.omp_thread_count
 
     @omp_thread_count.setter
     def omp_thread_count(self, value):
         """Sets the omp_thread_count used"""
         if not isinstance(value, int) or value < 1:
             raise ValueError("The omp_thread_count must be specified as a positive integer.")
-        self.omp_thread_count = value
+        self.bpd.omp_thread_count = value
 
     @property
     def random_serial_schedule(self):
         """Returns the value of random_serial_schedule"""
-        return self.random_serial_schedule
+        return self.bpd.random_serial_schedule
 
     @random_serial_schedule.setter
     def random_serial_schedule(self, value):
         """Sets the value of random_serial_schedule"""
         if not isinstance(value, int) or value < 0 or value > 1:
             raise ValueError("The value of random_serial_schedule must be either 0 or 1.")
-        self.random_serial_schedule = value
+        self.bpd.random_serial_schedule = value
         
 
 cdef class bp_decoder(bp_decoder_base):

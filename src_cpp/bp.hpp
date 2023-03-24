@@ -36,7 +36,7 @@ typedef GF2Sparse<BpEntry> BpSparse;
 class BpDecoder{
     public:
         shared_ptr<BpSparse> pcm;
-        int check_count,max_iter,decoding_method, schedule;
+        int check_count,max_iter,bp_method, schedule;
         int bit_count;
         double ms_scaling_factor;
         vector<uint8_t> decoding;
@@ -74,7 +74,7 @@ class BpDecoder{
             this->candidate_syndrome.resize(check_count);
             this->decoding.resize(bit_count);
             this->converge=0;
-            this->decoding_method=bp_method;
+            this->bp_method=bp_method;
             this->iterations=0;
             this->schedule = bp_schedule;
             this->omp_thread_count = omp_threads;
@@ -132,7 +132,7 @@ class BpDecoder{
             for(int it=1;it<=max_iter;it++){
 
                 if(CONVERGED) continue;
-                if(decoding_method==0){
+                if(bp_method==0){
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
                         double temp=1.0;
@@ -150,7 +150,7 @@ class BpDecoder{
                     }
                 }
 
-                else if(decoding_method==1){
+                else if(bp_method==1){
                     //check to bit updates
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
@@ -276,7 +276,7 @@ class BpDecoder{
                     log_prob_ratios[bit_index]=log((1-channel_probs[bit_index])/channel_probs[bit_index]);
                     // cout<<log_prob_ratios[bit_index]<<endl;
                 
-                    if(decoding_method==0){
+                    if(bp_method==0){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
                             
@@ -291,7 +291,7 @@ class BpDecoder{
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
                         }
                     }
-                    else if(decoding_method==1){
+                    else if(bp_method==1){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
                             int sgn=syndrome[check_index];

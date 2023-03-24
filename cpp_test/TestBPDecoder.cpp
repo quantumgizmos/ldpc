@@ -54,7 +54,7 @@ TEST(BpDecoderTest, InitializationTest)
     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
     EXPECT_EQ(max_iter, decoder->max_iter);
     EXPECT_EQ(0.625, decoder->ms_scaling_factor);
-    EXPECT_EQ(1, decoder->decoding_method);
+    EXPECT_EQ(1, decoder->bp_method);
     EXPECT_EQ(0, decoder->schedule);
     EXPECT_EQ(1, decoder->omp_thread_count);
     EXPECT_EQ(0, decoder->random_serial_schedule);
@@ -91,7 +91,7 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
     EXPECT_EQ(max_iter, decoder->max_iter);
     EXPECT_EQ(min_sum_scaling_factor, decoder->ms_scaling_factor);
-    EXPECT_EQ(bp_method, decoder->decoding_method);
+    EXPECT_EQ(bp_method, decoder->bp_method);
     EXPECT_EQ(bp_schedule, decoder->schedule);
     EXPECT_EQ(omp_threads, decoder->omp_thread_count);
     EXPECT_EQ(serial_schedule, decoder->serial_schedule_order);
@@ -153,7 +153,7 @@ TEST(BpDecoder, product_sum_parallel){
     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
     EXPECT_EQ(max_iter, decoder->max_iter);
     EXPECT_EQ(79879879, decoder->ms_scaling_factor);
-    EXPECT_EQ(0, decoder->decoding_method);
+    EXPECT_EQ(0, decoder->bp_method);
     EXPECT_EQ(0, decoder->schedule);
     EXPECT_EQ(1, decoder->omp_thread_count);
     EXPECT_EQ(0, decoder->random_serial_schedule);
@@ -192,7 +192,7 @@ TEST(BpDecoder, min_sum_parallel){
     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
     EXPECT_EQ(max_iter, decoder->max_iter);
     EXPECT_EQ(0.625, decoder->ms_scaling_factor);
-    EXPECT_EQ(1, decoder->decoding_method);
+    EXPECT_EQ(1, decoder->bp_method);
     EXPECT_EQ(0, decoder->schedule);
     EXPECT_EQ(1, decoder->omp_thread_count);
     EXPECT_EQ(0, decoder->random_serial_schedule);

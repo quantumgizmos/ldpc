@@ -35,6 +35,10 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
         vector[int] serial_schedule_order
         int random_schedule
         int iterations
+        int random_serial_schedule
+        int bp_method
+        int schedule
+        double ms_scaling_factor
 
 
 
