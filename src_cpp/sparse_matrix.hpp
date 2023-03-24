@@ -108,7 +108,10 @@ public:
     int m,n; //m: check-count; n: bit-count
     int node_count;
     int entry_block_size;
+    int allocated_entry_count;
     int released_entry_count;
+    int block_position;
+    int block_idx;
     vector<ENTRY_OBJ*> entries;
     vector<ENTRY_OBJ*> removed_entries;       
     vector<ENTRY_OBJ*> row_heads; //starting point for each row
@@ -126,7 +129,9 @@ public:
         this->m=check_count;
         this->n=bit_count;
         this->entry_block_size = this->m+this->n;
+        this->block_idx=-1;
         this->released_entry_count=0;
+        this->allocated_entry_count=0;
         allocate();
     }
 
@@ -134,7 +139,7 @@ public:
      * @brief Destructor for SparseMatrixBase. Frees memory occupied by entries.
      */
     ~SparseMatrixBase(){
-        for(auto e: this->entries) delete e;
+        for(auto entry_block: this->entries) delete[] entry_block;
         this->entries.clear();
     }
 
@@ -157,17 +162,19 @@ public:
         }
         // if there are no previously removed entries, create a new one
         // if there is no space for the new entry, add a new block of entries
-        if(this->released_entry_count==this->entries.size()){
-            int new_size = this->entries.size()+this->entry_block_size;
-            for(int i = 0; i<this->entry_block_size; i++){
-                this->entries.push_back(new ENTRY_OBJ());
-            }
+        if(this->released_entry_count==this->allocated_entry_count){
+            this->entries.push_back(new ENTRY_OBJ[this->entry_block_size]());
+            this->allocated_entry_count+=this->entry_block_size;
+            this->block_idx++;
+            this->block_position=0;
         }
 
-        // use the next available entry in the pool
-        auto e = this->entries[this->released_entry_count];
-        this->released_entry_count++;
 
+
+        // use the next available entry in the pool
+        auto e = &this->entries[block_idx][this->block_position];
+        this->block_position++;
+        this->released_entry_count++;
         return e;
     }
 
