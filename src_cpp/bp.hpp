@@ -38,11 +38,10 @@ class BpDecoder{
         shared_ptr<BpSparse> pcm;
         int check_count,max_iter,decoding_method, schedule;
         int bit_count;
-        double alpha;
+        double ms_scaling_factor;
         vector<uint8_t> decoding;
         vector<uint8_t> candidate_syndrome;
-        vector<uint8_t> synd;
-        vector<double> channel_probs;
+        vector<double>& channel_probs;
         vector<double> log_prob_ratios;
         vector<double> initial_log_prob_ratios;
         vector<int> serial_schedule_order;
@@ -57,23 +56,24 @@ class BpDecoder{
             vector<double>& channel_probabilities,
             int maximum_iterations,
             int bp_method=1,
-            double min_sum_scaling_factor=0.625,
+            double min_sum_scaling_factor = 0.625,
             int bp_schedule=0,
             int omp_threads = 1,
             vector<int> serial_schedule = NULL_INT_VECTOR,
-            int random_schedule = 0){
+            int random_schedule = 0):
+            channel_probs(channel_probabilities){
             
             this->pcm = matrix;
             this->check_count = pcm->m;
             this->bit_count = pcm->n;
-            this->channel_probs=channel_probabilities;
+            // this->channel_probs=channel_probabilities;
+            this->ms_scaling_factor=min_sum_scaling_factor;
             this->max_iter=maximum_iterations;
             this->initial_log_prob_ratios.resize(bit_count);
             this->log_prob_ratios.resize(bit_count);
             this->candidate_syndrome.resize(check_count);
             this->decoding.resize(bit_count);
             this->converge=0;
-            this->alpha = min_sum_scaling_factor;
             this->decoding_method=bp_method;
             this->iterations=0;
             this->schedule = bp_schedule;
@@ -123,7 +123,6 @@ class BpDecoder{
 
         vector<uint8_t>& bp_decode_parallel(vector<uint8_t>& syndrome){
 
-            synd=syndrome;
             converge=0;
             int CONVERGED = false;
 
@@ -145,7 +144,7 @@ class BpDecoder{
                         temp=1;
                         for(auto e: pcm->reverse_iterate_row(i)){
                             e->check_to_bit_msg*=temp;
-                            e->check_to_bit_msg = pow(-1,synd[i])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
+                            e->check_to_bit_msg = pow(-1,syndrome[i])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
                             temp*=tanh(e->bit_to_check_msg/2);
                         }
                     }
@@ -157,7 +156,7 @@ class BpDecoder{
                     for(int i=0;i<check_count;i++){
 
                         int total_sgn,sgn;
-                        total_sgn=synd[i];
+                        total_sgn=syndrome[i];
                         double temp = numeric_limits<double>::max();
 
                         for(auto e: pcm->iterate_row(i)){
@@ -176,7 +175,7 @@ class BpDecoder{
                                 e->check_to_bit_msg = temp;
                             }
                             
-                            e->check_to_bit_msg*=pow(-1.0,sgn)*alpha;
+                            e->check_to_bit_msg*=pow(-1.0,sgn)*ms_scaling_factor;
                         
                             if(abs(e->bit_to_check_msg)<temp){
                                 temp = abs(e->bit_to_check_msg);
@@ -218,7 +217,7 @@ class BpDecoder{
                 #pragma omp for
                 for(int i=0;i<check_count;i++){
                     if(loop_break) continue;
-                    if(candidate_syndrome[i]!=synd[i]){
+                    if(candidate_syndrome[i]!=syndrome[i]){
                         CONVERGED=false;
                         loop_break=true;
                     }
@@ -251,7 +250,6 @@ class BpDecoder{
 
         vector<uint8_t>& bp_decode_serial(vector<uint8_t>& syndrome){
 
-            synd=syndrome;
             int check_index;
             converge=0;
             // int it;
@@ -288,7 +286,7 @@ class BpDecoder{
                                     e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
                                 }
                             }
-                            e->check_to_bit_msg = pow(-1,synd[check_index])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
+                            e->check_to_bit_msg = pow(-1,syndrome[check_index])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
                             e->bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
                         }
@@ -296,7 +294,7 @@ class BpDecoder{
                     else if(decoding_method==1){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
-                            int sgn=synd[check_index];
+                            int sgn=syndrome[check_index];
                             temp = numeric_limits<double>::max();
                             for(auto g: pcm->iterate_row(check_index)){
                                 if(g!=e){
@@ -304,7 +302,7 @@ class BpDecoder{
                                     if(g->bit_to_check_msg<=0) sgn+=1;
                                 }
                             }
-                            e->check_to_bit_msg = alpha*pow(-1,sgn)*temp;
+                            e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*temp;
                             e->bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
                         }
@@ -334,7 +332,7 @@ class BpDecoder{
 
                 for(int i=0;i<check_count;i++){
                     if(loop_break) continue;
-                    if(candidate_syndrome[i]!=synd[i]){
+                    if(candidate_syndrome[i]!=syndrome[i]){
                         CONVERGED=0;
                         loop_break=true;
                     }

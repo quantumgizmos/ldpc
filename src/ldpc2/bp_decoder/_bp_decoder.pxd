@@ -28,10 +28,11 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
         vector[uint8_t]& decode(vector[uint8_t]& syndrome)
         vector[uint8_t] decoding
         vector[double] log_prob_ratios
+        vector[double] channel_probs
         int converge
         int max_iter
         int omp_thread_count
-        vector[double] serial_schedule
+        vector[int] serial_schedule_order
         int random_schedule
         int iterations
 

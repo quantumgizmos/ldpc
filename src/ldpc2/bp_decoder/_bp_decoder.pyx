@@ -77,6 +77,7 @@ cdef class bp_decoder_base:
         else:
             if not len(serial_schedule_order) == self.n:
                 raise Exception("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
+            self.serial_schedule_order.resize(self.n)
             for i in range(self.n): self.serial_schedule_order[i] = serial_schedule_order[i]
 
         self.random_serial_schedule = random_serial_schedule
@@ -142,6 +143,19 @@ cdef class bp_decoder_base:
         return out
 
     @property
+    def error_channel(self):
+        out = np.zeros(self.n).astype(float)
+        for i in range(self.n): out[i] = self.bpd.channel_probs[i]
+        return out
+
+    @error_channel.setter
+    def error_channel(self, value):
+        if len(value)!=self.n:
+            raise ValueError(f"The error channel vector must have length {self.n}, not {len(value)}.")
+        for i in range(self.n): self.error_channel[i] = value[i]
+
+
+    @property
     def log_prob_ratios(self):
         out=np.zeros(self.n)
         for i in range(self.n): out[i] = self.bpd.log_prob_ratios[i]
@@ -181,7 +195,12 @@ cdef class bp_decoder_base:
     @property
     def bp_method(self):
         """Returns the belief propagation method used"""
-        return self.bp_method
+        if self.bp_method == 0:
+            return 'product_sum'
+        elif self.bp_method == 1:
+            return 'minimum_sum'
+        else:
+            return self.bp_method
 
     @bp_method.setter
     def bp_method(self, value):
@@ -198,7 +217,12 @@ cdef class bp_decoder_base:
     @property
     def schedule(self):
         """Returns the scheduling method used"""
-        return self.schedule
+        if self.schedule == 0:
+            return 'parallel'
+        elif self.schedule == 1:
+            return 'serial'
+        else:
+            return self.schedule
 
     @schedule.setter
     def schedule(self, value):
@@ -212,6 +236,65 @@ cdef class bp_decoder_base:
                     Please choose from the following methods: \
                     'schedule=parallel', 'schedule=serial'")
 
+    @property
+    def serial_schedule_order(self):
+        """Returns the serial schedule order"""
+        if self.bpd.serial_schedule_order.size() == 0:
+            return None
+
+        out = np.zeros(self.n).astype(int)
+        for i in range(self.n):
+            out[i] = self.bpd.serial_schedule_order[i]
+        return out
+
+    @serial_schedule_order.setter
+    def serial_schedule_order(self, value):
+        """Sets the serial schedule order"""
+        if value is None:
+            self.serial_schedule_order = NULL_INT_VECTOR
+            return
+        if not len(value) == self.n:
+            raise Exception("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
+        for i in range(self.n):
+            if not isinstance(value[i], int) or value[i] < 0 or value[i] >= self.n:
+                raise ValueError(f"serial_schedule_order[{i}] is invalid. It must be a non-negative integer less than {self.n}.")
+            self.bpd.serial_schedule_order[i] = value[i]
+
+    @property
+    def ms_scaling_factor(self):
+        """Returns the ms_scaling_factor used"""
+        return self.ms_scaling_factor
+
+    @ms_scaling_factor.setter
+    def ms_scaling_factor(self, value):
+        """Sets the ms_scaling_factor used"""
+        if not isinstance(value, float):
+            raise ValueError("The ms_scaling factor must be specified as a float")
+        self.ms_scaling_factor = value
+
+    @property
+    def omp_thread_count(self):
+        """Returns the omp_thread_count used"""
+        return self.omp_thread_count
+
+    @omp_thread_count.setter
+    def omp_thread_count(self, value):
+        """Sets the omp_thread_count used"""
+        if not isinstance(value, int) or value < 1:
+            raise ValueError("The omp_thread_count must be specified as a positive integer.")
+        self.omp_thread_count = value
+
+    @property
+    def random_serial_schedule(self):
+        """Returns the value of random_serial_schedule"""
+        return self.random_serial_schedule
+
+    @random_serial_schedule.setter
+    def random_serial_schedule(self, value):
+        """Sets the value of random_serial_schedule"""
+        if not isinstance(value, int) or value < 0 or value > 1:
+            raise ValueError("The value of random_serial_schedule must be either 0 or 1.")
+        self.random_serial_schedule = value
         
 
 cdef class bp_decoder(bp_decoder_base):
@@ -243,7 +326,7 @@ cdef class bp_decoder(bp_decoder_base):
     @property
     def decoding(self):
         out = np.zeros(self.n).astype(int)
-        for i in range(self.n): out[i] = self.osd.osdw_decoding[i]
+        for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
 
 
