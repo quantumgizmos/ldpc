@@ -57,7 +57,7 @@ class BpDecoder{
             int maximum_iterations,
             int bp_method=1,
             double min_sum_scaling_factor = 0.625,
-            int bp_schedule=0,
+            int schedule=0,
             int omp_threads = 1,
             vector<int> serial_schedule = NULL_INT_VECTOR,
             int random_schedule = 0):
@@ -76,7 +76,7 @@ class BpDecoder{
             this->converge=0;
             this->bp_method=bp_method;
             this->iterations=0;
-            this->schedule = bp_schedule;
+            this->schedule = schedule;
             this->omp_thread_count = omp_threads;
             this->random_schedule_seed = random_schedule_seed;
 

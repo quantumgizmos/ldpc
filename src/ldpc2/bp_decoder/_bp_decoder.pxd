@@ -44,16 +44,14 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
 
 cdef class bp_decoder_base:
     cdef shared_ptr[bp_sparse] pcm
-    cdef int m, n, max_iter, bp_method, schedule
+    cdef int m, n, schedule
     cdef vector[uint8_t] decoding
     cdef vector[uint8_t] syndrome
     cdef vector[double] error_channel
     cdef double error_rate
-    cdef double ms_scaling_factor
     cdef bool MEMORY_ALLOCATED
     cdef bp_decoder_cpp *bpd
     cdef str user_dtype
-    cdef int omp_thread_count
     cdef vector[int] serial_schedule_order
     cdef int random_serial_schedule
 

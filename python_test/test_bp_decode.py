@@ -10,6 +10,7 @@ def test_rep_code_ps():
 
     bpd = bp_decoder(H,error_rate=0.1)
     assert bpd is not None
+    print(bpd.bp_method)
     assert bpd.bp_method == "product_sum"
     assert bpd.schedule == "parallel"
     assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
@@ -69,6 +70,7 @@ def test_rep_code_ps_serial():
     bpd.decode(np.array([1, 1]))
     assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
 
-if __name__ == '__main__':
-    test_rep_code_ps()
-    test_rep_code_ms()
+# if __name__ == '__main__':
+#     # pass
+#     test_rep_code_ps()
+#     test_rep_code_ms()

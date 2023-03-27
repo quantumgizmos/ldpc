@@ -45,8 +45,6 @@ cdef class bp_decoder_base:
         else: raise ValueError(f"BP method '{bp_method}' is invalid.\
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum'")
-        self.bp_method = bp_method
-
 
         #max_iter input parameter
         if not isinstance(max_iter,int):
@@ -54,13 +52,11 @@ cdef class bp_decoder_base:
         if max_iter<0:
             raise ValueError(f"max_iter input parameter must be a postive int. Not {max_iter}.")
         if max_iter==0:
-            self.max_iter = self.n
-        else: self.max_iter = max_iter
+            max_iter = self.n
 
         #ms_scaling_factor input parameter
         if not isinstance(ms_scaling_factor, float):
-            raise ValueError("The ms_scaling factor must be specified as a float")
-        self.ms_scaling_factor=ms_scaling_factor
+            raise TypeError("The ms_scaling factor must be specified as a float")
 
         #schedule input parameter
         if str(schedule).lower() in ['parallel','p','0']:
@@ -70,20 +66,19 @@ cdef class bp_decoder_base:
         else: raise ValueError(f"The BP schedule method '{schedule}' is invalid.\
                             Please choose from the following methods:1) 'schedule = parallel',\
                             'schedule=serial'")
-        self.schedule = schedule
 
         if serial_schedule_order is None:
             self.serial_schedule_order = NULL_INT_VECTOR
         else:
             if not len(serial_schedule_order) == self.n:
-                raise Exception("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
+                raise ValueError("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
             self.serial_schedule_order.resize(self.n)
             for i in range(self.n): self.serial_schedule_order[i] = serial_schedule_order[i]
 
-        self.random_serial_schedule = random_serial_schedule
+        # self.random_serial_schedule = random_serial_schedule
 
         ## thread_count
-        self.omp_thread_count = omp_thread_count
+        # self.omp_thread_count = omp_thread_count
 
 
         #MEMORY ALLOCATION
@@ -122,7 +117,7 @@ cdef class bp_decoder_base:
             raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
 
 
-        self.bpd = new bp_decoder_cpp(self.pcm,self.error_channel,self.max_iter,self.bp_method,self.ms_scaling_factor,self.schedule,self.omp_thread_count,self.serial_schedule_order,self.random_serial_schedule)
+        self.bpd = new bp_decoder_cpp(self.pcm,self.error_channel,max_iter,bp_method,ms_scaling_factor,schedule,omp_thread_count,self.serial_schedule_order,random_serial_schedule)
         self.MEMORY_ALLOCATED=True
 
     def __del__(self):

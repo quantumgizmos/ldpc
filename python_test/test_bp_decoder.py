@@ -66,35 +66,35 @@ def test_bp_decoder_init():
 
     # test with invalid max_iter type
     with pytest.raises(ValueError):
-        decoder = bp_decoder(pcm, max_iter='invalid')
+        decoder = bp_decoder(pcm, error_rate=0.1,max_iter='invalid')
 
     # test with invalid max_iter value
     with pytest.raises(ValueError):
-        decoder = bp_decoder(pcm, max_iter=-1)
+        decoder = bp_decoder(pcm, error_rate =0.1, max_iter=-1)
 
     # test with invalid bp_method value
     with pytest.raises(ValueError):
-        decoder = bp_decoder(pcm, bp_method='invalid')
+        decoder = bp_decoder(pcm,error_rate=0.1, bp_method='invalid')
 
     # test with invalid schedule value
     with pytest.raises(ValueError):
-        decoder = bp_decoder(pcm, schedule='invalid')
+        decoder = bp_decoder(pcm,error_rate=0.1, schedule='invalid')
 
     # test with invalid ms_scaling_factor value
-    with pytest.raises(ValueError):
-        decoder = bp_decoder(pcm, ms_scaling_factor='invalid')
+    with pytest.raises(TypeError):
+        decoder = bp_decoder(pcm,error_rate=0.1, ms_scaling_factor='invalid')
 
     # test with invalid omp_thread_count value
     with pytest.raises(TypeError):
-        decoder = bp_decoder(pcm, omp_thread_count='invalid')
+        decoder = bp_decoder(pcm, error_rate=0.1,omp_thread_count='invalid')
 
     # test with invalid random_serial_schedule value
     with pytest.raises(TypeError):
-        decoder = bp_decoder(pcm, random_serial_schedule='invalid')
+        decoder = bp_decoder(pcm, error_rate=0.1, random_serial_schedule='invalid')
 
     # test with invalid serial_schedule_order value
-    with pytest.raises(Exception):
-        decoder = bp_decoder(pcm, serial_schedule_order=[1, 2])
+    with pytest.raises(ValueError):
+        decoder = bp_decoder(pcm, error_rate=0.1, serial_schedule_order=[1, 2])
 
 
 # if __name__ == "__main__":
