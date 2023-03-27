@@ -1,13 +1,15 @@
 from ldpc2.bp_decoder import bp_decoder
 import numpy as np
 from tqdm import tqdm
+from scipy.sparse import csr_matrix
+
 
 from ldpc.codes import rep_code
 run_count = 1000
-error_rate = 0.1
+error_rate = 0.2
 np.random.seed(0)
-H = rep_code(1000)
-bpd=bp_decoder(H, error_rate=error_rate, bp_method='ps', schedule = "parallel", ms_scaling_factor=0.8, max_iter=10,omp_thread_count=4)
+H = csr_matrix(rep_code(10000))
+bpd=bp_decoder(H, error_rate=error_rate, bp_method='ps', schedule = "serial", ms_scaling_factor=1.0, max_iter=100,omp_thread_count=1)
 
 m, n = H.shape
 

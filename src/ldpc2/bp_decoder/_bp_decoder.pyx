@@ -262,6 +262,20 @@ cdef class bp_decoder_base:
         self.bpd.random_serial_schedule = value
         
 
+# define the fused types
+ctypedef fused SupportedTypes:
+    np.int8_t
+    np.int16_t
+    np.int32_t
+    np.int64_t
+    np.uint8_t
+    np.uint16_t
+    np.uint32_t
+    np.uint64_t
+    np.float32_t
+    np.float64_t
+
+
 cdef class bp_decoder(bp_decoder_base):
     """
     Belief propagation decoder for binary linear codes.
@@ -344,6 +358,34 @@ cdef class bp_decoder(bp_decoder_base):
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
+
+        # def decode(self, SupportedTypes[:] arr) -> np.ndarray:
+        # """
+        # Decode the input syndrome using belief propagation decoding algorithm.
+
+        # Parameters
+        # ----------
+        # syndrome : numpy.ndarray
+        #     A 1D numpy array of length equal to the number of rows in the parity check matrix.
+
+        # Returns
+        # -------
+        # numpy.ndarray
+        #     A 1D numpy array of length equal to the number of columns in the parity check matrix.
+
+        # Raises
+        # ------
+        # ValueError
+        #     If the length of the input syndrome does not match the number of rows in the parity check matrix.
+        # """
+        
+        # cdef uint8_t* data = <uint8_t*> arr.data
+        # cdef int size = arr.shape[0]
+        # cdef uint8_t[:] syndrome = <uint8_t[:size]> data
+        # self.bpd.decode(syndrome)
+
+
+        # return vector
 
     @property
     def decoding(self):
