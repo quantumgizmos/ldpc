@@ -2,13 +2,14 @@ import pytest
 import numpy as np
 from scipy.sparse import csr_matrix
 from ldpc2.bp_decoder import bp_decoder
+from ldpc.codes import rep_code
 
 def test_constructor():
     # test valid input parameters
     pcm = np.array([[1,0,1,0],[0,1,1,0],[0,0,1,1]])
     decoder = bp_decoder(pcm, error_rate=0.1, max_iter=10, bp_method='product_sum')
-    assert decoder.m == 3
-    assert decoder.n == 4
+    assert decoder.check_count == 3
+    assert decoder.bit_count == 4
     assert decoder.bp_method == "product_sum"
     assert decoder.max_iter == 10
     assert decoder.ms_scaling_factor == 1.0
@@ -35,8 +36,8 @@ def test_bp_decoder_init():
     pcm = np.array([[1, 0, 1], [0, 1, 1]])
     decoder = bp_decoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_serial_schedule=1, serial_schedule_order=[1,2,0])
     assert decoder is not None
-    assert decoder.m == 2
-    assert decoder.n == 3
+    assert decoder.check_count == 2
+    assert decoder.bit_count == 3
     assert decoder.max_iter == 10
     assert decoder.bp_method == "product_sum"
     assert decoder.ms_scaling_factor == 0.5
@@ -49,8 +50,8 @@ def test_bp_decoder_init():
     pcm = csr_matrix([[1, 0, 1], [0, 1, 1]])
     decoder = bp_decoder(pcm, error_channel=[0.1, 0.2, 0.3])
     assert decoder is not None
-    assert decoder.m == 2
-    assert decoder.n == 3
+    assert decoder.check_count == 2
+    assert decoder.bit_count == 3
     assert decoder.max_iter == 3
     assert decoder.bp_method == "product_sum"
     assert decoder.ms_scaling_factor == 1.0
@@ -89,12 +90,81 @@ def test_bp_decoder_init():
         decoder = bp_decoder(pcm, error_rate=0.1,omp_thread_count='invalid')
 
     # test with invalid random_serial_schedule value
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         decoder = bp_decoder(pcm, error_rate=0.1, random_serial_schedule='invalid')
 
     # test with invalid serial_schedule_order value
-    with pytest.raises(ValueError):
+    with pytest.raises(Exception):
         decoder = bp_decoder(pcm, error_rate=0.1, serial_schedule_order=[1, 2])
+
+
+def test_rep_code_ps():
+
+    H = rep_code(3)
+
+    bpd = bp_decoder(H,error_rate=0.1)
+    assert bpd is not None
+    print(bpd.bp_method)
+    assert bpd.bp_method == "product_sum"
+    assert bpd.schedule == "parallel"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+
+def test_rep_code_ms():
+
+    H = rep_code(3)
+
+    bpd = bp_decoder(H,error_rate=0.1, bp_method='min_sum', ms_scaling_factor=1.0)
+    assert bpd is not None
+    assert bpd.bp_method == "minimum_sum"
+    assert bpd.schedule == "parallel"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+    
+
+def test_rep_code_ps_serial():
+
+    H = rep_code(3)
+
+    bpd = bp_decoder(H,error_rate=0.1,schedule = "serial")
+    assert bpd is not None
+    assert bpd.bp_method == "product_sum"
+    assert bpd.schedule == "serial"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+    assert np.array_equal(bpd.serial_schedule_order,np.array([0,1,2]))
+
+    bpd.serial_schedule_order = np.array([2,1,0])
+
+    assert np.array_equal(bpd.serial_schedule_order,np.array([2,1,0]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+
+
 
 
 # if __name__ == "__main__":

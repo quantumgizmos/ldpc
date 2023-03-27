@@ -16,7 +16,7 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
         bool at_end()
 
     cdef cppclass bp_sparse "bp::BpSparse":
-        bp_sparse(int m, int n) except +
+        bp_sparse(int m, int n, int entry_count) except +
         bp_entry* insert_entry(int i, int j)
         bp_entry* get_entry(int i, int j)
         vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
@@ -39,22 +39,20 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
         int bp_method
         int schedule
         double ms_scaling_factor
+        void set_omp_thread_count(int omp_threads)
 
 
 
 cdef class bp_decoder_base:
+    cdef int m, n
     cdef shared_ptr[bp_sparse] pcm
-    cdef int m, n, schedule
-    cdef vector[uint8_t] decoding
-    cdef vector[uint8_t] syndrome
-    cdef vector[double] error_channel
-    cdef double error_rate
+    cdef vector[uint8_t] _syndrome
+    cdef vector[double] _error_channel
+    cdef vector[int] _serial_schedule_order
     cdef bool MEMORY_ALLOCATED
     cdef bp_decoder_cpp *bpd
     cdef str user_dtype
-    cdef vector[int] serial_schedule_order
-    cdef int random_serial_schedule
-
+    
 cdef class bp_decoder(bp_decoder_base):
     pass
 

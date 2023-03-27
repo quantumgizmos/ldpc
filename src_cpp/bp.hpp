@@ -41,7 +41,7 @@ class BpDecoder{
         double ms_scaling_factor;
         vector<uint8_t> decoding;
         vector<uint8_t> candidate_syndrome;
-        vector<double>& channel_probs;
+        vector<double> channel_probs;
         vector<double> log_prob_ratios;
         vector<double> initial_log_prob_ratios;
         vector<int> serial_schedule_order;
@@ -60,13 +60,12 @@ class BpDecoder{
             int schedule=0,
             int omp_threads = 1,
             vector<int> serial_schedule = NULL_INT_VECTOR,
-            int random_schedule = 0):
-            channel_probs(channel_probabilities){
+            int random_schedule = 0){
             
             this->pcm = matrix;
             this->check_count = pcm->m;
             this->bit_count = pcm->n;
-            // this->channel_probs=channel_probabilities;
+            this->channel_probs=channel_probabilities;
             this->ms_scaling_factor=min_sum_scaling_factor;
             this->max_iter=maximum_iterations;
             this->initial_log_prob_ratios.resize(bit_count);
@@ -94,11 +93,16 @@ class BpDecoder{
             this->random_serial_schedule = random_schedule;
 
             //Initialise OMP thread pool
-            omp_set_num_threads(this->omp_thread_count);
-
+            this->omp_thread_count = omp_threads;
+            this->set_omp_thread_count(this->omp_thread_count);
         }
 
         ~BpDecoder(){};
+
+        void set_omp_thread_count(int count){
+            this->omp_thread_count = count;
+            omp_set_num_threads(this->omp_thread_count);
+        }
 
 
         void initialise_log_domain_bp(){

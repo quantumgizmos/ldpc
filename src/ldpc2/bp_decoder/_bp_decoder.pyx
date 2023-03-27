@@ -24,7 +24,7 @@ cdef class bp_decoder_base:
         Docstring test
         '''
 
-        cdef i, j
+        cdef int i, j, nonzero_count
         self.MEMORY_ALLOCATED=False
 
         #check the parity check matrix is the right type
@@ -36,72 +36,14 @@ cdef class bp_decoder_base:
         # get the parity check dimensions
         self.m, self.n = pcm.shape[0], pcm.shape[1]
 
+        # get the number of nonzero entries in the parity check matrix
+        if isinstance(pcm,np.ndarray):
+            nonzero_count  = int(np.sum( np.count_nonzero(pcm,axis=1) ))
+        elif isinstance(pcm,spmatrix):
+            nonzero_count = int(pcm.nnz)
 
-        #bp_method input parameter
-        if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
-            bp_method=0
-        elif str(bp_method).lower() in ['min_sum','minimum_sum','ms','1','minimum sum','min sum']:
-            bp_method=1 # method 1 is not working (see issue 1). Defaulting to the log version of bp.
-        else: raise ValueError(f"BP method '{bp_method}' is invalid.\
-                            Please choose from the following methods:'product_sum',\
-                            'minimum_sum'")
-
-        #max_iter input parameter
-        if not isinstance(max_iter,int):
-            raise ValueError("max_iter input parameter is invalid. This must be specified as a positive int.")
-        if max_iter<0:
-            raise ValueError(f"max_iter input parameter must be a postive int. Not {max_iter}.")
-        if max_iter==0:
-            max_iter = self.n
-
-        #ms_scaling_factor input parameter
-        if not isinstance(ms_scaling_factor, float):
-            raise TypeError("The ms_scaling factor must be specified as a float")
-
-        #schedule input parameter
-        if str(schedule).lower() in ['parallel','p','0']:
-            schedule=0
-        elif str(schedule).lower() in ['serial','s','1']:
-            schedule=1 # method 1 is not working (see issue 1). Defaulting to the log version of bp.
-        else: raise ValueError(f"The BP schedule method '{schedule}' is invalid.\
-                            Please choose from the following methods:1) 'schedule = parallel',\
-                            'schedule=serial'")
-
-        if serial_schedule_order is None:
-            self.serial_schedule_order = NULL_INT_VECTOR
-        else:
-            if not len(serial_schedule_order) == self.n:
-                raise ValueError("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
-            self.serial_schedule_order.resize(self.n)
-            for i in range(self.n): self.serial_schedule_order[i] = serial_schedule_order[i]
-
-        # self.random_serial_schedule = random_serial_schedule
-
-        ## thread_count
-        # self.omp_thread_count = omp_thread_count
-
-
-        #MEMORY ALLOCATION
-        self.pcm = make_shared[bp_sparse](self.m,self.n,0) #createst the C++ sparse matrix object
-        self.error_channel.resize(self.n) #C vector for the error channel
-        self.syndrome.resize(self.m) #C vector for the syndrome
-
-        ## error channel setup
-        if error_rate is None:
-            if error_channel is None:
-                raise ValueError("Please specify the error channel. Either: 1) error_rate: float or 2) error_channel: list of floats of length equal to the block length of the code {self.n}.")
-
-        if error_rate is not None:
-            if error_channel is None:
-                if not isinstance(error_rate,float):
-                    raise ValueError("The `error_rate` parameter must be specified as a single float value.")
-                for i in range(self.n): self.error_channel[i] = error_rate
-
-        if error_channel is not None:
-            if len(error_channel)!=self.n:
-                raise ValueError(f"The error channel vector must have length {self.n}, not {len(error_channel)}.")
-            for i in range(self.n): self.error_channel[i] = error_channel[i]
-
+        # Matrix memory allocation
+        self.pcm = make_shared[bp_sparse](self.m,self.n,nonzero_count) #creates the C++ sparse matrix object
 
         #fill sparse matrix
         if isinstance(pcm,np.ndarray):
@@ -116,8 +58,31 @@ cdef class bp_decoder_base:
         else:
             raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
 
+        # allocate vectors for decoder input
+        self._error_channel.resize(self.n) #C++ vector for the error channel
+        self._syndrome.resize(self.m) #C++ vector for the syndrome
+        self._serial_schedule_order = NULL_INT_VECTOR
 
-        self.bpd = new bp_decoder_cpp(self.pcm,self.error_channel,max_iter,bp_method,ms_scaling_factor,schedule,omp_thread_count,self.serial_schedule_order,random_serial_schedule)
+        ## initialise the decoder with default values
+        self.bpd = new bp_decoder_cpp(self.pcm,self._error_channel,0,0,0.0,0,0,self._serial_schedule_order,0)
+
+        ## set the decoder parameters
+        self.bp_method = bp_method
+        self.max_iter = max_iter
+        self.ms_scaling_factor = ms_scaling_factor
+        self.schedule = schedule
+        self.serial_schedule_order = serial_schedule_order
+        self.random_serial_schedule = random_serial_schedule
+        self.omp_thread_count = omp_thread_count
+
+        if error_channel is not None:
+            self.error_channel = error_channel
+        elif error_rate is not None:
+            self.error_rate = error_rate
+        else:
+            raise ValueError("Please specify the error channel. Either: 1) error_rate: float or 2) error_channel:\
+            list of floats of length equal to the block length of the code {self.n}.")
+
         self.MEMORY_ALLOCATED=True
 
     def __del__(self):
@@ -125,8 +90,8 @@ cdef class bp_decoder_base:
             del self.bpd
 
     # cpdef np.ndarray[np.uint8_t, ndim=1] decode(self,uint8_t[::1] input_syndrome):
-    #     self.syndrome = &input_syndrome[0] #get pointer of memoryview
-    #     self.bpd.decode(self.syndrome) 
+    #     self._syndrome = &input_syndrome[0] #get pointer of memoryview
+    #     self.bpd.decode(self._syndrome) 
     #     # cdef uint8_t[::1] output_view = <uint8_t[:self.n]> self.bpd.decoding #convert pointer array to memory view
     #     cdef np.ndarray[np.uint8_t, ndim=1] out = np.asarray(<uint8_t[:self.n]> self.bpd.decoding) #convert memory view to numpy
     #     return out #return numpy array
@@ -137,6 +102,22 @@ cdef class bp_decoder_base:
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
 
+ 
+
+    @property
+    def error_rate(self):
+        out = np.zeros(self.n).astype(float)
+        for i in range(self.n): out[i] = self.bpd.channel_probs[i]
+        return out
+
+    @error_rate.setter
+    def error_rate(self, value):
+        if value is not None:
+            if not isinstance(value,float):
+                raise ValueError("The `error_rate` parameter must be specified as a single float value.")
+            for i in range(self.n): self.bpd.channel_probs[i] = value
+
+
     @property
     def error_channel(self):
         out = np.zeros(self.n).astype(float)
@@ -145,9 +126,10 @@ cdef class bp_decoder_base:
 
     @error_channel.setter
     def error_channel(self, value):
-        if len(value)!=self.n:
-            raise ValueError(f"The error channel vector must have length {self.n}, not {len(value)}.")
-        for i in range(self.n): self.error_channel[i] = value[i]
+        if value is not None:
+            if len(value)!=self.n:
+                raise ValueError(f"The error channel vector must have length {self.n}, not {len(value)}.")
+            for i in range(self.n): self.bpd.channel_probs[i] = value[i]
 
 
     @property
@@ -165,14 +147,15 @@ cdef class bp_decoder_base:
         return self.bpd.iterations
 
     @property
-    def m(self):
+    def check_count(self):
         """Returns the number of rows of the parity check matrix"""
         return self.pcm.get().m
 
     @property
-    def n(self):
+    def bit_count(self):
         """Returns the number of columns of the parity check matrix"""
         return self.pcm.get().n
+
     @property
     def max_iter(self):
         """Returns the maximum number of iterations"""
@@ -246,7 +229,7 @@ cdef class bp_decoder_base:
     def serial_schedule_order(self, value):
         """Sets the serial schedule order"""
         if value is None:
-            self.serial_schedule_order = NULL_INT_VECTOR
+            self._serial_schedule_order = NULL_INT_VECTOR
             return
         if not len(value) == self.n:
             raise Exception("Input error. The `serial_schedule_order` input parameter must have length equal to the length of the code.")
@@ -265,7 +248,7 @@ cdef class bp_decoder_base:
     def ms_scaling_factor(self, value):
         """Sets the ms_scaling_factor used"""
         if not isinstance(value, float):
-            raise ValueError("The ms_scaling factor must be specified as a float")
+            raise TypeError("The ms_scaling factor must be specified as a float")
         self.bpd.ms_scaling_factor = value
 
     @property
@@ -277,8 +260,8 @@ cdef class bp_decoder_base:
     def omp_thread_count(self, value):
         """Sets the omp_thread_count used"""
         if not isinstance(value, int) or value < 1:
-            raise ValueError("The omp_thread_count must be specified as a positive integer.")
-        self.bpd.omp_thread_count = value
+            raise TypeError("The omp_thread_count must be specified as a positive integer.")
+        self.bpd.set_omp_thread_count(value)
 
     @property
     def random_serial_schedule(self):
@@ -310,11 +293,11 @@ cdef class bp_decoder(bp_decoder_base):
         DTYPE = syndrome.dtype
         
         for i in range(self.m):
-            self.syndrome[i] = syndrome[i]
-            if self.syndrome[i]: zero_syndrome = False
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]: zero_syndrome = False
         if zero_syndrome: return np.zeros(self.n,dtype=DTYPE)
         
-        self.bpd.decode(self.syndrome)
+        self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
@@ -327,8 +310,8 @@ cdef class bp_decoder(bp_decoder_base):
 
 
     # cpdef np.ndarray[np.uint8_t, ndim=1] decode(self,uint8_t[::1] input_syndrome):
-    #     self.syndrome = &input_syndrome[0] #get pointer of memoryview
-    #     self.bpd.decode(self.syndrome) 
+    #     self._syndrome = &input_syndrome[0] #get pointer of memoryview
+    #     self.bpd.decode(self._syndrome) 
     #     # cdef uint8_t[::1] output_view = <uint8_t[:self.n]> self.bpd.decoding #convert pointer array to memory view
     #     cdef np.ndarray[np.uint8_t, ndim=1] out = np.asarray(<uint8_t[:self.n]> self.bpd.decoding) #convert memory view to numpy
     #     return out #return numpy array
