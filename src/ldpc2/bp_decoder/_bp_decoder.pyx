@@ -263,6 +263,7 @@ cdef class BpDecoderBase:
                     Please choose from the following methods: \
                     'product_sum', 'minimum_sum'")
 
+    @property
     def schedule(self) -> str:
         """
         Returns the scheduling method used.
