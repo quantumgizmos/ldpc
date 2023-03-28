@@ -8,10 +8,10 @@ from ldpc import bp_decoder as bp_decoder_og
 
 from ldpc2.codes import rep_code
 run_count = 10000
-error_rate = 0.3
-H = rep_code(1000)
-bpd=bp_decoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=100,omp_thread_count=1)
-bpd_og=bp_decoder_og(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=100)
+error_rate = 0.01
+H = rep_code(500)
+bpd=bp_decoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=1)
+bpd_og=bp_decoder_og(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=10)
 
 
 
