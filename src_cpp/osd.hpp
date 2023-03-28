@@ -14,6 +14,8 @@
 
 using namespace std;
 
+namespace osd{
+
 vector<uint8_t> decimal_to_binary_reverse(int n,int k)
 {
    vector<uint8_t> binary_number;
@@ -35,7 +37,7 @@ vector<uint8_t> decimal_to_binary_reverse(int n,int k)
 }
 
 
-class osd_decoder{
+class OsdDecoder{
     public:
         int osd_method;
         int osd_order;
@@ -49,7 +51,7 @@ class osd_decoder{
         vector<int> column_ordering;
         gf2sparse_linalg::RowReduce<shared_ptr<bp::BpSparse>>* LuDecomposition;
         
-        osd_decoder(shared_ptr<bp::BpSparse> parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
+        OsdDecoder(shared_ptr<bp::BpSparse> parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
 
             this->pcm = parity_check_matrix;
             this->bit_count = pcm->n;
@@ -101,7 +103,7 @@ class osd_decoder{
            
         }
 
-        ~osd_decoder(){
+        ~OsdDecoder(){
             delete this->LuDecomposition;
         };
 
@@ -134,7 +136,7 @@ class osd_decoder{
                 non_pivot_columns.push_back(this->column_ordering[i]);
             }
             
-            auto pcm_t = copy_cols(pcm, non_pivot_columns);
+            auto pcm_t = gf2sparse::copy_cols(pcm, non_pivot_columns);
 
             vector<uint8_t> t_syndrome;
             t_syndrome.resize(pcm->m);
@@ -173,6 +175,8 @@ class osd_decoder{
         }
 
 };
+
+}//end osd namespace
 
 
 #endif

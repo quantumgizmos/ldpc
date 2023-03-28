@@ -360,6 +360,24 @@ shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n){
     return matrix;
 }
 
+
+template <class GF2SPARSE_MATRIX_CLASS>
+shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<GF2SPARSE_MATRIX_CLASS> mat, vector<int> cols){
+    int m,n,i,j;
+    m = mat->m;
+    n = cols.size();
+    auto copy_mat = GF2SPARSE_MATRIX_CLASS::New(m,n);
+    int new_col_index=-1;
+    for(auto col_index: cols){
+        new_col_index+=1;
+        for(auto e: mat->iterate_column(col_index)){
+            copy_mat->insert_entry(e->row_index,new_col_index);
+        }
+    }
+    return copy_mat;
+}
+
+
 } // end namespace gf2sparse
 
 

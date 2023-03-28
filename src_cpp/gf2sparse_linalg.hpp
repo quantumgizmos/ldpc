@@ -109,7 +109,7 @@ class RowReduce{
 
 
 
-        GF2_MATRIX rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        auto rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
             if(lower_triangular) this->LOWER_TRIANGULAR = true;
             this->set_column_row_orderings(cols,rows);

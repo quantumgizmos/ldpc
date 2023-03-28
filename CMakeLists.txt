@@ -64,6 +64,9 @@ add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
 add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
 add_executable(TestGF2RowReduce cpp_test/TestGF2RowReduce.cpp)
 add_executable(TestBPDecoder cpp_test/TestBPDecoder.cpp)
+add_executable(TestOsdDecoder cpp_test/TestOsdDecoder.cpp)
+
+
 
 # Link the ldpc2 and gtest_main libraries to the test executables
 target_link_libraries(TestSparseMatrix gtest_main ldpc2)
@@ -71,6 +74,7 @@ target_link_libraries(TestSparseMatrixUtil gtest_main ldpc2)
 target_link_libraries(TestGF2Sparse gtest_main ldpc2)
 target_link_libraries(TestGF2RowReduce gtest_main ldpc2)
 target_link_libraries(TestBPDecoder gtest_main ldpc2)
+target_link_libraries(TestOsdDecoder gtest_main ldpc2)
 
 # Discover and run tests using GoogleTest
 enable_testing()
@@ -79,3 +83,4 @@ gtest_discover_tests(TestSparseMatrixUtil)
 gtest_discover_tests(TestGF2Sparse)
 gtest_discover_tests(TestGF2RowReduce)
 gtest_discover_tests(TestBPDecoder)
+gtest_discover_tests(TestOsdDecoder)
