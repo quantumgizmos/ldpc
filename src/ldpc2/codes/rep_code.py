@@ -7,7 +7,7 @@ def rep_code(distance: int) -> sp.csr_matrix:
     Parameters
     ----------
     distance: int
-        The distance of the repetition code.
+        The distance of the repetition code. Must be greater than or equal to 2.
     Returns
     -------
     sp.csr_matrix
@@ -20,6 +20,9 @@ def rep_code(distance: int) -> sp.csr_matrix:
      [0 0 1 1 0]
      [0 0 0 1 1]]
     """
+
+    if distance < 2:
+        raise ValueError("Distance should be greater than or equal to 2.")
 
     rows = []
     cols = []
@@ -39,7 +42,7 @@ def ring_code(distance: int) -> sp.csr_matrix:
     Parameters
     ----------
     distance: int
-        The distance of the repetition code.
+        The distance of the repetition code. Must be greater than or equal to 2.
     Returns
     -------
     sp.csr_matrix
@@ -53,6 +56,9 @@ def ring_code(distance: int) -> sp.csr_matrix:
      [0 0 0 1 1]
      [1 0 0 0 1]]
     """
+
+    if distance < 2:
+        raise ValueError("Distance should be greater than or equal to 2.")
 
     rows = []
     cols = []
