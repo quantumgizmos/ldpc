@@ -56,48 +56,57 @@ class OsdDecoder{
             this->bit_count = this->pcm->n;
             this->check_count = this->pcm->m;
             this->channel_probs = channel_probabilities;
+
+            this->osd_order = osd_order;
+            this->osd_method = osd_method;
+
+            this->osd_setup();
+
+
+        }
+
+        int osd_setup(){
+            
+            if(this->osd_method == -1) return 0;
+
             this->LuDecomposition = new gf2sparse_linalg::RowReduce<shared_ptr<bp::BpSparse>>(this->pcm);
+            this->column_ordering.resize(this->pcm->n);
+            int osd_candidate_string_count;
+            this->LuDecomposition->rref(false,true); 
+            this->k = this->pcm->n - this->LuDecomposition->rank;
 
+            if(this->osd_method==0 || this->osd_order==0){
+                return 1;
+            }
 
-            if(osd_method!=-1){
-                this->column_ordering.resize(this->pcm->n);
-                int osd_candidate_string_count;
-                this->LuDecomposition->rref(false,true); 
-                this->osd_order = osd_order;
-                this->osd_method = osd_method;
-                this->k = this->pcm->n - this->LuDecomposition->rank;
+            if(this->osd_method==1){
+                osd_candidate_string_count = pow(2,this->osd_order);
+                for(int i=1; i<osd_candidate_string_count; i++){
+                    this->osd_candidate_strings.push_back(decimal_to_binary_reverse(i,k));
+                }
+            }
 
-
-                if(osd_method==0 && osd_order!=0){
-                    osd_candidate_string_count = pow(2,osd_order);
-                    for(int i=1; i<osd_candidate_string_count; i++){
-                        this->osd_candidate_strings.push_back(decimal_to_binary_reverse(i,k));
-                    }
+            if(this->osd_method==2){
+                for(int i=0; i<k; i++) {
+                    vector<uint8_t> osd_candidate;
+                    osd_candidate.resize(k,0);
+                    osd_candidate[i]=1; 
+                    this->osd_candidate_strings.push_back(osd_candidate);
                 }
 
-                if(osd_method==1 && osd_order!=0){
-                    for(int i=0; i<k; i++) {
+                for(int i = 0; i<this->osd_order;i++){
+                    for(int j = 0; j<this->osd_order; j++){
+                        if(j<=i) continue;
                         vector<uint8_t> osd_candidate;
                         osd_candidate.resize(k,0);
-                        osd_candidate[i]=1; 
+                        osd_candidate[i]=1;
+                        osd_candidate[j]=1; 
                         this->osd_candidate_strings.push_back(osd_candidate);
                     }
-
-                    for(int i = 0; i<osd_order;i++){
-                        for(int j = 0; j<osd_order; j++){
-                            if(j<=i) continue;
-                            vector<uint8_t> osd_candidate;
-                            osd_candidate.resize(k,0);
-                            osd_candidate[i]=1;
-                            osd_candidate[j]=1; 
-                            this->osd_candidate_strings.push_back(osd_candidate);
-                        }
-                    }
-
                 }
 
             }
-           
+            return 1;
         }
 
         ~OsdDecoder(){

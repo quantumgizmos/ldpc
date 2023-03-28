@@ -21,9 +21,10 @@ cdef class BpDecoderBase:
         random_serial_schedule = kwargs.get("random_serial_schedule", 0)
         serial_schedule_order = kwargs.get("serial_schedule_order", None)
         
-        '''
+        
+        """
         Docstring test
-        '''
+        """
 
         cdef int i, j, nonzero_count
         self.MEMORY_ALLOCATED=False
