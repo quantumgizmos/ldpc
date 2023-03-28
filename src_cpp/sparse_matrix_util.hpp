@@ -42,11 +42,11 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = fals
 
 
 template <class SPARSE_MATRIX_CLASS>
-SPARSE_MATRIX_CLASS *copy_cols(SPARSE_MATRIX_CLASS *mat, vector<int> cols){
+shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<SPARSE_MATRIX_CLASS> mat, vector<int> cols){
     int m,n,i,j;
     m = mat->m;
     n = cols.size();
-    SPARSE_MATRIX_CLASS * copy_mat = new SPARSE_MATRIX_CLASS(m,n);
+    auto copy_mat = SPARSE_MATRIX_CLASS::New(m,n);
     int new_col_index=-1;
     for(auto col_index: cols){
         new_col_index+=1;

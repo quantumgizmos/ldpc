@@ -7,7 +7,10 @@
 #include <cmath> 
 #include <limits>
 #include "bp.hpp"
+#include "gf2sparse.hpp"
+#include "gf2sparse_linalg.hpp"
 #include "sort.hpp"
+#include "sparse_matrix_util.hpp"
 
 using namespace std;
 
@@ -37,30 +40,33 @@ class osd_decoder{
         int osd_method;
         int osd_order;
         int k, bit_count, check_count;
-        BpSparse* pcm;
+        shared_ptr<bp::BpSparse> pcm;
         vector<uint8_t> osd0_decoding;
         vector<uint8_t> osdw_decoding;
         vector<uint8_t> bp_decoding;
         vector<vector<uint8_t>> osd_candidate_strings;
         vector<double> channel_probs;
+        vector<int> column_ordering;
+        gf2sparse_linalg::RowReduce<shared_ptr<bp::BpSparse>>* LuDecomposition;
         
-        osd_decoder(BpSparse* parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
+        osd_decoder(shared_ptr<bp::BpSparse> parity_check_matrix, int osd_method, int osd_order, vector<double> channel_probabilities){
 
             this->pcm = parity_check_matrix;
             this->bit_count = pcm->n;
             this->check_count = pcm->m;
             this->channel_probs = channel_probabilities;
+            this->LuDecomposition = new gf2sparse_linalg::RowReduce<shared_ptr<bp::BpSparse>>(pcm);
 
 
             if(osd_method!=-1){
-
-                this->osdw_decoding.resize(pcm->n);
-                this->osd0_decoding.resize(pcm->n);
+                this->column_ordering.resize(pcm->n);
+                // this->osdw_decoding.resize(pcm->n);
+                // this->osd0_decoding.resize(pcm->n);
                 int osd_candidate_string_count;
-                this->pcm->lu_decomposition(); 
+                this->LuDecomposition->rref(false,true); 
                 this->osd_order = osd_order;
                 this->osd_method = osd_method;
-                this->k = pcm->n - pcm->rank;
+                this->k = pcm->n - this->LuDecomposition->rank;
 
 
                 if(osd_method==0 && osd_order!=0){
@@ -95,17 +101,20 @@ class osd_decoder{
            
         }
 
-        ~osd_decoder(){};
+        ~osd_decoder(){
+            delete this->LuDecomposition;
+        };
 
 
         vector<uint8_t>& decode(vector<uint8_t>& syndrome, vector<double>& log_prob_ratios) {
 
-            soft_decision_col_sort(log_prob_ratios, pcm->cols,bit_count);
+            soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
 
-            pcm->lu_decomposition(false);
-            osd0_decoding=pcm->lu_solve(syndrome,osd0_decoding);
+            //row reduce the matrix according to the new column ordering
+            this->LuDecomposition->rref(false,true,this->column_ordering);
 
-            for(int i=0;i<pcm->n;i++) osdw_decoding[i]=osd0_decoding[i];
+            //find the OSD0 solution
+            this->osd0_decoding = this->osdw_decoding = LuDecomposition->lu_solve(syndrome);
 
             if(osd_order==0){
                 return osd0_decoding;
@@ -121,8 +130,8 @@ class osd_decoder{
             }
 
             vector<int> non_pivot_columns;
-            for(int i = pcm->rank; i<pcm->n; i++){
-                non_pivot_columns.push_back(pcm->cols[i]);
+            for(int i = this->LuDecomposition->rank; i<pcm->n; i++){
+                non_pivot_columns.push_back(this->column_ordering[i]);
             }
             
             auto pcm_t = copy_cols(pcm, non_pivot_columns);
@@ -140,7 +149,7 @@ class osd_decoder{
                     t_syndrome[i] ^= syndrome[i];
                 }
 
-                pcm->lu_solve(t_syndrome,candidate_solution);
+                candidate_solution = this->LuDecomposition->lu_solve(t_syndrome);
                 for(int i=0; i<k; i++){
                     candidate_solution[non_pivot_columns[i]]=candidate_string[i];
                 }
@@ -159,7 +168,6 @@ class osd_decoder{
 
             }
 
-            delete pcm_t;
             return osdw_decoding;
 
         }
