@@ -262,9 +262,13 @@ cdef class BpDecoderBase:
                     Please choose from the following methods: \
                     'product_sum', 'minimum_sum'")
 
-    @property
     def schedule(self) -> str:
-        """Returns the scheduling method used"""
+        """
+        Returns the scheduling method used.
+
+        Returns:
+            str: The scheduling method used. Possible values are 'parallel' or 'serial'.
+        """
         if self.bpd.schedule == 0:
             return 'parallel'
         elif self.bpd.schedule == 1:
@@ -274,7 +278,15 @@ cdef class BpDecoderBase:
 
     @schedule.setter
     def schedule(self, value: str) -> None:
-        """Sets the scheduling method used"""
+        """
+        Sets the scheduling method used.
+
+        Args:
+            value (str): The scheduling method to use. Possible values are 'parallel' or 'serial'.
+
+        Raises:
+            ValueError: If value is not a valid option.
+        """
         if str(value).lower() in ['parallel','p','0']:
             self.bpd.schedule = 0
         elif str(value).lower() in ['serial','s','1']:
@@ -286,7 +298,12 @@ cdef class BpDecoderBase:
 
     @property
     def serial_schedule_order(self) -> Union[None, np.ndarray]:
-        """Returns the serial schedule order"""
+        """
+        Returns the serial schedule order.
+
+        Returns:
+            Union[None, np.ndarray]: The serial schedule order as a numpy array, or None if no schedule has been set.
+        """
         if self.bpd.serial_schedule_order.size() == 0:
             return None
 
@@ -297,7 +314,17 @@ cdef class BpDecoderBase:
 
     @serial_schedule_order.setter
     def serial_schedule_order(self, value: Union[None, List[int]]) -> None:
-        """Sets the serial schedule order"""
+        """
+        Sets the serial schedule order.
+
+        Args:
+            value (Union[None, List[int]]): The serial schedule order to set. Must have length equal to the block
+            length of the code `self.n`.
+
+        Raises:
+            Exception: If value does not have the correct length.
+            ValueError: If value contains an invalid integer value.
+        """
         if value is None:
             self._serial_schedule_order = NULL_INT_VECTOR
             return
@@ -311,38 +338,72 @@ cdef class BpDecoderBase:
 
     @property
     def ms_scaling_factor(self) -> float:
-        """Returns the ms_scaling_factor used"""
+        """Get the scaling factor for minimum sum method.
+
+        Returns:
+            float: The current scaling factor.
+        """
         return self.bpd.ms_scaling_factor
 
     @ms_scaling_factor.setter
     def ms_scaling_factor(self, value: float) -> None:
-        """Sets the ms_scaling_factor used"""
+        """Set the scaling factor for minimum sum method.
+
+        Args:
+            value (float): The new scaling factor.
+
+        Raises:
+            TypeError: If the input value is not a float.
+        """
         if not isinstance(value, float):
             raise TypeError("The ms_scaling factor must be specified as a float")
         self.bpd.ms_scaling_factor = value
 
     @property
     def omp_thread_count(self) -> int:
-        """Returns the omp_thread_count used"""
+        """Get the number of OpenMP threads.
+
+        Returns:
+            int: The number of threads used.
+        """
         return self.bpd.omp_thread_count
 
     @omp_thread_count.setter
     def omp_thread_count(self, value: int) -> None:
-        """Sets the omp_thread_count used"""
+        """Set the number of OpenMP threads.
+
+        Args:
+            value (int): The number of threads to use.
+
+        Raises:
+            TypeError: If the input value is not an integer or is less than 1.
+        """
         if not isinstance(value, int) or value < 1:
             raise TypeError("The omp_thread_count must be specified as a positive integer.")
         self.bpd.set_omp_thread_count(value)
 
     @property
     def random_serial_schedule(self) -> int:
-        """Returns the value of random_serial_schedule"""
+        """Get the value of random_serial_schedule.
+
+        Returns:
+            int: The current value of random_serial_schedule.
+        """
         return self.bpd.random_serial_schedule
 
     @random_serial_schedule.setter
     def random_serial_schedule(self, value: int) -> None:
-        """Sets the value of random_serial_schedule"""
+        """Set the value of random_serial_schedule.
+
+        Args:
+            value (int): The new value of random_serial_schedule.
+
+        Raises:
+            ValueError: If the input value is not 0 or 1.
+        """
         if not isinstance(value, int) or value < 0 or value > 1:
             raise ValueError("The value of random_serial_schedule must be either 0 or 1.")
+
 
         
 
@@ -443,39 +504,19 @@ cdef class BpDecoder(BpDecoderBase):
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
 
-        # def decode(self, SupportedTypes[:] arr) -> np.ndarray:
-        # """
-        # Decode the input syndrome using belief propagation decoding algorithm.
-
-        # Parameters
-        # ----------
-        # syndrome : numpy.ndarray
-        #     A 1D numpy array of length equal to the number of rows in the parity check matrix.
-
-        # Returns
-        # -------
-        # numpy.ndarray
-        #     A 1D numpy array of length equal to the number of columns in the parity check matrix.
-
-        # Raises
-        # ------
-        # ValueError
-        #     If the length of the input syndrome does not match the number of rows in the parity check matrix.
-        # """
-        
-        # cdef uint8_t* data = <uint8_t*> arr.data
-        # cdef int size = arr.shape[0]
-        # cdef uint8_t[:] syndrome = <uint8_t[:size]> data
-        # self.bpd.decode(syndrome)
-
-
-        # return vector
-
     @property
-    def decoding(self):
+    def decoding(self) -> np.ndarray:
+        """
+        Returns the current decoded output.
+
+        Returns:
+            np.ndarray: A numpy array containing the current decoded output.
+        """
         out = np.zeros(self.n).astype(int)
-        for i in range(self.n): out[i] = self.bpd.decoding[i]
+        for i in range(self.n):
+            out[i] = self.bpd.decoding[i]
         return out
+
 
 
 
