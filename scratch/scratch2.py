@@ -12,4 +12,6 @@ print(H.toarray())
 
 from ldpc2.bp_decoder import BpDecoder, bp_decoder
 
+BpDecoder(H, error_rate=0.2, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=100,omp_thread_count=1)
+
 bp_decoder()
