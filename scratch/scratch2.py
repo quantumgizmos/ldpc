@@ -9,3 +9,7 @@ print(H.toarray())
 # print(error)
 
 # print(H.toarray())
+
+from ldpc2.bp_decoder import BpDecoder, bp_decoder
+
+bp_decoder()

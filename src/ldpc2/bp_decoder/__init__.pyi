@@ -4,7 +4,7 @@ import numpy as np
 from scipy.sparse import spmatrix
 from typing import Optional, List, Union
 
-class bp_decoder(bp_decoder_base):
+class BpDecoder(bp_decoder_base):
     """
     Belief propagation decoder for binary linear codes.
 
@@ -86,6 +86,8 @@ class bp_decoder(bp_decoder_base):
         out = np.zeros(self.n).astype(int)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
+    
+bp_decoder = BpDecoder
 
 
 

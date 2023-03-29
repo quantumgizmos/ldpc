@@ -4,7 +4,7 @@ import numpy as np
 from scipy.sparse import spmatrix
 from typing import Optional, List, Union
 
-cdef class bp_decoder_base:
+cdef class BpDecoderBase:
 
     def __init__(self,pcm, **kwargs):
         pass
@@ -44,7 +44,7 @@ cdef class bp_decoder_base:
             nonzero_count = int(pcm.nnz)
 
         # Matrix memory allocation
-        self.pcm = make_shared[bp_sparse](self.m,self.n,nonzero_count) #creates the C++ sparse matrix object
+        self.pcm = make_shared[BpSparse](self.m,self.n,nonzero_count) #creates the C++ sparse matrix object
 
         #fill sparse matrix
         if isinstance(pcm,np.ndarray):
@@ -65,7 +65,7 @@ cdef class bp_decoder_base:
         self._serial_schedule_order = NULL_INT_VECTOR
 
         ## initialise the decoder with default values
-        self.bpd = new bp_decoder_cpp(self.pcm,self._error_channel,0,0,0.0,0,0,self._serial_schedule_order,0)
+        self.bpd = new BpDecoderCpp(self.pcm,self._error_channel,0,0,0.0,0,0,self._serial_schedule_order,0)
 
         ## set the decoder parameters
         self.bp_method = bp_method
@@ -276,7 +276,7 @@ ctypedef fused SupportedTypes:
     np.float64_t
 
 
-cdef class bp_decoder(bp_decoder_base):
+cdef class BpDecoder(BpDecoderBase):
     """
     Belief propagation decoder for binary linear codes.
 
