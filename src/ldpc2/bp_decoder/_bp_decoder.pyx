@@ -91,74 +91,150 @@ cdef class BpDecoderBase:
             del self.bpd
 
     @property
-    def error_rate(self):
+    def error_rate(self) -> np.ndarray:
+        """
+        Returns the current error rate vector.
+
+        Returns:
+            np.ndarray: A numpy array containing the current error rate vector.
+        """
         out = np.zeros(self.n).astype(float)
-        for i in range(self.n): out[i] = self.bpd.channel_probs[i]
+        for i in range(self.n):
+            out[i] = self.bpd.channel_probs[i]
         return out
 
     @error_rate.setter
-    def error_rate(self, value):
-        if value is not None:
-            if not isinstance(value,float):
-                raise ValueError("The `error_rate` parameter must be specified as a single float value.")
-            for i in range(self.n): self.bpd.channel_probs[i] = value
+    def error_rate(self, value: Optional[float]) -> None:
+        """
+        Sets the error rate for the decoder.
 
+        Args:
+            value (Optional[float]): The error rate value to be set. Must be a single float value.
+        """
+        if value is not None:
+            if not isinstance(value, float):
+                raise ValueError("The `error_rate` parameter must be specified as a single float value.")
+            for i in range(self.n):
+                self.bpd.channel_probs[i] = value
 
     @property
-    def error_channel(self):
+    def error_channel(self) -> np.ndarray:
+        """
+        Returns the current error channel vector.
+
+        Returns:
+            np.ndarray: A numpy array containing the current error channel vector.
+        """
         out = np.zeros(self.n).astype(float)
-        for i in range(self.n): out[i] = self.bpd.channel_probs[i]
+        for i in range(self.n):
+            out[i] = self.bpd.channel_probs[i]
         return out
 
     @error_channel.setter
-    def error_channel(self, value):
+    def error_channel(self, value: Optional[List[float]]) -> None:
+        """
+        Sets the error channel for the decoder.
+
+        Args:
+            value (Optional[List[float]]): The error channel vector to be set. Must have length equal to the block
+            length of the code `self.n`.
+        """
         if value is not None:
-            if len(value)!=self.n:
+            if len(value) != self.n:
                 raise ValueError(f"The error channel vector must have length {self.n}, not {len(value)}.")
-            for i in range(self.n): self.bpd.channel_probs[i] = value[i]
+            for i in range(self.n):
+                self.bpd.channel_probs[i] = value[i]
 
 
     @property
-    def log_prob_ratios(self):
-        out=np.zeros(self.n)
-        for i in range(self.n): out[i] = self.bpd.log_prob_ratios[i]
+    def log_prob_ratios(self) -> np.ndarray:
+        """
+        Returns the current log probability ratio vector.
+
+        Returns:
+            np.ndarray: A numpy array containing the current log probability ratio vector.
+        """
+        out = np.zeros(self.n)
+        for i in range(self.n):
+            out[i] = self.bpd.log_prob_ratios[i]
         return out
 
     @property
-    def converge(self):
+    def converge(self) -> bool:
+        """
+        Returns whether the decoder has converged or not.
+
+        Returns:
+            bool: True if the decoder has converged, False otherwise.
+        """
         return self.bpd.converge
 
     @property
-    def iter(self):
+    def iter(self) -> int:
+        """
+        Returns the number of iterations performed by the decoder.
+
+        Returns:
+            int: The number of iterations performed by the decoder.
+        """
         return self.bpd.iterations
 
+
     @property
-    def check_count(self):
-        """Returns the number of rows of the parity check matrix"""
+    def check_count(self) -> int:
+        """
+        Returns the number of rows of the parity check matrix.
+
+        Returns:
+            int: The number of rows of the parity check matrix.
+        """
         return self.pcm.get().m
 
     @property
-    def bit_count(self):
-        """Returns the number of columns of the parity check matrix"""
+    def bit_count(self) -> int:
+        """
+        Returns the number of columns of the parity check matrix.
+
+        Returns:
+            int: The number of columns of the parity check matrix.
+        """
         return self.pcm.get().n
 
     @property
-    def max_iter(self):
-        """Returns the maximum number of iterations"""
+    def max_iter(self) -> int:
+        """
+        Returns the maximum number of iterations allowed by the decoder.
+
+        Returns:
+            int: The maximum number of iterations allowed by the decoder.
+        """
         return self.bpd.max_iter
 
     @max_iter.setter
-    def max_iter(self, value):
-        """Sets the maximum number of iterations"""
-        if not isinstance(value,int):
+    def max_iter(self, value: int) -> None:
+        """
+        Sets the maximum number of iterations allowed by the decoder.
+
+        Args:
+            value (int): The maximum number of iterations allowed by the decoder.
+
+        Raises:
+            ValueError: If value is not a positive integer.
+        """
+        if not isinstance(value, int):
             raise ValueError("max_iter input parameter is invalid. This must be specified as a positive int.")
-        if value<0:
-            raise ValueError(f"max_iter input parameter must be a postive int. Not {value}.")
+        if value < 0:
+            raise ValueError(f"max_iter input parameter must be a positive int. Not {value}.")
         self.bpd.max_iter = value if value != 0 else self.n
 
     @property
-    def bp_method(self):
-        """Returns the belief propagation method used"""
+    def bp_method(self) -> str:
+        """
+        Returns the belief propagation method used.
+
+        Returns:
+            str: The belief propagation method used. Possible values are 'product_sum' or 'minimum_sum'.
+        """
         if self.bpd.bp_method == 0:
             return 'product_sum'
         elif self.bpd.bp_method == 1:
@@ -167,11 +243,19 @@ cdef class BpDecoderBase:
             return self.bpd.bp_method
 
     @bp_method.setter
-    def bp_method(self, value):
-        """Sets the belief propagation method used"""
-        if str(value).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
+    def bp_method(self, value: str) -> None:
+        """
+        Sets the belief propagation method used.
+
+        Args:
+            value (str): The belief propagation method to use. Possible values are 'product_sum' or 'minimum_sum'.
+
+        Raises:
+            ValueError: If value is not a valid option.
+        """
+        if str(value).lower() in ['prod_sum', 'product_sum', 'ps', '0', 'prod sum']:
             self.bpd.bp_method = 0
-        elif str(value).lower() in ['min_sum','minimum_sum','ms','1','minimum sum','min sum']:
+        elif str(value).lower() in ['min_sum', 'minimum_sum', 'ms', '1', 'minimum sum', 'min sum']:
             self.bpd.bp_method = 1
         else:
             raise ValueError(f"BP method '{value}' is invalid. \
@@ -179,7 +263,7 @@ cdef class BpDecoderBase:
                     'product_sum', 'minimum_sum'")
 
     @property
-    def schedule(self):
+    def schedule(self) -> str:
         """Returns the scheduling method used"""
         if self.bpd.schedule == 0:
             return 'parallel'
@@ -189,7 +273,7 @@ cdef class BpDecoderBase:
             return self.bpd.schedule
 
     @schedule.setter
-    def schedule(self, value):
+    def schedule(self, value: str) -> None:
         """Sets the scheduling method used"""
         if str(value).lower() in ['parallel','p','0']:
             self.bpd.schedule = 0
@@ -201,7 +285,7 @@ cdef class BpDecoderBase:
                     'schedule=parallel', 'schedule=serial'")
 
     @property
-    def serial_schedule_order(self):
+    def serial_schedule_order(self) -> Union[None, np.ndarray]:
         """Returns the serial schedule order"""
         if self.bpd.serial_schedule_order.size() == 0:
             return None
@@ -212,7 +296,7 @@ cdef class BpDecoderBase:
         return out
 
     @serial_schedule_order.setter
-    def serial_schedule_order(self, value):
+    def serial_schedule_order(self, value: Union[None, List[int]]) -> None:
         """Sets the serial schedule order"""
         if value is None:
             self._serial_schedule_order = NULL_INT_VECTOR
@@ -226,40 +310,40 @@ cdef class BpDecoderBase:
             self.bpd.serial_schedule_order[i] = value[i]
 
     @property
-    def ms_scaling_factor(self):
+    def ms_scaling_factor(self) -> float:
         """Returns the ms_scaling_factor used"""
         return self.bpd.ms_scaling_factor
 
     @ms_scaling_factor.setter
-    def ms_scaling_factor(self, value):
+    def ms_scaling_factor(self, value: float) -> None:
         """Sets the ms_scaling_factor used"""
         if not isinstance(value, float):
             raise TypeError("The ms_scaling factor must be specified as a float")
         self.bpd.ms_scaling_factor = value
 
     @property
-    def omp_thread_count(self):
+    def omp_thread_count(self) -> int:
         """Returns the omp_thread_count used"""
         return self.bpd.omp_thread_count
 
     @omp_thread_count.setter
-    def omp_thread_count(self, value):
+    def omp_thread_count(self, value: int) -> None:
         """Sets the omp_thread_count used"""
         if not isinstance(value, int) or value < 1:
             raise TypeError("The omp_thread_count must be specified as a positive integer.")
         self.bpd.set_omp_thread_count(value)
 
     @property
-    def random_serial_schedule(self):
+    def random_serial_schedule(self) -> int:
         """Returns the value of random_serial_schedule"""
         return self.bpd.random_serial_schedule
 
     @random_serial_schedule.setter
-    def random_serial_schedule(self, value):
+    def random_serial_schedule(self, value: int) -> None:
         """Sets the value of random_serial_schedule"""
         if not isinstance(value, int) or value < 0 or value > 1:
             raise ValueError("The value of random_serial_schedule must be either 0 or 1.")
-        self.bpd.random_serial_schedule = value
+
         
 
 # define the fused types
