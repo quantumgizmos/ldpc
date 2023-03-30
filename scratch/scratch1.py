@@ -10,7 +10,7 @@ from ldpc import bposd_decoder as bposd_decoder_og
 
 from ldpc2.codes import rep_code
 run_count = 1000
-error_rate = 0.0001
+error_rate = 0.4
 H = rep_code(1000)
 bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=1)
 bpd_og=bp_decoder_og(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=10)
@@ -44,6 +44,6 @@ for DECODER in [osdD,bposd_og]:
         if np.array_equal(zc, z):
             syndrome_converge+=1
 
-    print(f"ler: {fail/run_count}", f"converge: {converge_fail/run_count}", f"Syndrome match fail: {1.0-syndrome_converge/run_count}")
+    print(f"ler: {fail/run_count}", f"converge failure rate: {converge_fail/run_count}", f"Syndrome match failure rate: {1.0-syndrome_converge/run_count}")
         
 
