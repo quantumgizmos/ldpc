@@ -23,8 +23,8 @@ m, n = H.shape
 
 
 
-# for DECODER in [osdD,bposd_og]:
-for DECODER in [bpd,bpd_og]:
+for DECODER in [osdD,bposd_og]:
+# for DECODER in [bpd,bpd_og]:
     np.random.seed(42)
     fail = 0
     converge_fail = 0
