@@ -90,9 +90,10 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
         if(self.bpd.converge):
             for i in range(self.n): out[i] = self.bpd.decoding[i]
-        else:
-            self.osdD.decode(self._syndrome,self.bpd.log_prob_ratios)
-            for i in range(self.n): out[i] = self.osdD.osdw_decoding[i]
+        # else:
+        #     self.osdD.decode(self._syndrome,self.bpd.log_prob_ratios)
+        #     for i in range(self.n): out[i] = self.osdD.osdw_decoding[i]
+        #     print("OSD")
         return out
 
 

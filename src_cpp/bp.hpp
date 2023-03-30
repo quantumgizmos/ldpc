@@ -136,6 +136,9 @@ class BpDecoder{
             for(int it=1;it<=max_iter;it++){
 
                 if(CONVERGED) continue;
+
+                std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
+
                 if(bp_method==0){
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
@@ -206,29 +209,37 @@ class BpDecoder{
                     //make hard decision on basis of log probability ratio for bit i
                     log_prob_ratios[i]=temp;
                     // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
-                    if(temp<=0) decoding[i] = 1;
+                    if(temp<=0){
+                        decoding[i] = 1;
+                        for(auto e: pcm->iterate_column(i)){
+                            candidate_syndrome[e->row_index]^=1;                        }
+                    }
                     else decoding[i]=0;
                 }
 
 
 
                 //compute the syndrome for the current candidate decoding solution
-                candidate_syndrome = pcm->mulvec_parallel(decoding,candidate_syndrome);
+                // candidate_syndrome = pcm->mulvec_parallel(decoding,candidate_syndrome);
                 int loop_break = false;
-                CONVERGED = true;
+                CONVERGED = false;
                 #pragma omp barrier
 
-                #pragma omp for
-                for(int i=0;i<check_count;i++){
-                    if(loop_break) continue;
-                    if(candidate_syndrome[i]!=syndrome[i]){
-                        CONVERGED=false;
-                        loop_break=true;
-                    }
 
+                if(std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())){
+                    CONVERGED = true;
                 }
+
+                // #pragma omp for
+                // for(int i=0;i<check_count;i++){
+                //     if(loop_break) continue;
+                //     if(candidate_syndrome[i]!=syndrome[i]){
+                //         CONVERGED=false;
+                //         loop_break=true;
+                //     }
+
+                // }
                 
-                #pragma omp barrier
                 iterations = it;
 
                 if(CONVERGED) continue;
