@@ -9,7 +9,7 @@ from ldpc import bposd_decoder as bposd_decoder_og
 
 
 from ldpc2.codes import rep_code
-run_count = 10
+run_count = 1000
 error_rate = 0.2
 H = rep_code(500)
 bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=1)
