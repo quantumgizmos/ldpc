@@ -75,25 +75,25 @@ cdef class BpOsdDecoder(BpDecoderBase):
         if not len(syndrome)==self.m:
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
         cdef int i
+
         DTYPE = syndrome.dtype
         out = np.zeros(self.n,dtype=DTYPE)
         
         cdef bool zero_syndrome = True
         for i in range(self.m):
             if syndrome[i]!=0: zero_syndrome = False
-            self.syndrome[i] = syndrome[i]
+            self._syndrome[i] = syndrome[i]
         
-        if zero_syndrome:
-            out = np.zeros(self.n,dtype=DTYPE)
-            return out
+        if zero_syndrome: return out
 
-        self.bpd.decode(syndrome)
+        self.bpd.decode(self._syndrome)
 
         if(self.bpd.converge):
             for i in range(self.n): out[i] = self.bpd.decoding[i]
         else:
-            self.osd.decode(self.syndrome,self.bpd.log_prob_ratios)
-            for i in range(self.n): out[i] = self.osd.osdw_decoding[i]
+            print('OSD')
+            self.osdD.decode(self._syndrome,self.bpd.log_prob_ratios)
+            for i in range(self.n): out[i] = self.osdD.osdw_decoding[i]
         return out
 
 
@@ -109,7 +109,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
             return None
 
     @osd_method.setter
-    def osd_method(self, method: str):
+    def osd_method(self, method: Union[str, int, float]):
         # OSD method
         if str(method).lower() in ['OSD_0','osd_0','0','osd0']:
             self.osdD.osd_method=0
