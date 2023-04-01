@@ -66,6 +66,8 @@ class OsdDecoder{
         }
 
         int osd_setup(){
+
+            this->osd_candidate_strings.clear();
             
             if(this->osd_method == -1) return 0;
 

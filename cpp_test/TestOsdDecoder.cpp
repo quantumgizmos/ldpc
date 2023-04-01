@@ -122,21 +122,32 @@ TEST(OsdDecoder, DecodeHammingCode) {
     // Decode the received codeword
     auto osdD = new osd::OsdDecoder(pcm, -1, 0, error_channel);
 
+    osdD->osd_method = 0;
     osdD->osd_order = 4;
-    osdD->osd_method = 2;
     osdD->osd_setup();
 
-    cout<<"Candidate error vectors"<<endl;
+    ASSERT_EQ(osdD->osd_candidate_strings.size(), 0);
 
-    for(auto cand: osdD->osd_candidate_strings){
-        print_vector(cand);
-    }
+
+    osdD->osd_method = 1;
+    osdD->osd_order = 4;
+    osdD->osd_setup();
+
+    ASSERT_EQ(osdD->osd_candidate_strings.size(), 16-1);
+
+    osdD->osd_method = 2;
+    osdD->osd_order = 4;
+    osdD->osd_setup();
+
+    ASSERT_EQ(osdD->osd_candidate_strings.size(), 10);
+
 
     auto decoding = osdD->decode(syndrome, lbr);
 
     // Verify that the decoded codeword is valid by computing the syndrome
     auto syndrome2 = vector<uint8_t>{0, 0, 0};
     pcm->mulvec(decoding, syndrome2);
+    print_vector(decoding);
     for (int i = 0; i < 3; i++) {
         ASSERT_EQ(syndrome[i], syndrome2[i]);
     }
