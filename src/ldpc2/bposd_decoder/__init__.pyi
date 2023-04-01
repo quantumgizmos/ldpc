@@ -9,8 +9,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
 
-    This class provides an implementation of an OSD decoder for binary linear codes that uses belief propagation decoding
-    as a fallback method if the OSD does not converge. The class inherits from the `BpDecoderBase` class.
+    This class provides an implementation of the BP decoding that uses Ordered Statistic Decoding (OSD)
+    as a fallback method if the BP does not converge. The class inherits from the `BpDecoderBase` class.
 
     Parameters
     ----------
@@ -59,8 +59,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
         ## set up OSD with default values and channel probs from BP
         self.osdD = new OsdDecoderCpp(self.pcm, -1, 0, self.bpd.channel_probs)
-        self.osd_order=int(osd_order)
-        self.osd_method=int(osd_method)
+        self.osd_order=osd_order
+        self.osd_method=osd_method
 
         self.osdD.osd_setup()
 
@@ -70,73 +70,154 @@ cdef class BpOsdDecoder(BpDecoderBase):
         if self.MEMORY_ALLOCATED:
             del self.osd
 
-    def decode(self,syndrome):
-        
-        if not len(syndrome)==self.m:
+    def decode(self, syndrome: np.ndarray) -> np.ndarray:
+        """
+        Decodes the input syndrome using the belief propagation and OSD decoding methods.
+
+        This method takes an input syndrome and decodes it using the belief propagation (BP) decoding method. If the BP
+        decoding method converges, it returns the decoding output. Otherwise, the method falls back to using the Ordered
+        Statistic Decoding (OSD) decoding method.
+
+        Parameters
+        ----------
+        syndrome : np.ndarray
+            The input syndrome to decode.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the decoded output.
+
+        Raises
+        ------
+        ValueError
+            If the length of the input syndrome is not equal to the length of the code.
+
+        Notes
+        -----
+        This method first checks if the input syndrome is all zeros. If it is, it returns an array of zeros of the same
+        length as the codeword. If the BP decoding method converges, it returns the decoding output. Otherwise, it falls back
+        to using the OSD decoding method. The OSD method used is specified by the `osd_method` parameter passed to the class
+        constructor. The OSD order used is specified by the `osd_order` parameter passed to the class constructor.
+
+        """
+        if not len(syndrome) == self.m:
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
-        cdef int i
-        DTYPE = syndrome.dtype
-        out = np.zeros(self.n,dtype=DTYPE)
         
-        cdef bool zero_syndrome = True
+        zero_syndrome = True
+        
         for i in range(self.m):
-            if syndrome[i]!=0: zero_syndrome = False
-            self.syndrome[i] = syndrome[i]
-        
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]:
+                zero_syndrome = False
         if zero_syndrome:
-            out = np.zeros(self.n,dtype=DTYPE)
-            return out
+            return np.zeros(self.n, dtype=syndrome.dtype)
+        
+        self.bpd.decode(self._syndrome)
+        out = np.zeros(self.n, dtype=syndrome.dtype)
 
-        self.bpd.decode(syndrome)
-
-        if(self.bpd.converge):
-            for i in range(self.n): out[i] = self.bpd.decoding[i]
+        if self.bpd.converge:
+            for i in range(self.n):
+                out[i] = self.bpd.decoding[i]
         else:
-            self.osd.decode(self.syndrome,self.bpd.log_prob_ratios)
-            for i in range(self.n): out[i] = self.osd.osdw_decoding[i]
+            self.osdD.decode(self._syndrome, self.bpd.log_prob_ratios)
+            for i in range(self.n):
+                out[i] = self.osdD.osdw_decoding[i]
+
         return out
 
 
+
     @property
-    def osd_method(self):
-        if self.osdD.osd_method==0:
+    def osd_method(self) -> Optional[str]:
+        """
+        The Ordered Statistic Decoding (OSD) method used.
+
+        Returns
+        -------
+        Optional[str]
+            A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
+            has been set, returns `None`.
+        """
+        if self.osdD.osd_method == 0:
             return 'OSD_0'
-        elif self.osdD.osd_method==1:
+        elif self.osdD.osd_method == 1:
             return 'OSD_E'
-        elif self.osdD.osd_method==2:
+        elif self.osdD.osd_method == 2:
             return 'OSD_CS'
         else:
             return None
 
+
     @osd_method.setter
-    def osd_method(self, method: str):
+    def osd_method(self, method: Union[str, int, float]) -> None:
+        """
+        Sets the OSD method used.
+
+        Parameters
+        ----------
+        method : Union[str, int, float]
+            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
+            Alternatively, 'osd_0', '0' or 'osd0' can be used to set the OSD method to 'OSD_0', 'osd_e', 'e' or
+            'exhaustive' can be used to set the OSD method to 'OSD_E', and 'osd_cs', '1', 'cs', 'combination_sweep' or
+            'combination_sweep' can be used to set the OSD method to 'OSD_CS'.
+        """
         # OSD method
-        if str(method).lower() in ['OSD_0','osd_0','0','osd0']:
-            self.osdD.osd_method=0
-            self.osdD.osd_order=0
-        elif str(method).lower() in ['osd_e','osde','exhaustive','e']:
-            self.osdD.osd_method=1
-        elif str(method).lower() in ['osd_cs','1','osdcs','combination_sweep','combination_sweep','cs']:
-            self.osdD.osd_method=2
+        if str(method).lower() in ['osd_0', '0', 'osd0']:
+            self.osdD.osd_method = 0
+            self.osdD.osd_order = 0
+        elif str(method).lower() in ['osd_e', 'e', 'exhaustive']:
+            self.osdD.osd_method = 1
+        elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep']:
+            self.osdD.osd_method = 2
         else:
-            raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following\
-            methods: 'OSD_0', 'OSD_E' or 'OSD_CS'.")
+            raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following methods:\
+                'OSD_0', 'OSD_E' or 'OSD_CS'.")
+
 
     @property
-    def osd_order(self):
+    def osd_order(self) -> int:
+        """
+        The OSD order used.
+
+        Returns
+        -------
+        int
+            An integer representing the OSD order used.
+        """
         return self.osdD.osd_order
 
+
     @osd_order.setter
-    def osd_order(self, order: int):
+    def osd_order(self, order: int) -> None:
+        """
+        Set the order for the OSD method.
+
+        Parameters
+        ----------
+        order : int
+            The order for the OSD method. Must be a positive integer.
+
+        Raises
+        ------
+        ValueError
+            If order is less than 0.
+
+        Warns
+        -----
+        UserWarning
+            If the OSD method is 'OSD_E' and the order is greater than 15.
+
+        """
         # OSD order
-        if order<0:
+        if order < 0:
             raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
-                
-        if self.osdD.osd_method == 0 and order>15:
-            warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth\
-            greater than 15 is not recommended. Use the 'osd_cs' method instead.")
-        
-        self.osdD.osd_order=order
+
+        if self.osdD.osd_method == 0 and order > 15:
+            warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not "
+                        "recommended. Use the 'osd_cs' method instead.")
+
+        self.osdD.osd_order = order
 
     @property
     def decoding(self) -> np.ndarray:
