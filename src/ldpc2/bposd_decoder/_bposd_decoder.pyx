@@ -59,8 +59,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
         ## set up OSD with default values and channel probs from BP
         self.osdD = new OsdDecoderCpp(self.pcm, -1, 0, self.bpd.channel_probs)
-        self.osd_order=int(osd_order)
-        self.osd_method=int(osd_method)
+        self.osd_order=osd_order
+        self.osd_method=osd_method
 
         self.osdD.osd_setup()
 

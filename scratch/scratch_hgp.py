@@ -22,8 +22,8 @@ lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
 run_count = 1000
 error_rate = 0.05
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1,osd_order=10,osd_method="osd_cs")
-osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10,osd_order=10,osd_method="osd_cs")
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=1,omp_thread_count=1,osd_order=40,osd_method="osd_cs")
+osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=1,osd_order=40,osd_method="osd_cs")
 
 for DECODER in [osd,osd_og]:
     np.random.seed(42)

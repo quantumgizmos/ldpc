@@ -139,7 +139,7 @@ class OsdDecoder{
 
             vector<int> non_pivot_columns;
             for(int i = this->LuDecomposition->rank; i<this->pcm->n; i++){
-                non_pivot_columns.push_back(this->column_ordering[i]);
+                non_pivot_columns.push_back(this->LuDecomposition->cols[i]);
             }
             
             auto pcm_t = gf2sparse::copy_cols(this->pcm, non_pivot_columns);
