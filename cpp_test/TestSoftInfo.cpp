@@ -62,11 +62,11 @@ TEST(OsdDecoder, above_cutoff_same_as_ms) {
 }
 
 
-TEST(OsdDecoder, errored_syndrome) {
+TEST(OsdDecoder, errored_close_to_zero) {
 
     /*In this test, I will attempt to decode a 3 qubit ring code with an
-    errored 1-qubit syndrome. The errored qubit is assigned as soft-syndrome
-    magnitude below the cutoff.*/
+    errored zero syndrome. Ie. all syndromes are close to zero. I expect
+    the decoder to return the 000 codeword (corresponding to the 000 syndrome)*/
 
 
     //Setup repetition code
@@ -77,30 +77,102 @@ TEST(OsdDecoder, errored_syndrome) {
         pcm->insert_entry(i,(i+1)%N);
     }
 
-    print_sparse_matrix(*pcm);
+    // print_sparse_matrix(*pcm);
 
     vector<double> error_channel(pcm->n,0.1);
     //could we come up with a sum product formulation for this?
     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
     vector<double> soft_syndrome(pcm->m,2);
-    soft_syndrome[0]=-2;
-    soft_syndrome[1]=0.01; //syndrome is incorrect, but only just
-
-    double cutoff = 0.1;
+    soft_syndrome[0]=-1;
+    soft_syndrome[1]=1; //syndrome is incorrect, but only just
+    soft_syndrome[2]=-1;
+    double cutoff = 10;
     vector<uint8_t> soft_decoding;
     bpd->soft_info_decode_serial(soft_syndrome,cutoff);
     for(auto bit: bpd->decoding) soft_decoding.push_back(bit);
-
-    cout<<"Decoding: "<<endl;
-    print_vector(soft_decoding);
-
-    // for(int i = 0; i<pcm->n; i++){
-    //     ASSERT_EQ(normal_decoding[i],soft_decoding[i]);
-    // }
+    for(int i = 0; i<pcm->n; i++){
+        ASSERT_EQ(soft_decoding[i],0);
+    }
 
     
+}
 
+
+TEST(OsdDecoder, one_errored_syndrome_bit) {
+
+    /*In this test, I will attempt to decode a 3 qubit ring code with an
+    errored zero syndrome. The second syndrome is set to 5 (ie. no syndrome).
+    However, it is below the cutoff. I expect the decoder to flip the second syndrome
+    bit and return the decoding 100.*/
+
+
+    //Setup repetition code
+    int N = 3;
+    auto pcm = bp::BpSparse::New(N, N);
+    for(int i = 0; i<N; i++){
+        pcm->insert_entry(i, i);
+        pcm->insert_entry(i,(i+1)%N);
+    }
+
+    // print_sparse_matrix(*pcm);
+
+    vector<double> error_channel(pcm->n,0.1);
+    //could we come up with a sum product formulation for this?
+    auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+
+    vector<double> soft_syndrome = {-20,2,20};
+    double cutoff = 10;
+    auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff);
+    vector<uint8_t> expected_decoding = {0,1,0};
+
+    // print_vector(soft_decoding);
+
+    for(int i = 0; i<pcm->n; i++){
+        ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
+    }
+
+    
+}
+
+
+
+TEST(OsdDecoder, long_rep_code) {
+
+    /*In this test, I will attempt to decode a 3 qubit ring code with an
+    errored zero syndrome. The second syndrome is set to 5 (ie. no syndrome).
+    However, it is below the cutoff. I expect the decoder to flip the second syndrome
+    bit and return the decoding 100.*/
+
+
+    //Setup repetition code
+    int N = 20;
+    auto pcm = bp::BpSparse::New(N, N);
+    for(int i = 0; i<N; i++){
+        pcm->insert_entry(i, i);
+        pcm->insert_entry(i,(i+1)%N);
+    }
+
+    // print_sparse_matrix(*pcm);
+
+    vector<double> error_channel(pcm->n,0.1);
+    //could we come up with a sum product formulation for this?
+    auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+
+    vector<double> soft_syndrome(pcm->m,100);
+    soft_syndrome[0]=-100;
+    soft_syndrome[7]=1;
+    double cutoff = 10;
+    auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff);
+    vector<uint8_t> expected_decoding = {0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // print_vector(soft_decoding);
+
+    for(int i = 0; i<pcm->n; i++){
+        ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
+    }
+
+    
 }
 
 

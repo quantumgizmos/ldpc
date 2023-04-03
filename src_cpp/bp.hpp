@@ -386,6 +386,7 @@ class BpDecoder{
 
             // cout<<"Soft-Hard Tranlsate: ";
             // print_vector(syndrome);
+            // cout<<"Cut-off: "<<cutoff<<endl;
 
             int check_index;
             converge=0;
@@ -433,8 +434,8 @@ class BpDecoder{
                     else if(bp_method==1){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
-                            int sgn=syndrome[check_index];
-                            // int sgn = 0;
+                            // int sgn=syndrome[check_index];
+                            int sgn = 0;
                             temp = numeric_limits<double>::max();
 
                             for(auto g: pcm->iterate_row(check_index)){
@@ -458,11 +459,9 @@ class BpDecoder{
                             //then we check if the magnitude is less than the cutoff.
                             if(soft_syndrome_magnitude<cutoff && !check_indices_updated.contains(check_index)){
                                 check_indices_updated.insert(check_index);
-
-                                // cout<<"HELLO"<<endl;
                                 
                                 //if the syndrome is the lowest weight message, then we propagate the syndrome
-                                if(soft_syndrome_magnitude<min_bit_to_check_msg){
+                                if(soft_syndrome_magnitude<=min_bit_to_check_msg){
                                     propagated_msg = soft_syndrome_magnitude;
 
                                     //syndrome update
@@ -478,10 +477,9 @@ class BpDecoder{
                                     //now we calculate the total sign of ALL of the messages incoming to the syndrome.
                                     int check_node_sgn = sgn;
                                     if(e->bit_to_check_msg<=0) check_node_sgn^=1;
-                                    check_node_sgn+=syndrome[check_index];
-                                    // check_node_sgn = pow(-1,check_node_sgn);
+            
                                     //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
-                                    if(syndrome[check_index] != check_node_sgn){
+                                    if(syndrome[check_index] == check_node_sgn){
                                         soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
                                     }
                                     // if not, we flip the sign of the soft syndrome;
@@ -491,11 +489,12 @@ class BpDecoder{
                                     }
 
 
+
                                 }
 
                             }
 
-                            // sgn^=syndrome[check_index];
+                            sgn^=syndrome[check_index];
                             e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*propagated_msg;
                             e->bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
@@ -503,8 +502,7 @@ class BpDecoder{
 
                         }
 
-                        cout<<"Soft Syndrome: ";
-                        print_vector(soft_syndrome);
+
                     
                     }
 
@@ -518,6 +516,9 @@ class BpDecoder{
                     }
 
                 }
+
+                // cout<<"Soft Syndrome: ";
+                // print_vector(soft_syndrome);
 
             
             
