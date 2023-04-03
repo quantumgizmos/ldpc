@@ -85,7 +85,7 @@ TEST(OsdDecoder, errored_syndrome) {
 
     vector<double> soft_syndrome(pcm->m,2);
     soft_syndrome[0]=-2;
-    soft_syndrome[1]=0.05; //syndrome is incorrect, but only just
+    soft_syndrome[1]=0.08; //syndrome is incorrect, but only just
 
     double cutoff = 0.1;
     vector<uint8_t> soft_decoding;

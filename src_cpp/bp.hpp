@@ -429,7 +429,8 @@ class BpDecoder{
                     else if(bp_method==1){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
-                            int sgn=syndrome[check_index];
+                            // int sgn=syndrome[check_index];
+                            int sgn = 0;
 
                             bool SOFT_SYNDROME_IS_MAX_MESSAGE = false;
                             temp = numeric_limits<double>::max();
@@ -439,7 +440,7 @@ class BpDecoder{
                                     if(abs(g->bit_to_check_msg)<temp){
                                         temp = abs(g->bit_to_check_msg);
                                     }
-                                    if(g->bit_to_check_msg<=0) sgn+=1;
+                                    if(g->bit_to_check_msg<=0) sgn^=1;
                                 }
                             }
 
@@ -476,7 +477,7 @@ class BpDecoder{
                                     if(e->bit_to_check_msg<=0) check_node_sgn+=1;
                                     check_node_sgn = pow(-1,check_node_sgn);
                                     //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
-                                    if(soft_syndrome_sign != check_node_sgn){
+                                    if(syndrome[check_index] == check_node_sgn){
                                         soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
                                     }
                                     // if not, we flip the sign of the soft syndrome;
@@ -490,6 +491,7 @@ class BpDecoder{
 
                             }
 
+                            sgn+=syndrome[check_index];
                             e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*propagated_msg;
                             e->bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
