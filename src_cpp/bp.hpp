@@ -12,6 +12,7 @@
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
+#include <cassert>
 
 
 using namespace std;
@@ -475,12 +476,13 @@ class BpDecoder{
                                     if(e->bit_to_check_msg<=0) check_node_sgn+=1;
                                     check_node_sgn = pow(-1,check_node_sgn);
                                     //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
-                                    if(soft_syndrome_sign == check_node_sgn){
+                                    if(soft_syndrome_sign != check_node_sgn){
                                         soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
                                     }
                                     // if not, we flip the sign of the soft syndrome;
                                     else{
                                         soft_syndrome[check_index] *= -1;
+                                        syndrome[check_index]^=1;
                                     }
 
 
