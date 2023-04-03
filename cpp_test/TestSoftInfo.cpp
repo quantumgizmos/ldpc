@@ -102,7 +102,7 @@ TEST(OsdDecoder, errored_close_to_zero) {
 TEST(OsdDecoder, one_errored_syndrome_bit) {
 
     /*In this test, I will attempt to decode a 3 qubit ring code with an
-    errored zero syndrome. The second syndrome is set to 5 (ie. no syndrome).
+    errored syndrome. The second syndrome is set to 5 (ie. no syndrome).
     However, it is below the cutoff. I expect the decoder to flip the second syndrome
     bit and return the decoding 100.*/
 
@@ -139,10 +139,7 @@ TEST(OsdDecoder, one_errored_syndrome_bit) {
 
 TEST(OsdDecoder, long_rep_code) {
 
-    /*In this test, I will attempt to decode a 3 qubit ring code with an
-    errored zero syndrome. The second syndrome is set to 5 (ie. no syndrome).
-    However, it is below the cutoff. I expect the decoder to flip the second syndrome
-    bit and return the decoding 100.*/
+    /*Same as the above test but with a longer repetition code.*/
 
 
     //Setup repetition code
