@@ -12,7 +12,9 @@
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
-#include <cassert>
+// #include <cassert>
+#include <stdexcept> // required for std::runtime_error
+#include <set>
 
 
 using namespace std;
@@ -396,6 +398,7 @@ class BpDecoder{
             this->initialise_log_domain_bp();
 
 
+            set<int> check_indices_updated;
 
             for(int it=1;it<=max_iter;it++){
 
@@ -405,6 +408,7 @@ class BpDecoder{
                     shuffle(serial_schedule_order.begin(), serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
                 }
 
+                check_indices_updated.clear();
                 #pragma omp for
                 for(int bit_index: serial_schedule_order){
                     double temp;
@@ -429,10 +433,8 @@ class BpDecoder{
                     else if(bp_method==1){
                         for(auto e: pcm->iterate_column(bit_index)){
                             check_index = e->row_index;
-                            // int sgn=syndrome[check_index];
-                            int sgn = 0;
-
-                            bool SOFT_SYNDROME_IS_MAX_MESSAGE = false;
+                            int sgn=syndrome[check_index];
+                            // int sgn = 0;
                             temp = numeric_limits<double>::max();
 
                             for(auto g: pcm->iterate_row(check_index)){
@@ -454,7 +456,8 @@ class BpDecoder{
                             double soft_syndrome_magnitude = abs(soft_syndrome[check_index]);
                             
                             //then we check if the magnitude is less than the cutoff.
-                            if(soft_syndrome_magnitude<cutoff){
+                            if(soft_syndrome_magnitude<cutoff && !check_indices_updated.contains(check_index)){
+                                check_indices_updated.insert(check_index);
 
                                 // cout<<"HELLO"<<endl;
                                 
@@ -474,10 +477,11 @@ class BpDecoder{
 
                                     //now we calculate the total sign of ALL of the messages incoming to the syndrome.
                                     int check_node_sgn = sgn;
-                                    if(e->bit_to_check_msg<=0) check_node_sgn+=1;
-                                    check_node_sgn = pow(-1,check_node_sgn);
+                                    if(e->bit_to_check_msg<=0) check_node_sgn^=1;
+                                    check_node_sgn+=syndrome[check_index];
+                                    // check_node_sgn = pow(-1,check_node_sgn);
                                     //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
-                                    if(syndrome[check_index] == check_node_sgn){
+                                    if(syndrome[check_index] != check_node_sgn){
                                         soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
                                     }
                                     // if not, we flip the sign of the soft syndrome;
@@ -491,7 +495,7 @@ class BpDecoder{
 
                             }
 
-                            sgn+=syndrome[check_index];
+                            // sgn^=syndrome[check_index];
                             e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*propagated_msg;
                             e->bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e->check_to_bit_msg;
