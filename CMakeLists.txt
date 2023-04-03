@@ -65,6 +65,7 @@ add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
 add_executable(TestGF2RowReduce cpp_test/TestGF2RowReduce.cpp)
 add_executable(TestBPDecoder cpp_test/TestBPDecoder.cpp)
 add_executable(TestOsdDecoder cpp_test/TestOsdDecoder.cpp)
+add_executable(TestSoftInfo cpp_test/TestSoftInfo.cpp)
 
 
 
@@ -75,6 +76,7 @@ target_link_libraries(TestGF2Sparse gtest_main ldpc2)
 target_link_libraries(TestGF2RowReduce gtest_main ldpc2)
 target_link_libraries(TestBPDecoder gtest_main ldpc2)
 target_link_libraries(TestOsdDecoder gtest_main ldpc2)
+target_link_libraries(TestSoftInfo gtest_main ldpc2)
 
 # Discover and run tests using GoogleTest
 enable_testing()

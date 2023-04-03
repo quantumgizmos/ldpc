@@ -365,6 +365,148 @@ class BpDecoder{
 
         }
 
+        vector<uint8_t>& soft_info_decode_serial(vector<double>& soft_syndrome, double cutoff){
+
+
+            vector<uint8_t> syndrome;
+            for(double value: soft_syndrome){
+                if(value<=0) syndrome.push_back(1);
+                else syndrome.push_back(0);
+            }
+
+            int check_index;
+            converge=0;
+            // int it;
+            int CONVERGED = 0;
+            bool loop_break = false;
+
+            // initialise BP
+
+            this->initialise_log_domain_bp();
+
+
+
+            for(int it=1;it<=max_iter;it++){
+
+                if(CONVERGED) continue;
+
+                if(random_serial_schedule>1 && omp_thread_count == 1){
+                    shuffle(serial_schedule_order.begin(), serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
+                }
+
+                #pragma omp for
+                for(int bit_index: serial_schedule_order){
+                    double temp;
+                    log_prob_ratios[bit_index]=log((1-channel_probs[bit_index])/channel_probs[bit_index]);
+                    // cout<<log_prob_ratios[bit_index]<<endl;
+                
+                    if(bp_method==0){
+                        for(auto e: pcm->iterate_column(bit_index)){
+                            check_index = e->row_index;
+                            
+                            e->check_to_bit_msg=1.0;
+                            for(auto g: pcm->iterate_row(check_index)){
+                                if(g!=e){
+                                    e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
+                                }
+                            }
+                            e->check_to_bit_msg = pow(-1,syndrome[check_index])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
+                            e->bit_to_check_msg=log_prob_ratios[bit_index];
+                            log_prob_ratios[bit_index]+=e->check_to_bit_msg;
+                        }
+                    }
+                    else if(bp_method==1){
+                        for(auto e: pcm->iterate_column(bit_index)){
+                            check_index = e->row_index;
+                            int sgn=syndrome[check_index];
+
+                            bool SOFT_SYNDROME_IS_MAX_MESSAGE = false;
+                            temp = numeric_limits<double>::max();
+
+                            for(auto g: pcm->iterate_row(check_index)){
+                                if(g!=e){
+                                    if(abs(g->bit_to_check_msg)<temp){
+                                        temp = abs(g->bit_to_check_msg);
+                                    }
+                                    if(g->bit_to_check_msg<=0) sgn+=1;
+                                }
+                            }
+
+                            double soft_syndrome_magnitude = abs(soft_syndrome[check_index]);
+                            bool BELOW_CUTOFF = false;
+
+                            double min_bit_to_check_msg = temp;
+                            double propagated_msg = min_bit_to_check_msg;
+
+                            if(soft_syndrome_magnitude<cutoff){
+                                BELOW_CUTOFF = true;
+                                
+                                if(soft_syndrome_magnitude<min_bit_to_check_msg){
+                                    propagated_msg = soft_syndrome_magnitude;
+
+                                    //continue here
+
+                                }
+
+                            } 
+
+
+                            e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*propagated_msg;
+                            e->bit_to_check_msg=log_prob_ratios[bit_index];
+                            log_prob_ratios[bit_index]+=e->check_to_bit_msg;
+
+
+                            if(BELOW_CUTOFF && SOFT_SYNDROME_IS_MAX_MESSAGE){
+
+                            }
+
+
+                        }
+                    
+                    }
+
+                    if(log_prob_ratios[bit_index]<=0) decoding[bit_index] = 1;
+                    else decoding[bit_index]=0;
+
+                    temp=0;
+                    for(auto e: pcm->reverse_iterate_column(bit_index)){
+                        e->bit_to_check_msg+=temp;
+                        temp += e->check_to_bit_msg;
+                    }
+
+                }
+
+            
+            
+
+                // compute the syndrome for the current candidate decoding solution
+                loop_break = false;
+                CONVERGED = 1;
+
+                
+                candidate_syndrome = pcm->mulvec(decoding,candidate_syndrome);
+
+                for(int i=0;i<check_count;i++){
+                    if(loop_break) continue;
+                    if(candidate_syndrome[i]!=syndrome[i]){
+                        CONVERGED=0;
+                        loop_break=true;
+                    }
+
+                }
+
+                iterations = it;
+
+            
+
+            }
+
+            converge=CONVERGED;
+            return decoding;
+
+        }
+
+
 
 };
 
