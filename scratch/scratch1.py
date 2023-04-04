@@ -10,8 +10,8 @@ from ldpc import bposd_decoder as bposd_decoder_og
 
 from ldpc2.codes import rep_code
 run_count = 10000
-error_rate = 0.3
-H = rep_code(1000)
+error_rate = 0.01
+H = rep_code(5)
 bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=1)
 bpd_og=bp_decoder_og(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=10)
 
@@ -19,32 +19,7 @@ bposd_og=bposd_decoder_og(H, error_rate=error_rate, bp_method='ms', ms_scaling_f
 osdD=BpOsdDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "serial", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=1,osd_order=0,osd_method=1)
 
 
+from ldpc2.monte_carlo_simulation import McSim
 
-m, n = H.shape
-
-
-
-for DECODER in [osdD,bposd_og]:
-# for DECODER in [bpd,bpd_og]:
-    np.random.seed(42)
-    fail = 0
-    converge_fail = 0
-    syndrome_converge = 0
-    for _ in tqdm(range(run_count)):
-
-        error = generate_bsc_error(H.shape[1], error_rate)
-        z = H@error%2
-        x = DECODER.decode(z)
-
-        if not DECODER.converge: converge_fail+=1
-        if not np.array_equal(x, error):
-            fail+=1
-
-        zc = H@x%2
-
-        if np.array_equal(zc, z):
-            syndrome_converge+=1
-
-    print(f"ler: {fail/run_count}", f"converge failure rate: {converge_fail/run_count}", f"Syndrome match failure rate: {1.0-syndrome_converge/run_count}")
-        
-
+McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=10000,seed=42)
+McSim(H, error_rate=error_rate, Decoder=bpd_og, target_run_count=10000,seed=42)
