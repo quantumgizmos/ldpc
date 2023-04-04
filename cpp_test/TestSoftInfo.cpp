@@ -5,7 +5,7 @@
 #include "sparse_matrix_util.hpp"
 #include "osd.hpp"
 
-TEST(OsdDecoder, above_cutoff_same_as_ms) {
+TEST(SoftInfoDecoder, above_cutoff_same_as_ms) {
 
     /*The soft into decoder should give the same result
     as min-sum BP if the syndrome is below the cutoff.*/
@@ -62,7 +62,7 @@ TEST(OsdDecoder, above_cutoff_same_as_ms) {
 }
 
 
-TEST(OsdDecoder, errored_close_to_zero) {
+TEST(SoftInfoDecoder, errored_close_to_zero) {
 
     /*In this test, I will attempt to decode a 3 qubit ring code with an
     errored zero syndrome. Ie. all syndromes are close to zero. I expect
@@ -99,7 +99,7 @@ TEST(OsdDecoder, errored_close_to_zero) {
 }
 
 
-TEST(OsdDecoder, one_errored_syndrome_bit) {
+TEST(SoftInfoDecoder, one_errored_syndrome_bit) {
 
     /*In this test, I will attempt to decode a 3 qubit ring code with an
     errored syndrome. The second syndrome is set to 5 (ie. no syndrome).
@@ -137,7 +137,7 @@ TEST(OsdDecoder, one_errored_syndrome_bit) {
 
 
 
-TEST(OsdDecoder, long_rep_code) {
+TEST(SoftInfoDecoder, long_rep_code) {
 
     /*Same as the above test but with a longer repetition code.*/
 
