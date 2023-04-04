@@ -11,30 +11,13 @@
 #include "gf2sparse_linalg.hpp"
 #include "sort.hpp"
 #include "sparse_matrix_util.hpp"
+#include "util.hpp"
 
 using namespace std;
 
 namespace osd{
 
-vector<uint8_t> decimal_to_binary_reverse(int n,int k)
-{
-   vector<uint8_t> binary_number;
-   int divisor;
-   int remainder;
-   divisor=n;
 
-   binary_number.resize(k);
-
-   for(int i=0; i<k;i++)
-   {
-        remainder=divisor%2;
-        binary_number[i]=remainder;
-        divisor=divisor/2;
-        if(divisor==0) break;
-   }
-
-   return  binary_number;
-}
 
 
 class OsdDecoder{
@@ -84,7 +67,7 @@ class OsdDecoder{
             if(this->osd_method==1){
                 osd_candidate_string_count = pow(2,this->osd_order);
                 for(int i=1; i<osd_candidate_string_count; i++){
-                    this->osd_candidate_strings.push_back(decimal_to_binary_reverse(i,k));
+                    this->osd_candidate_strings.push_back(util::decimal_to_binary_reverse(i,k));
                 }
             }
 

@@ -7,10 +7,12 @@
 #include "io.hpp"
 #include <string>
 #include "rng.hpp"
+#include "util.hpp"
 
 
 using namespace std;
 using namespace gf2sparse;
+using namespace util;
 
 
 // Define a custom node type. eg. Here I define a node type that
@@ -34,6 +36,12 @@ int main()
         cout << random.random_double() << endl;
     }
 
+
+    for (int i = 0; i < 100; i++)
+    {
+        auto bin = decimal_to_binary(i,20);
+        print_vector(bin);
+    }
 
     return 0;
 
