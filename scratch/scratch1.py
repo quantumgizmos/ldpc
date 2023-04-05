@@ -21,5 +21,25 @@ osdD=BpOsdDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "serial",
 
 from ldpc2.monte_carlo_simulation import McSim
 
-McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=10000,seed=42)
-McSim(H, error_rate=error_rate, Decoder=bpd_og, target_run_count=10000,seed=42)
+# McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=10000,seed=42)
+# McSim(H, error_rate=error_rate, Decoder=bpd_og, target_run_count=10000,seed=42)
+
+
+from ldpc2.bp_decoder import SoftInfoBpDecoder
+
+sbpd = SoftInfoBpDecoder(H, error_rate = 0.1, max_iter = 10, cutoff = 10)
+
+soft_syndrome = 10*np.ones(4)
+soft_syndrome[0] = -10
+soft_syndrome[1] = -1*5
+
+print(soft_syndrome)
+
+print(sbpd.decode(soft_syndrome))
+print(sbpd.soft_syndrome)
+print(sbpd.schedule)
+print(sbpd.bp_method)
+
+pcm = np.eye(3, dtype=int)
+pcm += np.roll(pcm, 1, axis=1)
+print(pcm)

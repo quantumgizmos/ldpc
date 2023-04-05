@@ -26,9 +26,11 @@ cdef extern from "bp.hpp" namespace "bp" nogil:
     cdef cppclass BpDecoderCpp "bp::BpDecoder":
         BpDecoderCpp(shared_ptr[BpSparse] pcm, vector[double]& error_channel, int max_iter, int bp_method, double ms_scaling_factor, int schedule, int omp_threads, vector[int] serial_schedule,int random_schedule) except +
         vector[uint8_t]& decode(vector[uint8_t]& syndrome)
+        vector[uint8_t]& soft_info_decode_serial(vector[double]& soft_syndrome, double cutoff)
         vector[uint8_t] decoding
         vector[double] log_prob_ratios
         vector[double] channel_probs
+        vector[double] soft_syndrome
         int converge
         int max_iter
         int omp_thread_count
@@ -56,3 +58,6 @@ cdef class BpDecoderBase:
 cdef class BpDecoder(BpDecoderBase):
     pass
 
+cdef class SoftInfoBpDecoder(BpDecoderBase):
+    cdef double cutoff
+    pass

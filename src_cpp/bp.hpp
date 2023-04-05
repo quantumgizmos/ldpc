@@ -47,6 +47,7 @@ class BpDecoder{
         vector<double> channel_probs;
         vector<double> log_prob_ratios;
         vector<double> initial_log_prob_ratios;
+        vector<double> soft_syndrome;
         vector<int> serial_schedule_order;
         int random_serial_schedule;
         int iterations;
@@ -368,19 +369,20 @@ class BpDecoder{
 
         }
 
-        vector<uint8_t>& soft_info_decode_serial(vector<double>& soft_syndrome, double cutoff){
+        vector<uint8_t>& soft_info_decode_serial(vector<double>& soft_info_syndrome, double cutoff){
 
+            this->soft_syndrome = soft_info_syndrome;
 
             vector<uint8_t> syndrome;
-            // vector<int8_t> soft_syndrome_sign;
-            for(double value: soft_syndrome){
+            // vector<int8_t> this->soft_syndrome_sign;
+            for(double value: this->soft_syndrome){
                 if(value<=0){
                     syndrome.push_back(1);
-                    // soft_syndrome_sign.push_back(-1);
+                    // this->soft_syndrome_sign.push_back(-1);
                 }
                 else{
                     syndrome.push_back(0);
-                    // soft_syndrome_sign.push_back(1);
+                    // this->soft_syndrome_sign.push_back(1);
                 }
             }
 
@@ -454,7 +456,7 @@ class BpDecoder{
                             //VIRTUAL CHECK NODE UPDATE
 
                             //first we calculate the magnitude of the soft syndrome
-                            double soft_syndrome_magnitude = abs(soft_syndrome[check_index]);
+                            double soft_syndrome_magnitude = abs(this->soft_syndrome[check_index]);
                             
                             //then we check if the magnitude is less than the cutoff.
                             if(soft_syndrome_magnitude<cutoff && !check_indices_updated.contains(check_index)){
@@ -467,7 +469,7 @@ class BpDecoder{
                                     //syndrome update
                                     //first we calculate the sign of the soft syndrome
                                     int soft_syndrome_sign;
-                                    if(soft_syndrome[check_index] <= 0){
+                                    if(this->soft_syndrome[check_index] <= 0){
                                         soft_syndrome_sign = -1;                                        
                                     }
                                     else{
@@ -480,11 +482,11 @@ class BpDecoder{
             
                                     //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
                                     if(syndrome[check_index] == check_node_sgn){
-                                        soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
+                                        this->soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
                                     }
                                     // if not, we flip the sign of the soft syndrome;
                                     else{
-                                        soft_syndrome[check_index] *= -1;
+                                        this->soft_syndrome[check_index] *= -1;
                                         syndrome[check_index]^=1;
                                     }
 
@@ -518,7 +520,7 @@ class BpDecoder{
                 }
 
                 // cout<<"Soft Syndrome: ";
-                // print_vector(soft_syndrome);
+                // print_vector(this->soft_syndrome);
 
             
             
