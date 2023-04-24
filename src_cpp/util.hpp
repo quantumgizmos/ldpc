@@ -35,6 +35,18 @@ vector<uint8_t> decimal_to_binary_reverse(int decimal_nubmer,int binary_string_l
    return decimal_to_binary(decimal_nubmer,binary_string_length,true);
 }
 
+int binary_to_decimal(vector<uint8_t> binary_number)
+{
+    int decimal_number = 0;
+    int power = 0;
+    for(int i = binary_number.size()-1; i>=0; i--){
+        decimal_number += binary_number[i] * pow(2,power);
+        power++;
+    }
+    return decimal_number;
+}
+
+
 }//end namespace util
 
 
