@@ -58,6 +58,7 @@ shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<SPARSE_MATRIX_CLASS> mat, v
 }
 
 
+
 template<class T>
 void print_vector(const T& input){
     int length = input.size();

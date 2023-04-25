@@ -402,26 +402,23 @@ class RowReduce{
 };
 
 
-template <typename T>
-shared_ptr<GF2Sparse<T>> kernel(shared_ptr<GF2Sparse<T>> mat){
+template <class GF2MATRIX>
+shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
 
     auto matT = mat->transpose();
-    auto rr = new RowReduce<T>(matT);
     
+    auto rr = new RowReduce(matT);
     rr->rref(false,false);
-
     int rank = rr->rank;
     int n = mat->n;
     int k = n - rank;
-
-    auto ker = GF2Sparse<T>::New(k,n);
+    auto ker = GF2MATRIX::New(k,n);
 
     for(int i = rank; i<n; i++){
         for(auto e: rr->L->iterate_row(i)){
-            ker->insert_entry(i,e->col_index);
+            ker->insert_entry(i-rank,e->col_index);
         }
     }
-
 
     delete rr;
     
@@ -431,7 +428,7 @@ shared_ptr<GF2Sparse<T>> kernel(shared_ptr<GF2Sparse<T>> mat){
 
 
 
-}
+}//end namespace gf2sparse
 
 typedef gf2sparse::GF2Entry cygf2_entry;
 typedef gf2sparse::GF2Sparse<gf2sparse::GF2Entry> cygf2_sparse;
