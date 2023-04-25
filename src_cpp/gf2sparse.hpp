@@ -399,28 +399,33 @@ shared_ptr<GF2MATRIX> vstack(vector<shared_ptr<GF2MATRIX>> mats){
         row_offset+=mat->m;
     }
 
+    return stacked_mat;
+
 }
 
 template <class GF2MATRIX>
 shared_ptr<GF2MATRIX> hstack(vector<shared_ptr<GF2MATRIX>> mats){
     
-        int mat_count = mats.size();
-        int m = mats[0]->m;
-        int n0  = mats[0]->n;
-    
-        int n = n0*mat_count;
-    
-        auto stacked_mat = GF2MATRIX::New(m,n);
-    
-        int col_offset = 0;
-        for(auto mat: mats){
-            for(auto i=0; i<mat->n; i++){
-                for(auto e: mat->iterate_column(i)){
-                    stacked_mat->insert_entry(e->row_index,col_offset+e->col_index);
-                }
+    int mat_count = mats.size();
+    int n0 = mats[0]->n;
+    int m = mats[0]->m;
+
+    int n = n0*mat_count;
+
+    auto stacked_mat = GF2MATRIX::New(m,n);
+
+    int col_offset = 0;
+    for(auto mat: mats){
+        for(auto i=0; i<mat->m; i++){
+            for(auto e: mat->iterate_row(i)){
+                stacked_mat->insert_entry(e->row_index,col_offset+e->col_index);
             }
-            col_offset+=mat->n;
         }
+        col_offset+=mat->n;
+    }
+
+    return stacked_mat;
+
     
 }
 

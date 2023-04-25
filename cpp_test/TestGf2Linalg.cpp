@@ -9,8 +9,13 @@
 
 TEST(kernel, hamming_code) {
 
-    for(int i=2; i<10;i++){
-        auto pcm = gf2codes::hamming_code(i);
+    for(int i=2; i<8;i++){
+        auto pcm1 = gf2codes::hamming_code(i);
+        auto pcm2 = gf2codes::hamming_code(i);
+
+        auto mats = vector<decltype(pcm1)>{pcm1,pcm2};
+        auto pcm = gf2sparse::vstack(mats);
+
         auto kernel = gf2sparse_linalg::kernel(pcm);
         // print_sparse_matrix(*kernel);
         auto kernelT = kernel->transpose();
@@ -23,13 +28,15 @@ TEST(kernel, hamming_code) {
     }
 }
 
-// TEST(GF2Sparse,hstack){
-//     auto m1 = gf2codes::hamming_code(3);
-//     auto m2 = gf2codes::hamming_code(3);
+TEST(GF2Sparse,hstack){
+    auto m1 = gf2codes::hamming_code(3);
+    auto m2 = gf2codes::hamming_code(3);
 
-//     auto m3 = gf2sparse::hstack(vector<shared_ptr<sparse_matrix::SparseMatrixBase>>{m1,m2});
-//     print_sparse_matrix(*m3);
-// }
+    auto mats = vector<decltype(m1)>{m1,m2};
+
+    auto m3 = gf2sparse::hstack(mats);
+    print_sparse_matrix(*m3);
+}
 
 
 
