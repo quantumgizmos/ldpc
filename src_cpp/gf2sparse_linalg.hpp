@@ -402,6 +402,34 @@ class RowReduce{
 };
 
 
+template <typename T>
+shared_ptr<GF2Sparse<T>> kernel(shared_ptr<GF2Sparse<T>> mat){
+
+    auto matT = mat->transpose();
+    auto rr = new RowReduce<T>(matT);
+    
+    rr->rref(false,false);
+
+    int rank = rr->rank;
+    int n = mat->n;
+    int k = n - rank;
+
+    auto ker = GF2Sparse<T>::New(k,n);
+
+    for(int i = rank; i<n; i++){
+        for(auto e: rr->L->iterate_row(i)){
+            ker->insert_entry(i,e->col_index);
+        }
+    }
+
+
+    delete rr;
+    
+    return ker;
+
+} 
+
+
 
 }
 

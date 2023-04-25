@@ -356,6 +356,10 @@ TEST(GF2Sparse, lu_solve_batch){
 
 }
 
+TEST(kernel,kernel_test1){
+    
+}
+
 
 
 
