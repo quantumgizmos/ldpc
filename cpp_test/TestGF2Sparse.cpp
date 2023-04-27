@@ -7,6 +7,7 @@
 #include "io.hpp"
 #include <string>
 #include "sparse_matrix.hpp"
+#include "gf2codes.hpp"
 
 using namespace gf2sparse;
 
@@ -457,6 +458,47 @@ TEST(GF2Sparse, matmul){
 
     }
 
+
+}
+
+TEST(GF2Sparse,hstack){
+    auto m1 = gf2codes::hamming_code(3);
+    auto m2 = gf2codes::hamming_code(3);
+
+    auto mats = vector<decltype(m1)>{m1,m2};
+
+    auto m3 = gf2sparse::hstack(mats);
+
+    ASSERT_EQ(m3->m,3);
+    ASSERT_EQ(m3->n,14);
+
+    // print_sparse_matrix(*m3);
+}
+
+TEST(GF2Sparse,vstack){
+    auto m1 = gf2codes::hamming_code(3);
+    auto m2 = gf2codes::hamming_code(3);
+
+    auto mats = vector<decltype(m1)>{m1,m2};
+
+    auto m3 = gf2sparse::vstack(mats);
+
+    ASSERT_EQ(m3->m,6);
+    ASSERT_EQ(m3->n,7);
+
+    // print_sparse_matrix(*m3);
+}
+
+TEST(GF2Sparse, kron){
+    auto m1 = gf2sparse::gf2_identity<bp::BpEntry>(100);
+    auto m2 = gf2codes::hamming_code(5);
+
+    auto m3 = gf2sparse::kron(m1,m2);
+
+    ASSERT_EQ(m3->m,m1->m*m2->m);
+    ASSERT_EQ(m3->n,m1->n*m2->n);
+
+    // print_sparse_matrix(*m3);
 
 }
 

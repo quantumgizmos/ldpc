@@ -429,6 +429,36 @@ shared_ptr<GF2MATRIX> hstack(vector<shared_ptr<GF2MATRIX>> mats){
     
 }
 
+template <class GF2MATRIX>
+shared_ptr<GF2MATRIX> kron(shared_ptr<GF2MATRIX> mat1, shared_ptr<GF2MATRIX> mat2){
+    
+    int m1,n1,m2,n2;
+    m1 = mat1->m;
+    n1 = mat1->n;
+    m2 = mat2->m;
+    n2 = mat2->n;
+
+    auto kron_mat = GF2MATRIX::New(m1*m2,n1*n2);
+
+    for(auto i=0; i<m1; i++){
+        for(auto e: mat1->iterate_row(i)){
+            int row_offset = e->row_index*m2;
+            int col_offset = e->col_index*n2;
+
+            for(auto j = 0; j<m2; j++){
+                for(auto f: mat2->iterate_row(j)){
+                    kron_mat->insert_entry(row_offset+f->row_index,col_offset+f->col_index);
+                }
+            }
+
+        }
+        
+    }
+
+    return kron_mat;
+
+}
+
 
 } // end namespace gf2sparse
 

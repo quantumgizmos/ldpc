@@ -28,15 +28,7 @@ TEST(kernel, hamming_code) {
     }
 }
 
-TEST(GF2Sparse,hstack){
-    auto m1 = gf2codes::hamming_code(3);
-    auto m2 = gf2codes::hamming_code(3);
 
-    auto mats = vector<decltype(m1)>{m1,m2};
-
-    auto m3 = gf2sparse::hstack(mats);
-    print_sparse_matrix(*m3);
-}
 
 
 
