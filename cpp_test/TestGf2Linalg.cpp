@@ -28,6 +28,23 @@ TEST(kernel, hamming_code) {
     }
 }
 
+TEST(rank, hamming_code_test) {
+
+    for(int i=2; i<8;i++){
+        auto pcm1 = gf2codes::hamming_code(i);
+        auto pcm2 = gf2codes::hamming_code(i);
+        auto pcm0 = gf2sparse::GF2Sparse<bp::BpEntry>::New(pcm1->m,pcm1->n);
+
+        auto mats = vector<decltype(pcm1)>{pcm1,pcm0,pcm2};
+        auto pcm = gf2sparse::vstack(mats);
+
+        int rank = gf2sparse_linalg::rank(pcm);
+
+        ASSERT_EQ(rank,i);
+    
+    }
+}
+
 
 
 

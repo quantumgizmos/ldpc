@@ -424,6 +424,15 @@ shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
     
     return ker;
 
+}
+
+template <class GF2MATRIX>
+int rank(shared_ptr<GF2MATRIX> mat){
+    auto rr = new RowReduce(mat);
+    rr->rref(false,false);
+    int rnk = rr->rank;
+    delete rr;
+    return rnk;
 } 
 
 
