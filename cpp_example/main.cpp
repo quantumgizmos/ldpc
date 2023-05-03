@@ -8,6 +8,7 @@
 #include <string>
 #include "rng.hpp"
 #include "util.hpp"
+#include "gf2codes.hpp"
 // #include "ssf.hpp"
 
 
@@ -83,6 +84,21 @@ int main()
     cout<<"Syndrome: ";
     print_vector(syndrome);
 
+
+    auto H = gf2codes::rep_code(5);
+
+    auto coords = H->nonzero_coordinates();
+
+    for(auto c: coords){
+        print_vector(c);
+    }
+
+    auto h = gf2sparse::GF2Sparse<gf2sparse::GF2Entry>::New(3,3);
+    h->insert_entry(0,0);
+    print_sparse_matrix(*h);
+
+    auto ker = cy_kernel(h);
+    print_sparse_matrix(*ker);
 
     return 0;
 

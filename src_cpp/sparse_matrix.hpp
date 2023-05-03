@@ -475,14 +475,12 @@ public:
         // Iterate through all rows and columns to find non-zero entries
         for(int i = 0; i<this->m; i++){
             for(auto e: this->iterate_row(i)){
-                if(e->value == 1){
-                    // Increment node count and add non-zero entry coordinates to vector
-                    this->node_count += 1;
-                    vector<int> coord;
-                    coord.push_back(e->row_index);
-                    coord.push_back(e->col_index);
-                    nonzero.push_back(coord);
-                }
+                // Increment node count and add non-zero entry coordinates to vector
+                this->node_count += 1;
+                vector<int> coord;
+                coord.push_back(e->row_index);
+                coord.push_back(e->col_index);
+                nonzero.push_back(coord);
             }
         }
 

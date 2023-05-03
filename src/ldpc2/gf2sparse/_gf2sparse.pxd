@@ -25,3 +25,19 @@ cdef extern from "gf2sparse.hpp" namespace "gf2sparse" nogil:
         vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
+
+cdef extern from "gf2sparse_linalg.hpp" nogil:
+
+    cdef cppclass RowReduce "cy_row_reduce":
+        RowReduce(shared_ptr[GF2Sparse] A) except +
+        vector[int] rows
+        vector[int] cols
+        shared_ptr[GF2Sparse] L
+        shared_ptr[GF2Sparse] U
+        int rank
+        int rref(bool full_reduce, bool lower_triangular)
+
+    shared_ptr[GF2Sparse] cy_kernel(shared_ptr[GF2Sparse] mat)
+
+    
+

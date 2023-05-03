@@ -109,7 +109,7 @@ class RowReduce{
 
 
 
-        auto rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        int rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
             if(lower_triangular) this->LOWER_TRIANGULAR = true;
             this->set_column_row_orderings(cols,rows);
@@ -189,7 +189,7 @@ class RowReduce{
                 }
             }
 
-            return this->U;
+            return this->rank;
 
         }
 
@@ -437,9 +437,11 @@ int rank(shared_ptr<GF2MATRIX> mat){
 
 
 
-}//end namespace gf2sparse
+}//end namespace gf2sparse_linalg
 
-typedef gf2sparse::GF2Entry cygf2_entry;
-typedef gf2sparse::GF2Sparse<gf2sparse::GF2Entry> cygf2_sparse;
+typedef gf2sparse_linalg::RowReduce<shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>> cy_row_reduce;
+
+using kernel_func = std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> (*)(std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>);
+kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif
