@@ -402,8 +402,32 @@ class RowReduce{
 };
 
 
+// template <class GF2MATRIX>
+// shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
+
+//     auto matT = mat->transpose();
+    
+//     auto rr = new RowReduce(matT);
+//     rr->rref(false,false);
+//     int rank = rr->rank;
+//     int n = mat->n;
+//     int k = n - rank;
+//     auto ker = GF2MATRIX::New(k,n);
+
+//     for(int i = rank; i<n; i++){
+//         for(auto e: rr->L->iterate_row(i)){
+//             ker->insert_entry(i-rank,e->col_index);
+//         }
+//     }
+
+//     delete rr;
+    
+//     return ker;
+
+// }
+
 template <class GF2MATRIX>
-shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
+vector<vector<uint8_t>> kernel(shared_ptr<GF2MATRIX> mat){
 
     auto matT = mat->transpose();
     
@@ -412,11 +436,13 @@ shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
     int rank = rr->rank;
     int n = mat->n;
     int k = n - rank;
-    auto ker = GF2MATRIX::New(k,n);
+    // auto ker = GF2MATRIX::New(k,n);
+
+    auto ker = vector<vector<uint8_t>>(k,vector<uint8_t>(n,0));
 
     for(int i = rank; i<n; i++){
         for(auto e: rr->L->iterate_row(i)){
-            ker->insert_entry(i-rank,e->col_index);
+            ker[i-rank][e->col_index]=1;
         }
     }
 
@@ -441,7 +467,7 @@ int rank(shared_ptr<GF2MATRIX> mat){
 
 typedef gf2sparse_linalg::RowReduce<shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>> cy_row_reduce;
 
-using kernel_func = std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> (*)(std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>);
+using kernel_func = vector<vector<uint8_t>> (*)(std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>);
 kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif

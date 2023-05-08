@@ -98,7 +98,10 @@ int main()
     print_sparse_matrix(*h);
 
     auto ker = cy_kernel(h);
-    print_sparse_matrix(*ker);
+    // print_sparse_matrix(*ker);
+    for(auto c: ker){
+        print_vector(c);
+    }
 
     return 0;
 

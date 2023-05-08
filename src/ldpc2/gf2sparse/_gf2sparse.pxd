@@ -36,8 +36,18 @@ cdef extern from "gf2sparse_linalg.hpp" nogil:
         shared_ptr[GF2Sparse] U
         int rank
         int rref(bool full_reduce, bool lower_triangular)
+        vector[uint8_t]& lu_solve(vector[uint8_t]& y)
 
-    shared_ptr[GF2Sparse] cy_kernel(shared_ptr[GF2Sparse] mat)
+    vector[vector[np.uint8_t]] cy_kernel(shared_ptr[GF2Sparse] mat)
+
+cdef class LuDecomposition():
+    cdef int m
+    cdef int n
+    cdef shared_ptr[GF2Sparse] cpcm
+    cdef shared_ptr[GF2Sparse] L
+    cdef shared_ptr[GF2Sparse] U
+    cdef shared_ptr[RowReduce] rr
+
 
     
 

@@ -77,5 +77,40 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
 
 def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
     cdef shared_ptr[GF2Sparse] cpcm = Py2GF2Sparse(pcm)
-    cdef shared_ptr[GF2Sparse] ckernel = cy_kernel(cpcm)
-    return GF2Sparse2Py(ckernel)
+    cdef vector[vector[np.uint8_t]] ckernel = cy_kernel(cpcm)
+    cdef int m = cpcm.get().m
+    cdef int n = cpcm.get().n
+    cdef int i
+    # ctypedef np.uint8_t dtype_t
+    ker = np.zeros((m,n), dtype=np.uint8)
+    for i in range(m):
+        for j in range(n):
+            ker = ckernel[i][j]
+
+    return ker
+
+cdef class LuDecomposition():
+
+    def __cinit__(self, pcm):
+        self.m = pcm.shape[0]
+        self.n = pcm.shape[1]
+        self.cpcm = Py2GF2Sparse(pcm)
+        self.rr = make_shared[RowReduce](self.cpcm)
+        self.rr.get().rref(False,True)
+
+    def solve(self, y):
+        cdef vector[uint8_t] cy
+        cdef vector[uint8_t] cx
+
+        cy.resize(self.m)
+        # cx.resize(self.n)
+
+        cdef int i
+        for i in range(self.m): cy[i] = y[i]
+
+        cx = self.rr.get().lu_solve(cy)
+
+        cdef np.ndarray[np.uint8_t, ndim=1] x = np.zeros(self.n, dtype=np.uint8)
+        for i in range(self.n): x[i] = cx[i]
+        
+        return x
