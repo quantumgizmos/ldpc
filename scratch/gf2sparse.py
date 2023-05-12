@@ -4,27 +4,35 @@ import scipy.sparse as sp
 
 from ldpc2.codes import hamming_code,rep_code
 
-H = rep_code(3)
+H = hamming_code(10)
+
+print(H.shape)
+
+ker = kernel(H)
+print(ker)
 
 
-H = sp.vstack([H, H])
+# H = sp.vstack([H, H])
 
 
-print(H.toarray())
+# print(H.toarray())
 
-print(rank(H))
+# print(rank(H))
 
-lud = LuDecomposition(H)
-
-
-
-error = np.zeros(H.shape[1], dtype=np.uint8)
-
-error[0] = 1
-
-syndrome = H@error%2
+# lud = LuDecomposition(H,lower_triangular=True)
 
 
-x =lud.solve(syndrome)
 
-print(x)
+# error = np.zeros(H.shape[1], dtype=np.uint8)
+
+# error[0] = 1
+# error[1] = 1
+
+# syndrome = H@error%2
+
+
+# x =lud.solve(syndrome)
+
+
+
+# print(x)

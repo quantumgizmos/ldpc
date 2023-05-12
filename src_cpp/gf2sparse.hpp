@@ -249,30 +249,25 @@ void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
     bool intersection;
     vector<ENTRY_OBJ*> entries_to_remove;
 
-    // Iterate over each non-zero entry in row j
     for(auto g: this->iterate_row(j)){
-
         intersection=false;
-        // Iterate over each non-zero entry in row i
-        for(auto e: this->iterate_row(i)){
-
-            // If the column index of the entry in row j matches the column index of the entry in row i,
-            // add the entry to the list of entries to remove and mark that there was an intersection
-            if(g->col_index==e->col_index){
+        int col_index = g->col_index;
+        for(auto e: this->iterate_column(col_index)){
+            if(e->row_index==i){
                 entries_to_remove.push_back(e);
                 intersection=true;
-                break;
             }
         }
-
         // If there was no intersection between the entries, insert the entry from row j into row i
         if(!intersection){
-            auto ne = this->insert_entry(i,g->col_index);
+            auto ne = this->insert_entry(i,col_index);
         }
+
     }
 
     // Remove all the entries from row i that were marked for removal
     for(auto e: entries_to_remove) this->remove(e);
+
 }
 
 template<class ENTRY_OBJ>

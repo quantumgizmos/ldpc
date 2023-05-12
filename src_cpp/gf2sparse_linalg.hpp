@@ -429,10 +429,16 @@ class RowReduce{
 template <class GF2MATRIX>
 vector<vector<uint8_t>> kernel(shared_ptr<GF2MATRIX> mat){
 
+
     auto matT = mat->transpose();
     
+    // cout<<"Transpose of input matrix: "<<endl;
+
     auto rr = new RowReduce(matT);
     rr->rref(false,false);
+
+    // cout<<"Rref done"<<endl;
+
     int rank = rr->rank;
     int n = mat->n;
     int k = n - rank;

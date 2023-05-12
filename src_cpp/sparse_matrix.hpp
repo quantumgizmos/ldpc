@@ -373,14 +373,14 @@ public:
         // Find the left and right entries in the jth row of the matrix
         auto left_entry = this->row_heads[j];
         auto right_entry = this->row_heads[j];
-        for(auto entry: iterate_row(j)){
+        for(auto entry: reverse_iterate_row(j)){
             if(entry->col_index == i){
                 // Entry already exists at this position
                 return entry;
             }
-            if(entry->col_index < i) left_entry = entry;
-            if(entry->col_index > i) {
-                right_entry = entry;
+            if(entry->col_index > i) right_entry = entry;
+            if(entry->col_index < i) {
+                left_entry = entry;
                 break;
             }
         }
@@ -388,10 +388,10 @@ public:
         // Find the up and down entries in the ith column of the matrix
         auto up_entry = this->column_heads[i];
         auto down_entry = this->column_heads[i];
-        for(auto entry: this->iterate_column(i)){
-            if(entry->row_index < j) up_entry = entry;
-            if(entry->row_index > j) {
-                down_entry = entry;
+        for(auto entry: this->reverse_iterate_column(i)){
+            if(entry->row_index > j) down_entry = entry;
+            if(entry->row_index < j) {
+                up_entry = entry;
                 break;
             }
         }
@@ -433,7 +433,7 @@ public:
 
         // Iterate over the column at index i and check each entry's row index.
         // If the row index matches j, return that entry.
-        for(auto e: this->iterate_column(i)){
+        for(auto e: this->reverse_iterate_column(i)){
             if(e->row_index==j) return e;
         }
 

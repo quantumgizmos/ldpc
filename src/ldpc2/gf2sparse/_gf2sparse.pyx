@@ -78,25 +78,25 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
 def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
     cdef shared_ptr[GF2Sparse] cpcm = Py2GF2Sparse(pcm)
     cdef vector[vector[np.uint8_t]] ckernel = cy_kernel(cpcm)
-    cdef int m = cpcm.get().m
+    cdef int k = ckernel.size()
     cdef int n = cpcm.get().n
     cdef int i
     # ctypedef np.uint8_t dtype_t
-    ker = np.zeros((m,n), dtype=np.uint8)
-    for i in range(m):
+    ker = np.zeros((k,n), dtype=np.uint8)
+    for i in range(k):
         for j in range(n):
-            ker = ckernel[i][j]
+            ker[i,j] = ckernel[i][j]
 
     return ker
 
 cdef class LuDecomposition():
 
-    def __cinit__(self, pcm):
+    def __cinit__(self, pcm, full_reduce=False, lower_triangular=False):
         self.m = pcm.shape[0]
         self.n = pcm.shape[1]
         self.cpcm = Py2GF2Sparse(pcm)
         self.rr = make_shared[RowReduce](self.cpcm)
-        self.rr.get().rref(False,True)
+        self.rr.get().rref(full_reduce,lower_triangular)
 
     def solve(self, y):
         cdef vector[uint8_t] cy
