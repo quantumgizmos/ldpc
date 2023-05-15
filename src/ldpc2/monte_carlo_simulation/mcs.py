@@ -43,18 +43,19 @@ class McSim:
         target_run_count=1000,
         tqdm_disable=False,
         save_interval=60,
-        seed = None
+        seed = None,
+        run = True
     ) -> None:
         """
         Initializes a McSim object with the given parameters.
 
         """
         if parity_check_matrix is None or not isinstance(parity_check_matrix, (np.ndarray, sp.csr_matrix)):
-            raise ValueError("Invalid parity check matrix provided.")
+            raise ValueError(f"parity_check_matrix should be of type np.ndarray or scipy.sparse.csr_matrix. Not {type(parity_check_matrix)}")
         self.parity_check_matrix = parity_check_matrix
 
         if error_rate is None or not isinstance(error_rate, float) or error_rate < 0 or error_rate > 1:
-            raise ValueError("Invalid error rate provided.")
+            raise ValueError("Invalid error rate provided. The error rate should be a float with value between 0 and 1.")
         self.error_rate = error_rate
 
         if Decoder is None:
@@ -86,7 +87,8 @@ class McSim:
         self.fail_count = 0
         self.logical_error_rate = 0.0
 
-        self.run()
+        if run:
+            self.run()
 
     def run(self) -> None:
         """
