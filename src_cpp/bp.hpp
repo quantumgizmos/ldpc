@@ -459,42 +459,35 @@ class BpDecoder{
                             double soft_syndrome_magnitude = abs(this->soft_syndrome[check_index]);
                             
                             //then we check if the magnitude is less than the cutoff.
-                            if(soft_syndrome_magnitude<cutoff && !check_indices_updated.contains(check_index)){
-                                check_indices_updated.insert(check_index);
+  
                                 
-                                //if the syndrome is the lowest weight message, then we propagate the syndrome
-                                if(soft_syndrome_magnitude<=min_bit_to_check_msg){
+                            if(soft_syndrome_magnitude<cutoff){
+
+                                if(soft_syndrome_magnitude<abs(min_bit_to_check_msg)){
                                     propagated_msg = soft_syndrome_magnitude;
 
-                                    //syndrome update
-                                    //first we calculate the sign of the soft syndrome
-                                    int soft_syndrome_sign;
-                                    if(this->soft_syndrome[check_index] <= 0){
-                                        soft_syndrome_sign = -1;                                        
-                                    }
-                                    else{
-                                        soft_syndrome_sign = 1;
-                                    }
-
-                                    //now we calculate the total sign of ALL of the messages incoming to the syndrome.
                                     int check_node_sgn = sgn;
                                     if(e->bit_to_check_msg<=0) check_node_sgn^=1;
-            
-                                    //if the sign of the syndrome is the same as the soft syndrome sign, we change the magnitude of the soft syndrome
-                                    if(syndrome[check_index] == check_node_sgn){
-                                        this->soft_syndrome[check_index] = soft_syndrome_sign*min_bit_to_check_msg;
+
+                                    if(check_node_sgn==syndrome[check_index]){
+                                        if(abs(e->bit_to_check_msg)<min_bit_to_check_msg){
+                                            this->soft_syndrome[check_index] = pow(-1,syndrome[check_index])*abs(e->bit_to_check_msg);
+                                        }
+                                        else{
+                                            this->soft_syndrome[check_index] = pow(-1,syndrome[check_index])*min_bit_to_check_msg;
+                                        }
                                     }
-                                    // if not, we flip the sign of the soft syndrome;
                                     else{
-                                        this->soft_syndrome[check_index] *= -1;
                                         syndrome[check_index]^=1;
+                                        this->soft_syndrome[check_index]*=-1;
                                     }
 
 
+                                } //end syndrome bit message if
+                            
+                            } //end cutoff if
 
-                                }
-
-                            }
+                            
 
                             sgn^=syndrome[check_index];
                             e->check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*propagated_msg;
@@ -516,6 +509,17 @@ class BpDecoder{
                         e->bit_to_check_msg+=temp;
                         temp += e->check_to_bit_msg;
                     }
+
+                    cout<<"Iteration: "<<it<<"; Bit index: "<<unsigned(bit_index)<<endl;
+                    cout<<"Decoding: ";
+                    print_vector(decoding);
+                    cout<<"Log Prob Ratios: ";
+                    print_vector(log_prob_ratios);
+                    cout<<"Syndrome: ";
+                    print_vector(syndrome);
+                    cout<<"Soft Syndrome: ";
+                    print_vector(this->soft_syndrome);
+                    cout<<endl;
 
                 }
 
