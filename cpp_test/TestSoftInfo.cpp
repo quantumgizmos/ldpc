@@ -123,7 +123,7 @@ TEST(SoftInfoDecoder, one_errored_syndrome_bit) {
 
     vector<double> soft_syndrome = {-20,2,20};
     double cutoff = 10;
-    auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff);
+    auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff,0.3);
     vector<uint8_t> expected_decoding = {0,1,0};
 
     // print_vector(soft_decoding);

@@ -369,30 +369,29 @@ class BpDecoder{
 
         }
 
-        vector<uint8_t>& soft_info_decode_serial(vector<double>& soft_info_syndrome, double cutoff){
+        vector<uint8_t>& soft_info_decode_serial(vector<double>& soft_info_syndrome, double cutoff, double sigma){
 
+            //calculate the syndrome log-likelihoods
             this->soft_syndrome = soft_info_syndrome;
+            for(int i = 0; i<this->check_count; i++){
+                this->soft_syndrome[i] = 2*this->soft_syndrome[i]/(sigma*sigma);
+            }
 
+
+            //calculate the hard syndrome from the log-likelihoods
             vector<uint8_t> syndrome;
-            // vector<int8_t> this->soft_syndrome_sign;
             for(double value: this->soft_syndrome){
                 if(value<=0){
                     syndrome.push_back(1);
-                    // this->soft_syndrome_sign.push_back(-1);
                 }
                 else{
                     syndrome.push_back(0);
-                    // this->soft_syndrome_sign.push_back(1);
                 }
             }
 
-            // cout<<"Soft-Hard Tranlsate: ";
-            // print_vector(syndrome);
-            // cout<<"Cut-off: "<<cutoff<<endl;
-
             int check_index;
             converge=0;
-            // int it;
+
             int CONVERGED = 0;
             bool loop_break = false;
 
@@ -510,16 +509,16 @@ class BpDecoder{
                         temp += e->check_to_bit_msg;
                     }
 
-                    cout<<"Iteration: "<<it<<"; Bit index: "<<unsigned(bit_index)<<endl;
-                    cout<<"Decoding: ";
-                    print_vector(decoding);
-                    cout<<"Log Prob Ratios: ";
-                    print_vector(log_prob_ratios);
-                    cout<<"Syndrome: ";
-                    print_vector(syndrome);
-                    cout<<"Soft Syndrome: ";
-                    print_vector(this->soft_syndrome);
-                    cout<<endl;
+                    // cout<<"Iteration: "<<it<<"; Bit index: "<<unsigned(bit_index)<<endl;
+                    // cout<<"Decoding: ";
+                    // print_vector(decoding);
+                    // cout<<"Log Prob Ratios: ";
+                    // print_vector(log_prob_ratios);
+                    // cout<<"Syndrome: ";
+                    // print_vector(syndrome);
+                    // cout<<"Soft Syndrome: ";
+                    // print_vector(this->soft_syndrome);
+                    // cout<<endl;
 
                 }
 
