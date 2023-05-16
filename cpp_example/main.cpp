@@ -8,6 +8,7 @@
 #include <string>
 #include "rng.hpp"
 #include "util.hpp"
+#include "gf2codes.hpp"
 // #include "ssf.hpp"
 
 
@@ -34,55 +35,82 @@ int main()
     int N = 10;
     auto pcm = GF2Custom::New(N,N); //this is a shared pointer object, so no need to worry about memory management.
 
-    for(auto i = 0; i<N; i++){
-        pcm->insert_entry(i,i);
-        pcm->insert_entry(i,(i+1)%N);
+    pcm->insert_entry(0,0);
+
+    for(auto e: pcm->iterate_row(0)){
+        e->bit_to_check_msg = 1;
     }
+
+    print_sparse_matrix(*pcm);
+
+
+    // for(auto i = 0; i<N; i++){
+    //     pcm->insert_entry(i,i);
+    //     pcm->insert_entry(i,(i+1)%N);
+    // }
 
     
-    print_sparse_matrix(*pcm); //this funciton is from "sparse_matrix_util.hpp"
+    // print_sparse_matrix(*pcm); //this funciton is from "sparse_matrix_util.hpp"
 
 
-    //filling the matrix. Ok, so now lets fill the matrix with some meta_data. To
-    //do this we can use the sparse matrix iterators:
+    // //filling the matrix. Ok, so now lets fill the matrix with some meta_data. To
+    // //do this we can use the sparse matrix iterators:
 
-    //Eg. to set the `bit_to_check_msg` to 4 and the `check_to_bit_msg` to 42 for all nodes in column 5, we do the following:
+    // //Eg. to set the `bit_to_check_msg` to 4 and the `check_to_bit_msg` to 42 for all nodes in column 5, we do the following:
 
-    for(auto e: pcm->iterate_column(5)){
-        //here e is a pointer to the node
-        e->bit_to_check_msg = 4;
-        e->check_to_bit_msg = 42;
-    }
+    // for(auto e: pcm->iterate_column(5)){
+    //     //here e is a pointer to the node
+    //     e->bit_to_check_msg = 4;
+    //     e->check_to_bit_msg = 42;
+    // }
 
-    //It is also possible to iterate over the columns:
+    // //It is also possible to iterate over the columns:
 
-    for(auto e: pcm->iterate_row(5)){
-        e->bit_to_check_msg = 150;
-    }
+    // for(auto e: pcm->iterate_row(5)){
+    //     e->bit_to_check_msg = 150;
+    // }
 
 
-    //GF2 operations
-    //Matrix multiplication
-    //The `GF2Sparse<T>.mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector)` can be used for
-    // matrix vector multiplication. eg:
+    // //GF2 operations
+    // //Matrix multiplication
+    // //The `GF2Sparse<T>.mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector)` can be used for
+    // // matrix vector multiplication. eg:
 
-    vector<uint8_t> error; //defines error vector
-    error.resize(pcm->n,0); //fill error vector with zeros. `pcm->n` returns the number of columns in the pcm.
-    error[4] = 1;
+    // vector<uint8_t> error; //defines error vector
+    // error.resize(pcm->n,0); //fill error vector with zeros. `pcm->n` returns the number of columns in the pcm.
+    // error[4] = 1;
 
-    vector<uint8_t> syndrome; //defines syndrome vector
-    syndrome.resize(pcm->m,0); //fill error vector with zeros. `pcm->n` returns the number of rows in the pcm.
-    syndrome = pcm->mulvec(error, syndrome);
+    // vector<uint8_t> syndrome; //defines syndrome vector
+    // syndrome.resize(pcm->m,0); //fill error vector with zeros. `pcm->n` returns the number of rows in the pcm.
+    // syndrome = pcm->mulvec(error, syndrome);
 
-    //nb. Why does mulvec take the syndrome vector (or more generlaly output vector) as an argument? This allows an existing vector to be reused, rather
-    // than allocating a new vector each time. This seems to make a difference in Monte Carlo simulations at low error rates.
+    // //nb. Why does mulvec take the syndrome vector (or more generlaly output vector) as an argument? This allows an existing vector to be reused, rather
+    // // than allocating a new vector each time. This seems to make a difference in Monte Carlo simulations at low error rates.
 
-    cout<<endl;
-    cout<<"Error: ";
-    print_vector(error);
-    cout<<"Syndrome: ";
-    print_vector(syndrome);
+    // cout<<endl;
+    // cout<<"Error: ";
+    // print_vector(error);
+    // cout<<"Syndrome: ";
+    // print_vector(syndrome);
 
+
+    // auto H = gf2codes::rep_code(5);
+
+    // auto coords = H->nonzero_coordinates();
+
+    // for(auto c: coords){
+    //     print_vector(c);
+    // }
+
+    // auto h = gf2sparse::GF2Sparse<gf2sparse::GF2Entry>::New(3,3);
+    // h->insert_entry(0,0);
+    // print_sparse_matrix(*h);
+
+    // auto ker = cy_kernel(h);
+    // // print_sparse_matrix(*ker);
+    // for(auto c: ker){
+    //     print_vector(c);
+    // }
 
     return 0;
 

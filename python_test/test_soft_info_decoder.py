@@ -33,7 +33,7 @@ def test_one_errored_syndrome_bit():
 
     sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10)
 
-    soft_syndrome = np.array([-20, 2, 20])
+    soft_syndrome = np.array([-20, 1, 20])
     expected_decoding = np.array([0, 1, 0])
     soft_decoding = sbpd.decode(soft_syndrome)
 

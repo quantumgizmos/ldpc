@@ -373,14 +373,14 @@ public:
         // Find the left and right entries in the jth row of the matrix
         auto left_entry = this->row_heads[j];
         auto right_entry = this->row_heads[j];
-        for(auto entry: iterate_row(j)){
+        for(auto entry: reverse_iterate_row(j)){
             if(entry->col_index == i){
                 // Entry already exists at this position
                 return entry;
             }
-            if(entry->col_index < i) left_entry = entry;
-            if(entry->col_index > i) {
-                right_entry = entry;
+            if(entry->col_index > i) right_entry = entry;
+            if(entry->col_index < i) {
+                left_entry = entry;
                 break;
             }
         }
@@ -388,10 +388,10 @@ public:
         // Find the up and down entries in the ith column of the matrix
         auto up_entry = this->column_heads[i];
         auto down_entry = this->column_heads[i];
-        for(auto entry: this->iterate_column(i)){
-            if(entry->row_index < j) up_entry = entry;
-            if(entry->row_index > j) {
-                down_entry = entry;
+        for(auto entry: this->reverse_iterate_column(i)){
+            if(entry->row_index > j) down_entry = entry;
+            if(entry->row_index < j) {
+                up_entry = entry;
                 break;
             }
         }
@@ -433,7 +433,7 @@ public:
 
         // Iterate over the column at index i and check each entry's row index.
         // If the row index matches j, return that entry.
-        for(auto e: this->iterate_column(i)){
+        for(auto e: this->reverse_iterate_column(i)){
             if(e->row_index==j) return e;
         }
 
@@ -475,14 +475,12 @@ public:
         // Iterate through all rows and columns to find non-zero entries
         for(int i = 0; i<this->m; i++){
             for(auto e: this->iterate_row(i)){
-                if(e->value == 1){
-                    // Increment node count and add non-zero entry coordinates to vector
-                    this->node_count += 1;
-                    vector<int> coord;
-                    coord.push_back(e->row_index);
-                    coord.push_back(e->col_index);
-                    nonzero.push_back(coord);
-                }
+                // Increment node count and add non-zero entry coordinates to vector
+                this->node_count += 1;
+                vector<int> coord;
+                coord.push_back(e->row_index);
+                coord.push_back(e->col_index);
+                nonzero.push_back(coord);
             }
         }
 
@@ -517,46 +515,6 @@ public:
 
     }
 
-
-
-
-    /**
-     * @brief Base class for implementing iterators for sparse matrices
-     *
-     * This class provides a basic implementation of the required methods for a forward
-     * iterator. It is intended to be used as a base class for iterators that inherit from
-     * it via the Curiously Recurring Template Pattern (CRTP). The derived classes must
-     * implement a `next()` method, which updates the iterator to point to the next element
-     * in the matrix.
-     *
-     * @tparam DERIVED The derived class that implements the `next()` method. This should
-     * be a template parameter of the derived class, using the `Iterator` class as the
-     * template argument.
-     * @tparam ENTRY_OBJ The entry object class that the sparse matrix uses for its entries.
-     * This class should contain fields for row index, column index, and value.
-     */
-    template <class DERIVED>
-    class Iterator{
-        public:
-            using iterator_category = std::forward_iterator_tag;
-            using difference_type   = std::ptrdiff_t;
-            SparseMatrixBase<ENTRY_OBJ>* matrix;
-            ENTRY_OBJ* e;
-            ENTRY_OBJ* head;
-            // int index = -1;
-            Iterator(SparseMatrixBase<ENTRY_OBJ>* mat){
-                matrix = mat;
-            }
-            ~Iterator(){};
-            DERIVED end(){
-                return static_cast<DERIVED&>(*this);
-            }
-            ENTRY_OBJ* operator*() const { return e; };
-            friend bool operator== (const Iterator& a, const Iterator& b) { return a.e == b.head; };
-            friend bool operator!= (const Iterator& a, const Iterator& b) { return a.e != b.head; };
-    };
-
-
     /**
      * @brief An iterator class that iterates over rows of a sparse matrix in a doubly linked list format.
      * 
@@ -566,26 +524,44 @@ public:
      * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
      * should contain fields for row index, column index, and value.
      */
-    class RowIterator: public Iterator<RowIterator>{
+    class RowIterator{
         public:
-            typedef Iterator<RowIterator> BASE;
-            using BASE::e; using BASE::matrix; using BASE::head;
-            RowIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
-
-            RowIterator begin(){
-                e=head->right;
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            RowIterator(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_row_degree(i);
+                it_count = 0;
+                e = matrix->row_heads[i];
+            }
+            ~RowIterator(){};
+            RowIterator& end(){
                 return *this;
             }
+
+            RowIterator& begin(){
+                e=e->right;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ* operator*() {
+                return e;
+            }
+            friend bool operator == (const RowIterator& a, const RowIterator& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const RowIterator& a, const RowIterator& b) { return a.it_count <= b.entry_count; };
+
+
             RowIterator& operator++(){
                 e=e->right;
+                ++it_count;
                 return *this;
             }
 
-            RowIterator operator[](int i)
-            {
-                head = matrix->row_heads[i];
-                return *this;
-            }
     };
 
     /**
@@ -600,26 +576,44 @@ public:
      * 
      * @tparam ENTRY_OBJ The entry object class that the iterator will use for its entries.
      */
-    class ReverseRowIterator: public Iterator<ReverseRowIterator>{
+    class ReverseRowIterator{
         public:
-            typedef Iterator<ReverseRowIterator> BASE;
-            using BASE::e; using BASE::matrix;  using BASE::head;
-            ReverseRowIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
-
-            ReverseRowIterator begin(){
-                e=head->left;
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ReverseRowIterator(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_row_degree(i);
+                it_count = 0;
+                e = matrix->row_heads[i];
+            }
+            ~ReverseRowIterator(){};
+            ReverseRowIterator& end(){
                 return *this;
             }
+
+            ReverseRowIterator& begin(){
+                e=e->left;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ* operator*() {
+                return e;
+            }
+            friend bool operator == (const ReverseRowIterator& a, const ReverseRowIterator& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ReverseRowIterator& a, const ReverseRowIterator& b) { return a.it_count <= b.entry_count; };
+
+
             ReverseRowIterator& operator++(){
                 e=e->left;
+                ++it_count;
                 return *this;
             }
 
-            ReverseRowIterator operator[](int i)
-            {
-                head = matrix->row_heads[i];
-                return *this;
-            }
     };
 
 
@@ -632,25 +626,44 @@ public:
      * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
      * should contain fields for row index, column index, and value.
      */
-    class ColumnIterator: public Iterator<ColumnIterator>{
+    class ColumnIterator{
         public:
-            typedef Iterator<ColumnIterator> BASE;
-            using BASE::e; using BASE::matrix;  using BASE::head;
-            ColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
-
-            ColumnIterator begin(){
-                e=head->down;
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_col_degree(i);
+                it_count = 0;
+                e = matrix->column_heads[i];
+            }
+            ~ColumnIterator(){};
+            ColumnIterator& end(){
                 return *this;
             }
+
+            ColumnIterator& begin(){
+                e=e->down;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ* operator*() {
+                return e;
+            }
+            friend bool operator == (const ColumnIterator& a, const ColumnIterator& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ColumnIterator& a, const ColumnIterator& b) { return a.it_count <= b.entry_count; };
+
+
             ColumnIterator& operator++(){
                 e=e->down;
+                ++it_count;
                 return *this;
             }
-            ColumnIterator operator[](int i)
-            {
-                head = matrix->column_heads[i];
-                return *this;
-            }
+
     };
 
     /**
@@ -663,25 +676,44 @@ public:
      * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
      * should contain fields for row index, column index, and value.
      */
-    class ReverseColumnIterator: public Iterator<ReverseColumnIterator>{
+    class ReverseColumnIterator{
         public:
-            typedef Iterator<ReverseColumnIterator> BASE;
-            using BASE::e; using BASE::matrix;  using BASE::head;
-            ReverseColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat) : BASE::Iterator(mat){}
-
-            ReverseColumnIterator begin(){
-                e=head->up;
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ReverseColumnIterator(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_col_degree(i);
+                it_count = 0;
+                e = matrix->column_heads[i];
+            }
+            ~ReverseColumnIterator(){};
+            ReverseColumnIterator& end(){
                 return *this;
             }
+
+            ReverseColumnIterator& begin(){
+                e=e->up;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ* operator*() {
+                return e;
+            }
+            friend bool operator == (const ReverseColumnIterator& a, const ReverseColumnIterator& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ReverseColumnIterator& a, const ReverseColumnIterator& b) { return a.it_count <= b.entry_count; };
+
+
             ReverseColumnIterator& operator++(){
                 e=e->up;
+                ++it_count;
                 return *this;
             }
-            ReverseColumnIterator operator[](int i)
-            {
-                head = matrix->column_heads[i];
-                return *this;
-            }
+
     };
 
 
@@ -694,7 +726,7 @@ public:
      */
     RowIterator iterate_row(int i){
         if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
-        return RowIterator(this)[i];
+        return RowIterator(this,i);
     }
 
     /**
@@ -706,7 +738,7 @@ public:
      */
     ReverseRowIterator reverse_iterate_row(int i){
         if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
-        return ReverseRowIterator(this)[i];
+        return ReverseRowIterator(this,i);
     }
 
     /**
@@ -718,7 +750,7 @@ public:
      */
     ColumnIterator iterate_column(int i){
         if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
-        return ColumnIterator(this)[i];
+        return ColumnIterator(this,i);
     }
 
     /**
@@ -730,7 +762,7 @@ public:
      */
     ReverseColumnIterator reverse_iterate_column(int i){
         if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
-        return ReverseColumnIterator(this)[i];
+        return ReverseColumnIterator(this,i);
     }
 
 };

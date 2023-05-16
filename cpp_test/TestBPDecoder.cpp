@@ -14,6 +14,7 @@ TEST(BpEntry, init)
     ASSERT_EQ(e->bit_to_check_msg, 0.0);
     ASSERT_EQ(e->bit_to_check_msg, 0.0);
     delete e;
+    ASSERT_EQ(1,1);
 }
 
 TEST(BpSparse, init)

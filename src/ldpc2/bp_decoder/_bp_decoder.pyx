@@ -146,6 +146,9 @@ cdef class BpDecoderBase:
             for i in range(self.n):
                 self.bpd.channel_probs[i] = value[i]
 
+    def update_channel_probs(self, value: List[float]) -> None:
+        self.error_channel = value
+
 
     @property
     def log_prob_ratios(self) -> np.ndarray:
@@ -551,9 +554,12 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
 
     def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf):
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
 
         self.cutoff = cutoff
+        if not isinstance(sigma,float) or sigma <= 0:
+            raise ValueError("The sigma value must be a float greater than 0.")
+        self.sigma = sigma
         self.schedule = "serial"
         self.bp_method = "minimum_sum"
 
@@ -561,7 +567,7 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
 
     def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf):
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
         
         pass
 
@@ -585,7 +591,7 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
         for i in range(self.m):
             soft_syndrome[i] = soft_info_syndrome[i]
         
-        self.bpd.soft_info_decode_serial(soft_syndrome,self.cutoff)
+        self.bpd.soft_info_decode_serial(soft_syndrome,self.cutoff, self.sigma)
 
         out = np.zeros(self.n,dtype=np.uint8)
         for i in range(self.n): out[i] = self.bpd.decoding[i]

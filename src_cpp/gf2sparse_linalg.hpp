@@ -109,7 +109,7 @@ class RowReduce{
 
 
 
-        auto rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        int rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
             if(lower_triangular) this->LOWER_TRIANGULAR = true;
             this->set_column_row_orderings(cols,rows);
@@ -189,7 +189,7 @@ class RowReduce{
                 }
             }
 
-            return this->U;
+            return this->rank;
 
         }
 
@@ -402,10 +402,78 @@ class RowReduce{
 };
 
 
+// template <class GF2MATRIX>
+// shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
+
+//     auto matT = mat->transpose();
+    
+//     auto rr = new RowReduce(matT);
+//     rr->rref(false,false);
+//     int rank = rr->rank;
+//     int n = mat->n;
+//     int k = n - rank;
+//     auto ker = GF2MATRIX::New(k,n);
+
+//     for(int i = rank; i<n; i++){
+//         for(auto e: rr->L->iterate_row(i)){
+//             ker->insert_entry(i-rank,e->col_index);
+//         }
+//     }
+
+//     delete rr;
+    
+//     return ker;
+
+// }
+
+template <class GF2MATRIX>
+vector<vector<uint8_t>> kernel(shared_ptr<GF2MATRIX> mat){
+
+
+    auto matT = mat->transpose();
+    
+    // cout<<"Transpose of input matrix: "<<endl;
+
+    auto rr = new RowReduce(matT);
+    rr->rref(false,false);
+
+    // cout<<"Rref done"<<endl;
+
+    int rank = rr->rank;
+    int n = mat->n;
+    int k = n - rank;
+    // auto ker = GF2MATRIX::New(k,n);
+
+    auto ker = vector<vector<uint8_t>>(k,vector<uint8_t>(n,0));
+
+    for(int i = rank; i<n; i++){
+        for(auto e: rr->L->iterate_row(i)){
+            ker[i-rank][e->col_index]=1;
+        }
+    }
+
+    delete rr;
+    
+    return ker;
 
 }
 
-typedef gf2sparse::GF2Entry cygf2_entry;
-typedef gf2sparse::GF2Sparse<gf2sparse::GF2Entry> cygf2_sparse;
+template <class GF2MATRIX>
+int rank(shared_ptr<GF2MATRIX> mat){
+    auto rr = new RowReduce(mat);
+    rr->rref(false,false);
+    int rnk = rr->rank;
+    delete rr;
+    return rnk;
+} 
+
+
+
+}//end namespace gf2sparse_linalg
+
+typedef gf2sparse_linalg::RowReduce<shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>> cy_row_reduce;
+
+using kernel_func = vector<vector<uint8_t>> (*)(std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>);
+kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif

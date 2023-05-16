@@ -249,30 +249,25 @@ void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
     bool intersection;
     vector<ENTRY_OBJ*> entries_to_remove;
 
-    // Iterate over each non-zero entry in row j
     for(auto g: this->iterate_row(j)){
-
         intersection=false;
-        // Iterate over each non-zero entry in row i
-        for(auto e: this->iterate_row(i)){
-
-            // If the column index of the entry in row j matches the column index of the entry in row i,
-            // add the entry to the list of entries to remove and mark that there was an intersection
-            if(g->col_index==e->col_index){
+        int col_index = g->col_index;
+        for(auto e: this->iterate_column(col_index)){
+            if(e->row_index==i){
                 entries_to_remove.push_back(e);
                 intersection=true;
-                break;
             }
         }
-
         // If there was no intersection between the entries, insert the entry from row j into row i
         if(!intersection){
-            auto ne = this->insert_entry(i,g->col_index);
+            auto ne = this->insert_entry(i,col_index);
         }
+
     }
 
     // Remove all the entries from row i that were marked for removal
     for(auto e: entries_to_remove) this->remove(e);
+
 }
 
 template<class ENTRY_OBJ>
@@ -375,6 +370,88 @@ shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<GF2SPARSE_MATRIX_CLASS> 
         }
     }
     return copy_mat;
+}
+
+
+template <class GF2MATRIX>
+shared_ptr<GF2MATRIX> vstack(vector<shared_ptr<GF2MATRIX>> mats){
+
+    int mat_count = mats.size();
+    int n = mats[0]->n;
+    int m0  = mats[0]->m;
+
+    int m = m0*mat_count;
+
+    auto stacked_mat = GF2MATRIX::New(m,n);
+
+    int row_offset = 0;
+    for(auto mat: mats){
+        for(auto i=0; i<mat->m; i++){
+            for(auto e: mat->iterate_row(i)){
+                stacked_mat->insert_entry(row_offset+e->row_index,e->col_index);
+            }
+        }
+        row_offset+=mat->m;
+    }
+
+    return stacked_mat;
+
+}
+
+template <class GF2MATRIX>
+shared_ptr<GF2MATRIX> hstack(vector<shared_ptr<GF2MATRIX>> mats){
+    
+    int mat_count = mats.size();
+    int n0 = mats[0]->n;
+    int m = mats[0]->m;
+
+    int n = n0*mat_count;
+
+    auto stacked_mat = GF2MATRIX::New(m,n);
+
+    int col_offset = 0;
+    for(auto mat: mats){
+        for(auto i=0; i<mat->m; i++){
+            for(auto e: mat->iterate_row(i)){
+                stacked_mat->insert_entry(e->row_index,col_offset+e->col_index);
+            }
+        }
+        col_offset+=mat->n;
+    }
+
+    return stacked_mat;
+
+    
+}
+
+template <class GF2MATRIX>
+shared_ptr<GF2MATRIX> kron(shared_ptr<GF2MATRIX> mat1, shared_ptr<GF2MATRIX> mat2){
+    
+    int m1,n1,m2,n2;
+    m1 = mat1->m;
+    n1 = mat1->n;
+    m2 = mat2->m;
+    n2 = mat2->n;
+
+    auto kron_mat = GF2MATRIX::New(m1*m2,n1*n2);
+
+    for(auto i=0; i<m1; i++){
+        for(auto e: mat1->iterate_row(i)){
+            int row_offset = e->row_index*m2;
+            int col_offset = e->col_index*n2;
+
+            for(auto j = 0; j<m2; j++){
+                for(auto f: mat2->iterate_row(j)){
+                    kron_mat->insert_entry(row_offset+f->row_index,col_offset+f->col_index);
+                }
+            }
+
+        }
+        
+    }
+
+    return kron_mat;
+
 }
 
 

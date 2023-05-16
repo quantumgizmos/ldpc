@@ -67,8 +67,9 @@ add_executable(TestBPDecoder cpp_test/TestBPDecoder.cpp)
 add_executable(TestOsdDecoder cpp_test/TestOsdDecoder.cpp)
 add_executable(TestSoftInfo cpp_test/TestSoftInfo.cpp)
 add_executable(TestFlipDecoder cpp_test/TestFlipDecoder.cpp)
-
-
+add_executable(TestGf2Codes cpp_test/TestGf2Codes.cpp)
+add_executable(TestGf2Linalg cpp_test/TestGf2Linalg.cpp
+)
 
 # Link the ldpc2 and gtest_main libraries to the test executables
 target_link_libraries(TestSparseMatrix gtest_main ldpc2)
@@ -79,6 +80,9 @@ target_link_libraries(TestBPDecoder gtest_main ldpc2)
 target_link_libraries(TestOsdDecoder gtest_main ldpc2)
 target_link_libraries(TestSoftInfo gtest_main ldpc2)
 target_link_libraries(TestFlipDecoder gtest_main ldpc2)
+target_link_libraries(TestGf2Codes gtest_main ldpc2)
+target_link_libraries(TestGf2Linalg gtest_main ldpc2)
+
 
 # Discover and run tests using GoogleTest
 enable_testing()
@@ -89,4 +93,6 @@ gtest_discover_tests(TestGF2RowReduce)
 gtest_discover_tests(TestBPDecoder)
 gtest_discover_tests(TestOsdDecoder)
 gtest_discover_tests(TestFlipDecoder)
+gtest_discover_tests(TestGf2Codes)
+gtest_discover_tests(TestGf2Linalg)
 

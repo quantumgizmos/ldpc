@@ -1,1 +1,1 @@
-from ldpc2.gf2sparse._gf2sparse cimport gf2sparse
+from ldpc2.gf2sparse._gf2sparse cimport *
