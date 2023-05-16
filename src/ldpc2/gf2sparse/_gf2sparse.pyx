@@ -2,20 +2,21 @@
 # distutils: language = c++
 import numpy as np
 import scipy.sparse
+from typing import Tuple, Union
 
 cdef class gf2sparse:
     """
     Test test test test
     """
 
-    def __init__(self, pcm: np.ndarray = None, empty: bool = False):
+    def __init__(self, pcm = Union[np.ndarray, scipy.sparse.csr_matrix], empty: bool = False):
         """
         Test test test test
         """
 
         pass
 
-    def __cinit__(self, pcm=None, empty=False):
+    def __cinit__(self, pcm = Union[np.ndarray, scipy.sparse.csr_matrix], empty: bool = False):
 
         self.PCM_ALLOCATED = False
 
@@ -30,15 +31,15 @@ cdef class gf2sparse:
                     for j in range(self.n):
                         if pcm[i,j]!=0:
                             self.pcm.insert_entry(i,j,pcm[i,j])
-            elif isinstance(pcm, scipy.sparse):
+            elif isinstance(pcm, scipy.sparse.csr_matrix):
                 rows, cols = pcm.nonzero()
                 for i in range(len(rows)):
                     self.pcm.insert_entry(rows[i], cols[i], pcm[rows[i], cols[i]])
             else:
-                raise Exception(f"InputError: The 'pcm' input parameter must be either a `numpy.ndarray` or a `scipy.sparse` matrix. Not {type(pcm)}")
+                raise Exception(f"InputError: The 'pcm' input parameter must be either a `numpy.ndarray` or a `scipy.sparse.csr_matrix` matrix. Not {type(pcm)}")
         
         elif empty==False:
-            raise ValueError("Please provide a parity check matric as input to this funciton.")
+            raise ValueError("Please provide a parity check matrix as input to this funciton.")
         
         else:
             pass
@@ -52,6 +53,31 @@ cdef class gf2sparse:
     def __del__(self):
         if self.PCM_ALLOCATED:
             del self.pcm
+
+    def toarray(self, type: str = "0"):
+
+        cdef int i
+
+        if type.lower() in ["numpy", "np", "numpy.ndarray", "np.ndarray"]:
+            out = np.zeros((self.m,self.n)).astype(np.uint8)
+        elif type.lower() in ["csr", "csr_matrix", "scipy.sparse.csr_matrix",]:
+            out = scipy.sparse.csr_matrix((self.m,self.n), dtype = np.uint8)
+        else:
+            raise TypeError("Error. Please enter a valid output format from: 1) 'numpy', 2)'csr_matrix'.")
+
+        cdef vector[vector[int]] coordinates
+        coordinates = self.pcm.nonzero_coordinates()
+        for i in range(self.pcm.node_count):
+            out[coordinates[i][0],coordinates[i][1]] = 1
+        
+        return out
+
+    def to_numpy(self):
+        return self.toarray(type="numpy.ndarray")
+
+    def to_scipy_sparse(self):
+        return self.toarray(type="scipy.sparse.csr_matrix")
+
 
 
     def lu_decomposition(self, reset_cols: bool = True, full_reduce: bool = False):

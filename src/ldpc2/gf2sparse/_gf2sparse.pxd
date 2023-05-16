@@ -29,13 +29,17 @@ cdef extern from "gf2sparse.hpp":
         vector[int] cols
         vector[int] inv_rows
         vector[int] inv_cols
+        vector[vector[int]] nonzero_coordinates()
         int rank
         int m
         int n
+        int node_count
         
 
 cdef class gf2sparse:
     cdef bool PCM_ALLOCATED
+    cdef bool PCMT_ALLOCATED
+    cdef bool KERN_ALLOCATED
     cdef cygf2_sparse *pcm
     cdef int m
     cdef int n

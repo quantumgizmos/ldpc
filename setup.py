@@ -19,6 +19,9 @@ this_directory = Path(__file__).parent
 
 cpp_modules = ["bp_decoder","bposd_decoder","mbp_decoder",
                 "uf_decoder","bf_decoder","bp_decoder2","gf2sparse"]
+
+cpp_modules = ["bp_decoder", "bposd_decoder"]
+
 c_extensions = []
 for module in cpp_modules:
 
@@ -27,7 +30,7 @@ for module in cpp_modules:
         sources=[f"src/ldpc2/{module}/_{module}.pyx"],
         libraries=[],
         library_dirs=[],
-        include_dirs=[numpy.get_include(),'src_cpp', 'include/robin_map'],
+        include_dirs=[numpy.get_include(),'src_cpp', 'src_cpp/include/robin_map'],
         extra_compile_args=['-std=c++2a', '-O3','-fopenmp'],
         extra_link_args=['-lgomp','-fopenmp'],
         language="c++"

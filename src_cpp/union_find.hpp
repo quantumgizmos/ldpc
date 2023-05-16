@@ -27,7 +27,7 @@ vector<int> sort_indices(std::vector<double>& B){
 
 
 struct cluster{
-    bp_sparse* pcm;
+    BpSparse* pcm;
     int cluster_id;
     bool active;
     bool valid;
@@ -51,7 +51,7 @@ struct cluster{
     tsl::robin_map<int,int> cluster_to_matrix_check_map;
 
 
-    cluster(bp_sparse *parity_check_matrix, int syndrome_index, cluster** ccm, cluster** bcm){
+    cluster(BpSparse *parity_check_matrix, int syndrome_index, cluster** ccm, cluster** bcm){
         this->active=true;
         this->valid=false;
         this->pcm = parity_check_matrix;
@@ -311,7 +311,7 @@ struct cluster{
         return erasure;
     }
 
-    bp_sparse* convert_to_matrix(const vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
+    BpSparse* convert_to_matrix(const vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
 
         this->matrix_to_cluster_bit_map.clear();
         this->matrix_to_cluster_check_map.clear();
@@ -354,7 +354,7 @@ struct cluster{
             count++;
         }
 
-        bp_sparse* cluster_pcm = new bp_sparse(this->check_nodes.size(),this->bit_nodes.size());
+        BpSparse* cluster_pcm = new BPSparse(this->check_nodes.size(),this->bit_nodes.size());
 
         for(int check_index: this->check_nodes){
             for(auto e: this->pcm->iterate_row(check_index)){
@@ -415,7 +415,7 @@ struct cluster{
     //     vector<double> bp_channel_probs;
     //     bp_channel_probs.resize(cluster_pcm->n,0.05);
 
-    //     bp_decoder* bpd = new bp_decoder(cluster_pcm,bp_channel_probs,0,0,0,1);
+    //     BPDecoder* bpd = new BPDecoder(cluster_pcm,bp_channel_probs,0,0,0,1);
     //     bposd_decoder* bposd = new bposd_decoder(bpd,0,0);
         
     //     cluster_solution = cluster_pcm->lu_solve(cluster_syndrome,cluster_solution);
@@ -456,13 +456,13 @@ class uf_decoder{
 
     private:
         bool weighted;
-        bp_sparse* pcm;
+        BpSparse* pcm;
 
     public:
         vector<uint8_t> decoding;
         int bit_count;
         int check_count;
-        uf_decoder(bp_sparse* parity_check_matrix){
+        uf_decoder(BpSparse* parity_check_matrix){
             this->pcm = parity_check_matrix;
             this->bit_count = pcm->n;
             this->check_count = pcm->m;

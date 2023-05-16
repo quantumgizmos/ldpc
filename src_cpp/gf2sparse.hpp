@@ -1,3 +1,8 @@
+/**
+ * @file gf2sparse.h
+ * @brief A C++ library for sparse matrices in GF(2)
+ */
+
 #ifndef GF2SPARSE_H
 #define GF2SPARSE_H
 
@@ -6,452 +11,377 @@
 #include <memory>
 #include <iterator>
 #include <algorithm>
+#include <limits>
 #include <omp.h>
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
 
 using namespace std;
+using namespace sparse_matrix;
+
+namespace gf2sparse{
+
+/**
+ * @brief An entry in a sparse matrix over GF(2)
+ */
+class GF2Entry: public EntryBase<GF2Entry>{ 
+    public: 
+        ~GF2Entry(){};
+};
+
+/**
+ * @brief A sparse matrix over GF(2)
+ */
+template <class ENTRY_OBJ = GF2Entry>
+class GF2Sparse: public SparseMatrixBase<ENTRY_OBJ>{
+    public:
+        typedef SparseMatrixBase<ENTRY_OBJ> BASE;
+
+        /**
+         * @brief Constructor for creating a new GF2Sparse object with the given dimensions
+         * @param m The number of rows in the matrix
+         * @param n The number of columns in the matrix
+         */
+        GF2Sparse(int m, int n, int entry_count = 0): BASE::SparseMatrixBase(m,n,entry_count){}
+
+        /**
+         * @brief Destructor for GF2Sparse object
+         */
+        ~GF2Sparse(){}
+
+        /**
+         * @brief Creates a new GF2Sparse object with the given dimensions
+         * @param m The number of rows in the matrix
+         * @param n The number of columns in the matrix
+         * @return A shared pointer to the new GF2Sparse object
+         */
+        static shared_ptr<GF2Sparse<ENTRY_OBJ>> New(int m, int n, int entry_count = 0){
+            return make_shared<GF2Sparse<ENTRY_OBJ>>(m,n,entry_count);
+        }
+
+        /**
+         * @brief Inserts a row of entries in compressed sparse row (CSR) format
+         * @param row_index The index of the row to insert
+         * @param column_indices The indices of the non-zero entries in the row
+         */
+        void csr_row_insert(int row_index, vector<int>& column_indices);
+
+        /**
+         * @brief Inserts a matrix in CSR format
+         * @param csr_matrix The matrix to insert
+         */
+        void csr_insert(vector<vector<int>>& csr_matrix);
+
+        /**
+         * @brief Multiplies the matrix by a vector and stores the result in another vector
+         * @param input_vector The vector to multiply the matrix with
+         * @param output_vector The vector to store the result in
+         * @return A reference to the output vector
+         */
+        vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector);
+
+        /**
+         * @brief Multiplies the matrix by a vector and returns the result as a new vector
+         * @param input_vector The vector to multiply the matrix with
+         * @return The resulting vector
+         */
+        vector<uint8_t> mulvec2(vector<uint8_t>& input_vector);
+
+        /**
+         * @brief Multiplies the matrix by a vector with parallel execution using OpenMP and stores the result in another vector
+         * @param input_vector The vector to multiply the matrix with
+         * @param output_vector The vector to store the result in
+         * @return A reference to the output vector
+         */
+        vector<uint8_t>& mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector);
+
+        /**
+         * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
+         * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
+         * @param
+         * @param mat_right The matrix to multiply with
+        * @return The resulting matrix
+        */
+        template<typename ENTRY_OBJ2>
+        shared_ptr<GF2Sparse<ENTRY_OBJ>> matmul(shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right);
+
+        /**
+         * @brief Adds two rows together
+         * @param i The row to overwrite
+         * @param j The row to add to row i
+         */
+        void add_rows(int i, int j);
+
+        /**
+         * @brief Transposes the matrix
+         * @return A shared pointer to the transposed matrix
+         */
+        shared_ptr<GF2Sparse<ENTRY_OBJ>> transpose();
+
+        /**
+         * @brief Compares two matrices for equality
+         * @tparam ENTRY_OBJ2 The type of entries in the matrix to compare with
+         * @param matrix2 The matrix to compare with
+         * @return True if the matrices are equal, false otherwise
+         */
+        template <typename ENTRY_OBJ2>
+        bool gf2_equal(shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2);
+
+};
+
+template<class ENTRY_OBJ>
+void GF2Sparse<ENTRY_OBJ>::csr_row_insert(int row_index, vector<int>& column_indices){
+    // Iterate through each column index in the vector
+    for(auto col_index: column_indices){
+        // Insert a new entry with the given row and column indices
+        this->insert_entry(row_index,col_index);
+    }
+}
+
+template<class ENTRY_OBJ>
+void GF2Sparse<ENTRY_OBJ>::csr_insert(vector<vector<int>>& csr_matrix){
+    int i = 0;
+    // Iterate through each row of the matrix
+    for(auto row: csr_matrix){
+        // Insert the row of entries in compressed sparse row (CSR) format
+        this->csr_row_insert(i, row);
+        i++;
+    }
+}
 
 
-    class gf2entry: public entry_base<gf2entry>{ 
-        public: 
-            uint8_t value;
-            ~gf2entry(){};
-    };
+template <class ENTRY_OBJ>
+vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
+    // Initialize the output vector to all zeros
+    for(int i = 0; i<this->m; i++) output_vector[i] = 0;
 
-    template <class ENTRY_OBJ = gf2entry>
-    class gf2sparse: public sparse_matrix_base<ENTRY_OBJ>{
-        public:
-            typedef sparse_matrix_base<ENTRY_OBJ> BASE;
-            using BASE::row_heads; using BASE::column_heads; using BASE::m; using BASE::n;
-            using BASE::swap_rows; using BASE::get_entry; using BASE::iterate_column;
-            using BASE::iterate_row;
-            gf2sparse<gf2entry>* L;
-            gf2sparse<gf2entry>* U;
-            vector<int> rows;
-            vector<int> cols;
-            vector<int> orig_cols;
-            vector<int> inv_rows;
-            vector<int> inv_cols;
-            bool L_allocated=false;
-            bool U_allocated=false;
-            bool LU_indices_allocated=false;
-            int rank;
-            
-            gf2sparse(int m, int n): BASE::sparse_matrix_base(m,n){
-                L_allocated=false;
-                U_allocated=false;
-                cols.resize(n);
-                inv_cols.resize(n);
-                rows.resize(m);
-                inv_rows.resize(m);
+    // Iterate through each row of the matrix
+    for(int i = 0; i < this->m; i++){
+        // Iterate through each non-zero entry in the row
+        for(auto e: this->iterate_row(i)){
+            // Compute the XOR of the current output value with the value in the input vector at the entry's column index
+            output_vector[i] ^= input_vector[e->col_index];
+        }
+    }
+
+    // Return the output vector
+    return output_vector;
+}
+
+template<class ENTRY_OBJ>
+vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec2(vector<uint8_t>& input_vector){
+    // Initialize the output vector to all zeros
+    vector<uint8_t> output_vector(this->m,0);
+
+    // Iterate through each row of the matrix
+    for(int i = 0; i < this->m; i++){
+        // Iterate through each non-zero entry in the row
+        for(auto e: this->iterate_row(i)){
+            // Compute the XOR of the current output value with the value in the input vector at the entry's column index
+            output_vector[i] ^= input_vector[e->col_index];
+        }
+    }
+
+    // Return the output vector
+    return output_vector;
+}
+
+
+template<class ENTRY_OBJ>
+vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
+    // Initialize the output vector to all zeros
+    #pragma omp for
+    for(int i = 0; i<this->m; i++) output_vector[i] = 0;
+
+    // Iterate through each row of the matrix
+    #pragma omp for
+    for(int i = 0; i < this->m; i++){
+        // Iterate through each non-zero entry in the row
+        for(auto e: this->iterate_row(i)){
+            // Compute the XOR of the current output value with the value in the input vector at the entry's column index
+            output_vector[i] ^= input_vector[e->col_index];
+        }
+    }
+
+    // Return the output vector
+    return output_vector;
+}
+
+
+template<typename ENTRY_OBJ>
+template<typename ENTRY_OBJ2>
+shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::matmul(shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right) {
+
+    // Check if the dimensions of the input matrices are valid for multiplication
+    if( this->n!=mat_right->m){
+        throw invalid_argument("Input matrices have invalid dimensions!");
+    }
+
+    // Create a new GF2Sparse matrix to store the output
+    auto output_mat = GF2Sparse<ENTRY_OBJ>::New(this->m,mat_right->n);
+
+    // Iterate over each row and column of the output matrix
+    for(int i = 0; i<output_mat->m; i++){
+        for(int j = 0; j<output_mat->n; j++){
+            int sum = 0;
+            // Iterate over the non-zero entries in the column of the right-hand matrix
+            for(auto e: mat_right->iterate_column(j)){
+                // Iterate over the non-zero entries in the row of this matrix
+                for(auto g: this->iterate_row(i)){
+                    // Check if the column index of this matrix matches the row index of the right-hand matrix
+                    if(g->col_index == e->row_index) sum^=1;
+                }
             }
-            ~gf2sparse(){
-                // cout<<"L allcoated "<<L_allocated<<" U_allocated "<<U_allocated<<endl;
-                if(L_allocated==true){ delete L; }
-                if(U_allocated==true){ delete U; }
-            }
+            // Insert an entry in the output matrix if the sum is non-zero
+            if(sum) output_mat->insert_entry(i,j);
+        }
+    }
 
-            ENTRY_OBJ* insert_entry(int i, int j, uint8_t val = uint8_t(1)){
-                auto e = BASE::insert_entry(i,j);
-                e->value = val;
-                return e;
-            }
+    // Return a shared pointer to the output matrix
+    return output_mat;
+}
 
-            vector<uint8_t>& mulvec(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
-                for(int i = 0; i<m; i++) output_vector[i] = 0;
-                for(int i = 0; i < n; i++){
-                    if(input_vector[i]){
-                        for(auto e: BASE::iterate_column(i)){
-                            output_vector[e->row_index] ^= 1;
-                        }
-                    }
-                }
-                return output_vector;
-            }
+template<class ENTRY_OBJ>
+void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
 
-            vector<uint8_t>& mulvec_parallel(vector<uint8_t>& input_vector, vector<uint8_t>& output_vector){
-                #pragma omp for
-                for(int i = 0; i<m; i++) output_vector[i] = 0;
-                
-                #pragma omp for
-                for(int i = 0; i < m; i++){
-                    for(auto e: BASE::iterate_row(i)){
-                        output_vector[i] ^= input_vector[e->col_index];
-                    }
-                }
-                return output_vector;
-            }
+    // Set row i as the row that will be overwritten
+    // Initialize variables
+    bool intersection;
+    vector<ENTRY_OBJ*> entries_to_remove;
 
+    // Iterate over each non-zero entry in row j
+    for(auto g: this->iterate_row(j)){
 
-            gf2sparse* matmul(gf2sparse *mat_right, gf2sparse *output_mat){
-            
-                if( n!=mat_right->m || m!=output_mat->m || mat_right->n!=output_mat->n){
-                    throw invalid_argument("Input matrices have invalid dimensions!");
-                }
+        intersection=false;
+        // Iterate over each non-zero entry in row i
+        for(auto e: this->iterate_row(i)){
 
-                delete output_mat->sparse_matrix_entries;
-                delete[] output_mat->row_heads;
-                delete[] output_mat->column_heads;
-                output_mat->allocate();
-
-                int sum = 0;
-                for(int i = 0; i < m; i++){
-                    for(int j = 0; j < n; j++){
-                        sum=0;
-                        for(auto e: BASE::iterate_row(i)){
-                            for(auto g: mat_right->iterate_column(j)){
-                                if(g->row_index==e->col_index) sum^=(e->value*g->value);
-                            }
-                        }
-                        if(sum==1){
-                            output_mat->insert_entry(i,j,1);
-                        }
-                    }
-                }
-
-                return output_mat;    
-
-            }
-
-            void add_rows(int i, int j){
-                //row i is the row that will be overwritten
-                bool intersection;
-                for(auto g: BASE::iterate_row(j)){
-                    if(g->value==0) continue;
-                    intersection=false;
-                    for(auto e: BASE::iterate_row(i)){
-                        if(g->col_index==e->col_index){
-                            e->value = (e->value + g->value)%2;
-                            intersection=true;
-                            break;
-                        }
-                    }
-                    if(!intersection){
-                        auto ne = BASE::insert_entry(i,g->col_index);
-                        ne->value = g->value;
-                    }
-                }
-            }
-
-            void add_columns(int i, int j){
-                //row i is the row that will be overwritten
-                bool intersection;
-                for(auto g: BASE::iterate_column(j)){
-                    if(g->value==0) continue;
-                    intersection=false;
-                    for(auto e: BASE::iterate_column(i)){
-                        if(g->row_index==e->row_index){
-                            e->value = (e->value + g->value)%2;
-                            intersection=true;
-                            break;
-                        }
-                    }
-                    if(!intersection){
-                        auto ne = BASE::insert_entry(g->row_index,i);
-                        ne->value = g->value;
-                    }
-                }
-            }
-
-            
-
-            int lu_decomposition(bool reset_cols = true, bool full_reduce = false){
-
-                int temp1,temp2;
-                int pivot_count=0;
-
-                if(U_allocated) delete U;
-                if(L_allocated) delete L;
-                U=new gf2sparse<gf2entry>(m,n);
-                U_allocated=true;
-                L=new gf2sparse<gf2entry>(m,m);
-                L_allocated=true;
-                vector<int> col_tracker;
-                vector<int> pivot_cols;
-                vector<int> not_pivot_cols;
-
-
-                if(reset_cols){
-                    for(int i=0; i<n;i++) {
-                        col_tracker.push_back(i);
-                        cols[i] = i;
-                        inv_cols[cols[i]] = i;
-                    }
-                }
-                else{
-                    for(int i=0; i<n;i++) {
-                        col_tracker.push_back(i);
-                        inv_cols[cols[i]] = i;
-                    }
-                }
-
-                
-                for(int i=0;i<m;i++){
-                    rows[i] = i;
-                    inv_rows[rows[i]] = i;
-                }
-
-                for(int i=0;i<m;i++){
-                    for(auto e: iterate_row(i)){
-                        if(e->value==1){
-                            U->insert_entry(i,e->col_index,1);
-                        }
-                    }
-                    if(full_reduce == true) L->insert_entry(i,i,1);
-                }
-
-
-                for(int i=0;i<m;i++){
-                    rows[i] = i;
-                    inv_rows[rows[i]]=i;
-                }
-
-
-
-                int max_rank = min(m,n);
-                // int max_mn = max(m,n);
-
-                // int sub_pivot_index = 0;
-                for(int pivot_index = 0; pivot_index < n; pivot_index++){
-
-                    if(pivot_count==max_rank) {
-                        break;
-                    };
-
-                    auto e = U->get_entry(rows[pivot_count],cols[pivot_index]);
-                    if(e->value==1 && !e->at_end()) {
-                        // cout<<"Direct pivot found. Pivot indices: "<<e->row_index<<", "<<e->col_index<<" Entry val: "<<unsigned(e->value)<<endl;
-                        // print_sparse_matrix(*U);
-                        goto pivot_found;
-                    } 
-
-                    // cout<<"hello"<<endl;
-                    
-                    for(auto g: U->iterate_column(cols[pivot_index])){
-                            // cout<<"pivot count "<<pivot_count<<" pivot index "<<pivot_index<<" Entry value "<<unsigned(g->value)<<endl;
-
-                            // cout<<inv_rows[g->row_index]<<"pivot: " <<pivot_index<<"sub col pivot: "<<sub_pivot_index<<endl;
-                            if((inv_rows[g->row_index] > pivot_count) && (g->value == 1)){
-                                
-
-                                temp1=rows[pivot_count];
-                                temp2=rows[inv_rows[g->row_index]];
-
-                                rows[pivot_count] = temp2;
-                                rows[inv_rows[g->row_index]] = temp1;
-
-                                inv_rows[temp1]=inv_rows[g->row_index];
-                                inv_rows[temp2]=pivot_count;
-                                // U->swap_rows(pivot_index,g->row_index);
-                        
-                                // pivot_count+=1;
-                                goto pivot_found;
-                            }
-
-
-                    }
-
-                    not_pivot_cols.push_back(cols[pivot_index]);
-                    col_tracker[cols[pivot_index]]=-100;
-                    continue;
-                    pivot_found:
-                        if(full_reduce == false){
-                            for(auto e: U->iterate_column(cols[pivot_index])){
-                                if(e->value==1 && inv_rows[e->row_index] > pivot_count){
-                                    U->add_rows(e->row_index, rows[pivot_count]);
-                                    L->insert_entry(e->row_index,pivot_count,1);
-                                    // cout<<"Pivot: "<<pivot_count<<" Pivot add row: "<<inv_rows[e->row_index]<<endl;
-                                    // display_L();
-                                    // cout<<endl;
-                                    // display_U();
-
-                                }
-                            }
-                        }
-
-                        else if(full_reduce = true){
-
-                            for(auto e: U->iterate_column(cols[pivot_index])){
-                                if(e->value==1 && inv_rows[e->row_index] != pivot_count){
-                                    U->add_rows(e->row_index, rows[pivot_count]);
-                                    L->add_rows(e->row_index, rows[pivot_count]);
-                                    // L->add_rows(rows[pivot_count],e->row_index);
-                                    // cout<<"Pivot: "<<pivot_count<<" Pivot add row: "<<inv_rows[e->row_index]<<endl;
-                                    // display_L();
-                                    // cout<<endl;
-                                    // display_U();
-
-                                }
-                            }
-
-                        }
-
-                        pivot_count+=1;
-                        pivot_cols.push_back(cols[pivot_index]);
-                        col_tracker[cols[pivot_index]]=-100;
-
-                    }
-
-                    if(full_reduce == false){
-                        for(int i=0; i<m; i++){
-                            L->insert_entry(rows[i],i,1);
-                        }
-                    }
-
-                int col_index=-1;
-                for(auto column: pivot_cols){
-                    col_index+=1;
-                    cols[col_index] = column;
-                    inv_cols[cols[col_index]] = col_index;
-                }
-                for(auto column: not_pivot_cols){
-                    col_index+=1;
-                    cols[col_index] = column;
-                    inv_cols[cols[col_index]] = col_index;
-                }
-                for(int i=0; i<n; i++){
-                    if(col_tracker[i]!=-100){
-                        col_index+=1;
-                        cols[col_index] = col_tracker[i]; 
-                        inv_cols[cols[col_index]] = col_index;
-                    }
-                }
-
-
-                // cout<<"Hello"<<endl;
-                rank = pivot_count;
-                return pivot_count;
-
-            }
-
-
-        void display_L(){
-            for(int i=0; i<m; i++){
-                for(int j=0; j<m; j++){
-                    auto ii = rows[i];
-                    auto e=L->get_entry(ii,j);
-                    if(!e->at_end()){
-                        cout<<unsigned(e->value)<<" ";
-                    }
-                    else cout<<0<<" ";
-                }
-                cout<<endl;
+            // If the column index of the entry in row j matches the column index of the entry in row i,
+            // add the entry to the list of entries to remove and mark that there was an intersection
+            if(g->col_index==e->col_index){
+                entries_to_remove.push_back(e);
+                intersection=true;
+                break;
             }
         }
 
-        void display_U(){
-            for(int i=0; i<m; i++){
-                for(int j=0; j<n; j++){
-                    auto ii = rows[i];
-                    auto jj = cols[j];
-                    auto e=U->get_entry(ii,jj);
-                    if(!e->at_end()){
-                        cout<<unsigned(e->value)<<" ";
-                    }
-                    else cout<<0<<" ";
-                }
-                cout<<endl;
-            }
+        // If there was no intersection between the entries, insert the entry from row j into row i
+        if(!intersection){
+            auto ne = this->insert_entry(i,g->col_index);
+        }
+    }
+
+    // Remove all the entries from row i that were marked for removal
+    for(auto e: entries_to_remove) this->remove(e);
+}
+
+template<class ENTRY_OBJ>
+shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::transpose(){
+
+    // Create a new GF2Sparse matrix with the dimensions of the transposed matrix
+    shared_ptr<GF2Sparse<ENTRY_OBJ>> pcmT = GF2Sparse<ENTRY_OBJ>::New(this->n,this->m);
+
+    // Iterate over each row of this matrix
+    for(int i = 0; i<this->m; i++){
+        // Iterate over each non-zero entry in the row
+        for(auto e: this->iterate_row(i)){
+            // Insert the entry into the transposed matrix with the row and column indices swapped
+            pcmT->insert_entry(e->col_index,e->row_index);
+        }
+    }
+
+    // Return a shared pointer to the transposed matrix
+    return pcmT;
+}
+
+template<class ENTRY_OBJ>
+template <typename ENTRY_OBJ2>
+bool GF2Sparse<ENTRY_OBJ>::gf2_equal(shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
+
+    // Check if the dimensions of the matrices are equal
+    if(this->n!=matrix2->n || this->m!=matrix2->m) return false;
+
+    // Iterate over each row of this matrix
+    for(int i = 0; i<this->m; i++){
+
+        // Iterate over each non-zero entry in the row of this matrix
+        for(auto e: this->iterate_row(i)){
+
+            // Get the corresponding entry in the same position of the other matrix
+            auto g = matrix2->get_entry(e->row_index,e->col_index);
+
+            // If there is no corresponding entry in the same position of the other matrix, the matrices are not equal
+            if(g->at_end()) return false;
         }
 
-        vector<uint8_t>& lu_solve(vector<uint8_t>& y, vector<uint8_t>& x){
+        // Iterate over each non-zero entry in the row of the other matrix
+        for(auto e: matrix2->iterate_row(i)){
 
-            for(int i=0;i<n;i++) x[i]=0;
+            // Get the corresponding entry in the same position of this matrix
+            auto g = this->get_entry(e->row_index,e->col_index);
 
-            if(!L_allocated){
-                lu_decomposition();
-            }
-
-            //Solves LUx=y
-            int row_sum;
-            vector<uint8_t> b;
-            b.resize(m);
-
-            //First we solve Lb = y, where b = Ux
-            //Solve Lb=y with forwared substitution
-            for(int row_index=0;row_index<m;row_index++){
-                row_sum=0;
-                for(auto e: L->iterate_row(rows[row_index])){
-                    row_sum+=e->value*b[e->col_index];
-                }
-                // cout<<row_sum<<endl;
-                b[row_index]=(row_sum%2)^y[rows[row_index]];
-            }
-
-
-            //Solve Ux = b with backwards substitution
-            for(int row_index=(rank-1);row_index>=0;row_index--){
-                row_sum=0;
-                for(auto e: U->iterate_row(rows[row_index])){
-                    row_sum+=e->value*x[e->col_index];
-                }
-                x[cols[row_index]] = (row_sum%2)^b[row_index];
-            }
-
-            return x;
-       
+            // If there is no corresponding entry in the same position of this matrix, the matrices are not equal
+            if(g->at_end()) return false;
         }
+    }
 
-        gf2sparse<ENTRY_OBJ>* transpose(){
-            gf2sparse<ENTRY_OBJ>* pcmT = new gf2sparse<ENTRY_OBJ>(n,m);
-            for(int i = 0; i<m; i++){
-                for(auto e: BASE::iterate_row(i)) pcmT->insert_entry(e->col_index,e->row_index, 1);
-            }
-            return pcmT;
+    // If all non-zero entries in both matrices are the same, the matrices are equal
+    return true;
+}
+
+/**
+ * @brief Compares two GF2Sparse matrices for equality
+ * @tparam ENTRY_OBJ1 The type of entries in the first matrix
+ * @tparam ENTRY_OBJ2 The type of entries in the second matrix
+ * @param matrix1 A shared pointer to the first matrix
+ * @param matrix2 A shared pointer to the second matrix
+ * @return True if the matrices are equal, false otherwise
+ */
+template <typename ENTRY_OBJ1, typename ENTRY_OBJ2>
+bool operator==(shared_ptr<GF2Sparse<ENTRY_OBJ1>> matrix1, shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
+    return matrix1->gf2_equal(matrix2);
+}
+
+/**
+ * @brief Creates a new GF2Sparse identity matrix with the given dimensions
+ * @tparam ENTRY_OBJ The type of entries in the matrix
+ * @param n The number of rows/columns in the matrix
+ * @return A shared pointer to the new GF2Sparse identity matrix
+ */
+template <class ENTRY_OBJ = GF2Entry>
+shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n){
+    // Create a new GF2Sparse matrix with the given dimensions
+    auto matrix = GF2Sparse<ENTRY_OBJ>::New(n,n);
+
+    // Insert non-zero entries along the diagonal
+    for(int i = 0; i<n; i++) matrix->insert_entry(i,i);
+
+    // Return a shared pointer to the new GF2Sparse identity matrix
+    return matrix;
+}
+
+
+template <class GF2SPARSE_MATRIX_CLASS>
+shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<GF2SPARSE_MATRIX_CLASS> mat, vector<int> cols){
+    int m,n,i,j;
+    m = mat->m;
+    n = cols.size();
+    auto copy_mat = GF2SPARSE_MATRIX_CLASS::New(m,n);
+    int new_col_index=-1;
+    for(auto col_index: cols){
+        new_col_index+=1;
+        for(auto e: mat->iterate_column(col_index)){
+            copy_mat->insert_entry(e->row_index,new_col_index);
         }
-
-        gf2sparse<ENTRY_OBJ>* kernel(){
-
-            auto pcmT=this;
-
-            bool TRANSPOSE_ALLOCATED = false;
-
-            if(n>m) {
-                pcmT=this->transpose();
-                TRANSPOSE_ALLOCATED = true;
-            }
-
-            rank = pcmT->lu_decomposition(true,true);
-
-            int dimension = pcmT->m-rank;
-
-            gf2sparse<ENTRY_OBJ>* kern = new gf2sparse<ENTRY_OBJ>(dimension,pcmT->m);
-
-            for(int i = rank; i<pcmT->L->m; i++){
-                for(auto e: pcmT->L->iterate_row(pcmT->rows[i])){
-                    kern->insert_entry(i-rank,e->col_index,e->value);
-                }
-            }
-
-            if(TRANSPOSE_ALLOCATED) delete pcmT;
-
-            return kern;
-
-        }
+    }
+    return copy_mat;
+}
 
 
-    };
-
-    // template <class uint8_t = int, template<class> class ENTRY_OBJ = sparse_matrix_entry>
-    // vector<uint8_t> gf2sparse_mulvec(gf2sparse<ENTRY_OBJ,uint8_t>* matrix, vector<uint8_t> input_vector, vector<uint8_t> output_vector){
-    //     int m,row_sum;
-    //     m = matrix->m;
-    //     fill(output_vector,output_vector+m,0);
-    //     for(int i = 0; i < n; i++){
-    //         if(input_vector[i]){
-    //             for(auto e: matrix->iterate_column(i)){
-    //                 output_vector[e->row_index]^=e->value;
-    //             }
-    //         }
-    //     }
-    //     return output_vector;
-    // }
+} // end namespace gf2sparse
 
 
-
-
-typedef gf2entry cygf2_entry;
-typedef gf2sparse<gf2entry> cygf2_sparse;
+typedef gf2sparse::GF2Entry cygf2_entry;
+typedef gf2sparse::GF2Sparse<gf2sparse::GF2Entry> cygf2_sparse;
 
 #endif
