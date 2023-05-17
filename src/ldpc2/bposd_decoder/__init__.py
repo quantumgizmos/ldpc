@@ -1,2 +1,2 @@
-from ldpc2.bposd_decoder._bposd_decoder import BpOsdDecoder
+from ldpc2.bposd_decoder._bposd_decoder import BpOsdDecoder, SoftInfoBpOsdDecoder
 bposd_decoder = BpOsdDecoder
