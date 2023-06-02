@@ -4,6 +4,12 @@ from setuptools import setup, Extension, find_namespace_packages
 from Cython.Build import cythonize
 import numpy
 from pathlib import Path
+import sys
+import os
+if sys.platform == "darwin":
+    os.environ["CC"] = "gcc-12"
+    os.environ["CXX"] = "g++-12"
+
 this_directory = Path(__file__).parent
 # long_description = (this_directory / "README.md").read_text()
 
@@ -16,6 +22,9 @@ this_directory = Path(__file__).parent
 # files=["README.md","LICENSE"]
 # for f in files:
 #     copyfile(f,"src/ldpc/"+f)
+
+
+
 
 cpp_modules = ["bp_decoder","bposd_decoder","mbp_decoder",
                 "uf_decoder","bf_decoder","bp_decoder2","gf2sparse"]
