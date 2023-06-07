@@ -20,3 +20,8 @@ cdef extern from "osd.hpp" namespace "osd" nogil:
 
 cdef class BpOsdDecoder(BpDecoderBase):
     cdef OsdDecoderCpp* osdD
+
+cdef class SoftInfoBpOsdDecoder(BpDecoderBase):
+    cdef OsdDecoderCpp* osdD
+    cdef double sigma
+    cdef double cutoff
