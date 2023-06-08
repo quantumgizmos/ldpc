@@ -9,17 +9,16 @@
 #include <sstream>      
 #include <string>
 
-using namespace std;
-using namespace sparse_matrix;
+// using namespace std;
 
 template <class SPARSE_MATRIX_CLASS>
-stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = false){
-    stringstream ss;
+std::stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = false){
+    std::stringstream ss;
     int m = matrix.m;
     int n = matrix.n;
     for(int j=0; j<m;j++){
         for(int i=0; i<n;i++){
-        //     // cout<<j<<" "<<i<<endl;
+        //     // std::cout<<j<<" "<<i<<std::endl;
             auto e = matrix.get_entry(j,i);
             
             if(e->at_end()) {
@@ -27,14 +26,14 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = fals
             } 
             else {
                 ss<<e->str();
-                // cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<endl;
+                // std::cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<std::endl;
             }
             
             if(i!=(n-1)) ss << " ";
         }
         if(j!=(m-1)) ss << "\n";
     }
-    if(!SILENT) cout<<ss.str()<<endl;
+    if(!SILENT) std::cout<<ss.str()<<std::endl;
     return ss;
 }
 
@@ -42,7 +41,7 @@ stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT = fals
 
 
 template <class SPARSE_MATRIX_CLASS>
-shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<SPARSE_MATRIX_CLASS> mat, vector<int> cols){
+std::shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<SPARSE_MATRIX_CLASS> mat, std::vector<int> cols){
     int m,n,i,j;
     m = mat->m;
     n = cols.size();
@@ -62,27 +61,27 @@ shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(shared_ptr<SPARSE_MATRIX_CLASS> mat, v
 template<class T>
 void print_vector(const T& input){
     int length = input.size();
-    cout<<"[";
+    std::cout<<"[";
     for(int i = 0; i<length; i++){
-        if(is_same<T, vector<uint8_t>>::value){
-            cout<<unsigned(input[i]);
+        if(std::is_same<T, std::vector<uint8_t>>::value){
+            std::cout<<unsigned(input[i]);
             }
-        else cout<<input[i];
-        if(i!=(length-1)) cout<<" ";
+        else std::cout<<input[i];
+        if(i!=(length-1)) std::cout<<" ";
     }
-    cout<<"]"<<endl;
+    std::cout<<"]"<<std::endl;
 }
 
 
 template <class T>
 void print_array(T array, int length){
     for(int i=0;i<length;i++){
-        if(is_same<T, uint8_t*>::value){
-            cout<<unsigned(array[i])<<" ";
+        if(std::is_same<T, uint8_t*>::value){
+            std::cout<<unsigned(array[i])<<" ";
             }
-        else cout<<array[i]<<" ";
+        else std::cout<<array[i]<<" ";
     }
-    cout<<endl;
+    std::cout<<std::endl;
 }
 
 

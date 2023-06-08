@@ -5,7 +5,7 @@
 #include <memory>
 #include <iterator>
 
-using namespace std;
+// using namespace std;
 
 namespace sparse_matrix{
 
@@ -67,11 +67,10 @@ class EntryBase {
          * 
          * @return The string representation of the entry
          */
-        string str(){
+        std::string  str(){
             return "1";
         }
 
-    ~EntryBase(){};
 };
 
 
@@ -99,12 +98,12 @@ public:
     int released_entry_count;
     int block_position;
     int block_idx;
-    vector<ENTRY_OBJ*> entries;
-    vector<ENTRY_OBJ*> removed_entries;       
-    vector<ENTRY_OBJ*> row_heads; //starting point for each row
-    vector<ENTRY_OBJ*> column_heads; //starting point for each column
+    std::vector<ENTRY_OBJ*> entries;
+    std::vector<ENTRY_OBJ*> removed_entries;       
+    std::vector<ENTRY_OBJ*> row_heads; //starting point for each row
+    std::vector<ENTRY_OBJ*> column_heads; //starting point for each column
 
-    // vector<ENTRY_OBJ*> matrix_entries;
+    // std::vector<ENTRY_OBJ*> matrix_entries;
 
     /**
      * @brief Constructs a sparse matrix with the given dimensions
@@ -185,7 +184,7 @@ public:
      *
      * @return The sparsity of the matrix as a double value.
      */
-    double sparsity(){
+    const double sparsity(){
         return this->entry_count()/(this->m*this->n);
     }
 
@@ -249,9 +248,9 @@ public:
     }
 
 
-    void reorder_rows(vector<int> rows){
+    void reorder_rows(std::vector<int> rows){
 
-        vector<ENTRY_OBJ*> temp_row_heads = this->row_heads;
+        std::vector<ENTRY_OBJ*> temp_row_heads = this->row_heads;
         // for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
         for(int i = 0; i<m; i++){
             this->row_heads[i] = temp_row_heads[rows[i]];
@@ -355,7 +354,7 @@ public:
     * @param j The row index of the new entry.
     * @param i The column index of the new entry.
     * @return A pointer to the newly created ENTRY_OBJ object.
-    * @throws std::invalid_argument if either i or j is out of bounds.
+    * @throws std::std::invalid_argument if either i or j is out of bounds.
     * 
     * This function inserts a new entry in the matrix at position (j, i). If an entry
     * already exists at that position, this function simply returns a pointer to it. 
@@ -368,7 +367,7 @@ public:
     */
     ENTRY_OBJ* insert_entry(int j, int i){
         // Check if indices are within bounds
-        if(j>=this->m || i>=this->n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds"); 
+        if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds"); 
                 
         // Find the left and right entries in the jth row of the matrix
         auto left_entry = this->row_heads[j];
@@ -426,10 +425,10 @@ public:
      * @param j The row index
      * @param i The column index
      * @return a pointer to the entry, or a pointer to the corresponding column head.
-     * @throws std::invalid_argument if j or i are out of bounds.
+     * @throws std::std::invalid_argument if j or i are out of bounds.
      */
     ENTRY_OBJ* get_entry(int j, int i){
-        if(j>=this->m || i>=this->n || j<0 || i<0) throw invalid_argument("Index i or j is out of bounds");
+        if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds");
 
         // Iterate over the column at index i and check each entry's row index.
         // If the row index matches j, return that entry.
@@ -449,7 +448,7 @@ public:
      * @param col_indices A vector of indices indicating which columns to insert entries into.
      * @return a pointer to the row head entry for the newly inserted row.
      */
-    ENTRY_OBJ* insert_row(int row_index, vector<int>& col_indices){
+    ENTRY_OBJ* insert_row(int row_index, std::vector<int>& col_indices){
         // Insert an entry at each specified column index.
         for(auto j: col_indices){
             this->insert_entry(row_index,j);
@@ -465,9 +464,9 @@ public:
      *
      * @return Vector of vectors, where each inner vector represents the row and column indices of a non-zero entry.
      */
-    vector<vector<int>> nonzero_coordinates(){
+    std::vector<std::vector<int>> nonzero_coordinates(){
 
-        vector<vector<int>> nonzero;
+        std::vector<std::vector<int>> nonzero;
 
         // Initialize node count to 0
         this->node_count = 0;
@@ -477,7 +476,7 @@ public:
             for(auto e: this->iterate_row(i)){
                 // Increment node count and add non-zero entry coordinates to vector
                 this->node_count += 1;
-                vector<int> coord;
+                std::vector<int> coord;
                 coord.push_back(e->row_index);
                 coord.push_back(e->col_index);
                 nonzero.push_back(coord);
@@ -493,15 +492,15 @@ public:
     * Returns a vector of vectors, where each vector contains the column indices of the non-zero entries in a row.
     * @return A vector of vectors, where each vector contains the column indices of the non-zero entries in a row.
     */
-    vector<vector<int>> nonzero_rows(){
+    std::vector<std::vector<int>> nonzero_rows(){
 
-        vector<vector<int>> nonzero;
+        std::vector<std::vector<int>> nonzero;
 
         this->node_count = 0; //reset node_count to 0
 
         //iterate over the rows of the matrix
         for(int i = 0; i<this->m; i++){
-            vector<int> row;
+            std::vector<int> row;
             
             //iterate over the entries in the current row
             for(auto e: this->iterate_row(i)){
@@ -721,11 +720,11 @@ public:
      * @brief Returns an iterator that iterates over the given row of the sparse matrix in a forward direction
      * 
      * @param i The row index of the matrix to iterate over
-     * @throws invalid_argument If the given index is out of bounds
+     * @throws std::invalid_argument If the given index is out of bounds
      * @return RowIterator An iterator object that iterates over the given row
      */
     RowIterator iterate_row(int i){
-        if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
+        if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return RowIterator(this,i);
     }
 
@@ -733,11 +732,11 @@ public:
      * @brief Returns an iterator that iterates over the given row of the sparse matrix in a reverse direction
      * 
      * @param i The row index of the matrix to iterate over
-     * @throws invalid_argument If the given index is out of bounds
+     * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseRowIterator An iterator object that iterates over the given row in reverse
      */
     ReverseRowIterator reverse_iterate_row(int i){
-        if(i<0 || i>=m) throw invalid_argument("Iterator index out of bounds");
+        if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseRowIterator(this,i);
     }
 
@@ -745,11 +744,11 @@ public:
      * @brief Returns an iterator that iterates over the given column of the sparse matrix in a forward direction
      * 
      * @param i The column index of the matrix to iterate over
-     * @throws invalid_argument If the given index is out of bounds
+     * @throws std::invalid_argument If the given index is out of bounds
      * @return ColumnIterator An iterator object that iterates over the given column
      */
     ColumnIterator iterate_column(int i){
-        if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
+        if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ColumnIterator(this,i);
     }
 
@@ -757,11 +756,11 @@ public:
      * @brief Returns an iterator that iterates over the given column of the sparse matrix in a reverse direction
      * 
      * @param i The column index of the matrix to iterate over
-     * @throws invalid_argument If the given index is out of bounds
+     * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseColumnIterator An iterator object that iterates over the given column in reverse
      */
     ReverseColumnIterator reverse_iterate_column(int i){
-        if(i<0 || i>=n) throw invalid_argument("Iterator index out of bounds");
+        if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseColumnIterator(this,i);
     }
 
@@ -775,7 +774,7 @@ class SparseMatrixEntry: public EntryBase<SparseMatrixEntry<T>> {
         T value = T(0); // the value structure we are storing at each matrix location. We can define this as any object, and overload operators.
     ~SparseMatrixEntry(){};
     
-    string str(){
+    std::string str(){
         return std::to_string(this->value);
     }
 
@@ -792,11 +791,11 @@ public:
         return e;
     }
 
-    static shared_ptr<SparseMatrix<T,ENTRY_OBJ>> New(int m, int n, int entry_count = 0){
-        return make_shared<SparseMatrix<T,ENTRY_OBJ>>(m,n,entry_count);
+    static std::shared_ptr<SparseMatrix<T,ENTRY_OBJ>> New(int m, int n, int entry_count = 0){
+        return std::make_shared<SparseMatrix<T,ENTRY_OBJ>>(m,n,entry_count);
     }
 
-    ENTRY_OBJ<T>* insert_row(int row_index, vector<int>& col_indices, vector<T>& values){
+    ENTRY_OBJ<T>* insert_row(int row_index, std::vector<int>& col_indices, std::vector<T>& values){
         BASE::insert_row(row_index,col_indices);
         int i = 0;
         for(auto e: this->iterate_row(row_index)){

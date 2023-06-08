@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "sparse_matrix_util.hpp"
 
+using namespace sparse_matrix;
+
 TEST(PrintSparseMatrixTest, PrintsCorrectly) {
     SparseMatrix<int> matrix(3, 4);
     matrix.insert_entry(0, 0, 1);
