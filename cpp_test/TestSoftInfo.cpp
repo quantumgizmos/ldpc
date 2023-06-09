@@ -5,6 +5,8 @@
 #include "sparse_matrix_util.hpp"
 #include "osd.hpp"
 
+using namespace std;
+
 // TEST(SoftInfoDecoder, above_cutoff_same_as_ms) {
 
 //     /*The soft into decoder should give the same result

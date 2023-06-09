@@ -211,7 +211,7 @@ std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::matmul(std::shared_p
 
     // Check if the dimensions of the input matrices are valid for multiplication
     if( this->n!=mat_right->m){
-        throw invalid_argument("Input matrices have invalid dimensions!");
+        throw std::invalid_argument("Input matrices have invalid dimensions!");
     }
 
     // Create a new GF2Sparse matrix to store the output
