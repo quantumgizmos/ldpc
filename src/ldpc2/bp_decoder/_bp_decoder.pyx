@@ -502,7 +502,9 @@ cdef class BpDecoder(BpDecoderBase):
         for i in range(self.m):
             self._syndrome[i] = syndrome[i]
             if self._syndrome[i]: zero_syndrome = False
-        if zero_syndrome: return np.zeros(self.n,dtype=DTYPE)
+        if zero_syndrome:
+            self.bpd.converge = True
+            return np.zeros(self.n,dtype=DTYPE)
         
         self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)

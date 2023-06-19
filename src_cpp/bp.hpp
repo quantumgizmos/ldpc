@@ -205,7 +205,7 @@ class BpDecoder{
                     for(auto e: pcm->iterate_column(i)){
                         e->bit_to_check_msg=temp;
                         temp+=e->check_to_bit_msg;
-                        if(isnan(temp)) temp = e->bit_to_check_msg;
+                        // if(isnan(temp)) temp = e->bit_to_check_msg;
 
 
                     }
