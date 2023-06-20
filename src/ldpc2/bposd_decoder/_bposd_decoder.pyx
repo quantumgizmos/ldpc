@@ -111,6 +111,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
             if self._syndrome[i]:
                 zero_syndrome = False
         if zero_syndrome:
+            self.bpd.converge = True
             return np.zeros(self.n, dtype=syndrome.dtype)
         
         self.bpd.decode(self._syndrome)
