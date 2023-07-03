@@ -224,15 +224,15 @@ class RowReduce{
             std::fill(this->x.begin(),this->x.end(), 0);
             std::fill(this->b.begin(),this->b.end(), 0);
 
-            //Solves LUx=y
-            int row_sum;
+            // //Solves LUx=y
+            // int row_sum;
 
 
 
             //First we solve Lb = y, where b = Ux
             //Solve Lb=y with forwared substitution
             for(int row_index=0;row_index<this->L->m;row_index++){
-                row_sum=0;
+                int row_sum=0;
                 for(auto e: L->iterate_row(row_index)){
                     row_sum^=b[e->col_index];
                 }
@@ -245,7 +245,7 @@ class RowReduce{
 
             //Solve Ux = b with backwards substitution
             for(int row_index=(rank-1);row_index>=0;row_index--){
-                row_sum=0;
+                int row_sum=0;
                 for(auto e: U->iterate_row(row_index)){
                     row_sum^=x[e->col_index];
                 }
