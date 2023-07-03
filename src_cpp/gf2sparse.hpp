@@ -452,6 +452,7 @@ std::shared_ptr<GF2MATRIX> kron(std::shared_ptr<GF2MATRIX> mat1, std::shared_ptr
 }
 
 
+
 } // end namespace gf2sparse
 
 
