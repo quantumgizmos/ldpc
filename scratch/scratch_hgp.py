@@ -22,11 +22,11 @@ hz = sp.csr_matrix(qcode.hz, dtype=np.uint8)
 lx = sp.csr_matrix(qcode.lx, dtype=np.uint8)
 lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
 
-run_count = 100000
-error_rate = 0.001
+run_count = 1000
+error_rate = 0.05
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1,osd_order=0,osd_method="osd_e")
-osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50,osd_order=0,osd_method="osd_e")
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1,osd_order=10,osd_method="osd_e")
+osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50,osd_order=10,osd_method="osd_e")
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
 bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50)
 # bpd = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
@@ -53,6 +53,8 @@ for DECODER in [osd,osd_og]:
 
     print(f"ler: {fail/run_count}")
 
+
+exit(22)
 
 for DECODER in [bp_og,bp]:
     np.random.seed(seed)

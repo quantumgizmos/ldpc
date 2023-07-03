@@ -120,6 +120,12 @@ class RowReduce{
 
             for(int j = 0; j<this->U->n; j++){
 
+                // cout<<"Column "<<j<<endl;
+                // // cout<<U->sparsity()<<endl;
+                // cout<<"U entry count: "<<U->entry_count()<<"; Sparsity: "<<U->sparsity()<<endl;
+                // cout<<"L entry count: "<<L->entry_count()<<"; Sparsity: "<<L->sparsity()<<endl;
+                // cout<<endl;
+
                 int pivot_index = this->cols[j];
        
                 if(this->rank == max_rank) break;
@@ -133,7 +139,9 @@ class RowReduce{
 
                     if(row_index<this->rank) continue;
 
-                    int row_weight = this->U->get_row_degree(row_index);
+                    //finds the total row weight across both L and U for the given row
+                    int row_weight = this->U->get_row_degree(row_index) + this->L->get_row_degree(row_index);
+
                     if(row_index >= this->rank && row_weight<max_row_weight){
                         swap_index = e->row_index;
                         max_row_weight = row_weight;

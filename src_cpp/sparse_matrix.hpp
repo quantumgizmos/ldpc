@@ -185,7 +185,7 @@ public:
      * @return The sparsity of the matrix as a double value.
      */
     const double sparsity(){
-        return this->entry_count()/(this->m*this->n);
+        return double(this->entry_count())/double(this->m*this->n);
     }
 
     /**
