@@ -412,7 +412,7 @@ TEST(GF2Sparse, matmul){
     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
-    class EntryTest: public sparse_matrix::EntryBase<EntryTest>{
+    class EntryTest: public sparse_matrix_base::EntryBase<EntryTest>{
         public:
             double extra_variable;
             uint8_t value;

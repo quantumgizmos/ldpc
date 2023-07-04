@@ -18,7 +18,8 @@
 
 
 using namespace std;
-using namespace sparse_matrix;
+// using namespace sparse_matrix;
+using namespace sparse_matrix_base;
 using namespace gf2sparse;
 
 namespace bp{

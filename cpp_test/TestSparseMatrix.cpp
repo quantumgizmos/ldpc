@@ -6,7 +6,7 @@ TEST(TestSparseMatrix, InitialisationAndAllocation)
 {
     /*Testing initialisation, entry insert, entry removal.*/
 
-    auto pcm = new SparseMatrix<int>(3, 4);
+    auto pcm = new sparse_matrix::SparseMatrix<int>(3, 4);
 
     // Test constructor and allocation.
     int m, n;
@@ -60,9 +60,67 @@ TEST(TestSparseMatrix, InitialisationAndAllocation)
     delete pcm;
 }
 
+TEST(TestSparseMatrix, InitialisationAndAllocationStack)
+{
+    /*Testing initialisation, entry insert, entry removal->*/
+
+    sparse_matrix::SparseMatrix<int> pcm;
+
+    pcm.allocate(3, 4);
+
+    // Test constructor and allocation.
+    int m = 3;
+    int n = 4;
+    ASSERT_EQ(pcm.m, m);
+    ASSERT_EQ(pcm.n, n);
+    ASSERT_EQ(pcm.released_entry_count, m + n);
+    ASSERT_EQ(pcm.entry_count(), 0);
+
+    // Test `insert_entry(i,j,value)
+    auto e = pcm.insert_entry(1, 2, 1);
+    ASSERT_EQ(e->value, 1);
+    ASSERT_EQ(e->row_index, 1);
+    ASSERT_EQ(e->col_index, 2);
+    ASSERT_EQ(pcm.released_entry_count, m + n + 1);
+
+    // Test `get_entry(i,j,value)
+    auto g = pcm.get_entry(1, 2);
+    ASSERT_EQ(g, e);
+    ASSERT_EQ(g->value, 1);
+    ASSERT_EQ(g->row_index, 1);
+    ASSERT_EQ(g->col_index, 2);
+
+    // Test `remove_entry(i,j)`
+    pcm.remove_entry(1, 2);
+    auto f = pcm.get_entry(1, 2);
+    ASSERT_NE(f, g);
+    /*the removed entry is stored in the `removed_entries buffer`. The total
+    number of released entries should therefore remain the same-> */
+    ASSERT_EQ(pcm.released_entry_count, m + n + 1);
+    ASSERT_EQ(pcm.entry_count(), 0);
+
+    /*Test allocation buffer New entries should preferentially come from the
+    `removed entries buffer`. We therefore expect the number of release
+    entries to the stay the same below:  */
+
+    auto k = pcm.insert_entry(2, 2, 1);
+    ASSERT_EQ(pcm.entry_count(), 1);
+    ASSERT_EQ(pcm.released_entry_count, m + n + 1);
+
+    /*If we insert an entry that already exists, we use the memory that has
+    already been allocated. In the test below, the value of the this entry is
+    reassigned.*/
+    auto l = pcm.insert_entry(2, 2, 3435);
+    ASSERT_EQ(l->value, 3435);
+    ASSERT_EQ(k, l);                                 // memory location should be the same
+    ASSERT_EQ(pcm.entry_count(), 1);                // the entry count should be unchanged
+    ASSERT_EQ(pcm.released_entry_count, m + n + 1); // the total number of allocated entries is unchanged.
+}
+
+
 TEST(SparseMatrix, row_and_column_weights){
 
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     for(int i = 0; i<3; i++){
         ASSERT_EQ(matrix.get_row_degree(i),0);
         ASSERT_EQ(matrix.get_col_degree(i),0);
@@ -101,13 +159,14 @@ TEST(SparseMatrix, row_and_column_weights){
 
 TEST(SparseMatrix, sparsity){
 
-    auto matrix = SparseMatrix<int>(5,5);
+    auto matrix = sparse_matrix::SparseMatrix<int>(5,5);
     auto e = matrix.insert_entry(1,1,5);
     ASSERT_EQ(matrix.entry_count(),1);
-    ASSERT_EQ(matrix.sparsity(),1/25);
+    ASSERT_EQ(matrix.sparsity(),1.0/25);
+
     matrix.remove(e);
     ASSERT_EQ(matrix.entry_count(),0);
-    ASSERT_EQ(matrix.sparsity(),0);
+    ASSERT_EQ(matrix.sparsity(),0.0);
 
     for(int j = 0; j<5; j++){
         for(int i = 0; i<5; i++){
@@ -115,14 +174,14 @@ TEST(SparseMatrix, sparsity){
         }
     }
 
-    ASSERT_EQ(matrix.sparsity(),1);
+    ASSERT_EQ(matrix.sparsity(),1.0);
 
 }
 
 
 TEST(SparseMatrix, RowIterateTest)
 {
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
     matrix.insert_entry(0, 1, 3);
     matrix.insert_entry(0, 2, 2);
@@ -159,7 +218,7 @@ TEST(SparseMatrix, RowIterateTest)
 
 TEST(SparseMatrix, ReverseRowIterateTest)
 {
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
     matrix.insert_entry(0, 1, 3);
     matrix.insert_entry(0, 2, 2);
@@ -196,7 +255,7 @@ TEST(SparseMatrix, ReverseRowIterateTest)
 
 TEST(SparseMatrix, IterateColTest)
 {
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
     matrix.insert_entry(0, 1, 3);
     matrix.insert_entry(0, 2, 2);
@@ -236,7 +295,7 @@ TEST(SparseMatrix, IterateColTest)
 
 TEST(SparseMatrix, ReverseIterateColTest)
 {
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 5);
     matrix.insert_entry(0, 1, 3);
     matrix.insert_entry(0, 2, 2);
@@ -273,7 +332,7 @@ TEST(SparseMatrix, ReverseIterateColTest)
 
 TEST(SparseMatrix, SwapRowsTest)
 {
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 1);
     matrix.insert_entry(0, 1, 2);
     matrix.insert_entry(0, 2, 3);
@@ -299,9 +358,9 @@ TEST(SparseMatrix, SwapRowsTest)
 
 TEST(SparseMatrix, InsertRowTest)
 {
-    SparseMatrix<int> matrix(8, 7);
-    vector<int> col_indices = {1, 3, 4, 6};
-    vector<int> values = {10, 20, 30, 40};
+    sparse_matrix::SparseMatrix<int> matrix(8, 7);
+    std::vector<int> col_indices = {1, 3, 4, 6};
+    std::vector<int> values = {10, 20, 30, 40};
     matrix.insert_row(2, col_indices, values);
 
     // Check that only the specified entries are inserted
@@ -325,52 +384,52 @@ TEST(SparseMatrix, InsertRowTest)
     }
 }
 
-TEST(DISABLED_SparseMatrix, iterator_timing_test){
+// TEST(DISABLED_SparseMatrix, iterator_timing_test){
 
-    int n =500;
-    int m =500;
-    auto matrix = SparseMatrix<int>(m,n);
-    for(int i = 0; i<m; i++){
-        for(int j = 0; j<n; j++){
-            matrix.insert_entry(i,j,1);
-        }
-    }
+//     int n =500;
+//     int m =500;
+//     auto matrix = sparse_matrix::SparseMatrix<int>(m,n);
+//     for(int i = 0; i<m; i++){
+//         for(int j = 0; j<n; j++){
+//             matrix.insert_entry(i,j,1);
+//         }
+//     }
 
-    for(int k = 0; k<1000; k++){
+//     for(int k = 0; k<1000; k++){
 
-        for(int i = 0; i<m; i++){
+//         for(int i = 0; i<m; i++){
 
-            for(auto e: matrix.iterate_column(i)){
-                e->value =2;
-            }
+//             for(auto e: matrix.iterate_column(i)){
+//                 e->value =2;
+//             }
 
-            for(auto e: matrix.reverse_iterate_column(i)){
-                e->value =3;
-            }
+//             for(auto e: matrix.reverse_iterate_column(i)){
+//                 e->value =3;
+//             }
 
-        }
+//         }
 
-        for(int j = 0; j<n; j++){
+//         for(int j = 0; j<n; j++){
         
-            for(auto e: matrix.iterate_row(j)){
-                e->value = 4;
-            }
+//             for(auto e: matrix.iterate_row(j)){
+//                 e->value = 4;
+//             }
 
-            for(auto e: matrix.reverse_iterate_row(j)){
-                e->value = 5;
-            }
+//             for(auto e: matrix.reverse_iterate_row(j)){
+//                 e->value = 5;
+//             }
         
-        }
+//         }
 
-    }
+//     }
 
-    ASSERT_EQ(1,1);
+//     ASSERT_EQ(1,1);
 
 
-}
+// }
 
 TEST(SparseMatrix,reorder_rows){
-    SparseMatrix<int> matrix(3, 3);
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
     matrix.insert_entry(0, 0, 1);
     matrix.insert_entry(0, 1, 2);
     matrix.insert_entry(0, 2, 3);
@@ -381,7 +440,7 @@ TEST(SparseMatrix,reorder_rows){
     matrix.insert_entry(2, 1, 8);
     matrix.insert_entry(2, 2, 9);
 
-    vector<int> new_order = {2,0,1};
+    std::vector<int> new_order = {2,0,1};
     matrix.reorder_rows(new_order);
 
     EXPECT_EQ(matrix.get_entry(0, 0)->value, 7);
@@ -397,7 +456,7 @@ TEST(SparseMatrix,reorder_rows){
 
 TEST(SparseMatrix,block_allocate){
 
-    auto pcm = SparseMatrix<int>::New(3,3,5);
+    auto pcm = sparse_matrix::SparseMatrix<int>::New(3,3,5);
     ASSERT_EQ( pcm->entry_count(),0);
     ASSERT_EQ(pcm->allocated_entry_count,11);
     ASSERT_EQ(pcm->released_entry_count,6);
@@ -457,6 +516,66 @@ TEST(SparseMatrix,block_allocate){
 
 
 }
+
+
+TEST(SparseMatrix, block_allocate_STACK) {
+    sparse_matrix::SparseMatrix<int> pcm(3, 3, 5);
+    ASSERT_EQ(pcm.entry_count(), 0);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 6);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 6);
+
+    pcm.insert_entry(0, 0, 1);
+    ASSERT_EQ(pcm.entry_count(), 1);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 7);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 7);
+
+    pcm.remove_entry(0, 0);
+
+    ASSERT_EQ(pcm.entry_count(), 0);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 7);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 7);
+
+    pcm.insert_entry(1, 1, 99);
+
+    ASSERT_EQ(pcm.entry_count(), 1);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 7);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 7);
+
+    pcm.insert_entry(1, 2, 99);
+
+    ASSERT_EQ(pcm.entry_count(), 2);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 8);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 8);
+
+    pcm.insert_entry(2, 0, 99);
+    pcm.insert_entry(2, 1, 99);
+    pcm.insert_entry(2, 2, 99);
+
+    ASSERT_EQ(pcm.entry_count(), 5);
+    ASSERT_EQ(pcm.allocated_entry_count, 11);
+    ASSERT_EQ(pcm.released_entry_count, 11);
+    ASSERT_EQ(pcm.block_idx, 0);
+    ASSERT_EQ(pcm.block_position, 11);
+
+    pcm.insert_entry(0, 0, 99);
+
+    ASSERT_EQ(pcm.entry_count(), 6);
+    ASSERT_EQ(pcm.allocated_entry_count, 17);
+    ASSERT_EQ(pcm.released_entry_count, 12);
+    ASSERT_EQ(pcm.block_idx, 1);
+    ASSERT_EQ(pcm.block_position, 1);
+}
+
 
 int main(int argc, char **argv)
 {

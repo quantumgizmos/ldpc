@@ -5,9 +5,11 @@
 #include <vector>
 #include <memory>
 #include <iterator>
-#include "sparse_matrix.hpp"
 #include <sstream>      
 #include <string>
+#include "sparse_matrix.hpp"
+#include "sparse_matrix_util.hpp"
+
 
 // using namespace std;
 
@@ -41,7 +43,7 @@ std::stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT =
 
 
 template <class SPARSE_MATRIX_CLASS>
-std::shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<SPARSE_MATRIX_CLASS> mat, std::vector<int> cols){
+std::shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<SPARSE_MATRIX_CLASS> mat, const std::vector<int> cols){
     int m,n,i,j;
     m = mat->m;
     n = cols.size();
@@ -51,6 +53,23 @@ std::shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<SPARSE_MATRIX_CLA
         new_col_index+=1;
         for(auto e: mat->iterate_column(col_index)){
             copy_mat->insert_entry(e->row_index,new_col_index,e->value);
+        }
+    }
+    return copy_mat;
+}
+
+
+template <class SPARSE_MATRIX_CLASS>
+SPARSE_MATRIX_CLASS copy_cols(SPARSE_MATRIX_CLASS& mat, const std::vector<int> cols){
+    int m,n,i,j;
+    m = mat.m;
+    n = cols.size();
+    auto copy_mat = SPARSE_MATRIX_CLASS(m,n);
+    int new_col_index=-1;
+    for(auto col_index: cols){
+        new_col_index+=1;
+        for(auto e: mat.iterate_column(col_index)){
+            copy_mat.insert_entry(e->row_index,new_col_index,e->value);
         }
     }
     return copy_mat;

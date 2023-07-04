@@ -21,7 +21,7 @@ namespace gf2sparse{
 /**
  * @brief An entry in a sparse matrix over GF(2)
  */
-class GF2Entry: public sparse_matrix::EntryBase<GF2Entry>{ 
+class GF2Entry: public sparse_matrix_base::EntryBase<GF2Entry>{ 
     public: 
         ~GF2Entry() = default;
 };
@@ -30,16 +30,16 @@ class GF2Entry: public sparse_matrix::EntryBase<GF2Entry>{
  * @brief A sparse matrix over GF(2)
  */
 template <class ENTRY_OBJ = GF2Entry>
-class GF2Sparse: public sparse_matrix::SparseMatrixBase<ENTRY_OBJ>{
+class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
     public:
-        typedef sparse_matrix::SparseMatrixBase<ENTRY_OBJ> BASE;
+        typedef sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ> BASE;
 
         /**
          * @brief Constructor for creating a new GF2Sparse object with the given dimensions
          * @param m The number of rows in the matrix
          * @param n The number of columns in the matrix
          */
-        GF2Sparse(int m, int n, int entry_count = 0): sparse_matrix::SparseMatrixBase<ENTRY_OBJ>(m,n,entry_count){}
+        GF2Sparse(int m, int n, int entry_count = 0): sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>(m,n,entry_count){}
 
         /**
          * @brief Destructor for GF2Sparse object
