@@ -281,7 +281,7 @@ class RowReduce{
 
                     if(this->inv_rows[e->row_index]<this->rank) continue;
 
-                    int row_weight = this->U->get_row_degree(e->row_index);
+                    int row_weight = this->U->get_row_degree(e->row_index) + this->L->get_row_degree(e->row_index);
                     if(this->inv_rows[e->row_index] >= this->rank && row_weight<max_row_weight){
                         swap_index = this->inv_rows[e->row_index];
                         max_row_weight = row_weight;
@@ -381,7 +381,7 @@ class RowReduce{
 
             //First we solve Lb = y, where b = Ux
             //Solve Lb=y with forwared substitution
-            for(int row_index=0;row_index<this->L->m;row_index++){
+            for(int row_index=0;row_index<this->rank;row_index++){
                 row_sum=0;
                 for(auto e: L->iterate_row(this->rows[row_index])){
                     row_sum^=b[e->col_index];
