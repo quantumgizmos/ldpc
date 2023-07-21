@@ -40,6 +40,14 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
          * @param n The number of columns in the matrix
          */
         GF2Sparse(int m, int n, int entry_count = 0): sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>(m,n,entry_count){}
+        
+        
+        /**
+         * @brief Default constructor for creating a new GF2Sparse object.
+         *        Creates an empty GF2Sparse matrix with zero rows and columns.
+         */
+        GF2Sparse() = default;
+
 
         /**
          * @brief Destructor for GF2Sparse object
@@ -95,12 +103,20 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
         /**
          * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
          * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
-         * @param
          * @param mat_right The matrix to multiply with
-        * @return The resulting matrix
-        */
+         * @return A new shared_ptr to the resulting matrix
+         */
         template<typename ENTRY_OBJ2>
         std::shared_ptr<GF2Sparse<ENTRY_OBJ>> matmul(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right);
+
+        /**
+         * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
+         * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
+         * @param mat_right The matrix to multiply with
+         * @return The resulting matrix
+         */
+        template<typename ENTRY_OBJ2>
+        GF2Sparse<ENTRY_OBJ> matmul(GF2Sparse<ENTRY_OBJ2>& mat_right);
 
         /**
          * @brief Adds two rows together
@@ -111,9 +127,9 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
 
         /**
          * @brief Transposes the matrix
-         * @return A shared pointer to the transposed matrix
+         * @return The transposed matrix
          */
-        std::shared_ptr<GF2Sparse<ENTRY_OBJ>> transpose();
+        GF2Sparse<ENTRY_OBJ> transpose();
 
         /**
          * @brief Compares two matrices for equality
@@ -122,9 +138,24 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
          * @return True if the matrices are equal, false otherwise
          */
         template <typename ENTRY_OBJ2>
-        bool gf2_equal(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2);
+        bool gf2_equal(GF2Sparse<ENTRY_OBJ2>& matrix2);
+
+        /**
+         * @brief Allocates memory for the sparse matrix
+         * 
+         * @param m The row count
+         * @param n The column count
+         * @param entry_count The number of entries in the matrix (optional)
+         * @return ** void 
+         */
+        void allocate(int m, int n, int entry_count = 0);
 
 };
+
+template<class ENTRY_OBJ>
+void GF2Sparse<ENTRY_OBJ>::allocate(int m, int n, int entry_count){
+    this->initialise_sparse_matrix(m,n,entry_count);
+}
 
 template<class ENTRY_OBJ>
 void GF2Sparse<ENTRY_OBJ>::csr_row_insert(int row_index, std::vector<int>& column_indices){
@@ -238,6 +269,39 @@ std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::matmul(std::shared_p
     return output_mat;
 }
 
+template<typename ENTRY_OBJ>
+template<typename ENTRY_OBJ2>
+GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::matmul(GF2Sparse<ENTRY_OBJ2>& mat_right) {
+
+    // Check if the dimensions of the input matrices are valid for multiplication
+    if( this->n!=mat_right.m){
+        throw std::invalid_argument("Input matrices have invalid dimensions!");
+    }
+
+    // Create a new GF2Sparse matrix to store the output
+    auto output_mat = GF2Sparse<ENTRY_OBJ>(this->m,mat_right.n);
+
+    // Iterate over each row and column of the output matrix
+    for(int i = 0; i<output_mat.m; i++){
+        for(int j = 0; j<output_mat.n; j++){
+            int sum = 0;
+            // Iterate over the non-zero entries in the column of the right-hand matrix
+            for(auto e: mat_right.iterate_column(j)){
+                // Iterate over the non-zero entries in the row of this matrix
+                for(auto g: this->iterate_row(i)){
+                    // Check if the column index of this matrix matches the row index of the right-hand matrix
+                    if(g->col_index == e->row_index) sum^=1;
+                }
+            }
+            // Insert an entry in the output matrix if the sum is non-zero
+            if(sum) output_mat.insert_entry(i,j);
+        }
+    }
+
+    // Return a shared pointer to the output matrix
+    return output_mat;
+}
+
 template<class ENTRY_OBJ>
 void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
 
@@ -268,17 +332,17 @@ void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
 }
 
 template<class ENTRY_OBJ>
-std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::transpose(){
+GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::transpose(){
 
     // Create a new GF2Sparse matrix with the dimensions of the transposed matrix
-    std::shared_ptr<GF2Sparse<ENTRY_OBJ>> pcmT = GF2Sparse<ENTRY_OBJ>::New(this->n,this->m);
+    auto pcmT = GF2Sparse<ENTRY_OBJ>(this->n,this->m);
 
     // Iterate over each row of this matrix
     for(int i = 0; i<this->m; i++){
         // Iterate over each non-zero entry in the row
         for(auto e: this->iterate_row(i)){
             // Insert the entry into the transposed matrix with the row and column indices swapped
-            pcmT->insert_entry(e->col_index,e->row_index);
+            pcmT.insert_entry(e->col_index,e->row_index);
         }
     }
 
@@ -288,10 +352,10 @@ std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::transpose(){
 
 template<class ENTRY_OBJ>
 template <typename ENTRY_OBJ2>
-bool GF2Sparse<ENTRY_OBJ>::gf2_equal(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
+bool GF2Sparse<ENTRY_OBJ>::gf2_equal(GF2Sparse<ENTRY_OBJ2>& matrix2){
 
     // Check if the dimensions of the matrices are equal
-    if(this->n!=matrix2->n || this->m!=matrix2->m) return false;
+    if(this->n!=matrix2.n || this->m!=matrix2.m) return false;
 
     // Iterate over each row of this matrix
     for(int i = 0; i<this->m; i++){
@@ -300,14 +364,14 @@ bool GF2Sparse<ENTRY_OBJ>::gf2_equal(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> matr
         for(auto e: this->iterate_row(i)){
 
             // Get the corresponding entry in the same position of the other matrix
-            auto g = matrix2->get_entry(e->row_index,e->col_index);
+            auto g = matrix2.get_entry(e->row_index,e->col_index);
 
             // If there is no corresponding entry in the same position of the other matrix, the matrices are not equal
             if(g->at_end()) return false;
         }
 
         // Iterate over each non-zero entry in the row of the other matrix
-        for(auto e: matrix2->iterate_row(i)){
+        for(auto e: matrix2.iterate_row(i)){
 
             // Get the corresponding entry in the same position of this matrix
             auto g = this->get_entry(e->row_index,e->col_index);
@@ -330,23 +394,23 @@ bool GF2Sparse<ENTRY_OBJ>::gf2_equal(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> matr
  * @return True if the matrices are equal, false otherwise
  */
 template <typename ENTRY_OBJ1, typename ENTRY_OBJ2>
-bool operator==(std::shared_ptr<GF2Sparse<ENTRY_OBJ1>> matrix1, std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> matrix2){
-    return matrix1->gf2_equal(matrix2);
+bool operator==(GF2Sparse<ENTRY_OBJ1>& matrix1, GF2Sparse<ENTRY_OBJ2>& matrix2){
+    return matrix1.gf2_equal(matrix2);
 }
 
 /**
  * @brief Creates a new GF2Sparse identity matrix with the given dimensions
  * @tparam ENTRY_OBJ The type of entries in the matrix
  * @param n The number of rows/columns in the matrix
- * @return A shared pointer to the new GF2Sparse identity matrix
+ * @return The GF2Sparse identity matrix
  */
 template <class ENTRY_OBJ = GF2Entry>
-std::shared_ptr<GF2Sparse<ENTRY_OBJ>> gf2_identity(int n){
+GF2Sparse<ENTRY_OBJ> gf2_identity(int n){
     // Create a new GF2Sparse matrix with the given dimensions
-    auto matrix = GF2Sparse<ENTRY_OBJ>::New(n,n);
+    auto matrix = GF2Sparse<ENTRY_OBJ>(n,n);
 
     // Insert non-zero entries along the diagonal
-    for(int i = 0; i<n; i++) matrix->insert_entry(i,i);
+    for(int i = 0; i<n; i++) matrix.insert_entry(i,i);
 
     // Return a shared pointer to the new GF2Sparse identity matrix
     return matrix;
@@ -371,24 +435,24 @@ std::shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<GF2SPARSE_MATR
 
 
 template <class GF2MATRIX>
-std::shared_ptr<GF2MATRIX> vstack(std::vector<std::shared_ptr<GF2MATRIX>> mats){
+GF2MATRIX vstack(std::vector<GF2MATRIX>& mats){
 
     int mat_count = mats.size();
-    int n = mats[0]->n;
-    int m0  = mats[0]->m;
+    int n = mats[0].n;
+    int m0  = mats[0].m;
 
     int m = m0*mat_count;
 
-    auto stacked_mat = GF2MATRIX::New(m,n);
+    auto stacked_mat = GF2MATRIX(m,n);
 
     int row_offset = 0;
     for(auto mat: mats){
-        for(auto i=0; i<mat->m; i++){
-            for(auto e: mat->iterate_row(i)){
-                stacked_mat->insert_entry(row_offset+e->row_index,e->col_index);
+        for(auto i=0; i<mat.m; i++){
+            for(auto e: mat.iterate_row(i)){
+                stacked_mat.insert_entry(row_offset+e->row_index,e->col_index);
             }
         }
-        row_offset+=mat->m;
+        row_offset+=mat.m;
     }
 
     return stacked_mat;
@@ -396,24 +460,24 @@ std::shared_ptr<GF2MATRIX> vstack(std::vector<std::shared_ptr<GF2MATRIX>> mats){
 }
 
 template <class GF2MATRIX>
-std::shared_ptr<GF2MATRIX> hstack(std::vector<std::shared_ptr<GF2MATRIX>> mats){
+GF2MATRIX hstack(std::vector<GF2MATRIX>& mats){
     
     int mat_count = mats.size();
-    int n0 = mats[0]->n;
-    int m = mats[0]->m;
+    int n0 = mats[0].n;
+    int m = mats[0].m;
 
     int n = n0*mat_count;
 
-    auto stacked_mat = GF2MATRIX::New(m,n);
+    auto stacked_mat = GF2MATRIX(m,n);
 
     int col_offset = 0;
     for(auto mat: mats){
-        for(auto i=0; i<mat->m; i++){
-            for(auto e: mat->iterate_row(i)){
-                stacked_mat->insert_entry(e->row_index,col_offset+e->col_index);
+        for(auto i=0; i<mat.m; i++){
+            for(auto e: mat.iterate_row(i)){
+                stacked_mat.insert_entry(e->row_index,col_offset+e->col_index);
             }
         }
-        col_offset+=mat->n;
+        col_offset+=mat.n;
     }
 
     return stacked_mat;
