@@ -13,7 +13,7 @@ TEST(kernel, hamming_code_test) {
 
         auto pcm = gf2codes::hamming_code(i);
         auto ker = gf2sparse_linalg::kernel(pcm);
-        print_sparse_matrix(ker);
+        // print_sparse_matrix(ker);
         auto kerT = ker.transpose();
         auto ker0 = pcm.matmul(kerT);
         ASSERT_EQ(ker0.entry_count(),0);
