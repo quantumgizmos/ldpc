@@ -577,6 +577,25 @@ TEST(SparseMatrix, block_allocate_STACK) {
 }
 
 
+TEST(SparseMatrix, MoveSemantics)
+{
+    sparse_matrix::SparseMatrix<int> matrix(8, 7);
+    std::vector<int> col_indices = {1, 3, 4, 6};
+    std::vector<int> values = {10, 20, 30, 40};
+    matrix.insert_row(2, col_indices, values);
+
+    sparse_matrix::SparseMatrix<int> matrix2(8,7);
+
+    print_sparse_matrix(matrix);
+
+    std::vector<sparse_matrix::SparseMatrix<int>> matrices = {matrix,matrix2};
+
+    ASSERT_TRUE(true);
+
+
+}
+
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

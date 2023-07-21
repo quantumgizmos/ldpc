@@ -31,27 +31,18 @@
 TEST(rank, hamming_code_test) {
 
     for(int i=2; i<6;i++){
-        // auto pcm1 = gf2codes::hamming_code(i);
-        // auto pcm2 = gf2codes::hamming_code(i);
-        // auto pcm0 = gf2sparse::GF2Sparse<bp::BpEntry>(pcm1.m,pcm1.n);
+        auto pcm1 = gf2codes::hamming_code(i);
+        auto pcm2 = gf2codes::hamming_code(i);
+        auto pcm0 = gf2sparse::GF2Sparse<bp::BpEntry>(pcm1.m,pcm1.n);
 
 
-        // print_sparse_matrix(pcm1);
+        auto mats = vector<decltype(pcm1)>{pcm1,pcm0,pcm1};
 
-        vector<gf2sparse::GF2Sparse<bp::BpEntry>&> mats = {gf2codes::hamming_code(i),gf2codes::hamming_code(i),gf2sparse::GF2Sparse<bp::BpEntry>(i,pow(2,i)-1)};
-
-
-        // auto pcm = gf2sparse::vstack(mats);
-
-       
-
-        // print_sparse_matrix(pcm);
-
+        auto pcm = gf2sparse::vstack(mats);
             
+        int rank = gf2sparse_linalg::rank(pcm1);
 
-        // int rank = gf2sparse_linalg::rank(pcm1);
-
-        // ASSERT_EQ(rank,i);
+        ASSERT_EQ(rank,i);
 
     
     }

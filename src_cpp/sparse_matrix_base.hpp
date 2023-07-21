@@ -98,7 +98,7 @@ public:
     int released_entry_count;
     int block_position;
     int block_idx;
-    std::vector<ENTRY_OBJ*> entries;
+    std::vector<std::vector<ENTRY_OBJ>> entries;
     std::vector<ENTRY_OBJ*> removed_entries;       
     std::vector<ENTRY_OBJ*> row_heads; //starting point for each row
     std::vector<ENTRY_OBJ*> column_heads; //starting point for each column
@@ -134,7 +134,7 @@ public:
      * @brief Destructor for SparseMatrixBase. Frees memory occupied by entries.
      */
     ~SparseMatrixBase(){
-        for(auto entry_block: this->entries) delete[] entry_block;
+        for(auto entry_block: this->entries) entry_block.clear();
         this->entries.clear();
     }
 
@@ -158,7 +158,7 @@ public:
         // if there are no previously removed entries, create a new one
         // if there is no space for the new entry, add a new block of entries
         if(this->released_entry_count==this->allocated_entry_count){
-            this->entries.push_back(new ENTRY_OBJ[this->entry_block_size]());
+            this->entries.push_back(std::vector<ENTRY_OBJ>(this->entry_block_size));
             this->allocated_entry_count+=this->entry_block_size;
             this->block_idx++;
             this->block_position=0;
