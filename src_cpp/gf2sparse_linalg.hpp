@@ -434,14 +434,14 @@ class RowReduce{
 // }
 
 template <class GF2MATRIX>
-vector<vector<uint8_t>> kernel_adjacency_list(GF2MATRIX& mat){
+vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
 
 
     auto matT = mat.transpose();
     
     // cout<<"Transpose of input matrix: "<<endl;
 
-    auto rr = new RowReduce(matT);
+    auto rr = RowReduce(matT);
     rr.rref(false,false);
 
     // cout<<"Rref done"<<endl;
@@ -451,11 +451,12 @@ vector<vector<uint8_t>> kernel_adjacency_list(GF2MATRIX& mat){
     int k = n - rank;
     // auto ker = GF2MATRIX::New(k,n);
 
-    auto ker = vector<vector<uint8_t>>(k,vector<uint8_t>(n,0));
+    vector<vector<int>> ker;
+    ker.resize(k,vector<int>{});
 
     for(int i = rank; i<n; i++){
         for(auto e: rr.L.iterate_row(i)){
-            ker[i-rank][e->col_index]=1;
+            ker[i-rank].push_back(e->col_index);
         }
     }
     
@@ -467,6 +468,9 @@ template <class GF2MATRIX>
 GF2MATRIX kernel(GF2MATRIX& mat){
 
     auto adj_list = kernel_adjacency_list(mat);
+    // for(auto row: adj_list){
+    //     print_vector(row);
+    // }
     auto ker = GF2MATRIX(adj_list.size(),mat.n);
     ker.csr_insert(adj_list);
 
