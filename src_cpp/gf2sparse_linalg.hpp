@@ -434,53 +434,60 @@ class RowReduce{
 // }
 
 template <class GF2MATRIX>
-vector<vector<uint8_t>> kernel(shared_ptr<GF2MATRIX> mat){
+vector<vector<uint8_t>> kernel_adjacency_list(GF2MATRIX& mat){
 
 
-    auto matT = mat->transpose();
+    auto matT = mat.transpose();
     
     // cout<<"Transpose of input matrix: "<<endl;
 
     auto rr = new RowReduce(matT);
-    rr->rref(false,false);
+    rr.rref(false,false);
 
     // cout<<"Rref done"<<endl;
 
-    int rank = rr->rank;
-    int n = mat->n;
+    int rank = rr.rank;
+    int n = mat.n;
     int k = n - rank;
     // auto ker = GF2MATRIX::New(k,n);
 
     auto ker = vector<vector<uint8_t>>(k,vector<uint8_t>(n,0));
 
     for(int i = rank; i<n; i++){
-        for(auto e: rr->L.iterate_row(i)){
+        for(auto e: rr.L.iterate_row(i)){
             ker[i-rank][e->col_index]=1;
         }
     }
-
-    delete rr;
     
     return ker;
 
 }
 
 template <class GF2MATRIX>
-int rank(shared_ptr<GF2MATRIX> mat){
-    auto rr = new RowReduce(mat);
-    rr->rref(false,false);
-    int rnk = rr->rank;
-    delete rr;
-    return rnk;
+GF2MATRIX kernel(GF2MATRIX& mat){
+
+    auto adj_list = kernel_adjacency_list(mat);
+    auto ker = GF2MATRIX(adj_list.size(),mat.n);
+    ker.csr_insert(adj_list);
+
+    return ker;
+
+}
+
+template <class GF2MATRIX>
+int rank(GF2MATRIX& mat){
+    auto rr = RowReduce(mat);
+    rr.rref(false,false);
+    return  rr.rank;
 } 
 
 
 
 }//end namespace gf2sparse_linalg
 
-typedef gf2sparse_linalg::RowReduce<shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>> cy_row_reduce;
+// typedef gf2sparse_linalg::RowReduce<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> cy_row_reduce;
 
-using kernel_func = vector<vector<uint8_t>> (*)(std::shared_ptr<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>);
-kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
+// using kernel_func = vector<vector<uint8_t>> (*)(gf2sparse::GF2Sparse<gf2sparse::GF2Entry>);
+// kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif

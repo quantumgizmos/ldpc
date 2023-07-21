@@ -459,8 +459,8 @@ GF2MATRIX vstack(std::vector<GF2MATRIX>& mats){
 
 }
 
-template <class GF2MATRIX>
-GF2MATRIX hstack(std::vector<GF2MATRIX>& mats){
+template <class ENTRY_OBJ>
+GF2Sparse<ENTRY_OBJ> hstack(std::vector<GF2Sparse<ENTRY_OBJ>>& mats){
     
     int mat_count = mats.size();
     int n0 = mats[0].n;
@@ -468,7 +468,7 @@ GF2MATRIX hstack(std::vector<GF2MATRIX>& mats){
 
     int n = n0*mat_count;
 
-    auto stacked_mat = GF2MATRIX(m,n);
+    auto stacked_mat = GF2Sparse<ENTRY_OBJ>(m,n);
 
     int col_offset = 0;
     for(auto mat: mats){

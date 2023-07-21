@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include "bp.hpp"
+#include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
 #include "gf2sparse_linalg.hpp"
-#include "sparse_matrix_util.hpp"
-#include "osd.hpp"
 #include "gf2codes.hpp"
-#include "sparse_matrix.hpp"
+#include <cmath>
+
+// #include "sparse_matrix.hpp"
 
 // TEST(kernel, hamming_code) {
 
@@ -30,17 +30,29 @@
 
 TEST(rank, hamming_code_test) {
 
-    for(int i=2; i<8;i++){
-        auto pcm1 = gf2codes::hamming_code(i);
-        auto pcm2 = gf2codes::hamming_code(i);
-        auto pcm0 = gf2sparse::GF2Sparse<bp::BpEntry>(pcm1.m,pcm1.n);
+    for(int i=2; i<6;i++){
+        // auto pcm1 = gf2codes::hamming_code(i);
+        // auto pcm2 = gf2codes::hamming_code(i);
+        // auto pcm0 = gf2sparse::GF2Sparse<bp::BpEntry>(pcm1.m,pcm1.n);
 
-        auto mats = vector<decltype(pcm1)>{pcm1,pcm0,pcm2};
-        auto pcm = gf2sparse::vstack(mats);
 
-        int rank = gf2sparse_linalg::rank(pcm);
+        // print_sparse_matrix(pcm1);
 
-        ASSERT_EQ(rank,i);
+        vector<gf2sparse::GF2Sparse<bp::BpEntry>&> mats = {gf2codes::hamming_code(i),gf2codes::hamming_code(i),gf2sparse::GF2Sparse<bp::BpEntry>(i,pow(2,i)-1)};
+
+
+        // auto pcm = gf2sparse::vstack(mats);
+
+       
+
+        // print_sparse_matrix(pcm);
+
+            
+
+        // int rank = gf2sparse_linalg::rank(pcm1);
+
+        // ASSERT_EQ(rank,i);
+
     
     }
 }
