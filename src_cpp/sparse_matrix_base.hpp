@@ -772,6 +772,274 @@ public:
         return ReverseColumnIterator(this,i);
     }
 
+
+    /**
+     * @brief An iterator class that iterates over rows of a sparse matrix in a doubly linked list format.
+     * 
+     * This class inherits from the Iterator2 class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the rows of a sparse matrix in a doubly linked list format.
+     * 
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
+    class RowIterator2{
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            RowIterator2(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_row_degree(i);
+                it_count = 0;
+                e = matrix->row_heads[i];
+            }
+            ~RowIterator2(){};
+            RowIterator2& end(){
+                return *this;
+            }
+
+            RowIterator2& begin(){
+                e=e->right;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ& operator*() {
+                return *e;
+            }
+
+            // ENTRY_OBJ& operator*() {
+            //     return *e;
+            // }
+            friend bool operator == (const RowIterator2& a, const RowIterator2& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const RowIterator2& a, const RowIterator2& b) { return a.it_count <= b.entry_count; };
+
+
+            RowIterator2& operator++(){
+                e=e->right;
+                ++it_count;
+                return *this;
+            }
+
+    };
+
+    /**
+     * @brief A reverse iterator for iterating over the rows of a SparseMatrixBase
+     * 
+     * This iterator inherits from the `Iterator2` base class using the CRTP pattern.
+     * It is designed to be used with a SparseMatrixBase object to iterate over the rows
+     * of the matrix in reverse order. It iterates over the rows in reverse order by
+     * starting at the `head->left` entry and moving to the left using the `operator++()`
+     * method. It can be indexed to start at any row of the matrix using the `operator[]`
+     * method.
+     * 
+     * @tparam ENTRY_OBJ The entry object class that the iterator will use for its entries.
+     */
+    class ReverseRowIterator2{
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ReverseRowIterator2(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_row_degree(i);
+                it_count = 0;
+                e = matrix->row_heads[i];
+            }
+            ~ReverseRowIterator2(){};
+            ReverseRowIterator2& end(){
+                return *this;
+            }
+
+            ReverseRowIterator2& begin(){
+                e=e->left;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ operator*() {
+                return *e;
+            }
+
+            ENTRY_OBJ& operator&() {
+                return *e;
+            }
+            friend bool operator == (const ReverseRowIterator2& a, const ReverseRowIterator2& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ReverseRowIterator2& a, const ReverseRowIterator2& b) { return a.it_count <= b.entry_count; };
+
+
+            ReverseRowIterator2& operator++(){
+                e=e->left;
+                ++it_count;
+                return *this;
+            }
+
+    };
+
+
+    /**
+     * @brief A forward iterator class that iterates over columns of a sparse matrix in a doubly linked list format.
+     *
+     * This class inherits from the Iterator2 class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the columns of a sparse matrix in a doubly linked list format.
+     *
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
+    class ColumnIterator2{
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ColumnIterator2(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_col_degree(i);
+                it_count = 0;
+                e = matrix->column_heads[i];
+            }
+            ~ColumnIterator2(){};
+            ColumnIterator2& end(){
+                return *this;
+            }
+
+            ColumnIterator2& begin(){
+                e=e->down;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ operator*() {
+                return *e;
+            }
+
+            ENTRY_OBJ& operator&() {
+                return *e;
+            }
+            friend bool operator == (const ColumnIterator2& a, const ColumnIterator2& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ColumnIterator2& a, const ColumnIterator2& b) { return a.it_count <= b.entry_count; };
+
+
+            ColumnIterator2& operator++(){
+                e=e->down;
+                ++it_count;
+                return *this;
+            }
+
+    };
+
+    /**
+     * @brief A reverse iterator class that iterates over rows of a sparse matrix in a doubly linked list format.
+     *
+     * This class inherits from the Iterator2 class and is designed to work with SparseMatrixBase and its
+     * subclasses. It is used to iterate over the rows of a sparse matrix in a doubly linked list format
+     * starting from the rightmost element in the row.
+     *
+     * @tparam ENTRY_OBJ The entry object class that the sparse matrix will use for its entries. This class
+     * should contain fields for row index, column index, and value.
+     */
+    class ReverseColumnIterator2{
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            SparseMatrixBase<ENTRY_OBJ>* matrix;
+            int it_count;
+            int entry_count;
+            ENTRY_OBJ* e;
+            ReverseColumnIterator2(SparseMatrixBase<ENTRY_OBJ>* mat, int i){
+                matrix = mat;
+                entry_count = matrix->get_col_degree(i);
+                it_count = 0;
+                e = matrix->column_heads[i];
+            }
+            ~ReverseColumnIterator2(){};
+            ReverseColumnIterator2& end(){
+                return *this;
+            }
+
+            ReverseColumnIterator2& begin(){
+                e=e->up;
+                ++it_count;
+                return *this;
+            }
+
+            ENTRY_OBJ operator*() {
+                return *e;
+            }
+
+            ENTRY_OBJ& operator&() {
+                return *e;
+            }
+            friend bool operator == (const ReverseColumnIterator2& a, const ReverseColumnIterator2& b) { return a.it_count > b.entry_count; };
+            friend bool operator != (const ReverseColumnIterator2& a, const ReverseColumnIterator2& b) { return a.it_count <= b.entry_count; };
+
+
+            ReverseColumnIterator2& operator++(){
+                e=e->up;
+                ++it_count;
+                return *this;
+            }
+
+    };
+
+
+    /**
+     * @brief Returns an iterator that iterates over the given row of the sparse matrix in a forward direction
+     * 
+     * @param i The row index of the matrix to iterate over
+     * @throws std::invalid_argument If the given index is out of bounds
+     * @return RowIterator2 An iterator object that iterates over the given row
+     */
+    RowIterator2 stl_iterate_row(int i){
+        if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
+        return RowIterator2(this,i);
+    }
+
+    /**
+     * @brief Returns an iterator that iterates over the given row of the sparse matrix in a reverse direction
+     * 
+     * @param i The row index of the matrix to iterate over
+     * @throws std::invalid_argument If the given index is out of bounds
+     * @return ReverseRowIterator2 An iterator object that iterates over the given row in reverse
+     */
+    ReverseRowIterator2 reverse_stl_iterate_row(int i){
+        if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
+        return ReverseRowIterator2(this,i);
+    }
+
+    /**
+     * @brief Returns an iterator that iterates over the given column of the sparse matrix in a forward direction
+     * 
+     * @param i The column index of the matrix to iterate over
+     * @throws std::invalid_argument If the given index is out of bounds
+     * @return ColumnIterator2 An iterator object that iterates over the given column
+     */
+    ColumnIterator2 stl_iterate_column(int i){
+        if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
+        return ColumnIterator2(this,i);
+    }
+
+    /**
+     * @brief Returns an iterator that iterates over the given column of the sparse matrix in a reverse direction
+     * 
+     * @param i The column index of the matrix to iterate over
+     * @throws std::invalid_argument If the given index is out of bounds
+     * @return ReverseColumnIterator2 An iterator object that iterates over the given column in reverse
+     */
+    ReverseColumnIterator2 reverse_stl_iterate_column(int i){
+        if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
+        return ReverseColumnIterator2(this,i);
+    }
+
+
 };
 
 
