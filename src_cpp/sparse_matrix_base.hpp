@@ -151,9 +151,9 @@ public:
     ENTRY_OBJ* allocate_new_entry(){
         // if there are any previously removed entries, use them instead of creating new ones
         if(this->removed_entries.size()!=0){
-            auto e = this->removed_entries.back();
+            auto e_ptr = this->removed_entries.back();
             this->removed_entries.pop_back();
-            return e; 
+            return e_ptr; 
         }
         // if there are no previously removed entries, create a new one
         // if there is no space for the new entry, add a new block of entries
@@ -167,10 +167,10 @@ public:
 
 
         // use the next available entry in the pool
-        auto e = &this->entries[block_idx][this->block_position];
+        auto e_ptr = &this->entries[block_idx][this->block_position];
         this->block_position++;
         this->released_entry_count++;
-        return e;
+        return e_ptr;
     }
 
 
@@ -379,51 +379,51 @@ public:
         if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds"); 
                 
         // Find the left and right entries in the jth row of the matrix
-        auto left_entry = this->row_heads[j];
-        auto right_entry = this->row_heads[j];
+        auto left_entry_ptr = this->row_heads[j];
+        auto right_entry_ptr = this->row_heads[j];
         for(auto entry: reverse_iterate_row_ptr(j)){
             if(entry->col_index == i){
                 // Entry already exists at this position
                 return *entry;
             }
-            if(entry->col_index > i) right_entry = entry;
+            if(entry->col_index > i) right_entry_ptr = entry;
             if(entry->col_index < i) {
-                left_entry = entry;
+                left_entry_ptr = entry;
                 break;
             }
         }
 
         // Find the up and down entries in the ith column of the matrix
-        auto up_entry = this->column_heads[i];
-        auto down_entry = this->column_heads[i];
+        auto up_entry_ptr = this->column_heads[i];
+        auto down_entry_ptr = this->column_heads[i];
         for(auto entry: this->reverse_iterate_column_ptr(i)){
-            if(entry->row_index > j) down_entry = entry;
+            if(entry->row_index > j) down_entry_ptr = entry;
             if(entry->row_index < j) {
-                up_entry = entry;
+                up_entry_ptr = entry;
                 break;
             }
         }
 
         // Create and link the new entry
-        auto e = this->allocate_new_entry();
+        auto e_ptr = this->allocate_new_entry();
         node_count++;
-        e->row_index = j;
-        e->col_index = i;
-        e->right = right_entry;
-        e->left = left_entry;
-        e->up = up_entry;
-        e->down = down_entry;
-        left_entry->right = e;
-        right_entry->left = e;
-        up_entry->down = e;
-        down_entry->up = e;
+        e_ptr->row_index = j;
+        e_ptr->col_index = i;
+        e_ptr->right = right_entry_ptr;
+        e_ptr->left = left_entry_ptr;
+        e_ptr->up = up_entry_ptr;
+        e_ptr->down = down_entry_ptr;
+        left_entry_ptr->right = e_ptr;
+        right_entry_ptr->left = e_ptr;
+        up_entry_ptr->down = e_ptr;
+        down_entry_ptr->up = e_ptr;
 
         // Update row and column weights
-        this->row_heads[e->row_index]->col_index--;
-        this->column_heads[e->col_index]->col_index--;
+        this->row_heads[e_ptr->row_index]->col_index--;
+        this->column_heads[e_ptr->col_index]->col_index--;
 
         // Return a reference to the newly created entry
-        return *e;     
+        return *e_ptr;     
     }
 
 
