@@ -116,7 +116,7 @@ class BpDecoder{
             for(int i=0;i<this->bit_count;i++){
                 this->initial_log_prob_ratios[i] = log((1-this->channel_probs[i])/this->channel_probs[i]);
 
-                for(auto e: this->pcm->iterate_column(i)){
+                for(auto e: this->pcm->iterate_column_ptr(i)){
                     e->bit_to_check_msg = this->initial_log_prob_ratios[i];
                 }
             }
@@ -148,13 +148,13 @@ class BpDecoder{
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
                         double temp=1.0;
-                        for(auto e: pcm->iterate_row(i)){
+                        for(auto e: pcm->iterate_row_ptr(i)){
                             e->check_to_bit_msg=temp;
                             temp*=tanh(e->bit_to_check_msg/2);
                         }
 
                         temp=1;
-                        for(auto e: pcm->reverse_iterate_row(i)){
+                        for(auto e: pcm->reverse_iterate_row_ptr(i)){
                             e->check_to_bit_msg*=temp;
                             e->check_to_bit_msg = pow(-1,syndrome[i])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
                             temp*=tanh(e->bit_to_check_msg/2);
@@ -171,7 +171,7 @@ class BpDecoder{
                         total_sgn=syndrome[i];
                         double temp = numeric_limits<double>::max();
 
-                        for(auto e: pcm->iterate_row(i)){
+                        for(auto e: pcm->iterate_row_ptr(i)){
                             if(e->bit_to_check_msg<=0) total_sgn+=1;   
                             e->check_to_bit_msg = abs(temp);
                             if(abs(e->bit_to_check_msg)<temp){
@@ -180,7 +180,7 @@ class BpDecoder{
                         }
 
                         temp = numeric_limits<double>::max();
-                        for(auto e: pcm->reverse_iterate_row(i)){
+                        for(auto e: pcm->reverse_iterate_row_ptr(i)){
                             sgn=total_sgn;
                             if(e->bit_to_check_msg<=0) sgn+=1;
                             if(temp<e->check_to_bit_msg){
@@ -203,7 +203,7 @@ class BpDecoder{
                 #pragma omp for
                 for(int i=0;i<bit_count;i++){
                     double temp=initial_log_prob_ratios[i];
-                    for(auto e: pcm->iterate_column(i)){
+                    for(auto e: pcm->iterate_column_ptr(i)){
                         e->bit_to_check_msg=temp;
                         temp+=e->check_to_bit_msg;
                         // if(isnan(temp)) temp = e->bit_to_check_msg;
@@ -216,7 +216,7 @@ class BpDecoder{
                     // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
                     if(temp<=0){
                         decoding[i] = 1;
-                        for(auto e: pcm->iterate_column(i)){
+                        for(auto e: pcm->iterate_column_ptr(i)){
                             candidate_syndrome[e->row_index]^=1;                        }
                     }
                     else decoding[i]=0;
@@ -254,7 +254,7 @@ class BpDecoder{
                 #pragma omp for
                 for(int i=0;i<bit_count;i++){
                     double temp=0;
-                    for(auto e: pcm->reverse_iterate_column(i)){
+                    for(auto e: pcm->reverse_iterate_column_ptr(i)){
                         e->bit_to_check_msg+=temp;
                         temp+=e->check_to_bit_msg;
                     }
@@ -297,11 +297,11 @@ class BpDecoder{
                     // cout<<log_prob_ratios[bit_index]<<endl;
                 
                     if(bp_method==0){
-                        for(auto e: pcm->iterate_column(bit_index)){
+                        for(auto e: pcm->iterate_column_ptr(bit_index)){
                             check_index = e->row_index;
                             
                             e->check_to_bit_msg=1.0;
-                            for(auto g: pcm->iterate_row(check_index)){
+                            for(auto g: pcm->iterate_row_ptr(check_index)){
                                 if(g!=e){
                                     e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
                                 }
@@ -312,11 +312,11 @@ class BpDecoder{
                         }
                     }
                     else if(bp_method==1){
-                        for(auto e: pcm->iterate_column(bit_index)){
+                        for(auto e: pcm->iterate_column_ptr(bit_index)){
                             check_index = e->row_index;
                             int sgn=syndrome[check_index];
                             temp = numeric_limits<double>::max();
-                            for(auto g: pcm->iterate_row(check_index)){
+                            for(auto g: pcm->iterate_row_ptr(check_index)){
                                 if(g!=e){
                                     if(abs(g->bit_to_check_msg)<temp) temp = abs(g->bit_to_check_msg);
                                     if(g->bit_to_check_msg<=0) sgn+=1;
@@ -333,7 +333,7 @@ class BpDecoder{
                     else decoding[bit_index]=0;
 
                     temp=0;
-                    for(auto e: pcm->reverse_iterate_column(bit_index)){
+                    for(auto e: pcm->reverse_iterate_column_ptr(bit_index)){
                         e->bit_to_check_msg+=temp;
                         temp += e->check_to_bit_msg;
                     }
@@ -419,11 +419,11 @@ class BpDecoder{
                     // cout<<log_prob_ratios[bit_index]<<endl;
                 
                     if(bp_method==0){
-                        for(auto e: pcm->iterate_column(bit_index)){
+                        for(auto e: pcm->iterate_column_ptr(bit_index)){
                             check_index = e->row_index;
                             
                             e->check_to_bit_msg=1.0;
-                            for(auto g: pcm->iterate_row(check_index)){
+                            for(auto g: pcm->iterate_row_ptr(check_index)){
                                 if(g!=e){
                                     e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
                                 }
@@ -434,13 +434,13 @@ class BpDecoder{
                         }
                     }
                     else if(bp_method==1){
-                        for(auto e: pcm->iterate_column(bit_index)){
+                        for(auto e: pcm->iterate_column_ptr(bit_index)){
                             check_index = e->row_index;
                             // int sgn=syndrome[check_index];
                             int sgn = 0;
                             temp = numeric_limits<double>::max();
 
-                            for(auto g: pcm->iterate_row(check_index)){
+                            for(auto g: pcm->iterate_row_ptr(check_index)){
                                 if(g!=e){
                                     if(abs(g->bit_to_check_msg)<temp){
                                         temp = abs(g->bit_to_check_msg);
@@ -505,7 +505,7 @@ class BpDecoder{
                     else decoding[bit_index]=0;
 
                     temp=0;
-                    for(auto e: pcm->reverse_iterate_column(bit_index)){
+                    for(auto e: pcm->reverse_iterate_column_ptr(bit_index)){
                         e->bit_to_check_msg+=temp;
                         temp += e->check_to_bit_msg;
                     }

@@ -251,8 +251,8 @@ public:
         auto tmp2 = this->row_heads[j]; // store the head element of row j in a temporary variable
         this->row_heads[j] = tmp1; // set the head element of row j to the head element of row i
         this->row_heads[i] = tmp2; // set the head element of row i to the head element of row j
-        for(auto e: iterate_row(i)) e->row_index=i; // update the row index of all elements in row i to j
-        for(auto e: iterate_row(j)) e->row_index=j; // update the row index of all elements in row j to i
+        for(auto e: iterate_row_ptr(i)) e->row_index=i; // update the row index of all elements in row i to j
+        for(auto e: iterate_row_ptr(j)) e->row_index=j; // update the row index of all elements in row j to i
     }
 
 
@@ -262,7 +262,7 @@ public:
         // for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
         for(int i = 0; i<m; i++){
             this->row_heads[i] = temp_row_heads[rows[i]];
-            for(auto e: this->iterate_row(i)){
+            for(auto e: this->iterate_row_ptr(i)){
                 e->row_index = i;
             }
         }
@@ -281,8 +281,8 @@ public:
         this->column_heads[j] = tmp1;
         this->column_heads[i] = tmp2;
         // update the column indices for all entries in columns i and j
-        for(auto e: this->iterate_column(i)) e->col_index=i;
-        for(auto e: this->iterate_column(j)) e->col_index=j;
+        for(auto e: this->iterate_column_ptr(i)) e->col_index=i;
+        for(auto e: this->iterate_column_ptr(j)) e->col_index=j;
     }
 
     /**
@@ -327,7 +327,8 @@ public:
      * 
      * @param e Pointer to the entry object to be removed
      */
-    void remove(ENTRY_OBJ* e){
+    void remove(ENTRY_OBJ& e_ref){
+        ENTRY_OBJ* e = &e_ref;
         // Check if the entry is not already at the end of the row or column.
         if(!e->at_end()){
             // Store pointers to the adjacent entries.
@@ -373,17 +374,17 @@ public:
     * To retrieve the actual weights, use the get_row_weight() and get_col_weight()
     * functions.
     */
-    ENTRY_OBJ* insert_entry(int j, int i){
+    ENTRY_OBJ& insert_entry(int j, int i){
         // Check if indices are within bounds
         if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds"); 
                 
         // Find the left and right entries in the jth row of the matrix
         auto left_entry = this->row_heads[j];
         auto right_entry = this->row_heads[j];
-        for(auto entry: reverse_iterate_row(j)){
+        for(auto entry: reverse_iterate_row_ptr(j)){
             if(entry->col_index == i){
                 // Entry already exists at this position
-                return entry;
+                return *entry;
             }
             if(entry->col_index > i) right_entry = entry;
             if(entry->col_index < i) {
@@ -395,7 +396,7 @@ public:
         // Find the up and down entries in the ith column of the matrix
         auto up_entry = this->column_heads[i];
         auto down_entry = this->column_heads[i];
-        for(auto entry: this->reverse_iterate_column(i)){
+        for(auto entry: this->reverse_iterate_column_ptr(i)){
             if(entry->row_index > j) down_entry = entry;
             if(entry->row_index < j) {
                 up_entry = entry;
@@ -421,8 +422,8 @@ public:
         this->row_heads[e->row_index]->col_index--;
         this->column_heads[e->col_index]->col_index--;
 
-        // Return a pointer to the newly created entry
-        return e;     
+        // Return a reference to the newly created entry
+        return *e;     
     }
 
 
@@ -435,17 +436,17 @@ public:
      * @return a pointer to the entry, or a pointer to the corresponding column head.
      * @throws std::std::invalid_argument if j or i are out of bounds.
      */
-    ENTRY_OBJ* get_entry(int j, int i){
+    ENTRY_OBJ& get_entry(int j, int i){
         if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds");
 
         // Iterate over the column at index i and check each entry's row index.
         // If the row index matches j, return that entry.
-        for(auto e: this->reverse_iterate_column(i)){
-            if(e->row_index==j) return e;
+        for(auto& e: this->reverse_iterate_column(i)){
+            if(e.row_index==j) return e;
         }
 
         // If no entry is found, return the column head at index i.
-        return this->column_heads[i];
+        return *this->column_heads[i];
     }
 
 
@@ -481,7 +482,7 @@ public:
 
         // Iterate through all rows and columns to find non-zero entries
         for(int i = 0; i<this->m; i++){
-            for(auto e: this->iterate_row(i)){
+            for(auto e: this->iterate_row_ptr(i)){
                 // Increment node count and add non-zero entry coordinates to vector
                 this->node_count += 1;
                 std::vector<int> coord;
@@ -511,7 +512,7 @@ public:
             std::vector<int> row;
             
             //iterate over the entries in the current row
-            for(auto e: this->iterate_row(i)){
+            for(auto e: this->iterate_row_ptr(i)){
                 this->node_count += 1; //increment node_count
                 row.push_back(e->col_index); //add the column index of the current entry to the current row vector
             }
@@ -731,7 +732,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return RowIterator An iterator object that iterates over the given row
      */
-    RowIterator iterate_row(int i){
+    RowIterator iterate_row_ptr(int i){
         if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return RowIterator(this,i);
     }
@@ -743,7 +744,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseRowIterator An iterator object that iterates over the given row in reverse
      */
-    ReverseRowIterator reverse_iterate_row(int i){
+    ReverseRowIterator reverse_iterate_row_ptr(int i){
         if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseRowIterator(this,i);
     }
@@ -755,7 +756,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ColumnIterator An iterator object that iterates over the given column
      */
-    ColumnIterator iterate_column(int i){
+    ColumnIterator iterate_column_ptr(int i){
         if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ColumnIterator(this,i);
     }
@@ -767,7 +768,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseColumnIterator An iterator object that iterates over the given column in reverse
      */
-    ReverseColumnIterator reverse_iterate_column(int i){
+    ReverseColumnIterator reverse_iterate_column_ptr(int i){
         if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseColumnIterator(this,i);
     }
@@ -863,11 +864,7 @@ public:
                 return *this;
             }
 
-            ENTRY_OBJ operator*() {
-                return *e;
-            }
-
-            ENTRY_OBJ& operator&() {
+            ENTRY_OBJ& operator*() {
                 return *e;
             }
             friend bool operator == (const ReverseRowIterator2& a, const ReverseRowIterator2& b) { return a.it_count > b.entry_count; };
@@ -917,11 +914,7 @@ public:
                 return *this;
             }
 
-            ENTRY_OBJ operator*() {
-                return *e;
-            }
-
-            ENTRY_OBJ& operator&() {
+            ENTRY_OBJ& operator*() {
                 return *e;
             }
             friend bool operator == (const ColumnIterator2& a, const ColumnIterator2& b) { return a.it_count > b.entry_count; };
@@ -971,11 +964,7 @@ public:
                 return *this;
             }
 
-            ENTRY_OBJ operator*() {
-                return *e;
-            }
-
-            ENTRY_OBJ& operator&() {
+            ENTRY_OBJ& operator*() {
                 return *e;
             }
             friend bool operator == (const ReverseColumnIterator2& a, const ReverseColumnIterator2& b) { return a.it_count > b.entry_count; };
@@ -998,7 +987,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return RowIterator2 An iterator object that iterates over the given row
      */
-    RowIterator2 stl_iterate_row(int i){
+    RowIterator2 iterate_row(int i){
         if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return RowIterator2(this,i);
     }
@@ -1010,7 +999,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseRowIterator2 An iterator object that iterates over the given row in reverse
      */
-    ReverseRowIterator2 reverse_stl_iterate_row(int i){
+    ReverseRowIterator2 reverse_iterate_row(int i){
         if(i<0 || i>=m) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseRowIterator2(this,i);
     }
@@ -1022,7 +1011,7 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ColumnIterator2 An iterator object that iterates over the given column
      */
-    ColumnIterator2 stl_iterate_column(int i){
+    ColumnIterator2 iterate_column(int i){
         if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ColumnIterator2(this,i);
     }
@@ -1034,10 +1023,12 @@ public:
      * @throws std::invalid_argument If the given index is out of bounds
      * @return ReverseColumnIterator2 An iterator object that iterates over the given column in reverse
      */
-    ReverseColumnIterator2 reverse_stl_iterate_column(int i){
+    ReverseColumnIterator2 reverse_iterate_column(int i){
         if(i<0 || i>=n) throw std::invalid_argument("Iterator index out of bounds");
         return ReverseColumnIterator2(this,i);
     }
+
+
 
 
 };

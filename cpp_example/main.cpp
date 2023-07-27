@@ -1,6 +1,7 @@
 #include <iostream>
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
+#include <numeric> // Include the <numeric> header for std::accumulate
 // #include "ssf.hpp"
 
 
@@ -21,7 +22,7 @@ int main()
     // print_sparse_matrix(mat);
 
 
-    for(auto e: mat.stl_iterate_row(0))
+    for(auto e: mat.iterate_row(0))
     {
         cout<<e.value<<endl;
         // auto ptr = &e;
@@ -33,7 +34,7 @@ int main()
     cout<<endl;
 
 
-    for(auto& e: mat.stl_iterate_row(0))
+    for(auto& e: mat.iterate_row(0))
     {
         cout<<e.value<<endl;
         cout<<&e<<endl;
@@ -43,10 +44,15 @@ int main()
 
     cout<<endl;
 
-    for(auto e: mat.iterate_row(0)){
+    for(auto e: mat.iterate_row_ptr(0)){
         cout<<e->value<<endl;
         cout<<e<<endl;
     }
+
+
+    // int sum = accumulate(mat.iterate_row(0).begin(),mat.iterate_row(0).end(),0);
+
+    // cout<<sum<<endl;
 
     return 0;
 

@@ -38,7 +38,7 @@ class mbp_sparse: public SparseMatrix<uint8_t,mbp_entry>{
             for(int stab=0; stab<m;stab++){
                 output_vector[stab]=0;
                 row_sum=0;
-                for(auto e: BASE::iterate_row(stab)){
+                for(auto e: BASE::iterate_row_ptr(stab)){
                     if(input_vector[e->col_index]!=0 && input_vector[e->col_index]!=e->pauli){
                         row_sum+=1;
                     }
@@ -118,7 +118,7 @@ class mbp_decoder{
 
         //initialise decoder
         for(int i=0; i<qubit_count; i++){
-            for(auto e: pcm->iterate_column(i)){
+            for(auto e: pcm->iterate_column_ptr(i)){
                 for(int w=0; w<3; w++){
                     if(e->pauli!=(w+1)){
                         e->qubit_to_stab_msgs[w]=log((1-channel_probs[w][i])/channel_probs[w][i]);
@@ -136,12 +136,12 @@ class mbp_decoder{
 
                 if(bp_method==0){
                 // Product sum update. We should also implement min-sum at some point?
-                for(auto e: pcm->iterate_column(qubit)){
+                for(auto e: pcm->iterate_column_ptr(qubit)){
 
                     stab_index = e->row_index;
                     stab_update_product = 1.0;
                     // cout<<"qubit: "<<qubit<<"; stab: "<<stab_index<<"; Syndrome: "<<unsigned(synd[stab_index])<<"; qubit_neighbours: ";
-                    for(auto g: pcm->iterate_row(stab_index)){
+                    for(auto g: pcm->iterate_row_ptr(stab_index)){
                         
                         if(g!=e){
 
@@ -183,12 +183,12 @@ class mbp_decoder{
 
                 else if(bp_method==1){
                 // Min sum update.
-                for(auto e: pcm->iterate_column(qubit)){
+                for(auto e: pcm->iterate_column_ptr(qubit)){
 
                     stab_index = e->row_index;
                     stab_update_min = numeric_limits<double>::max();
                     sgn=int(synd[stab_index]);
-                    for(auto g: pcm->iterate_row(stab_index)){
+                    for(auto g: pcm->iterate_row_ptr(stab_index)){
                         
                         if(g!=e){
 
@@ -230,7 +230,7 @@ class mbp_decoder{
                 for(int w=0;w<3;w++){
                     log_prob_ratios[w][qubit] = log( (1-channel_probs[w][qubit])/channel_probs[w][qubit] );
                 }
-                for(auto e: pcm->iterate_column(qubit)){
+                for(auto e: pcm->iterate_column_ptr(qubit)){
                     for(int w=0; w<3;w++){
                         if(e->pauli!=(w+1)) log_prob_ratios[w][qubit]+=(1/alpha[w][qubit])*e->stab_to_qubit_msgs;
                         else log_prob_ratios[w][qubit]+=beta*e->stab_to_qubit_msgs;
@@ -254,7 +254,7 @@ class mbp_decoder{
                 if(all_positive) decoding[qubit] = 0;
 
                 //inhibition loop
-                for(auto e: pcm->iterate_column(qubit)){
+                for(auto e: pcm->iterate_column_ptr(qubit)){
                     for(int w=0; w<3;w++){
                         e->qubit_to_stab_msgs[w]=log_prob_ratios[w][qubit];
                         if(e->pauli!=(w+1)) e->qubit_to_stab_msgs[w] -= e->stab_to_qubit_msgs;

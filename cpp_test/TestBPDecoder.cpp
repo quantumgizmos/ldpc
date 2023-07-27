@@ -124,7 +124,7 @@ TEST(BpDecoderTest, InitialiseLogDomainBpTest)
     {
         EXPECT_EQ(log((1 - channel_probabilities[i]) / channel_probabilities[i]), decoder->initial_log_prob_ratios[i]);
 
-        for (auto e : decoder->pcm->iterate_column(i))
+        for (auto e : decoder->pcm->iterate_column_ptr(i))
         {
             EXPECT_EQ(decoder->initial_log_prob_ratios[i], e->bit_to_check_msg);
         }

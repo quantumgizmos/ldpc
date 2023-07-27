@@ -23,11 +23,11 @@ std::stringstream print_sparse_matrix(SPARSE_MATRIX_CLASS& matrix, bool SILENT =
         //     // std::cout<<j<<" "<<i<<std::endl;
             auto e = matrix.get_entry(j,i);
             
-            if(e->at_end()) {
+            if(e.at_end()) {
                 ss << unsigned(0);
             } 
             else {
-                ss<<e->str();
+                ss<<e.str();
                 // std::cout<<e->row_index<<" "<<e->col_index<<" "<<unsigned(e->value)<<std::endl;
             }
             
@@ -51,7 +51,7 @@ std::shared_ptr<SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<SPARSE_MATRIX_CLA
     int new_col_index=-1;
     for(auto col_index: cols){
         new_col_index+=1;
-        for(auto e: mat->iterate_column(col_index)){
+        for(auto e: mat->iterate_column_ptr(col_index)){
             copy_mat->insert_entry(e->row_index,new_col_index,e->value);
         }
     }
@@ -68,7 +68,7 @@ SPARSE_MATRIX_CLASS copy_cols(SPARSE_MATRIX_CLASS& mat, const std::vector<int> c
     int new_col_index=-1;
     for(auto col_index: cols){
         new_col_index+=1;
-        for(auto e: mat.iterate_column(col_index)){
+        for(auto e: mat.iterate_column_ptr(col_index)){
             copy_mat.insert_entry(e->row_index,new_col_index,e->value);
         }
     }

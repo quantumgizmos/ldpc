@@ -80,7 +80,7 @@ class RowReduce{
             this->L = GF2Sparse<GF2Entry>::New(this->A->m,this->A->m);
 
             for(int i = 0; i<this->A->m; i++){
-                for(auto e: this->A->iterate_row(i)){
+                for(auto e: this->A->iterate_row_ptr(i)){
                     this->U->insert_entry(e->row_index, e->col_index);
                 }
                 if(!this->LOWER_TRIANGULAR) this->L->insert_entry(i,i);
@@ -159,7 +159,7 @@ class RowReduce{
             bool PIVOT_FOUND = false;
             int max_row_weight = std::numeric_limits<int>::max();
             int swap_index;
-            for(auto e: this->U->iterate_column(pivot_index)){
+            for(auto e: this->U->iterate_column_ptr(pivot_index)){
                 int row_index = e->row_index;
 
                 if(row_index<this->rank) continue;

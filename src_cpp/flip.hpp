@@ -73,7 +73,7 @@ public:
                 vector<int> unsatisfied_checks;
                 vector<int> satisfied_checks;
 
-                for (auto e : this->pcm->iterate_column(bit_idx))
+                for (auto e : this->pcm->iterate_column_ptr(bit_idx))
                 {
                     int check_idx = e->row_index;
                     if (this->syndrome[check_idx] == 1)

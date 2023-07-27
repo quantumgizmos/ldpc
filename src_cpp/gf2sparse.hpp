@@ -186,7 +186,7 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec(std::vector<uint8_t>& input_v
     // Iterate through each row of the matrix
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row(i)){
+        for(auto e: this->iterate_row_ptr(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
             output_vector[i] ^= input_vector[e->col_index];
         }
@@ -204,7 +204,7 @@ std::vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec2(std::vector<uint8_t>& input_v
     // Iterate through each row of the matrix
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row(i)){
+        for(auto e: this->iterate_row_ptr(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
             output_vector[i] ^= input_vector[e->col_index];
         }
@@ -225,7 +225,7 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(std::vector<uint8_t>
     #pragma omp for
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row(i)){
+        for(auto e: this->iterate_row_ptr(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
             output_vector[i] ^= input_vector[e->col_index];
         }
@@ -253,9 +253,9 @@ std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::matmul(std::shared_p
         for(int j = 0; j<output_mat->n; j++){
             int sum = 0;
             // Iterate over the non-zero entries in the column of the right-hand matrix
-            for(auto e: mat_right->iterate_column(j)){
+            for(auto e: mat_right->iterate_column_ptr(j)){
                 // Iterate over the non-zero entries in the row of this matrix
-                for(auto g: this->iterate_row(i)){
+                for(auto g: this->iterate_row_ptr(i)){
                     // Check if the column index of this matrix matches the row index of the right-hand matrix
                     if(g->col_index == e->row_index) sum^=1;
                 }
@@ -286,9 +286,9 @@ GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::matmul(GF2Sparse<ENTRY_OBJ2>& mat_rig
         for(int j = 0; j<output_mat.n; j++){
             int sum = 0;
             // Iterate over the non-zero entries in the column of the right-hand matrix
-            for(auto e: mat_right.iterate_column(j)){
+            for(auto e: mat_right.iterate_column_ptr(j)){
                 // Iterate over the non-zero entries in the row of this matrix
-                for(auto g: this->iterate_row(i)){
+                for(auto g: this->iterate_row_ptr(i)){
                     // Check if the column index of this matrix matches the row index of the right-hand matrix
                     if(g->col_index == e->row_index) sum^=1;
                 }
@@ -310,10 +310,10 @@ void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
     bool intersection;
     std::vector<ENTRY_OBJ*> entries_to_remove;
 
-    for(auto g: this->iterate_row(j)){
+    for(auto g: this->iterate_row_ptr(j)){
         intersection=false;
         int col_index = g->col_index;
-        for(auto e: this->iterate_column(col_index)){
+        for(auto e: this->iterate_column_ptr(col_index)){
             if(e->row_index==i){
                 entries_to_remove.push_back(e);
                 intersection=true;
@@ -340,7 +340,7 @@ GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::transpose(){
     // Iterate over each row of this matrix
     for(int i = 0; i<this->m; i++){
         // Iterate over each non-zero entry in the row
-        for(auto e: this->iterate_row(i)){
+        for(auto e: this->iterate_row_ptr(i)){
             // Insert the entry into the transposed matrix with the row and column indices swapped
             pcmT.insert_entry(e->col_index,e->row_index);
         }
@@ -361,7 +361,7 @@ bool GF2Sparse<ENTRY_OBJ>::gf2_equal(GF2Sparse<ENTRY_OBJ2>& matrix2){
     for(int i = 0; i<this->m; i++){
 
         // Iterate over each non-zero entry in the row of this matrix
-        for(auto e: this->iterate_row(i)){
+        for(auto e: this->iterate_row_ptr(i)){
 
             // Get the corresponding entry in the same position of the other matrix
             auto g = matrix2.get_entry(e->row_index,e->col_index);
@@ -371,7 +371,7 @@ bool GF2Sparse<ENTRY_OBJ>::gf2_equal(GF2Sparse<ENTRY_OBJ2>& matrix2){
         }
 
         // Iterate over each non-zero entry in the row of the other matrix
-        for(auto e: matrix2.iterate_row(i)){
+        for(auto e: matrix2.iterate_row_ptr(i)){
 
             // Get the corresponding entry in the same position of this matrix
             auto g = this->get_entry(e->row_index,e->col_index);
@@ -426,7 +426,7 @@ std::shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<GF2SPARSE_MATR
     int new_col_index=-1;
     for(auto col_index: cols){
         new_col_index+=1;
-        for(auto e: mat->iterate_column(col_index)){
+        for(auto e: mat->iterate_column_ptr(col_index)){
             copy_mat->insert_entry(e->row_index,new_col_index);
         }
     }
@@ -448,7 +448,7 @@ GF2MATRIX vstack(std::vector<GF2MATRIX>& mats){
     int row_offset = 0;
     for(auto mat: mats){
         for(auto i=0; i<mat.m; i++){
-            for(auto e: mat.iterate_row(i)){
+            for(auto e: mat.iterate_row_ptr(i)){
                 stacked_mat.insert_entry(row_offset+e->row_index,e->col_index);
             }
         }
@@ -473,7 +473,7 @@ GF2Sparse<ENTRY_OBJ> hstack(std::vector<GF2Sparse<ENTRY_OBJ>>& mats){
     int col_offset = 0;
     for(auto mat: mats){
         for(auto i=0; i<mat.m; i++){
-            for(auto e: mat.iterate_row(i)){
+            for(auto e: mat.iterate_row_ptr(i)){
                 stacked_mat.insert_entry(e->row_index,col_offset+e->col_index);
             }
         }
@@ -497,12 +497,12 @@ std::shared_ptr<GF2MATRIX> kron(std::shared_ptr<GF2MATRIX> mat1, std::shared_ptr
     auto kron_mat = GF2MATRIX::New(m1*m2,n1*n2);
 
     for(auto i=0; i<m1; i++){
-        for(auto e: mat1->iterate_row(i)){
+        for(auto e: mat1->iterate_row_ptr(i)){
             int row_offset = e->row_index*m2;
             int col_offset = e->col_index*n2;
 
             for(auto j = 0; j<m2; j++){
-                for(auto f: mat2->iterate_row(j)){
+                for(auto f: mat2->iterate_row_ptr(j)){
                     kron_mat->insert_entry(row_offset+f->row_index,col_offset+f->col_index);
                 }
             }

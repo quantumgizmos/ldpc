@@ -85,7 +85,7 @@ struct cluster{
         this->candidate_bit_nodes.clear();
         for(int check_index: boundary_check_nodes){
             bool erase = true;
-            for(auto e: this->pcm->iterate_row(check_index)){
+            for(auto e: this->pcm->iterate_row_ptr(check_index)){
                 if(this->global_bit_membership[e->col_index] != this ){
                     candidate_bit_nodes.push_back(e->col_index);
                     erase = false;
@@ -118,7 +118,7 @@ struct cluster{
             this->global_bit_membership[bit_index] = this;
         }
 
-        for(auto e: this->pcm->iterate_column(bit_index)){
+        for(auto e: this->pcm->iterate_column_ptr(bit_index)){
             int check_index = e->row_index;
             auto check_membership = this->global_check_membership[check_index]; 
             if(check_membership == this) continue;
@@ -250,7 +250,7 @@ struct cluster{
 
         for(int check_index: this->check_nodes){
             int spanning_tree_connectivity = 0;
-            for(auto e: this->pcm->iterate_row(check_index)){
+            for(auto e: this->pcm->iterate_row_ptr(check_index)){
                 if(this->spanning_tree_bits.contains(e->col_index)) spanning_tree_connectivity+=1;
             }
             if(spanning_tree_connectivity == 1) this->spanning_tree_leaf_nodes.insert(check_index);
@@ -272,13 +272,13 @@ struct cluster{
             int bit_index = -1;
             int check2 = -1;
 
-            for(auto e: this->pcm->iterate_row(leaf_node_index)){
+            for(auto e: this->pcm->iterate_row_ptr(leaf_node_index)){
                 bit_index = e->col_index;
                 if(this->spanning_tree_bits.contains(bit_index)) break;
             }
 
 
-            for(auto e: this->pcm->iterate_column(bit_index)){
+            for(auto e: this->pcm->iterate_column_ptr(bit_index)){
                 if(e->row_index!=leaf_node_index) check2 = e->row_index;
             }
 
@@ -301,7 +301,7 @@ struct cluster{
 
             //check whether new check node is a leaf
             int spanning_tree_connectivity = 0;
-            for(auto e: this->pcm->iterate_row(check2)){
+            for(auto e: this->pcm->iterate_row_ptr(check2)){
                 if(this->spanning_tree_bits.contains(e->col_index)) spanning_tree_connectivity+=1;
             }
             if(spanning_tree_connectivity == 1) this->spanning_tree_leaf_nodes.insert(check2);
@@ -357,7 +357,7 @@ struct cluster{
         BpSparse* cluster_pcm = new BPSparse(this->check_nodes.size(),this->bit_nodes.size());
 
         for(int check_index: this->check_nodes){
-            for(auto e: this->pcm->iterate_row(check_index)){
+            for(auto e: this->pcm->iterate_row_ptr(check_index)){
                 int bit_index = e->col_index;
                 if(this->bit_nodes.contains(bit_index)){
                     int matrix_bit_index = cluster_to_matrix_bit_map[bit_index];

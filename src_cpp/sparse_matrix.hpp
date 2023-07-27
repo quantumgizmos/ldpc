@@ -19,7 +19,21 @@ class SparseMatrixEntry: public sparse_matrix_base::EntryBase<SparseMatrixEntry<
         return std::to_string(this->value);
     }
 
+    SparseMatrixEntry<T> operator+(const SparseMatrixEntry<T>& other);
+
 };
+
+template <class T>
+SparseMatrixEntry<T> SparseMatrixEntry<T>::operator+(const SparseMatrixEntry<T>& other){
+    SparseMatrixEntry<T> result;
+    result.value = this->value + other.value;
+    return result;
+}
+
+template <class T>
+bool operator==(SparseMatrixEntry<T> const &lhs,SparseMatrixEntry<T> const &rhs){
+    return lhs.value == rhs.value;
+}
 
 template <class T, template<class> class ENTRY_OBJ=SparseMatrixEntry>
 class SparseMatrix: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ<T>> {
@@ -33,9 +47,9 @@ public:
 
     SparseMatrix(int m, int n, int entry_count = 0): BASE(m,n,entry_count){};
 
-    ENTRY_OBJ<T>* insert_entry(int i, int j, T val = T(1)){
-        auto e = BASE::insert_entry(i,j);
-        e->value = val;
+    ENTRY_OBJ<T>& insert_entry(int i, int j, T val = T(1)){
+        auto& e = BASE::insert_entry(i,j);
+        e.value = val;
         return e;
     }
 
@@ -50,7 +64,7 @@ public:
     ENTRY_OBJ<T>* insert_row(int row_index, std::vector<int>& col_indices, std::vector<T>& values){
         BASE::insert_row(row_index,col_indices);
         int i = 0;
-        for(auto e: this->iterate_row(row_index)){
+        for(auto e: this->iterate_row_ptr(row_index)){
             e->value = values[i];
             i++; 
         }
