@@ -325,14 +325,14 @@ public:
      * @param e Pointer to the entry object to be removed
      */
     void remove(ENTRY_OBJ& e_ref){
-        ENTRY_OBJ* e = &e_ref;
+        ENTRY_OBJ* e_ptr = &e_ref;
         // Check if the entry is not already at the end of the row or column.
-        if(!e->at_end()){
+        if(!e_ptr->at_end()){
             // Store pointers to the adjacent entries.
-            auto e_left = e->left;
-            auto e_right = e->right;
-            auto e_up = e->up;
-            auto e_down = e ->down;
+            auto e_left = e_ptr->left;
+            auto e_right = e_ptr->right;
+            auto e_up = e_ptr->up;
+            auto e_down = e_ptr->down;
 
             // Update pointers of the adjacent entries to remove the entry from the linked list.
             e_left->right = e_right;
@@ -344,13 +344,13 @@ public:
             ENTRY_OBJ.col_index field as a negative number (to avoid confusion with
             an actual column index). To get the row/column weights, use the get_row_weight()
             and get_col_weight() functions. */
-            this->row_heads[e->row_index]->col_index++;
-            this->column_heads[e->col_index]->col_index++;
+            this->row_heads[e_ptr->row_index]->col_index++;
+            this->column_heads[e_ptr->col_index]->col_index++;
 
             // Reset the entry to default values before pushing it to the buffer.
-            e->reset();
+            e_ptr->reset();
             // Store the removed entry in the buffer for later reuse.
-            this->removed_entries.push_back(e);
+            this->removed_entries.push_back(e_ptr);
         }
     }
 
