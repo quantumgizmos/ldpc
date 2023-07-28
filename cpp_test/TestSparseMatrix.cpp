@@ -200,9 +200,10 @@ TEST(SparseMatrix, RowIterateTest)
         int i = 0;
 
         // Iterate through the entries in the row of the matrix
-        for (auto& entry : matrix.iterate_row(row))
+        for (auto entry : matrix.iterate_row(row))
         {
             actual_values[i] = entry.value;
+            entry.value+=1; //this is not saved in the matrix (passing by value)
             i++;
         }
 
@@ -211,6 +212,25 @@ TEST(SparseMatrix, RowIterateTest)
         {
             ASSERT_EQ(expected_values[row][j], actual_values[j]);
         }
+
+
+        // Iterate through the entries in the row of the matrix
+        i = 0;
+        for (auto& entry : matrix.iterate_row(row))
+        {
+            actual_values[i] = entry.value;
+            entry.value+=1; //this should now change the matrix values (passing by reference)
+            i++;
+        }
+
+        i = 0;
+        for (auto entry : matrix.iterate_row(row))
+        {
+            actual_values[i] = entry.value;
+            ASSERT_EQ(expected_values[row][i]+1, entry.value);
+            i++;
+        }
+
     }
 }
 
@@ -237,9 +257,9 @@ TEST(SparseMatrix, ReverseRowIterateTest)
         int i = 0;
 
         // Iterate through the entries in the row of the matrix in reverse order
-        for (auto entry : matrix.reverse_iterate_row_ptr(row))
+        for (auto& entry : matrix.reverse_iterate_row(row))
         {
-            actual_values[i] = entry->value;
+            actual_values[i] = entry.value;
             i++;
         }
 
@@ -328,31 +348,31 @@ TEST(SparseMatrix, ReverseRowIterateTest)
 //     }
 // }
 
-// TEST(SparseMatrix, SwapRowsTest)
-// {
-//     sparse_matrix::SparseMatrix<int> matrix(3, 3);
-//     matrix.insert_entry(0, 0, 1);
-//     matrix.insert_entry(0, 1, 2);
-//     matrix.insert_entry(0, 2, 3);
-//     matrix.insert_entry(1, 0, 4);
-//     matrix.insert_entry(1, 1, 5);
-//     matrix.insert_entry(1, 2, 6);
-//     matrix.insert_entry(2, 0, 7);
-//     matrix.insert_entry(2, 1, 8);
-//     matrix.insert_entry(2, 2, 9);
+TEST(SparseMatrix, SwapRowsTest)
+{
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
+    matrix.insert_entry(0, 0, 1);
+    matrix.insert_entry(0, 1, 2);
+    matrix.insert_entry(0, 2, 3);
+    matrix.insert_entry(1, 0, 4);
+    matrix.insert_entry(1, 1, 5);
+    matrix.insert_entry(1, 2, 6);
+    matrix.insert_entry(2, 0, 7);
+    matrix.insert_entry(2, 1, 8);
+    matrix.insert_entry(2, 2, 9);
 
-//     matrix.swap_rows(0, 2);
+    matrix.swap_rows(0, 2);
 
-//     EXPECT_EQ(matrix.get_entry(0, 0).value, 7);
-//     EXPECT_EQ(matrix.get_entry(0, 1).value, 8);
-//     EXPECT_EQ(matrix.get_entry(0, 2).value, 9);
-//     EXPECT_EQ(matrix.get_entry(1, 0).value, 4);
-//     EXPECT_EQ(matrix.get_entry(1, 1).value, 5);
-//     EXPECT_EQ(matrix.get_entry(1, 2).value, 6);
-//     EXPECT_EQ(matrix.get_entry(2, 0).value, 1);
-//     EXPECT_EQ(matrix.get_entry(2, 1).value, 2);
-//     EXPECT_EQ(matrix.get_entry(2, 2).value, 3);
-// }
+    EXPECT_EQ(matrix.get_entry(0, 0).value, 7);
+    EXPECT_EQ(matrix.get_entry(0, 1).value, 8);
+    EXPECT_EQ(matrix.get_entry(0, 2).value, 9);
+    EXPECT_EQ(matrix.get_entry(1, 0).value, 4);
+    EXPECT_EQ(matrix.get_entry(1, 1).value, 5);
+    EXPECT_EQ(matrix.get_entry(1, 2).value, 6);
+    EXPECT_EQ(matrix.get_entry(2, 0).value, 1);
+    EXPECT_EQ(matrix.get_entry(2, 1).value, 2);
+    EXPECT_EQ(matrix.get_entry(2, 2).value, 3);
+}
 
 // TEST(SparseMatrix, InsertRowTest)
 // {

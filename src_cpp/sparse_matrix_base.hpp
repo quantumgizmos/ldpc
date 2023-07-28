@@ -211,28 +211,26 @@ public:
 
         // create and initialize each row header node
         for(int i=0; i<this->m; i++){
-            ENTRY_OBJ* row_entry; // pointer to a new entry object
-            row_entry = this->allocate_new_entry(); // allocate memory for a new entry object
-            row_entry->row_index = -100; // set row index to -100 to indicate it is not a value element
-            row_entry->col_index = -100; // set col index to -100 to indicate it is not a value element
-            row_entry->right = row_entry; // point to itself since there are no other nodes in the same row yet
-            row_entry->left = row_entry; // point to itself since there are no other nodes in the same row yet
-            row_entry->up = row_entry; // point to itself since there are no other nodes in the same column yet
-            row_entry->down = row_entry; // point to itself since there are no other nodes in the same column yet
-            this->row_heads[i] = row_entry; // add the new row header node to the row_heads vector
+            ENTRY_OBJ* row_entry_ptr = this->allocate_new_entry(); // allocate memory for a new entry object
+            row_entry_ptr->row_index = -100; // set row index to -100 to indicate it is not a value element
+            row_entry_ptr->col_index = -100; // set col index to -100 to indicate it is not a value element
+            row_entry_ptr->right = row_entry_ptr; // point to itself since there are no other nodes in the same row yet
+            row_entry_ptr->left = row_entry_ptr; // point to itself since there are no other nodes in the same row yet
+            row_entry_ptr->up = row_entry_ptr; // point to itself since there are no other nodes in the same column yet
+            row_entry_ptr->down = row_entry_ptr; // point to itself since there are no other nodes in the same column yet
+            this->row_heads[i] = row_entry_ptr; // add the new row header node to the row_heads vector
         }
 
         // create and initialize each column header node
         for(int i=0; i<this->n; i++){
-            ENTRY_OBJ* column_entry; // pointer to a new entry object
-            column_entry = this->allocate_new_entry(); // allocate memory for a new entry object
-            column_entry->row_index = -100; // set row index to -100 to indicate it is not a value element
-            column_entry->col_index = -100; // set col index to -100 to indicate it is not a value element
-            column_entry->right = column_entry; // point to itself since there are no other nodes in the same column yet
-            column_entry->left = column_entry; // point to itself since there are no other nodes in the same column yet
-            column_entry->up = column_entry; // point to itself since there are no other nodes in the same row yet
-            column_entry->down = column_entry; // point to itself since there are no other nodes in the same row yet
-            this->column_heads[i] = column_entry; // add the new column header node to the column_heads vector
+            ENTRY_OBJ* col_entry_ptr = this->allocate_new_entry(); // allocate memory for a new entry object
+            col_entry_ptr->row_index = -100; // set row index to -100 to indicate it is not a value element
+            col_entry_ptr->col_index = -100; // set col index to -100 to indicate it is not a value element
+            col_entry_ptr->right = col_entry_ptr; // point to itself since there are no other nodes in the same column yet
+            col_entry_ptr->left = col_entry_ptr; // point to itself since there are no other nodes in the same column yet
+            col_entry_ptr->up = col_entry_ptr; // point to itself since there are no other nodes in the same row yet
+            col_entry_ptr->down = col_entry_ptr; // point to itself since there are no other nodes in the same row yet
+            this->column_heads[i] = col_entry_ptr; // add the new column header node to the column_heads vector
         }
     }   
 
@@ -247,19 +245,18 @@ public:
      * @param j The index of the second row to swap
      */
     void swap_rows(int i, int j){
-        auto tmp1 = this->row_heads[i]; // store the head element of row i in a temporary variable
-        auto tmp2 = this->row_heads[j]; // store the head element of row j in a temporary variable
-        this->row_heads[j] = tmp1; // set the head element of row j to the head element of row i
-        this->row_heads[i] = tmp2; // set the head element of row i to the head element of row j
-        for(auto e: iterate_row_ptr(i)) e->row_index=i; // update the row index of all elements in row i to j
-        for(auto e: iterate_row_ptr(j)) e->row_index=j; // update the row index of all elements in row j to i
+        auto tmp1_ptr = this->row_heads[i]; // store the head element of row i in a temporary variable
+        auto tmp2_ptr = this->row_heads[j]; // store the head element of row j in a temporary variable
+        this->row_heads[j] = tmp1_ptr; // set the head element of row j to the head element of row i
+        this->row_heads[i] = tmp2_ptr; // set the head element of row i to the head element of row j
+        for(auto& e: this->iterate_row(i)) e.row_index=i; // update the row index of all elements in row i to j
+        for(auto& e: this->iterate_row(j)) e.row_index=j; // update the row index of all elements in row j to i
     }
 
 
     void reorder_rows(std::vector<int> rows){
 
         std::vector<ENTRY_OBJ*> temp_row_heads = this->row_heads;
-        // for(int i = 0; i<m; i++) temp_row_heads.push_back(row_heads[i]);
         for(int i = 0; i<m; i++){
             this->row_heads[i] = temp_row_heads[rows[i]];
             for(auto e: this->iterate_row_ptr(i)){
