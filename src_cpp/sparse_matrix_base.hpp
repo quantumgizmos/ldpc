@@ -378,14 +378,14 @@ public:
         // Find the left and right entries in the jth row of the matrix
         auto left_entry_ptr = this->row_heads[j];
         auto right_entry_ptr = this->row_heads[j];
-        for(auto entry: reverse_iterate_row_ptr(j)){
-            if(entry->col_index == i){
+        for(auto& entry: reverse_iterate_row(j)){
+            if(entry.col_index == i){
                 // Entry already exists at this position
-                return *entry;
+                return entry;
             }
-            if(entry->col_index > i) right_entry_ptr = entry;
-            if(entry->col_index < i) {
-                left_entry_ptr = entry;
+            if(entry.col_index > i) right_entry_ptr = &entry;
+            if(entry.col_index < i) {
+                left_entry_ptr = &entry;
                 break;
             }
         }
@@ -393,10 +393,10 @@ public:
         // Find the up and down entries in the ith column of the matrix
         auto up_entry_ptr = this->column_heads[i];
         auto down_entry_ptr = this->column_heads[i];
-        for(auto entry: this->reverse_iterate_column_ptr(i)){
-            if(entry->row_index > j) down_entry_ptr = entry;
-            if(entry->row_index < j) {
-                up_entry_ptr = entry;
+        for(auto& entry: this->reverse_iterate_column(i)){
+            if(entry.row_index > j) down_entry_ptr = &entry;
+            if(entry.row_index < j) {
+                up_entry_ptr = &entry;
                 break;
             }
         }
@@ -479,12 +479,12 @@ public:
 
         // Iterate through all rows and columns to find non-zero entries
         for(int i = 0; i<this->m; i++){
-            for(auto e: this->iterate_row_ptr(i)){
+            for(auto& e: this->iterate_row(i)){
                 // Increment node count and add non-zero entry coordinates to vector
                 this->node_count += 1;
                 std::vector<int> coord;
-                coord.push_back(e->row_index);
-                coord.push_back(e->col_index);
+                coord.push_back(e.row_index);
+                coord.push_back(e.col_index);
                 nonzero.push_back(coord);
             }
         }
