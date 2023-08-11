@@ -178,14 +178,14 @@ def invert_tests():
         csv_string+=f"{m};{n};{csr};"
         print(csv_string, file=output_file)
 
-def invert_tests():
+def lu_solve_tests():
 
     output_file = open("gf2_lu_solve_test.csv", "a")
 
-    for j in range(100):
+    for j in tqdm(range(100)):
         
-        n = np.random.randint(1,150)
-        m = np.random.randint(1,20)
+        n = np.random.randint(1,200)
+        m = np.random.randint(1,150)
         
         pcm = random_binary_matrix(height=m,width=n,sparsity=0.1*np.random.randint(10))
 
@@ -214,5 +214,5 @@ def invert_tests():
 
 if __name__ == "__main__":
 
-    invert_tests()
+    lu_solve_tests()
     matmul_tests()

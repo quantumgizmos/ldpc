@@ -360,6 +360,44 @@ TEST(GF2Sparse, lu_solve_batch){
 
 }
 
+TEST(GF2Sparse, lu_solve_batch_vrs){
+
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = io::string_to_csr_vector(row[2]);
+        auto input_vector = io::binaryStringToVector(row[3]);
+
+        ASSERT_EQ(input_vector.size(),m);
+
+        auto matrix = GF2Sparse<>(m,n);
+        matrix.csr_insert(input_csr_vector);
+
+        auto rr = RowReduce(matrix);
+        rr.rref_vrs(false,true);
+        auto x = rr.lu_solve_vrs(input_vector);
+
+        vector<uint8_t> output_vector(m,0);
+
+        matrix.mulvec(x,output_vector);
+
+        for(auto i = 0; i<m; i++){
+            ASSERT_EQ(output_vector[i] == input_vector[i],true);
+        }
+
+    }
+
+}
+
 
 
 

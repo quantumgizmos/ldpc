@@ -59,8 +59,8 @@ class RowReduce{
             this->L.allocate(this->A.m,this->A.m);
 
             for(int i = 0; i<this->A.m; i++){
-                for(auto e: this->A.iterate_row_ptr(i)){
-                    this->U.insert_entry(e->row_index, e->col_index);
+                for(auto& e: this->A.iterate_row(i)){
+                    this->U.insert_entry(e.row_index, e.col_index);
                 }
                 if(!this->LOWER_TRIANGULAR) this->L.insert_entry(i,i);
             }
@@ -133,8 +133,8 @@ class RowReduce{
                 bool PIVOT_FOUND = false;
                 int max_row_weight = std::numeric_limits<int>::max();
                 int swap_index;
-                for(auto e: this->U.iterate_column_ptr(pivot_index)){
-                    int row_index = e->row_index;
+                for(auto& e: this->U.iterate_column(pivot_index)){
+                    int row_index = e.row_index;
 
                     if(row_index<this->rank) continue;
 
@@ -142,7 +142,7 @@ class RowReduce{
                     int row_weight = this->U.get_row_degree(row_index) + this->L.get_row_degree(row_index);
 
                     if(row_index >= this->rank && row_weight<max_row_weight){
-                        swap_index = e->row_index;
+                        swap_index = e.row_index;
                         max_row_weight = row_weight;
                     }
                     PIVOT_FOUND=true;
@@ -163,8 +163,8 @@ class RowReduce{
                 if(this->LOWER_TRIANGULAR) this->L.insert_entry(this->rank,this->rank);
 
                 vector<int> add_rows;
-                for(auto e: this->U.iterate_column_ptr(pivot_index)){
-                    int row_index = e->row_index;
+                for(auto& e: this->U.iterate_column(pivot_index)){
+                    int row_index = e.row_index;
                     if(row_index>this->rank || row_index<this->rank && full_reduce==true){
                         add_rows.push_back(row_index);
                     }
@@ -232,8 +232,8 @@ class RowReduce{
             //Solve Lb=y with forwared substitution
             for(int row_index=0;row_index<this->rank;row_index++){
                 int row_sum=0;
-                for(auto e: L.iterate_row_ptr(row_index)){
-                    row_sum^=b[e->col_index];
+                for(auto& e: L.iterate_row(row_index)){
+                    row_sum^=b[e.col_index];
                 }
                 b[row_index]=row_sum^y[this->rows[row_index]];
             }
@@ -245,8 +245,8 @@ class RowReduce{
             //Solve Ux = b with backwards substitution
             for(int row_index=(this->rank-1);row_index>=0;row_index--){
                 int row_sum=0;
-                for(auto e: U.iterate_row_ptr(row_index)){
-                    row_sum^=x[e->col_index];
+                for(auto& e: U.iterate_row(row_index)){
+                    row_sum^=x[e.col_index];
                 }
                 x[this->cols[row_index]] = row_sum^b[row_index];
             }
@@ -275,14 +275,14 @@ class RowReduce{
                 bool PIVOT_FOUND = false;
                 int max_row_weight = std::numeric_limits<int>::max();
                 int swap_index;
-                for(auto e: this->U.iterate_column_ptr(pivot_index)){
-                    // int row_index = e->row_index;
+                for(auto& e: this->U.iterate_column(pivot_index)){
+                    // int row_index = e.row_index;
 
-                    if(this->inv_rows[e->row_index]<this->rank) continue;
+                    if(this->inv_rows[e.row_index]<this->rank) continue;
 
-                    int row_weight = this->U.get_row_degree(e->row_index) + this->L.get_row_degree(e->row_index);
-                    if(this->inv_rows[e->row_index] >= this->rank && row_weight<max_row_weight){
-                        swap_index = this->inv_rows[e->row_index];
+                    int row_weight = this->U.get_row_degree(e.row_index) + this->L.get_row_degree(e.row_index);
+                    if(this->inv_rows[e.row_index] >= this->rank && row_weight<max_row_weight){
+                        swap_index = this->inv_rows[e.row_index];
                         max_row_weight = row_weight;
                     }
                     PIVOT_FOUND=true;
@@ -311,10 +311,10 @@ class RowReduce{
 
 
                 vector<int> add_rows;
-                for(auto e: this->U.iterate_column_ptr(pivot_index)){
-                    // int row_index = e->row_index;
-                    if(this->inv_rows[e->row_index]>this->rank || this->inv_rows[e->row_index]<this->rank && full_reduce==true){
-                        add_rows.push_back(e->row_index);
+                for(auto& e: this->U.iterate_column(pivot_index)){
+                    // int row_index = e.row_index;
+                    if(this->inv_rows[e.row_index]>this->rank || this->inv_rows[e.row_index]<this->rank && full_reduce==true){
+                        add_rows.push_back(e.row_index);
                     }
                 }
 
@@ -382,8 +382,8 @@ class RowReduce{
             //Solve Lb=y with forwared substitution
             for(int row_index=0;row_index<this->rank;row_index++){
                 row_sum=0;
-                for(auto e: L.iterate_row_ptr(this->rows[row_index])){
-                    row_sum^=b[e->col_index];
+                for(auto& e: L.iterate_row(this->rows[row_index])){
+                    row_sum^=b[e.col_index];
                 }
                 b[row_index]=row_sum^y[this->rows[row_index]];
             }
@@ -395,8 +395,8 @@ class RowReduce{
             //Solve Ux = b with backwards substitution
             for(int row_index=(rank-1);row_index>=0;row_index--){
                 row_sum=0;
-                for(auto e: U.iterate_row_ptr(this->rows[row_index])){
-                    row_sum^=x[e->col_index];
+                for(auto& e: U.iterate_row(this->rows[row_index])){
+                    row_sum^=x[e.col_index];
                 }
                 x[this->cols[row_index]] = row_sum^b[row_index];
             }
@@ -408,30 +408,6 @@ class RowReduce{
 
 };
 
-
-// template <class GF2MATRIX>
-// shared_ptr<GF2MATRIX> kernel(shared_ptr<GF2MATRIX> mat){
-
-//     auto matT = mat->transpose();
-    
-//     auto rr = new RowReduce(matT);
-//     rr->rref(false,false);
-//     int rank = rr->rank;
-//     int n = mat->n;
-//     int k = n - rank;
-//     auto ker = GF2MATRIX::New(k,n);
-
-//     for(int i = rank; i<n; i++){
-//         for(auto e: rr->L.iterate_row_ptr(i)){
-//             ker->insert_entry(i-rank,e->col_index);
-//         }
-//     }
-
-//     delete rr;
-    
-//     return ker;
-
-// }
 
 template <class GF2MATRIX>
 vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
@@ -455,8 +431,8 @@ vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
     ker.resize(k,vector<int>{});
 
     for(int i = rank; i<n; i++){
-        for(auto e: rr.L.iterate_row_ptr(i)){
-            ker[i-rank].push_back(e->col_index);
+        for(auto& e: rr.L.iterate_row(i)){
+            ker[i-rank].push_back(e.col_index);
         }
     }
     
