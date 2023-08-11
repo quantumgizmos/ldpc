@@ -361,199 +361,147 @@ TEST(GF2Sparse, mulvec_batch){
 
 }
 
-// TEST(DISABLED_GF2Sparse,mulvec_timing){
+TEST(GF2Sparse,mulvec_timing){
     
-//     //Make sure to run this test in release mode.
+    //Make sure to run this test in release mode.
 
-//     // cout<<"Hello"<<endl;
+    // cout<<"Hello"<<endl;
 
-//     auto matrix = GF2Sparse(100,100);
-//     for(int i = 0; i<100;i++) matrix.insert_entry(i,i);
-//     vector<uint8_t> input_vector;
-//     vector<uint8_t> output_vector;
-//     input_vector.resize(matrix.n,0);
-//     output_vector.resize(matrix.m,0);
+    auto matrix = GF2Sparse(100,100);
+    for(int i = 0; i<100;i++) matrix.insert_entry(i,i);
+    vector<uint8_t> input_vector;
+    vector<uint8_t> output_vector;
+    input_vector.resize(matrix.n,0);
+    output_vector.resize(matrix.m,0);
 
-//     const auto start_time = std::chrono::high_resolution_clock::now();
+    const auto start_time = std::chrono::high_resolution_clock::now();
 
-//     for(int i = 0; i<100000; i++){
-//         input_vector[2]^=1;
-//         matrix.mulvec(input_vector,output_vector);
-//     }
+    for(int i = 0; i<100000; i++){
+        input_vector[2]^=1;
+        matrix.mulvec(input_vector,output_vector);
+    }
 
-//     auto end_time = std::chrono::high_resolution_clock::now();
-//     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-//     cout<<"Duration orig: "<<duration<<endl;
+    cout<<"Duration orig: "<<duration<<endl;
 
 
-//     input_vector.resize(matrix.n,0);
+    input_vector.resize(matrix.n,0);
 
 
-//     const auto start_time2 = std::chrono::high_resolution_clock::now(); 
+    const auto start_time2 = std::chrono::high_resolution_clock::now(); 
 
-//     for(int i = 0; i<1000000; i++){
-//         input_vector[2]^=1;
-//         auto output = matrix.mulvec2(input_vector);
-//     }
+    for(int i = 0; i<1000000; i++){
+        input_vector[2]^=1;
+        auto output = matrix.mulvec2(input_vector);
+    }
 
-//     const auto end_time2 = std::chrono::high_resolution_clock::now();
-//     auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time2 - start_time2).count();
+    const auto end_time2 = std::chrono::high_resolution_clock::now();
+    auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time2 - start_time2).count();
 
-//     cout<<"Duration new: "<<duration2<<endl;
+    cout<<"Duration new: "<<duration2<<endl;
 
-//     SUCCEED();
+    SUCCEED();
 
 
-// }
+}
 
 
-// TEST(GF2Sparse, matmul){
-//     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
-//     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+TEST(GF2Sparse, matmul){
+    auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
-//     class EntryTest: public sparse_matrix_base::EntryBase<EntryTest>{
-//         public:
-//             double extra_variable;
-//             uint8_t value;
-//     };
+    class EntryTest: public sparse_matrix_base::EntryBase<EntryTest>{
+        public:
+            double extra_variable;
+            uint8_t value;
+    };
 
 
-//     int row_count = doc.GetColumn<string>(0).size();
+    int row_count = doc.GetColumn<string>(0).size();
 
-//     for(int i = 0; i<row_count; i++){
+    for(int i = 0; i<row_count; i++){
 
-//         std::vector<string> row = doc.GetRow<string>(i);
+        std::vector<string> row = doc.GetRow<string>(i);
 
-//         int m1 = stoi(row[0]);
-//         int n1 = stoi(row[1]);
-//         auto s1 = io::string_to_csr_vector(row[2]);
-//         auto matrix1 = GF2Sparse<>::New(m1,n1);
-//         matrix1->csr_insert(s1);
+        int m1 = stoi(row[0]);
+        int n1 = stoi(row[1]);
+        auto s1 = io::string_to_csr_vector(row[2]);
+        auto matrix1 = GF2Sparse<>(m1,n1);
+        matrix1.csr_insert(s1);
 
-//         // print_sparse_matrix(matrix1);
+        // print_sparse_matrix(matrix1);
 
-//         int m2 = stoi(row[3]);
-//         int n2 = stoi(row[4]);
-//         auto s2 = io::string_to_csr_vector(row[5]);
-//         auto matrix2 = GF2Sparse<EntryTest>::New(m2,n2);
-//         matrix2->csr_insert(s2);
+        int m2 = stoi(row[3]);
+        int n2 = stoi(row[4]);
+        auto s2 = io::string_to_csr_vector(row[5]);
+        auto matrix2 = GF2Sparse<EntryTest>(m2,n2);
+        matrix2.csr_insert(s2);
 
-//         // cout<<endl;
-//         // print_sparse_matrix(matrix2);
+        // cout<<endl;
+        // print_sparse_matrix(matrix2);
 
 
-//         int m3 = stoi(row[6]);
-//         int n3 = stoi(row[7]);
-//         auto s3 = io::string_to_csr_vector(row[8]);
-//         auto matrix3 = GF2Sparse<>::New(m3,n3);
-//         matrix3->csr_insert(s3);
+        int m3 = stoi(row[6]);
+        int n3 = stoi(row[7]);
+        auto s3 = io::string_to_csr_vector(row[8]);
+        auto matrix3 = GF2Sparse<>(m3,n3);
+        matrix3.csr_insert(s3);
 
-//         auto actual_matrix3 = matrix1->matmul(matrix2);
+        auto actual_matrix3 = matrix1.matmul(matrix2);
 
-//         ASSERT_EQ(print_sparse_matrix(*matrix3,true).str(), print_sparse_matrix(*actual_matrix3,true).str());
-//         ASSERT_EQ(TEST_WITH_CSR(*actual_matrix3,s3),true);
+        ASSERT_EQ(print_sparse_matrix(matrix3,true).str(), print_sparse_matrix(actual_matrix3,true).str());
+        ASSERT_EQ(TEST_WITH_CSR(actual_matrix3,s3),true);
 
 
 
-//     }
+    }
 
 
-// }
+}
 
 
-// TEST(GF2Sparse, matmul_stack){
-//     auto csv_path = io::getFullPath("cpp_test/test_inputs/gf2_matmul_test.csv");
-//     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+TEST(GF2Sparse,hstack){
+    auto m1 = gf2codes::hamming_code(3);
+    auto m2 = gf2codes::hamming_code(3);
 
-//     class EntryTest: public sparse_matrix_base::EntryBase<EntryTest>{
-//         public:
-//             double extra_variable;
-//             uint8_t value;
-//     };
+    auto mats = vector<decltype(m1)>{m1,m2};
 
+    auto m3 = gf2sparse::hstack(mats);
 
-//     int row_count = doc.GetColumn<string>(0).size();
+    ASSERT_EQ(m3.m,3);
+    ASSERT_EQ(m3.n,14);
 
-//     for(int i = 0; i<row_count; i++){
+    // print_sparse_matrix(*m3);
+}
 
-//         std::vector<string> row = doc.GetRow<string>(i);
+TEST(GF2Sparse,vstack){
+    auto m1 = gf2codes::hamming_code(3);
+    auto m2 = gf2codes::hamming_code(3);
 
-//         int m1 = stoi(row[0]);
-//         int n1 = stoi(row[1]);
-//         auto s1 = io::string_to_csr_vector(row[2]);
-//         auto matrix1 = GF2Sparse<>(m1,n1);
-//         matrix1.csr_insert(s1);
+    auto mats = vector<decltype(m1)>{m1,m2};
 
-//         // print_sparse_matrix(matrix1);
+    auto m3 = gf2sparse::vstack(mats);
 
-//         int m2 = stoi(row[3]);
-//         int n2 = stoi(row[4]);
-//         auto s2 = io::string_to_csr_vector(row[5]);
-//         auto matrix2 = GF2Sparse<EntryTest>(m2,n2);
-//         matrix2.csr_insert(s2);
+    ASSERT_EQ(m3.m,6);
+    ASSERT_EQ(m3.n,7);
 
-//         // cout<<endl;
-//         // print_sparse_matrix(matrix2);
+    // print_sparse_matrix(*m3);
+}
 
+TEST(GF2Sparse, kron){
+    auto m1 = gf2sparse::gf2_identity<bp::BpEntry>(100);
+    auto m2 = gf2codes::hamming_code(5);
 
-//         int m3 = stoi(row[6]);
-//         int n3 = stoi(row[7]);
-//         auto s3 = io::string_to_csr_vector(row[8]);
-//         auto matrix3 = GF2Sparse<>(m3,n3);
-//         matrix3.csr_insert(s3);
+    auto m3 = gf2sparse::kron(m1,m2);
 
-//         auto actual_matrix3 = matrix1.matmul(matrix2);
+    ASSERT_EQ(m3.m,m1.m*m2.m);
+    ASSERT_EQ(m3.n,m1.n*m2.n);
 
-//         ASSERT_EQ(print_sparse_matrix(matrix3,true).str(), print_sparse_matrix(actual_matrix3,true).str());
-//         ASSERT_EQ(TEST_WITH_CSR(actual_matrix3,s3),true);
+    // print_sparse_matrix(*m3);
 
-//     }
-
-
-// }
-
-
-// TEST(GF2Sparse,hstack){
-//     auto m1 = gf2codes::hamming_code(3);
-//     auto m2 = gf2codes::hamming_code(3);
-
-//     auto mats = vector<decltype(m1)>{m1,m2};
-
-//     auto m3 = gf2sparse::hstack(mats);
-
-//     ASSERT_EQ(m3->m,3);
-//     ASSERT_EQ(m3->n,14);
-
-//     // print_sparse_matrix(*m3);
-// }
-
-// TEST(GF2Sparse,vstack){
-//     auto m1 = gf2codes::hamming_code(3);
-//     auto m2 = gf2codes::hamming_code(3);
-
-//     auto mats = vector<decltype(m1)>{m1,m2};
-
-//     auto m3 = gf2sparse::vstack(mats);
-
-//     ASSERT_EQ(m3->m,6);
-//     ASSERT_EQ(m3->n,7);
-
-//     // print_sparse_matrix(*m3);
-// }
-
-// TEST(GF2Sparse, kron){
-//     auto m1 = gf2sparse::gf2_identity<bp::BpEntry>(100);
-//     auto m2 = gf2codes::hamming_code(5);
-
-//     auto m3 = gf2sparse::kron(m1,m2);
-
-//     ASSERT_EQ(m3->m,m1->m*m2->m);
-//     ASSERT_EQ(m3->n,m1->n*m2->n);
-
-//     // print_sparse_matrix(*m3);
-
-// }
+}
 
 
 int main(int argc, char **argv)

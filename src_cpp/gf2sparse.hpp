@@ -104,15 +104,6 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
          * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
          * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
          * @param mat_right The matrix to multiply with
-         * @return A new shared_ptr to the resulting matrix
-         */
-        template<typename ENTRY_OBJ2>
-        std::shared_ptr<GF2Sparse<ENTRY_OBJ>> matmul(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right);
-
-        /**
-         * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
-         * @tparam ENTRY_OBJ2 The type of entries in the matrix to be multiplied with
-         * @param mat_right The matrix to multiply with
          * @return The resulting matrix
          */
         template<typename ENTRY_OBJ2>
@@ -238,39 +229,6 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(std::vector<uint8_t>
 
 template<typename ENTRY_OBJ>
 template<typename ENTRY_OBJ2>
-std::shared_ptr<GF2Sparse<ENTRY_OBJ>> GF2Sparse<ENTRY_OBJ>::matmul(std::shared_ptr<GF2Sparse<ENTRY_OBJ2>> mat_right) {
-
-    // Check if the dimensions of the input matrices are valid for multiplication
-    if( this->n!=mat_right->m){
-        throw std::invalid_argument("Input matrices have invalid dimensions!");
-    }
-
-    // Create a new GF2Sparse matrix to store the output
-    auto output_mat = GF2Sparse<ENTRY_OBJ>::New(this->m,mat_right->n);
-
-    // Iterate over each row and column of the output matrix
-    for(int i = 0; i<output_mat->m; i++){
-        for(int j = 0; j<output_mat->n; j++){
-            int sum = 0;
-            // Iterate over the non-zero entries in the column of the right-hand matrix
-            for(auto e: mat_right->iterate_column_ptr(j)){
-                // Iterate over the non-zero entries in the row of this matrix
-                for(auto g: this->iterate_row_ptr(i)){
-                    // Check if the column index of this matrix matches the row index of the right-hand matrix
-                    if(g->col_index == e->row_index) sum^=1;
-                }
-            }
-            // Insert an entry in the output matrix if the sum is non-zero
-            if(sum) output_mat->insert_entry(i,j);
-        }
-    }
-
-    // Return a shared pointer to the output matrix
-    return output_mat;
-}
-
-template<typename ENTRY_OBJ>
-template<typename ENTRY_OBJ2>
 GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::matmul(GF2Sparse<ENTRY_OBJ2>& mat_right) {
 
     // Check if the dimensions of the input matrices are valid for multiplication
@@ -286,11 +244,11 @@ GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::matmul(GF2Sparse<ENTRY_OBJ2>& mat_rig
         for(int j = 0; j<output_mat.n; j++){
             int sum = 0;
             // Iterate over the non-zero entries in the column of the right-hand matrix
-            for(auto e: mat_right.iterate_column_ptr(j)){
+            for(auto& e: mat_right.iterate_column(j)){
                 // Iterate over the non-zero entries in the row of this matrix
-                for(auto g: this->iterate_row_ptr(i)){
+                for(auto& g: this->iterate_row(i)){
                     // Check if the column index of this matrix matches the row index of the right-hand matrix
-                    if(g->col_index == e->row_index) sum^=1;
+                    if(g.col_index == e.row_index) sum^=1;
                 }
             }
             // Insert an entry in the output matrix if the sum is non-zero
@@ -301,6 +259,7 @@ GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::matmul(GF2Sparse<ENTRY_OBJ2>& mat_rig
     // Return a shared pointer to the output matrix
     return output_mat;
 }
+
 
 template<class ENTRY_OBJ>
 void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
@@ -486,24 +445,24 @@ GF2Sparse<ENTRY_OBJ> hstack(std::vector<GF2Sparse<ENTRY_OBJ>>& mats){
 }
 
 template <class GF2MATRIX>
-std::shared_ptr<GF2MATRIX> kron(std::shared_ptr<GF2MATRIX> mat1, std::shared_ptr<GF2MATRIX> mat2){
+GF2MATRIX kron(GF2MATRIX& mat1, GF2MATRIX& mat2){
     
     int m1,n1,m2,n2;
-    m1 = mat1->m;
-    n1 = mat1->n;
-    m2 = mat2->m;
-    n2 = mat2->n;
+    m1 = mat1.m;
+    n1 = mat1.n;
+    m2 = mat2.m;
+    n2 = mat2.n;
 
-    auto kron_mat = GF2MATRIX::New(m1*m2,n1*n2);
+    auto kron_mat = GF2MATRIX(m1*m2,n1*n2);
 
     for(auto i=0; i<m1; i++){
-        for(auto e: mat1->iterate_row_ptr(i)){
-            int row_offset = e->row_index*m2;
-            int col_offset = e->col_index*n2;
+        for(auto& e: mat1.iterate_row(i)){
+            int row_offset = e.row_index*m2;
+            int col_offset = e.col_index*n2;
 
             for(auto j = 0; j<m2; j++){
-                for(auto f: mat2->iterate_row_ptr(j)){
-                    kron_mat->insert_entry(row_offset+f->row_index,col_offset+f->col_index);
+                for(auto& f: mat2.iterate_row(j)){
+                    kron_mat.insert_entry(row_offset+f.row_index,col_offset+f.col_index);
                 }
             }
 

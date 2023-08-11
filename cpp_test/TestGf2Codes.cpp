@@ -12,12 +12,12 @@ TEST(TestRepCode, init) {
     ASSERT_EQ(pcm.m,n-1);
 
     for(int i = 0; i<n-1; i++){
-        auto e = pcm.get_entry(i,i);
-        ASSERT_EQ(e->at_end(),false);
+        auto& e = pcm.get_entry(i,i);
+        ASSERT_EQ(e.at_end(),false);
     }
     for(int i = 0; i<n-1; i++){
-        auto e = pcm.get_entry(i,i+1);
-        ASSERT_EQ(e->at_end(),false);
+        auto& e = pcm.get_entry(i,i+1);
+        ASSERT_EQ(e.at_end(),false);
     }
     
 }
@@ -31,12 +31,12 @@ TEST(TestRingCode, init) {
     ASSERT_EQ(pcm.n,n);
     ASSERT_EQ(pcm.m,n);
     for(int i = 0; i<n; i++){
-        auto e = pcm.get_entry(i,i);
-        ASSERT_EQ(e->at_end(),false);
+        auto& e = pcm.get_entry(i,i);
+        ASSERT_EQ(e.at_end(),false);
     }
     for(int i = 0; i<n; i++){
-        auto e = pcm.get_entry(i,(i+1)%n);
-        ASSERT_EQ(e->at_end(),false);
+        auto& e = pcm.get_entry(i,(i+1)%n);
+        ASSERT_EQ(e.at_end(),false);
     }
     
 }
@@ -66,7 +66,7 @@ TEST(TestHammingCode, init) {
         int row_sum = 0;
         for (int j = 0; j < r; j++) {
             auto e = pcm.get_entry(j, i);
-            if (!e->at_end()) {
+            if (!e.at_end()) {
                 row_sum++;
             }
         }
