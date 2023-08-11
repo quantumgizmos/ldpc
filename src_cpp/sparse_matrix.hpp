@@ -61,14 +61,13 @@ public:
         return std::make_shared<SparseMatrix<T,ENTRY_OBJ>>(m,n,entry_count);
     }
 
-    ENTRY_OBJ<T>* insert_row(int row_index, std::vector<int>& col_indices, std::vector<T>& values){
+    void insert_row(int row_index, std::vector<int>& col_indices, std::vector<T>& values){
         BASE::insert_row(row_index,col_indices);
         int i = 0;
-        for(auto e: this->iterate_row_ptr(row_index)){
-            e->value = values[i];
+        for(auto& e: this->iterate_row(row_index)){
+            e.value = values[i];
             i++; 
         }
-        return this->row_heads[row_index];
     }
 
     ~SparseMatrix() = default;

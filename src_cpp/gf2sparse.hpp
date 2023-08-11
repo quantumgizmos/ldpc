@@ -186,9 +186,9 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec(std::vector<uint8_t>& input_v
     // Iterate through each row of the matrix
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row_ptr(i)){
+        for(auto& e: this->iterate_row(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
-            output_vector[i] ^= input_vector[e->col_index];
+            output_vector[i] ^= input_vector[e.col_index];
         }
     }
 
@@ -310,24 +310,24 @@ void GF2Sparse<ENTRY_OBJ>::add_rows(int i, int j){
     bool intersection;
     std::vector<ENTRY_OBJ*> entries_to_remove;
 
-    for(auto g: this->iterate_row_ptr(j)){
+    for(auto& g: this->iterate_row(j)){
         intersection=false;
-        int col_index = g->col_index;
-        for(auto e: this->iterate_column_ptr(col_index)){
-            if(e->row_index==i){
-                entries_to_remove.push_back(e);
+        int col_index = g.col_index;
+        for(auto& e: this->iterate_column(col_index)){
+            if(e.row_index==i){
+                entries_to_remove.push_back(&e);
                 intersection=true;
             }
         }
         // If there was no intersection between the entries, insert the entry from row j into row i
         if(!intersection){
-            auto ne = this->insert_entry(i,col_index);
+            this->insert_entry(i,col_index);
         }
 
     }
 
     // Remove all the entries from row i that were marked for removal
-    for(auto e: entries_to_remove) this->remove(e);
+    for(auto e: entries_to_remove) this->remove(*e);
 
 }
 
@@ -361,23 +361,23 @@ bool GF2Sparse<ENTRY_OBJ>::gf2_equal(GF2Sparse<ENTRY_OBJ2>& matrix2){
     for(int i = 0; i<this->m; i++){
 
         // Iterate over each non-zero entry in the row of this matrix
-        for(auto e: this->iterate_row_ptr(i)){
+        for(auto& e: this->iterate_row(i)){
 
             // Get the corresponding entry in the same position of the other matrix
-            auto g = matrix2.get_entry(e->row_index,e->col_index);
+            auto& g = matrix2.get_entry(e.row_index,e.col_index);
 
             // If there is no corresponding entry in the same position of the other matrix, the matrices are not equal
-            if(g->at_end()) return false;
+            if(g.at_end()) return false;
         }
 
         // Iterate over each non-zero entry in the row of the other matrix
-        for(auto e: matrix2.iterate_row_ptr(i)){
+        for(auto& e: matrix2.iterate_row(i)){
 
             // Get the corresponding entry in the same position of this matrix
-            auto g = this->get_entry(e->row_index,e->col_index);
+            auto& g = this->get_entry(e.row_index,e.col_index);
 
             // If there is no corresponding entry in the same position of this matrix, the matrices are not equal
-            if(g->at_end()) return false;
+            if(g.at_end()) return false;
         }
     }
 

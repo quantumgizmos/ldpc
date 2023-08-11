@@ -329,16 +329,16 @@ public:
         // Check if the entry is not already at the end of the row or column.
         if(!e_ptr->at_end()){
             // Store pointers to the adjacent entries.
-            auto e_left = e_ptr->left;
-            auto e_right = e_ptr->right;
-            auto e_up = e_ptr->up;
-            auto e_down = e_ptr->down;
+            auto e_left_ptr = e_ptr->left;
+            auto e_right_ptr = e_ptr->right;
+            auto e_up_ptr = e_ptr->up;
+            auto e_down_ptr = e_ptr->down;
 
             // Update pointers of the adjacent entries to remove the entry from the linked list.
-            e_left->right = e_right;
-            e_right->left = e_left;
-            e_up ->down = e_down;
-            e_down -> up = e_up;
+            e_left_ptr->right = e_right_ptr;
+            e_right_ptr->left = e_left_ptr;
+            e_up_ptr->down = e_down_ptr;
+            e_down_ptr->up = e_up_ptr;
 
             /* Update the row/column weights. Note that this information is stored in the
             ENTRY_OBJ.col_index field as a negative number (to avoid confusion with
