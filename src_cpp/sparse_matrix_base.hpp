@@ -315,7 +315,7 @@ public:
      * @param j The column index of the entry to remove.
      */
     void remove_entry(int i, int j){
-        auto e = this->get_entry(i,j);
+        auto& e = this->get_entry(i,j);
         this->remove(e);
     }
 
