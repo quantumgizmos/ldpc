@@ -503,6 +503,58 @@ TEST(GF2Sparse, kron){
 
 }
 
+TEST(GF2Sparse, copy_cols){
+
+    auto mat = GF2Sparse(3,3);
+    mat.insert_entry(1,1);
+    mat.insert_entry(2,2);
+
+    auto expected_output = GF2Sparse(3,2);
+    expected_output.insert_entry(1,0);
+    expected_output.insert_entry(2,1);
+
+    auto copy_col_mat = gf2sparse::copy_cols(mat,{1,2});
+
+    ASSERT_TRUE(copy_col_mat == expected_output);
+
+}
+
+// Test for the transpose function
+TEST(GF2Sparse, TransposeFunctionTest) {
+    // Set up initial square sparse matrix
+    GF2Sparse mat_square(3, 3);
+    mat_square.insert_entry(0, 1);
+    mat_square.insert_entry(1, 2);
+    mat_square.insert_entry(2, 0);
+
+    // Expected output after transposition for the square matrix
+    GF2Sparse expected_output_square(3, 3);
+    expected_output_square.insert_entry(1, 0);
+    expected_output_square.insert_entry(2, 1);
+    expected_output_square.insert_entry(0, 2);
+
+    // Transpose the square matrix using the transpose function
+    GF2Sparse transposed_mat_square = mat_square.transpose();
+
+    // Check if the transposed square matrix matches the expected output
+    ASSERT_TRUE(transposed_mat_square == expected_output_square);
+
+    // Set up initial rectangular sparse matrix
+    GF2Sparse mat_rectangular(2, 3);
+    mat_rectangular.insert_entry(0, 1);
+    mat_rectangular.insert_entry(1, 2);
+
+    // Expected output after transposition for the rectangular matrix
+    GF2Sparse expected_output_rectangular(3, 2);
+    expected_output_rectangular.insert_entry(1, 0);
+    expected_output_rectangular.insert_entry(2, 1);
+
+    // Transpose the rectangular matrix using the transpose function
+    GF2Sparse transposed_mat_rectangular = mat_rectangular.transpose();
+
+    // Check if the transposed rectangular matrix matches the expected output
+    ASSERT_TRUE(transposed_mat_rectangular == expected_output_rectangular);
+}
 
 int main(int argc, char **argv)
 {

@@ -195,9 +195,9 @@ std::vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec2(std::vector<uint8_t>& input_v
     // Iterate through each row of the matrix
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row_ptr(i)){
+        for(auto& e: this->iterate_row(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
-            output_vector[i] ^= input_vector[e->col_index];
+            output_vector[i] ^= input_vector[e.col_index];
         }
     }
 
@@ -216,9 +216,9 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(std::vector<uint8_t>
     #pragma omp for
     for(int i = 0; i < this->m; i++){
         // Iterate through each non-zero entry in the row
-        for(auto e: this->iterate_row_ptr(i)){
+        for(auto& e: this->iterate_row(i)){
             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
-            output_vector[i] ^= input_vector[e->col_index];
+            output_vector[i] ^= input_vector[e.col_index];
         }
     }
 
@@ -299,9 +299,9 @@ GF2Sparse<ENTRY_OBJ> GF2Sparse<ENTRY_OBJ>::transpose(){
     // Iterate over each row of this matrix
     for(int i = 0; i<this->m; i++){
         // Iterate over each non-zero entry in the row
-        for(auto e: this->iterate_row_ptr(i)){
+        for(auto& e: this->iterate_row(i)){
             // Insert the entry into the transposed matrix with the row and column indices swapped
-            pcmT.insert_entry(e->col_index,e->row_index);
+            pcmT.insert_entry(e.col_index,e.row_index);
         }
     }
 
@@ -377,16 +377,16 @@ GF2Sparse<ENTRY_OBJ> gf2_identity(int n){
 
 
 template <class GF2SPARSE_MATRIX_CLASS>
-std::shared_ptr<GF2SPARSE_MATRIX_CLASS> copy_cols(std::shared_ptr<GF2SPARSE_MATRIX_CLASS> mat, std::vector<int> cols){
+GF2SPARSE_MATRIX_CLASS copy_cols(GF2SPARSE_MATRIX_CLASS& mat, std::vector<int> cols){
     int m,n,i,j;
-    m = mat->m;
+    m = mat.m;
     n = cols.size();
-    auto copy_mat = GF2SPARSE_MATRIX_CLASS::New(m,n);
+    auto copy_mat = GF2SPARSE_MATRIX_CLASS(m,n);
     int new_col_index=-1;
     for(auto col_index: cols){
         new_col_index+=1;
-        for(auto e: mat->iterate_column_ptr(col_index)){
-            copy_mat->insert_entry(e->row_index,new_col_index);
+        for(auto& e: mat.iterate_column(col_index)){
+            copy_mat.insert_entry(e.row_index,new_col_index);
         }
     }
     return copy_mat;
