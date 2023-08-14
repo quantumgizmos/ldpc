@@ -37,6 +37,8 @@ class RowReduce{
         bool LOWER_TRIANGULAR;
         int rank;
 
+        RowReduce() = default;
+
         RowReduce(GF2Sparse<ENTRY_OBJ>& A): A(A){
 
             this->pivots.resize(this->A.n,false);
@@ -49,6 +51,20 @@ class RowReduce{
             this->LU_ALLOCATED = false;
             this->LOWER_TRIANGULAR = false;
 
+        }
+
+        void initialise(){
+            
+            this->pivots.resize(this->A.n,false);
+            this->cols.resize(this->A.n);
+            this->rows.resize(this->A.m);
+            this->inv_cols.resize(this->A.n);
+            this->inv_rows.resize(this->A.m);
+            this->x.resize(this->A.n);
+            this->b.resize(this->A.m);
+            this->LU_ALLOCATED = false;
+            this->LOWER_TRIANGULAR = false;
+            
         }
 
         ~RowReduce() = default;
