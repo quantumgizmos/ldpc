@@ -29,34 +29,41 @@ TEST(BpSparse, init)
     ASSERT_EQ(print_sparse_matrix(pcm, true).str(), expected);
 }
 
-// TEST(BpDecoderTest, InitializationTest)
-// {
-//     // Define input arguments for initialization
-//     int n = 3;
-//     auto pcm = bp::BpSparse::New(n - 1, n);
-//     for (int i = 0; i < (n - 1); i++)
-//     {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
-//     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+TEST(BpDecoderTest, InitializationTest)
+{
+    // Define input arguments for initialization
+    int n = 3;
+    auto pcm = bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++)
+    {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int max_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
-//     // Initialize decoder using input arguments
-//     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter);
+    // // Initialize decoder using input arguments
+    // auto decoder = bp::BpDecoder(pcm, channel_probabilities, max_iterations);
 
-//     // Check if member variables are set correctly
-//     EXPECT_EQ(pcm, decoder->pcm);
-//     EXPECT_EQ(pcm->m, decoder->check_count);
-//     EXPECT_EQ(pcm->n, decoder->bit_count);
-//     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
-//     EXPECT_EQ(max_iter, decoder->max_iter);
-//     EXPECT_EQ(0.625, decoder->ms_scaling_factor);
-//     EXPECT_EQ(1, decoder->bp_method);
-//     EXPECT_EQ(0, decoder->schedule);
-//     EXPECT_EQ(1, decoder->omp_thread_count);
-//     EXPECT_EQ(0, decoder->random_serial_schedule);
-// }
+    // Check if member variables are set correctly
+    EXPECT_EQ(pcm, pcm);
+
+    print_sparse_matrix(pcm);
+    std::cout << "------------------" << std::endl;
+    print_sparse_matrix(decoder.pcm);
+
+    // std::cout<<pcm == decoder.pcm<<std::endl;
+
+    // EXPECT_EQ(pcm.m, decoder.check_count);
+    // EXPECT_EQ(pcm.n, decoder.bit_count);
+    // EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
+    // EXPECT_EQ(max_iterations, decoder.maximum_iterations);
+    // EXPECT_EQ(0.625, decoder.ms_scaling_factor);
+    // EXPECT_EQ(1, decoder.bp_method);
+    // EXPECT_EQ(0, decoder.schedule);
+    // EXPECT_EQ(1, decoder.omp_thread_count);
+    // EXPECT_EQ(0, decoder.random_schedule_seed);
+}
 
 // TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
 // {
@@ -65,8 +72,8 @@ TEST(BpSparse, init)
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++)
 //     {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
 //     int max_iter = 10;
 //     auto channel_probabilities = vector<double>{0.1, 0.2, 0.3, 0.4};
@@ -83,17 +90,17 @@ TEST(BpSparse, init)
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter, bp_method, min_sum_scaling_factor, bp_schedule, omp_threads, serial_schedule, random_schedule);
 
 //     // Check if member variables are set correctly
-//     EXPECT_EQ(pcm, decoder->pcm);
-//     EXPECT_EQ(pcm->m, decoder->check_count);
-//     EXPECT_EQ(pcm->n, decoder->bit_count);
-//     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
-//     EXPECT_EQ(max_iter, decoder->max_iter);
-//     EXPECT_EQ(min_sum_scaling_factor, decoder->ms_scaling_factor);
-//     EXPECT_EQ(bp_method, decoder->bp_method);
-//     EXPECT_EQ(bp_schedule, decoder->schedule);
-//     EXPECT_EQ(omp_threads, decoder->omp_thread_count);
-//     EXPECT_EQ(serial_schedule, decoder->serial_schedule_order);
-//     EXPECT_EQ(random_schedule, decoder->random_serial_schedule);
+//     EXPECT_EQ(pcm, decoder.pcm);
+//     EXPECT_EQ(pcm.m, decoder.check_count);
+//     EXPECT_EQ(pcm.n, decoder.bit_count);
+//     EXPECT_EQ(channel_probabilities, decoder.channel_probs);
+//     EXPECT_EQ(max_iter, decoder.max_iter);
+//     EXPECT_EQ(min_sum_scaling_factor, decoder.ms_scaling_factor);
+//     EXPECT_EQ(bp_method, decoder.bp_method);
+//     EXPECT_EQ(bp_schedule, decoder.schedule);
+//     EXPECT_EQ(omp_threads, decoder.omp_thread_count);
+//     EXPECT_EQ(serial_schedule, decoder.serial_schedule_order);
+//     EXPECT_EQ(random_schedule, decoder.random_serial_schedule);
 //     EXPECT_EQ(omp_threads, omp_get_max_threads());
 // }
 
@@ -104,8 +111,8 @@ TEST(BpSparse, init)
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++)
 //     {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
 //     int max_iter = 100;
 //     auto channel_probabilities = vector<double>{0.1, 0.2, 0.3};
@@ -114,16 +121,16 @@ TEST(BpSparse, init)
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter);
 
 //     // Call initialise_log_domain_bp() function
-//     decoder->initialise_log_domain_bp();
+//     decoder.initialise_log_domain_bp();
 
 //     // Check if member variables are set correctly
-//     for (int i = 0; i < decoder->bit_count; i++)
+//     for (int i = 0; i < decoder.bit_count; i++)
 //     {
-//         EXPECT_EQ(log((1 - channel_probabilities[i]) / channel_probabilities[i]), decoder->initial_log_prob_ratios[i]);
+//         EXPECT_EQ(log((1 - channel_probabilities[i]) / channel_probabilities[i]), decoder.initial_log_prob_ratios[i]);
 
-//         for (auto e : decoder->pcm->iterate_column_ptr(i))
+//         for (auto e : decoder.pcm.iterate_column_ptr(i))
 //         {
-//             EXPECT_EQ(decoder->initial_log_prob_ratios[i], e->bit_to_check_msg);
+//             EXPECT_EQ(decoder.initial_log_prob_ratios[i], e->bit_to_check_msg);
 //         }
 //     }
 // }
@@ -135,33 +142,33 @@ TEST(BpSparse, init)
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++)
 //     {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter,0,79879879,0);
 
 //     // Check if member variables are set correctly
-//     EXPECT_EQ(pcm, decoder->pcm);
-//     EXPECT_EQ(pcm->m, decoder->check_count);
-//     EXPECT_EQ(pcm->n, decoder->bit_count);
-//     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
-//     EXPECT_EQ(max_iter, decoder->max_iter);
-//     EXPECT_EQ(79879879, decoder->ms_scaling_factor);
-//     EXPECT_EQ(0, decoder->bp_method);
-//     EXPECT_EQ(0, decoder->schedule);
-//     EXPECT_EQ(1, decoder->omp_thread_count);
-//     EXPECT_EQ(0, decoder->random_serial_schedule);
+//     EXPECT_EQ(pcm, decoder.pcm);
+//     EXPECT_EQ(pcm.m, decoder.check_count);
+//     EXPECT_EQ(pcm.n, decoder.bit_count);
+//     EXPECT_EQ(channel_probabilities, decoder.channel_probs);
+//     EXPECT_EQ(max_iter, decoder.max_iter);
+//     EXPECT_EQ(79879879, decoder.ms_scaling_factor);
+//     EXPECT_EQ(0, decoder.bp_method);
+//     EXPECT_EQ(0, decoder.schedule);
+//     EXPECT_EQ(1, decoder.omp_thread_count);
+//     EXPECT_EQ(0, decoder.random_serial_schedule);
 
 //     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
 //     auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
 
 //     auto count = 0;
 //     for(auto syndrome: syndromes){
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }
@@ -174,33 +181,33 @@ TEST(BpSparse, init)
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++)
 //     {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter,1,0.625,0);
 
 //     // Check if member variables are set correctly
-//     EXPECT_EQ(pcm, decoder->pcm);
-//     EXPECT_EQ(pcm->m, decoder->check_count);
-//     EXPECT_EQ(pcm->n, decoder->bit_count);
-//     EXPECT_EQ(channel_probabilities, decoder->channel_probs);
-//     EXPECT_EQ(max_iter, decoder->max_iter);
-//     EXPECT_EQ(0.625, decoder->ms_scaling_factor);
-//     EXPECT_EQ(1, decoder->bp_method);
-//     EXPECT_EQ(0, decoder->schedule);
-//     EXPECT_EQ(1, decoder->omp_thread_count);
-//     EXPECT_EQ(0, decoder->random_serial_schedule);
+//     EXPECT_EQ(pcm, decoder.pcm);
+//     EXPECT_EQ(pcm.m, decoder.check_count);
+//     EXPECT_EQ(pcm.n, decoder.bit_count);
+//     EXPECT_EQ(channel_probabilities, decoder.channel_probs);
+//     EXPECT_EQ(max_iter, decoder.max_iter);
+//     EXPECT_EQ(0.625, decoder.ms_scaling_factor);
+//     EXPECT_EQ(1, decoder.bp_method);
+//     EXPECT_EQ(0, decoder.schedule);
+//     EXPECT_EQ(1, decoder.omp_thread_count);
+//     EXPECT_EQ(0, decoder.random_serial_schedule);
 
 //     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
 //     auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
 
 //     auto count = 0;
 //     for(auto syndrome: syndromes){
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }
@@ -211,11 +218,11 @@ TEST(BpSparse, init)
 //     int n = 5;
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++) {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter, 0, 4324234, 0);
@@ -225,7 +232,7 @@ TEST(BpSparse, init)
 
 //     auto count = 0;
 //     for (auto syndrome : syndromes) {
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }
@@ -236,11 +243,11 @@ TEST(BpSparse, init)
 //     int n = 5;
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++) {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter, 1, 1, 0);
@@ -250,7 +257,7 @@ TEST(BpSparse, init)
 
 //     auto count = 0;
 //     for (auto syndrome : syndromes) {
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }
@@ -261,11 +268,11 @@ TEST(BpSparse, init)
 //     int n = 5;
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++) {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter, 0, 4324234, 1);
@@ -275,7 +282,7 @@ TEST(BpSparse, init)
 
 //     auto count = 0;
 //     for (auto syndrome : syndromes) {
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }
@@ -286,11 +293,11 @@ TEST(BpSparse, init)
 //     int n = 5;
 //     auto pcm = bp::BpSparse::New(n - 1, n);
 //     for (int i = 0; i < (n - 1); i++) {
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i, (i + 1) % n);
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
 //     }
-//     int max_iter = pcm->n;
-//     auto channel_probabilities = vector<double>(pcm->n, 0.1);
+//     int max_iter = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
 //     // Initialize decoder using input arguments
 //     auto decoder = make_shared<bp::BpDecoder>(pcm, channel_probabilities, max_iter, 1, 1, 1);
@@ -300,7 +307,7 @@ TEST(BpSparse, init)
 
 //     auto count = 0;
 //     for (auto syndrome : syndromes) {
-//         auto decoding = decoder->decode(syndrome);
+//         auto decoding = decoder.decode(syndrome);
 //         ASSERT_EQ(expected_decoding[count], decoding);
 //         count++;
 //     }

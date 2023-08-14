@@ -36,86 +36,89 @@ class BpEntry: public sparse_matrix_base::EntryBase<BpEntry>{
 typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
-// class BpDecoder{
-//     public:
-//         shared_ptr<BpSparse> pcm;
-//         int check_count,max_iter,bp_method, schedule;
-//         int bit_count;
-//         double ms_scaling_factor;
-//         vector<uint8_t> decoding;
-//         vector<uint8_t> candidate_syndrome;
-//         vector<double> channel_probs;
-//         vector<double> log_prob_ratios;
-//         vector<double> initial_log_prob_ratios;
-//         vector<double> soft_syndrome;
-//         vector<int> serial_schedule_order;
-//         int random_serial_schedule;
-//         int iterations;
-//         int omp_thread_count;
-//         bool converge;
-//         unsigned random_schedule_seed;
+class BpDecoder{
+    public:
+        BpSparse& pcm;
+        vector<double> channel_probabilities;
+        int check_count;
+        int bit_count;
+        int maximum_iterations;
+        int bp_method;
+        int schedule;
+        double ms_scaling_factor;
+        vector<uint8_t> decoding;
+        vector<uint8_t> candidate_syndrome;
+        
+        vector<double> log_prob_ratios;
+        vector<double> initial_log_prob_ratios;
+        vector<double> soft_syndrome;
+        vector<int> serial_schedule_order;
+        int iterations;
+        int omp_thread_count;
+        bool converge;
+        unsigned random_schedule_seed;
 
-//         BpDecoder(
-//             shared_ptr<BpSparse> matrix,
-//             vector<double>& channel_probabilities,
-//             int maximum_iterations,
-//             int bp_method=1,
-//             double min_sum_scaling_factor = 0.625,
-//             int schedule=0,
-//             int omp_threads = 1,
-//             vector<int> serial_schedule = NULL_INT_VECTOR,
-//             int random_schedule = 0){
+        BpDecoder(
+            BpSparse& parity_check_matrix,
+            vector<double> channel_probabilities,
+            int maximum_iterations = 0,
+            int bp_method=1,
+            double min_sum_scaling_factor = 0.625,
+            int schedule=0,
+            int omp_threads = 1,
+            vector<int> serial_schedule = NULL_INT_VECTOR,
+            int random_schedule_seed = 0):
+            pcm(parity_check_matrix) //the parity check matrix is passed in by reference
+            {
             
-//             this->pcm = matrix;
-//             this->check_count = pcm->m;
-//             this->bit_count = pcm->n;
-//             this->channel_probs=channel_probabilities;
-//             this->ms_scaling_factor=min_sum_scaling_factor;
-//             this->max_iter=maximum_iterations;
-//             this->initial_log_prob_ratios.resize(bit_count);
-//             this->log_prob_ratios.resize(bit_count);
-//             this->candidate_syndrome.resize(check_count);
-//             this->decoding.resize(bit_count);
-//             this->converge=0;
-//             this->bp_method=bp_method;
-//             this->iterations=0;
-//             this->schedule = schedule;
-//             this->omp_thread_count = omp_threads;
-//             this->random_schedule_seed = random_schedule_seed;
+            this->check_count = pcm.m;
+            this->bit_count = pcm.n;
+            this->channel_probabilities = channel_probabilities;
+            this->ms_scaling_factor=min_sum_scaling_factor;
+            this->maximum_iterations=maximum_iterations;
+            this->initial_log_prob_ratios.resize(bit_count);
+            this->log_prob_ratios.resize(bit_count);
+            this->candidate_syndrome.resize(check_count);
+            this->decoding.resize(bit_count);
+            this->converge=0;
+            this->bp_method=bp_method;
+            this->iterations=0;
+            this->schedule = schedule;
+            this->omp_thread_count = omp_threads;
+            this->random_schedule_seed = random_schedule_seed;
 
-//             if(serial_schedule != NULL_INT_VECTOR){
-//                 this->serial_schedule_order = serial_schedule;
-//             }
-//             else{
-//                 this->serial_schedule_order.resize(bit_count);
-//                 for(int i = 0; i < bit_count; i++) this->serial_schedule_order[i] = i;
-//                 if(random_schedule>0){
-//                     random_schedule_seed = std::chrono::system_clock::now().time_since_epoch().count();
-//                     shuffle(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
-//                 }
-//             }
-//             this->random_serial_schedule = random_schedule;
+            if(serial_schedule != NULL_INT_VECTOR){
+                this->serial_schedule_order = serial_schedule;
+            }
+            else{
+                this->serial_schedule_order.resize(bit_count);
+                for(int i = 0; i < bit_count; i++) this->serial_schedule_order[i] = i;
+                if(random_schedule_seed>0){
+                    random_schedule_seed = std::chrono::system_clock::now().time_since_epoch().count();
+                    shuffle(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
+                }
+            }
 
-//             //Initialise OMP thread pool
-//             this->omp_thread_count = omp_threads;
-//             this->set_omp_thread_count(this->omp_thread_count);
-//         }
+            //Initialise OMP thread pool
+            this->omp_thread_count = omp_threads;
+            this->set_omp_thread_count(this->omp_thread_count);
+        }
 
-//         ~BpDecoder(){};
+        ~BpDecoder() = default;
 
-//         void set_omp_thread_count(int count){
-//             this->omp_thread_count = count;
-//             omp_set_num_threads(this->omp_thread_count);
-//         }
+        void set_omp_thread_count(int count){
+            this->omp_thread_count = count;
+            omp_set_num_threads(this->omp_thread_count);
+        }
 
 
 //         void initialise_log_domain_bp(){
 //             // initialise BP
 //             #pragma omp for
 //             for(int i=0;i<this->bit_count;i++){
-//                 this->initial_log_prob_ratios[i] = log((1-this->channel_probs[i])/this->channel_probs[i]);
+//                 this->initial_log_prob_ratios[i] = log((1-this->channel_probabilities[i])/this->channel_probabilities[i]);
 
-//                 for(auto e: this->pcm->iterate_column_ptr(i)){
+//                 for(auto e: this->pcm.iterate_column_ptr(i)){
 //                     e->bit_to_check_msg = this->initial_log_prob_ratios[i];
 //                 }
 //             }
@@ -137,7 +140,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //             initialise_log_domain_bp();
 
 //             //main interation loop
-//             for(int it=1;it<=max_iter;it++){
+//             for(int it=1;it<=maximum_iterations;it++){
 
 //                 if(CONVERGED) continue;
 
@@ -147,13 +150,13 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                     #pragma omp for
 //                     for(int i=0;i<check_count;i++){
 //                         double temp=1.0;
-//                         for(auto e: pcm->iterate_row_ptr(i)){
+//                         for(auto e: pcm.iterate_row_ptr(i)){
 //                             e->check_to_bit_msg=temp;
 //                             temp*=tanh(e->bit_to_check_msg/2);
 //                         }
 
 //                         temp=1;
-//                         for(auto e: pcm->reverse_iterate_row_ptr(i)){
+//                         for(auto e: pcm.reverse_iterate_row_ptr(i)){
 //                             e->check_to_bit_msg*=temp;
 //                             e->check_to_bit_msg = pow(-1,syndrome[i])*log((1+e->check_to_bit_msg)/(1-e->check_to_bit_msg));
 //                             temp*=tanh(e->bit_to_check_msg/2);
@@ -170,7 +173,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                         total_sgn=syndrome[i];
 //                         double temp = numeric_limits<double>::max();
 
-//                         for(auto e: pcm->iterate_row_ptr(i)){
+//                         for(auto e: pcm.iterate_row_ptr(i)){
 //                             if(e->bit_to_check_msg<=0) total_sgn+=1;   
 //                             e->check_to_bit_msg = abs(temp);
 //                             if(abs(e->bit_to_check_msg)<temp){
@@ -179,7 +182,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                         }
 
 //                         temp = numeric_limits<double>::max();
-//                         for(auto e: pcm->reverse_iterate_row_ptr(i)){
+//                         for(auto e: pcm.reverse_iterate_row_ptr(i)){
 //                             sgn=total_sgn;
 //                             if(e->bit_to_check_msg<=0) sgn+=1;
 //                             if(temp<e->check_to_bit_msg){
@@ -202,7 +205,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 #pragma omp for
 //                 for(int i=0;i<bit_count;i++){
 //                     double temp=initial_log_prob_ratios[i];
-//                     for(auto e: pcm->iterate_column_ptr(i)){
+//                     for(auto e: pcm.iterate_column_ptr(i)){
 //                         e->bit_to_check_msg=temp;
 //                         temp+=e->check_to_bit_msg;
 //                         // if(isnan(temp)) temp = e->bit_to_check_msg;
@@ -215,7 +218,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                     // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
 //                     if(temp<=0){
 //                         decoding[i] = 1;
-//                         for(auto e: pcm->iterate_column_ptr(i)){
+//                         for(auto e: pcm.iterate_column_ptr(i)){
 //                             candidate_syndrome[e->row_index]^=1;                        }
 //                     }
 //                     else decoding[i]=0;
@@ -224,7 +227,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
 //                 //compute the syndrome for the current candidate decoding solution
-//                 // candidate_syndrome = pcm->mulvec_parallel(decoding,candidate_syndrome);
+//                 // candidate_syndrome = pcm.mulvec_parallel(decoding,candidate_syndrome);
 //                 int loop_break = false;
 //                 CONVERGED = false;
 //                 #pragma omp barrier
@@ -253,7 +256,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 #pragma omp for
 //                 for(int i=0;i<bit_count;i++){
 //                     double temp=0;
-//                     for(auto e: pcm->reverse_iterate_column_ptr(i)){
+//                     for(auto e: pcm.reverse_iterate_column_ptr(i)){
 //                         e->bit_to_check_msg+=temp;
 //                         temp+=e->check_to_bit_msg;
 //                     }
@@ -281,7 +284,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
 
-//             for(int it=1;it<=max_iter;it++){
+//             for(int it=1;it<=maximum_iterations;it++){
 
 //                 if(CONVERGED) continue;
 
@@ -292,15 +295,15 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 #pragma omp for
 //                 for(int bit_index: serial_schedule_order){
 //                     double temp;
-//                     log_prob_ratios[bit_index]=log((1-channel_probs[bit_index])/channel_probs[bit_index]);
+//                     log_prob_ratios[bit_index]=log((1-channel_probabilities[bit_index])/channel_probabilities[bit_index]);
 //                     // cout<<log_prob_ratios[bit_index]<<endl;
                 
 //                     if(bp_method==0){
-//                         for(auto e: pcm->iterate_column_ptr(bit_index)){
+//                         for(auto e: pcm.iterate_column_ptr(bit_index)){
 //                             check_index = e->row_index;
                             
 //                             e->check_to_bit_msg=1.0;
-//                             for(auto g: pcm->iterate_row_ptr(check_index)){
+//                             for(auto g: pcm.iterate_row_ptr(check_index)){
 //                                 if(g!=e){
 //                                     e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
 //                                 }
@@ -311,11 +314,11 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                         }
 //                     }
 //                     else if(bp_method==1){
-//                         for(auto e: pcm->iterate_column_ptr(bit_index)){
+//                         for(auto e: pcm.iterate_column_ptr(bit_index)){
 //                             check_index = e->row_index;
 //                             int sgn=syndrome[check_index];
 //                             temp = numeric_limits<double>::max();
-//                             for(auto g: pcm->iterate_row_ptr(check_index)){
+//                             for(auto g: pcm.iterate_row_ptr(check_index)){
 //                                 if(g!=e){
 //                                     if(abs(g->bit_to_check_msg)<temp) temp = abs(g->bit_to_check_msg);
 //                                     if(g->bit_to_check_msg<=0) sgn+=1;
@@ -332,7 +335,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                     else decoding[bit_index]=0;
 
 //                     temp=0;
-//                     for(auto e: pcm->reverse_iterate_column_ptr(bit_index)){
+//                     for(auto e: pcm.reverse_iterate_column_ptr(bit_index)){
 //                         e->bit_to_check_msg+=temp;
 //                         temp += e->check_to_bit_msg;
 //                     }
@@ -347,7 +350,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 CONVERGED = 1;
 
                 
-//                 candidate_syndrome = pcm->mulvec(decoding,candidate_syndrome);
+//                 candidate_syndrome = pcm.mulvec(decoding,candidate_syndrome);
 
 //                 for(int i=0;i<check_count;i++){
 //                     if(loop_break) continue;
@@ -402,7 +405,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 //             set<int> check_indices_updated;
 
-//             for(int it=1;it<=max_iter;it++){
+//             for(int it=1;it<=maximum_iterations;it++){
 
 //                 if(CONVERGED) continue;
 
@@ -414,15 +417,15 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 #pragma omp for
 //                 for(int bit_index: serial_schedule_order){
 //                     double temp;
-//                     log_prob_ratios[bit_index]=log((1-channel_probs[bit_index])/channel_probs[bit_index]);
+//                     log_prob_ratios[bit_index]=log((1-channel_probabilities[bit_index])/channel_probabilities[bit_index]);
 //                     // cout<<log_prob_ratios[bit_index]<<endl;
                 
 //                     if(bp_method==0){
-//                         for(auto e: pcm->iterate_column_ptr(bit_index)){
+//                         for(auto e: pcm.iterate_column_ptr(bit_index)){
 //                             check_index = e->row_index;
                             
 //                             e->check_to_bit_msg=1.0;
-//                             for(auto g: pcm->iterate_row_ptr(check_index)){
+//                             for(auto g: pcm.iterate_row_ptr(check_index)){
 //                                 if(g!=e){
 //                                     e->check_to_bit_msg*=tanh(g->bit_to_check_msg/2);
 //                                 }
@@ -433,13 +436,13 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                         }
 //                     }
 //                     else if(bp_method==1){
-//                         for(auto e: pcm->iterate_column_ptr(bit_index)){
+//                         for(auto e: pcm.iterate_column_ptr(bit_index)){
 //                             check_index = e->row_index;
 //                             // int sgn=syndrome[check_index];
 //                             int sgn = 0;
 //                             temp = numeric_limits<double>::max();
 
-//                             for(auto g: pcm->iterate_row_ptr(check_index)){
+//                             for(auto g: pcm.iterate_row_ptr(check_index)){
 //                                 if(g!=e){
 //                                     if(abs(g->bit_to_check_msg)<temp){
 //                                         temp = abs(g->bit_to_check_msg);
@@ -504,7 +507,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                     else decoding[bit_index]=0;
 
 //                     temp=0;
-//                     for(auto e: pcm->reverse_iterate_column_ptr(bit_index)){
+//                     for(auto e: pcm.reverse_iterate_column_ptr(bit_index)){
 //                         e->bit_to_check_msg+=temp;
 //                         temp += e->check_to_bit_msg;
 //                     }
@@ -533,7 +536,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //                 CONVERGED = 1;
 
                 
-//                 candidate_syndrome = pcm->mulvec(decoding,candidate_syndrome);
+//                 candidate_syndrome = pcm.mulvec(decoding,candidate_syndrome);
 
 //                 for(int i=0;i<check_count;i++){
 //                     if(loop_break) continue;
@@ -556,7 +559,7 @@ typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
 //         }
 
 
-// };
+};
 
 } // end namespace bp
 
