@@ -6,47 +6,87 @@
 #include "osd.hpp"
 #include "gf2codes.hpp"
 
-TEST(OsdDecoder, init){
+TEST(OsdDecoder, rep_code_test1){
 
     auto rep_code = gf2codes::rep_code<bp::BpEntry>(3);
-    
-
+    auto error = vector<uint8_t>{0, 0, 1};
+    auto syndrome = rep_code.mulvec(error);
+    auto error_channel = vector<double>{0.1,0.1,0.1};
+    auto lbr = vector<double>{0, 0, 0};
+    auto decoder = osd::OsdDecoder(rep_code,0,0,error_channel);
+    auto decoding = decoder.decode(syndrome,lbr);
+    auto syndrome2 = rep_code.mulvec(decoding);
+    ASSERT_TRUE(syndrome2 == syndrome);
 
 }
 
+TEST(OsdDecoder, ring_code_test1){
 
-// TEST(OsdDecoder, PrintsCorrectly) {
-//     auto pcm = bp::BpSparse(4, 4);
+    auto rep_code = gf2codes::ring_code<bp::BpEntry>(3);
+    auto error = vector<uint8_t>{0, 0, 1};
+    auto syndrome = rep_code.mulvec(error);
+    auto error_channel = vector<double>{0.1,0.1,0.1};
+    auto lbr = vector<double>{0, 0, 0};
+    auto decoder = osd::OsdDecoder(rep_code,0,0,error_channel);
+    auto decoding = decoder.decode(syndrome,lbr);
+    auto syndrome2 = rep_code.mulvec(decoding);
+    ASSERT_TRUE(syndrome2 == syndrome);
+
+}
+
+TEST(OsdDecoder, PrintsCorrectly) {
+    auto pcm = bp::BpSparse(4, 4);
     
-//     for(int i = 0; i<4; i++) pcm.insert_entry(i, i);
-//     pcm.insert_entry(1, 0);
-//     pcm.insert_entry(2, 0);
+    for(int i = 0; i<4; i++) pcm.insert_entry(i, i);
+    pcm.insert_entry(1, 0);
+    pcm.insert_entry(2, 0);
 
-//     print_sparse_matrix(pcm);
+    print_sparse_matrix(pcm);
 
-//     auto error = vector<uint8_t>{0, 1, 1, 1};
-//     auto syndrome = vector<uint8_t>{0, 0, 0, 0};
-//     auto error_channel = vector<double>{0.1,0.1,0.1,0.1};
-//     pcm.mulvec(error, syndrome);
+    auto error = vector<uint8_t>{0, 1, 1, 1};
+    auto error_channel = vector<double>{0.1,0.1,0.1,0.1};
+    auto syndrome = pcm.mulvec(error);
 
-//     cout<<endl;
-//     print_vector(syndrome);
+    cout<<endl;
+    print_vector(syndrome);
 
-//     auto lbr = vector<double>{0, 0, 0, 0};
-//     for(int i = 0; i<4; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
-//     auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
-//     auto decoding = osdD->decode(syndrome, lbr);
-//     auto syndrome2 = vector<uint8_t>{0, 0, 0, 0};
-//     pcm.mulvec(decoding, syndrome2);
+    auto lbr = vector<double>{0, 0, 0, 0};
+    for(int i = 0; i<4; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
+    auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
+    auto decoding = osdD->decode(syndrome, lbr);
+    auto syndrome2 = pcm.mulvec(decoding);
 
-//     cout<<endl;
-//     print_vector(syndrome2);
+    cout<<endl;
+    print_vector(syndrome2);
 
-//     for(int i = 0; i<4; i++) ASSERT_EQ(syndrome[i], syndrome2[i]);
+    // ASSERT_TRUE(syndrome == syndrome2);
 
-//     delete osdD;
 
-// }
+    auto LU = gf2sparse_linalg::RowReduce(pcm);
+    LU.rref(false,true);
+    LU.lu_solve(syndrome);
+
+    auto syndrome3 = pcm.mulvec(decoding);
+
+    print_vector(syndrome3);
+    print_vector(LU.rows);
+
+    auto LUpcm = LU.L.matmul(LU.U);
+
+    print_sparse_matrix(LUpcm);
+
+    cout<<endl;
+
+    print_sparse_matrix(LU.L);
+    cout<<endl;
+    print_sparse_matrix(LU.U);
+
+    // ASSERT_TRUE(syndrome == syndrome3);
+
+
+    delete osdD;
+
+}
 
 
 // TEST(OsdDecoder, AllZeroSyndrome) {
@@ -122,14 +162,14 @@ TEST(OsdDecoder, init){
 //     pcm.insert_entry(1, 1); pcm.insert_entry(1, 2); pcm.insert_entry(1, 5); pcm.insert_entry(1, 6);
 //     pcm.insert_entry(2, 0); pcm.insert_entry(2, 2); pcm.insert_entry(2, 4); pcm.insert_entry(2, 6);
 
-//     print_sparse_matrix(*pcm);
+//     // print_sparse_matrix(pcm);
 
 //     // Create a received codeword with a single-bit error
 //     auto error = vector<uint8_t>{0, 1, 0, 1, 0, 1, 1};
 //     auto syndrome = vector<uint8_t>{0, 0, 0};
 //     pcm.mulvec(error, syndrome);
 
-//     print_vector(syndrome);
+//     // print_vector(syndrome);
 
 //     // Create a vector of log-likelihood ratios for the received codeword
 //     auto error_channel = vector<double>{0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
@@ -166,7 +206,7 @@ TEST(OsdDecoder, init){
 //     // Verify that the decoded codeword is valid by computing the syndrome
 //     auto syndrome2 = vector<uint8_t>{0, 0, 0};
 //     pcm.mulvec(decoding, syndrome2);
-//     print_vector(decoding);
+//     // print_vector(decoding);
 //     for (int i = 0; i < 3; i++) {
 //         ASSERT_EQ(syndrome[i], syndrome2[i]);
 //     }

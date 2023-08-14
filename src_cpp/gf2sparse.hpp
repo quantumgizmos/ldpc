@@ -90,7 +90,7 @@ class GF2Sparse: public sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
          * @param input_vector The vector to multiply the matrix with
          * @return The resulting vector
          */
-        std::vector<uint8_t> mulvec2(std::vector<uint8_t>& input_vector);
+        std::vector<uint8_t> mulvec(std::vector<uint8_t>& input_vector);
 
         /**
          * @brief Multiplies the matrix by a vector with parallel execution using OpenMP and stores the result in another vector
@@ -188,7 +188,7 @@ std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec(std::vector<uint8_t>& input_v
 }
 
 template<class ENTRY_OBJ>
-std::vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec2(std::vector<uint8_t>& input_vector){
+std::vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec(std::vector<uint8_t>& input_vector){
     // Initialize the output vector to all zeros
     std::vector<uint8_t> output_vector(this->m,0);
 

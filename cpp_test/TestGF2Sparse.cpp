@@ -394,7 +394,7 @@ TEST(GF2Sparse,mulvec_timing){
 
     for(int i = 0; i<1000000; i++){
         input_vector[2]^=1;
-        auto output = matrix.mulvec2(input_vector);
+        auto output = matrix.mulvec(input_vector);
     }
 
     const auto end_time2 = std::chrono::high_resolution_clock::now();
