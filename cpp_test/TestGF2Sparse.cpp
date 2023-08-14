@@ -556,6 +556,91 @@ TEST(GF2Sparse, TransposeFunctionTest) {
     ASSERT_TRUE(transposed_mat_rectangular == expected_output_rectangular);
 }
 
+// Test for the vstack function
+TEST(GF2Sparse, VstackFunctionTest) {
+    // Set up input matrices
+    GF2Sparse mat1(2, 3);
+    mat1.insert_entry(0, 1);
+    mat1.insert_entry(1, 2);
+
+    GF2Sparse mat2(1, 3);
+    mat2.insert_entry(0, 0);
+
+    std::vector<GF2Sparse<>> mats = {mat1, mat2};
+
+    // Expected output after vertical stacking
+    GF2Sparse expected_output(3, 3);
+    expected_output.insert_entry(0, 1);
+    expected_output.insert_entry(1, 2);
+    expected_output.insert_entry(2, 0);
+
+    // Vertical stack the matrices using the vstack function
+    GF2Sparse stacked_mat = vstack(mats);
+
+    // Check if the stacked matrix matches the expected output
+    ASSERT_TRUE(stacked_mat == expected_output);
+}
+
+// Test for the vstack function
+TEST(GF2Sparse, VstackFunctionTestInocorrectDimensions) {
+    // Set up input matrices
+    GF2Sparse mat1(2, 3);
+    mat1.insert_entry(0, 1);
+    mat1.insert_entry(1, 2);
+
+    GF2Sparse mat2(1, 2); // Different number of columns
+    mat2.insert_entry(0, 0);
+
+    std::vector<GF2Sparse<>> mats = {mat1, mat2};
+
+    // Attempt to vertical stack matrices with different number of columns
+    ASSERT_THROW(GF2Sparse stacked_mat = vstack(mats), std::invalid_argument);
+}
+
+// Test for the hstack function
+TEST(GF2Sparse, HstackFunctionTest) {
+    // Set up input matrices
+    GF2Sparse mat1(2, 3);
+    mat1.insert_entry(0, 1);
+    mat1.insert_entry(1, 2);
+
+    GF2Sparse mat2(2, 2);
+    mat2.insert_entry(0, 0);
+    mat2.insert_entry(1, 1);
+
+    std::vector<GF2Sparse<>> mats = {mat1, mat2};
+
+    // Expected output after horizontal stacking
+    GF2Sparse expected_output(2, 5);
+    expected_output.insert_entry(0, 1);
+    expected_output.insert_entry(1, 2);
+    expected_output.insert_entry(0, 3);
+    expected_output.insert_entry(1, 4);
+
+    // Horizontal stack the matrices using the hstack function
+    GF2Sparse stacked_mat = hstack(mats);
+
+    // Check if the stacked matrix matches the expected output
+    ASSERT_TRUE(stacked_mat == expected_output);
+}
+
+// Test for the hstack function with incorrect dimensions
+TEST(GF2Sparse, HstackFunctionTestIncorrectDimensions) {
+    // Set up input matrices
+    GF2Sparse mat1(2, 3);
+    mat1.insert_entry(0, 1);
+    mat1.insert_entry(1, 2);
+
+    GF2Sparse mat2(3, 2); // Different number of rows
+    mat2.insert_entry(0, 0);
+    mat2.insert_entry(1, 1);
+
+    std::vector<GF2Sparse<>> mats = {mat1, mat2};
+
+    // Attempt to horizontal stack matrices with different number of rows
+    ASSERT_THROW(GF2Sparse stacked_mat = hstack(mats), std::invalid_argument);
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

@@ -400,15 +400,19 @@ GF2MATRIX vstack(std::vector<GF2MATRIX>& mats){
     int n = mats[0].n;
     int m0  = mats[0].m;
 
-    int m = m0*mat_count;
+    int m = 0;
+    for (auto mat: mats){
+        if(mat.n!=n) throw std::invalid_argument("All matrices must have the same number of columns");
+        m+=mat.m;
+    }
 
     auto stacked_mat = GF2MATRIX(m,n);
 
     int row_offset = 0;
     for(auto mat: mats){
         for(auto i=0; i<mat.m; i++){
-            for(auto e: mat.iterate_row_ptr(i)){
-                stacked_mat.insert_entry(row_offset+e->row_index,e->col_index);
+            for(auto& e: mat.iterate_row(i)){
+                stacked_mat.insert_entry(row_offset+e.row_index,e.col_index);
             }
         }
         row_offset+=mat.m;
@@ -422,18 +426,22 @@ template <class ENTRY_OBJ>
 GF2Sparse<ENTRY_OBJ> hstack(std::vector<GF2Sparse<ENTRY_OBJ>>& mats){
     
     int mat_count = mats.size();
-    int n0 = mats[0].n;
     int m = mats[0].m;
 
-    int n = n0*mat_count;
+    int n = 0;
+
+    for(auto mat: mats){
+        if(mat.m!=m) throw std::invalid_argument("All matrices must have the same number of rows");
+        n+=mat.n;
+    }
 
     auto stacked_mat = GF2Sparse<ENTRY_OBJ>(m,n);
 
     int col_offset = 0;
     for(auto mat: mats){
         for(auto i=0; i<mat.m; i++){
-            for(auto e: mat.iterate_row_ptr(i)){
-                stacked_mat.insert_entry(e->row_index,col_offset+e->col_index);
+            for(auto& e: mat.iterate_row(i)){
+                stacked_mat.insert_entry(e.row_index,col_offset+e.col_index);
             }
         }
         col_offset+=mat.n;

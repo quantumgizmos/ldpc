@@ -316,6 +316,32 @@ TEST(SparseMatrix, SwapRowsTest)
     EXPECT_EQ(matrix.get_entry(2, 2).value, 3);
 }
 
+// Test for the swap_cols method
+TEST(SparseMatrix, SwapColsTest) {
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
+    matrix.insert_entry(0, 0, 1);
+    matrix.insert_entry(0, 1, 2);
+    matrix.insert_entry(0, 2, 3);
+    matrix.insert_entry(1, 0, 4);
+    matrix.insert_entry(1, 1, 5);
+    matrix.insert_entry(1, 2, 6);
+    matrix.insert_entry(2, 0, 7);
+    matrix.insert_entry(2, 1, 8);
+    matrix.insert_entry(2, 2, 9);
+
+    matrix.swap_columns(0, 2);
+
+    EXPECT_EQ(matrix.get_entry(0, 0).value, 3);
+    EXPECT_EQ(matrix.get_entry(0, 1).value, 2);
+    EXPECT_EQ(matrix.get_entry(0, 2).value, 1);
+    EXPECT_EQ(matrix.get_entry(1, 0).value, 6);
+    EXPECT_EQ(matrix.get_entry(1, 1).value, 5);
+    EXPECT_EQ(matrix.get_entry(1, 2).value, 4);
+    EXPECT_EQ(matrix.get_entry(2, 0).value, 9);
+    EXPECT_EQ(matrix.get_entry(2, 1).value, 8);
+    EXPECT_EQ(matrix.get_entry(2, 2).value, 7);
+}
+
 TEST(SparseMatrix, InsertRowTest)
 {
     sparse_matrix::SparseMatrix<int> matrix(8, 7);
@@ -442,6 +468,26 @@ TEST(SparseMatrix, MoveSemantics)
     ASSERT_TRUE(true);
 
 
+}
+
+// Test for the nonzero_rows method
+TEST(SparseMatrix, NonzeroRowsTest) {
+    sparse_matrix::SparseMatrix<int> matrix(3, 3);
+    matrix.insert_entry(0, 0, 1);
+    matrix.insert_entry(0, 2, 3);
+    matrix.insert_entry(1, 1, 5);
+    matrix.insert_entry(2, 0, 7);
+    matrix.insert_entry(2, 2, 9);
+
+    std::vector<std::vector<int>> expected_output = {
+        {0, 2},
+        {1},
+        {0, 2}
+    };
+
+    std::vector<std::vector<int>> nonzero_rows = matrix.nonzero_rows();
+
+    ASSERT_EQ(nonzero_rows, expected_output);
 }
 
 

@@ -259,8 +259,8 @@ public:
         std::vector<ENTRY_OBJ*> temp_row_heads = this->row_heads;
         for(int i = 0; i<m; i++){
             this->row_heads[i] = temp_row_heads[rows[i]];
-            for(auto e: this->iterate_row_ptr(i)){
-                e->row_index = i;
+            for(auto& e: this->iterate_row(i)){
+                e.row_index = i;
             }
         }
 
@@ -278,8 +278,8 @@ public:
         this->column_heads[j] = tmp1;
         this->column_heads[i] = tmp2;
         // update the column indices for all entries in columns i and j
-        for(auto e: this->iterate_column_ptr(i)) e->col_index=i;
-        for(auto e: this->iterate_column_ptr(j)) e->col_index=j;
+        for(auto& e: this->iterate_column(i)) e.col_index=i;
+        for(auto& e: this->iterate_column(j)) e.col_index=j;
     }
 
     /**
@@ -509,9 +509,9 @@ public:
             std::vector<int> row;
             
             //iterate over the entries in the current row
-            for(auto e: this->iterate_row_ptr(i)){
+            for(auto& e: this->iterate_row(i)){
                 this->node_count += 1; //increment node_count
-                row.push_back(e->col_index); //add the column index of the current entry to the current row vector
+                row.push_back(e.col_index); //add the column index of the current entry to the current row vector
             }
             nonzero.push_back(row); //add the current row vector to the vector of non-zero rows
         }
