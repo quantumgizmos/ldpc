@@ -23,6 +23,11 @@ using namespace std;
 
 namespace bp{
 
+enum BpMethod{
+    PRODUCT_SUM = 0,
+    MINIMUM_SUM = 1
+};
+
 const vector<int> NULL_INT_VECTOR = {};
 
 class BpEntry: public sparse_matrix_base::EntryBase<BpEntry>{ 
@@ -43,7 +48,7 @@ class BpDecoder{
         int check_count;
         int bit_count;
         int maximum_iterations;
-        int bp_method;
+        BpMethod bp_method;
         int schedule;
         double ms_scaling_factor;
         vector<uint8_t> decoding;
@@ -63,7 +68,7 @@ class BpDecoder{
             BpSparse& parity_check_matrix,
             vector<double> channel_probabilities,
             int maximum_iterations = 0,
-            int bp_method=1,
+            BpMethod bp_method = PRODUCT_SUM,
             double min_sum_scaling_factor = 0.625,
             int schedule=0,
             int omp_threads = 1,
@@ -149,7 +154,7 @@ class BpDecoder{
 
                 std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
 
-                if(bp_method==0){
+                if(bp_method == PRODUCT_SUM){
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
                         double temp=1.0;
@@ -167,7 +172,7 @@ class BpDecoder{
                     }
                 }
 
-                else if(bp_method==1){
+                else if(bp_method == MINIMUM_SUM){
                     //check to bit updates
                     #pragma omp for
                     for(int i=0;i<check_count;i++){

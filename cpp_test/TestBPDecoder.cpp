@@ -53,7 +53,7 @@ TEST(BpDecoderTest, InitializationTest)
     EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
     EXPECT_EQ(maximum_iterationsations, decoder.maximum_iterations);
     EXPECT_EQ(0.625, decoder.ms_scaling_factor);
-    EXPECT_EQ(1, decoder.bp_method);
+    EXPECT_EQ(bp::PRODUCT_SUM, decoder.bp_method);
     EXPECT_EQ(0, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
     EXPECT_EQ(0, decoder.random_schedule_seed);
@@ -73,7 +73,7 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
     auto channel_probabilities = vector<double>{0.1, 0.2, 0.3, 0.4};
 
     // Define optional input parameters
-    int bp_method = 2;
+    bp::BpMethod bp_method = bp::MINIMUM_SUM;
     double min_sum_scaling_factor = 0.5;
     int bp_schedule = 2;
     int omp_threads = 4;
@@ -143,7 +143,7 @@ TEST(BpDecoder, product_sum_parallel){
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,0,79879879,0);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::PRODUCT_SUM,79879879,0);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -182,7 +182,7 @@ TEST(BpDecoder, min_sum_parallel){
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,1,0.625,0);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM,0.625,0);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -219,7 +219,7 @@ TEST(BpDecoder, ProdSumParallel_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, 0, 4324234, 0);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::PRODUCT_SUM, 4324234, 0);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -244,7 +244,7 @@ TEST(BpDecoder, MinSum_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, 1, 1, 0);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::MINIMUM_SUM, 1, 0);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -269,7 +269,7 @@ TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, 0, 4324234, 1);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::PRODUCT_SUM, 4324234, 1);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -294,7 +294,7 @@ TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, 1, 1, 1);
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::MINIMUM_SUM, 1, 1);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
