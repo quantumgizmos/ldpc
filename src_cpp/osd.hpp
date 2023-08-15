@@ -18,11 +18,17 @@ using namespace std;
 namespace osd{
 
 
+enum OsdMethod{
+    OSD_OFF,
+    OSD_0,
+    EXHAUSTIVE,
+    COMBINATION_SWEEP
+};
 
 
 class OsdDecoder{
     public:
-        int osd_method;
+        OsdMethod osd_method;
         int osd_order;
         int k, bit_count, check_count;
         bp::BpSparse& pcm;
@@ -35,7 +41,7 @@ class OsdDecoder{
         
         OsdDecoder(
             bp::BpSparse& parity_check_matrix,
-            int osd_method,
+            OsdMethod osd_method,
             int osd_order,
             vector<double> channel_probabilities):
             pcm(parity_check_matrix)    
@@ -57,7 +63,7 @@ class OsdDecoder{
 
             this->osd_candidate_strings.clear();
             
-            if(this->osd_method == -1) return 0;
+            if(this->osd_method == OSD_OFF) return 0;
 
             this->LuDecomposition = new gf2sparse_linalg::RowReduce<bp::BpEntry>(this->pcm);
             this->column_ordering.resize(this->pcm.n);
@@ -65,18 +71,18 @@ class OsdDecoder{
             this->LuDecomposition->rref(false,true); 
             this->k = this->pcm.n - this->LuDecomposition->rank;
 
-            if(this->osd_method==0 || this->osd_order==0){
+            if(this->osd_method == OSD_0 || this->osd_order==0){
                 return 1;
             }
 
-            if(this->osd_method==1){
+            if(this->osd_method == EXHAUSTIVE){
                 osd_candidate_string_count = pow(2,this->osd_order);
                 for(int i=1; i<osd_candidate_string_count; i++){
                     this->osd_candidate_strings.push_back(util::decimal_to_binary_reverse(i,k));
                 }
             }
 
-            if(this->osd_method==2){
+            if(this->osd_method == COMBINATION_SWEEP){
                 for(int i=0; i<k; i++) {
                     vector<uint8_t> osd_candidate;
                     osd_candidate.resize(k,0);

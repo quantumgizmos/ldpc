@@ -13,7 +13,7 @@ TEST(OsdDecoder, rep_code_test1){
     auto syndrome = rep_code.mulvec(error);
     auto error_channel = vector<double>{0.1,0.1,0.1};
     auto lbr = vector<double>{0, 0, 0};
-    auto decoder = osd::OsdDecoder(rep_code,0,0,error_channel);
+    auto decoder = osd::OsdDecoder(rep_code,osd::OSD_0,0,error_channel);
     auto decoding = decoder.decode(syndrome,lbr);
     auto syndrome2 = rep_code.mulvec(decoding);
     ASSERT_TRUE(syndrome2 == syndrome);
@@ -27,7 +27,7 @@ TEST(OsdDecoder, ring_code_test1){
     auto syndrome = rep_code.mulvec(error);
     auto error_channel = vector<double>{0.1,0.1,0.1};
     auto lbr = vector<double>{0, 0, 0};
-    auto decoder = osd::OsdDecoder(rep_code,0,0,error_channel);
+    auto decoder = osd::OsdDecoder(rep_code,osd::OSD_0,0,error_channel);
     auto decoding = decoder.decode(syndrome,lbr);
     auto syndrome2 = rep_code.mulvec(decoding);
     ASSERT_TRUE(syndrome2 == syndrome);
@@ -54,7 +54,7 @@ TEST(OsdDecoder, PrintsCorrectly) {
 
     auto lbr = vector<double>{0, 0, 0, 0};
     for(int i = 0; i<4; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
-    auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
+    auto osdD = new osd::OsdDecoder(pcm,osd::OSD_0,0,error_channel);
     auto decoding = osdD->decode(syndrome, lbr);
     auto syndrome2 = pcm.mulvec(decoding);
 
@@ -102,7 +102,7 @@ TEST(OsdDecoder, AllZeroSyndrome) {
     auto error_channel = vector<double>{0.1,0.1,0.1,0.1};
     auto lbr = vector<double>{0, 0, 0, 0};
     for(int i = 0; i<4; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
-    auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
+    auto osdD = new osd::OsdDecoder(pcm,osd::OSD_0,0,error_channel);
     auto decoding = osdD->decode(syndrome, lbr);
     for(int i = 0; i<4; i++) ASSERT_EQ(decoding[i], 0);
     delete osdD;
@@ -120,7 +120,7 @@ TEST(OsdDecoder, VariedErrorChannel) {
     auto error_channel = vector<double>{0.1,0.2,0.3,0.4};
     auto lbr = vector<double>{0, 0, 0, 0};
     for(int i = 0; i<4; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
-    auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
+    auto osdD = new osd::OsdDecoder(pcm,osd::OSD_0,0,error_channel);
     auto decoding = osdD->decode(syndrome, lbr);
     auto syndrome2 = vector<uint8_t>{0, 0, 0, 0};
     pcm.mulvec(decoding, syndrome2);
@@ -145,7 +145,7 @@ TEST(OsdDecoder, VariedErrorChannelLargerMatrix) {
     auto error_channel = vector<double>{0.1,0.2,0.3,0.4,0.5};
     auto lbr = vector<double>{0, 0, 0, 0, 0};
     for(int i = 0; i<5; i++) lbr[i] = log((1-error_channel[i])/(error_channel[i]));
-    auto osdD = new osd::OsdDecoder(pcm,0,0,error_channel);
+    auto osdD = new osd::OsdDecoder(pcm,osd::OSD_0,0,error_channel);
     auto decoding = osdD->decode(syndrome, lbr);
     auto syndrome2 = vector<uint8_t>{0, 0, 0};
     pcm.mulvec(decoding, syndrome2);
@@ -181,22 +181,22 @@ TEST(OsdDecoder, DecodeHammingCode) {
     }
 
     // Decode the received codeword
-    auto osdD = new osd::OsdDecoder(pcm, -1, 0, error_channel);
+    auto osdD = new osd::OsdDecoder(pcm, osd::OSD_OFF, 0, error_channel);
 
-    osdD->osd_method = 0;
+    osdD->osd_method = osd::OSD_0;
     osdD->osd_order = 4;
     osdD->osd_setup();
 
     ASSERT_EQ(osdD->osd_candidate_strings.size(), 0);
 
 
-    osdD->osd_method = 1;
+    osdD->osd_method = osd::EXHAUSTIVE;
     osdD->osd_order = 4;
     osdD->osd_setup();
 
     ASSERT_EQ(osdD->osd_candidate_strings.size(), 16-1);
 
-    osdD->osd_method = 2;
+    osdD->osd_method = osd::COMBINATION_SWEEP;
     osdD->osd_order = 4;
     osdD->osd_setup();
 
