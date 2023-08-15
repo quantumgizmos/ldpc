@@ -456,6 +456,12 @@ vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
 
 }
 
+//This is a helper definition for cython import
+using KernelFuncSignature = std::vector<std::vector<int>> (*)(gf2sparse::GF2Sparse<gf2sparse::GF2Entry>&);
+KernelFuncSignature cy_kernel = &kernel_adjacency_list<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
+// using kernel_func = vector<vector<uint8_t>> (*)(GF2Sparse<GF2Entry>);
+// kernel_func cython_kernel_adajency_list = gf2sparse_linalg::cython_kernel_adajency_list<GF2Sparse<GF2Entry>>;
+
 template <class GF2MATRIX>
 GF2MATRIX kernel(GF2MATRIX& mat){
 
@@ -479,11 +485,12 @@ int rank(GF2MATRIX& mat){
 
 
 
+
 }//end namespace gf2sparse_linalg
 
 // typedef gf2sparse_linalg::RowReduce<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> cy_row_reduce;
 
 // using kernel_func = vector<vector<uint8_t>> (*)(gf2sparse::GF2Sparse<gf2sparse::GF2Entry>);
-// kernel_func cy_kernel = gf2sparse_linalg::kernel<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
+// kernel_func cy_kernel = gf2sparse_linalg::kernel_adjacency_list<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif
