@@ -102,6 +102,7 @@ public:
     std::vector<ENTRY_OBJ*> removed_entries;       
     std::vector<ENTRY_OBJ*> row_heads; //starting point for each row
     std::vector<ENTRY_OBJ*> column_heads; //starting point for each column
+    bool MEMORY_ALLOCATED = false;
 
     // std::vector<ENTRY_OBJ*> matrix_entries;
 
@@ -120,6 +121,8 @@ public:
      * @param bit_count The number of columns in the matrix
      */
     void initialise_sparse_matrix(int check_count, int bit_count, int entry_count = 0){
+        
+        this->reset_matrix();
         this->m=check_count;
         this->n=bit_count;
         this->block_idx=-1;
@@ -130,12 +133,30 @@ public:
         this->entry_block_size = this->m+this->n;
     }
 
+    void reset_matrix(){
+
+        if(this->MEMORY_ALLOCATED){
+            this->column_heads.clear();
+            this->row_heads.clear();
+            this->removed_entries.clear();
+            for(auto entry_block: this->entries) entry_block.clear();
+            this->entries.clear();
+        }
+        this->m=0;
+        this->n=0;
+        this->block_idx=-1;
+        this->released_entry_count=0;
+        this->allocated_entry_count=0;
+        this->entry_block_size = 0;
+        this->entry_block_size = 0;
+        this->MEMORY_ALLOCATED = false;
+    }
+
     /**
      * @brief Destructor for SparseMatrixBase. Frees memory occupied by entries.
      */
     ~SparseMatrixBase(){
-        for(auto entry_block: this->entries) entry_block.clear();
-        this->entries.clear();
+        this->reset_matrix();
     }
 
     /**
@@ -205,7 +226,9 @@ public:
     * left, up, and down pointers to point to itself since there are no other nodes in the same row or column yet.
     */
     void allocate_memory(){
-            
+
+        this->MEMORY_ALLOCATED = true;
+
         this->row_heads.resize(this->m); // resize row_heads vector to m
         this->column_heads.resize(this->n); // resize column_heads vector to n
 

@@ -106,6 +106,9 @@ class OsdDecoder{
 
         vector<uint8_t>& decode(vector<uint8_t>& syndrome, vector<double>& log_prob_ratios) {
 
+            // print_sparse_matrix(this->pcm);
+
+
             soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
 
             //row reduce the matrix according to the new column ordering
