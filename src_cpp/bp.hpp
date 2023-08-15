@@ -28,6 +28,11 @@ enum BpMethod{
     MINIMUM_SUM = 1
 };
 
+enum BpSchedule{
+    SERIAL = 0,
+    PARALLEL = 1,
+};
+
 const vector<int> NULL_INT_VECTOR = {};
 
 class BpEntry: public sparse_matrix_base::EntryBase<BpEntry>{ 
@@ -49,7 +54,7 @@ class BpDecoder{
         int bit_count;
         int maximum_iterations;
         BpMethod bp_method;
-        int schedule;
+        BpSchedule schedule;
         double ms_scaling_factor;
         vector<uint8_t> decoding;
         vector<uint8_t> candidate_syndrome;
@@ -69,8 +74,8 @@ class BpDecoder{
             vector<double> channel_probabilities,
             int maximum_iterations = 0,
             BpMethod bp_method = PRODUCT_SUM,
+            BpSchedule schedule = PARALLEL,
             double min_sum_scaling_factor = 0.625,
-            int schedule=0,
             int omp_threads = 1,
             vector<int> serial_schedule = NULL_INT_VECTOR,
             int random_schedule_seed = 0,
@@ -134,9 +139,9 @@ class BpDecoder{
 
         vector<uint8_t> decode(vector<uint8_t>& syndrome){
 
-            if(schedule==0) bp_decode_parallel(syndrome);
-            else if(schedule==1) return bp_decode_serial(syndrome);
-            return decoding;
+            if(schedule == PARALLEL) return bp_decode_parallel(syndrome);
+            else if(schedule == SERIAL) return bp_decode_serial(syndrome);
+            else throw std::runtime_error("Invalid BP schedule");
 
         }
 
