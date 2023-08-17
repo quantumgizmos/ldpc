@@ -43,10 +43,34 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
     elif isinstance(pcm,scipy.sparse.spmatrix):
         rows, cols = pcm.nonzero()
         for i in range(len(rows)):
+            print(f"inserting entry {rows[i]},{cols[i]}")
             cpcm.insert_entry(rows[i], cols[i])
     else:
         raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix.spmatrix object, not {type(pcm)}")
     
+
+    cdef int entry_count = cpcm.entry_count()
+
+    cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
+    print("hello 3")
+
+    # cdef int m = cpcm.m
+    # cdef int n = cpcm.n
+
+    print("hello 4")
+
+    cdef np.ndarray[int, ndim=1] rows2 = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[int, ndim=1] cols2 = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
+
+    for i in range(entry_count-2):
+        rows2[i] = entries[i][0]
+        cols2[i] = entries[i][1]
+
+    print(f"Entry count {entry_count}")
+    print(f"Rows {rows2}")
+    print(f"Cols {cols}")   
+
 
     return cpcm
 

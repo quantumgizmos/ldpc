@@ -18,8 +18,8 @@ cdef extern from "gf2sparse.hpp" namespace "gf2sparse" nogil:
         int m
         int n
         GF2Sparse() except +
-        GF2Sparse(int m, int n, int nonzero_count) except +
-        GF2Entry& insert_entry(int i, int j)
+        GF2Sparse(int m, int n) except +
+        GF2Entry& insert_entry(int j, int i)
         GF2Entry& get_entry(int i, int j)
         GF2Sparse transpose()
         vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)

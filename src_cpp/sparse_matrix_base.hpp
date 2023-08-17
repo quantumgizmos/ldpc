@@ -395,6 +395,7 @@ public:
     * functions.
     */
     ENTRY_OBJ& insert_entry(int j, int i){
+        std::cout<<i<<" "<<j<<std::endl;
         // Check if indices are within bounds
         if(j>=this->m || i>=this->n || j<0 || i<0) throw std::invalid_argument("Index i or j is out of bounds"); 
                 
