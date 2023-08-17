@@ -641,6 +641,20 @@ TEST(GF2Sparse, HstackFunctionTestIncorrectDimensions) {
     ASSERT_THROW(GF2Sparse stacked_mat = hstack(mats), std::invalid_argument);
 }
 
+TEST(GF2Sparse, nonzero_coordinates){
+
+    auto mat = gf2codes::rep_code(3);
+
+    auto nonzero_coordinates = mat.nonzero_coordinates();
+
+    ASSERT_TRUE(nonzero_coordinates.size()==4);
+
+    auto expected_coordinates = std::vector<std::vector<int>>{{0,0},{0,1},{1,1},{1,2}};
+
+    ASSERT_TRUE(nonzero_coordinates==expected_coordinates);
+
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

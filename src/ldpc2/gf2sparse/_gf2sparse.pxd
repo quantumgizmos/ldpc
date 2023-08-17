@@ -29,6 +29,7 @@ cdef extern from "gf2sparse.hpp" namespace "gf2sparse" nogil:
 cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg" nogil:
 
     cdef cppclass RowReduce "gf2sparse_linalg::RowReduce<gf2sparse::GF2Entry>":
+        RowReduce() except +
         RowReduce(GF2Sparse& A) except +
         vector[int] rows
         vector[int] cols
@@ -38,7 +39,7 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg" nogil:
         int rref(bool full_reduce, bool lower_triangular)
         vector[uint8_t]& lu_solve(vector[uint8_t]& y)
 
-    vector[vector[int]] cy_kernel(GF2Sparse& mat)
+    # vector[vector[int]] cy_kernel(GF2Sparse& mat)
 
 cdef class LuDecomposition():
     cdef int m

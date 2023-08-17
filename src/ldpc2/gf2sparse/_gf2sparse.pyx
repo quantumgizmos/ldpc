@@ -49,21 +49,35 @@ cdef GF2Sparse2Py(GF2Sparse& cpcm):
 
     cdef int entry_count = cpcm.entry_count()
     cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
+    print("hello 3")
 
     cdef int m = cpcm.m
     cdef int n = cpcm.n
+
+    print("hello 4")
 
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
 
+    print(f"Entry count {entry_count}")
+
+
+    # assert entries.size() == entry_count
+
     cdef int i
 
-    for i in range(entry_count):
+
+
+    for i in range(entry_count-2):
         rows[i] = entries[i][0]
         cols[i] = entries[i][1]
 
+    print("hello2")
+
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
+
+    print(smat)
 
     return smat
 
@@ -76,19 +90,25 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
     del rr
     return rank
 
-def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     cdef GF2Sparse cpcm = Py2GF2Sparse(pcm)
-    cdef vector[vector[int]] ckernel = cy_kernel(cpcm)
-    # cdef int k = ckernel.size()
-    # cdef int n = cpcm.n
-    # cdef int i
-    # # ctypedef np.uint8_t dtype_t
-    # ker = np.zeros((k,n), dtype=np.uint8)
-    # for i in range(k):
-    #     for j in range(n):
-    #         ker[i,j] = ckernel[i][j]
+    print("hello")
+    output = GF2Sparse2Py(cpcm)
+    return output
 
-    return scipy.sparse.eye(3)
+# def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+#     cdef GF2Sparse cpcm = Py2GF2Sparse(pcm)
+#     cdef vector[vector[int]] ckernel = cy_kernel(cpcm)
+#     cdef int k = ckernel.size()
+#     cdef int n = cpcm.n
+#     cdef int i
+#     # ctypedef np.uint8_t dtype_t
+#     ker = np.zeros((k,n), dtype=np.uint8)
+#     for i in range(k):
+#         for j in range(n):
+#             ker[i,j] = ckernel[i][j]
+
+#     return scipy.sparse.eye(3)
 
 # cdef class LuDecomposition():
 

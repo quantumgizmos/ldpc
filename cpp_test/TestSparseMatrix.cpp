@@ -490,6 +490,24 @@ TEST(SparseMatrix, NonzeroRowsTest) {
     ASSERT_EQ(nonzero_rows, expected_output);
 }
 
+TEST(SparseMatrix, nonzero_coordinates){
+
+    auto mat = sparse_matrix::SparseMatrix<int>(2,3);
+    mat.insert_entry(0,0,1);
+    mat.insert_entry(0,1,1);
+    mat.insert_entry(1,1,1);
+    mat.insert_entry(1,2,1);
+
+    auto nonzero_coordinates = mat.nonzero_coordinates();
+
+    ASSERT_TRUE(nonzero_coordinates.size()==4);
+
+    auto expected_coordinates = std::vector<std::vector<int>>{{0,0},{0,1},{1,1},{1,2}};
+
+    ASSERT_TRUE(nonzero_coordinates==expected_coordinates);
+
+}
+
 
 int main(int argc, char **argv)
 {
