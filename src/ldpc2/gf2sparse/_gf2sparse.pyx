@@ -19,12 +19,16 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
     # get the parity check dimensions
     m, n = pcm.shape[0], pcm.shape[1]
 
+    print(f"m = {m}, n = {n}")
+
 
     # get the number of nonzero entries in the parity check matrix
     if isinstance(pcm,np.ndarray):
         nonzero_count  = int(np.sum( np.count_nonzero(pcm,axis=1) ))
     elif isinstance(pcm,scipy.sparse.spmatrix):
         nonzero_count = int(pcm.nnz)
+
+    print(f"nonzero_count = {nonzero_count}")
 
     # Matrix memory allocation
     cdef GF2Sparse cpcm = GF2Sparse(m,n,nonzero_count) #creates the C++ sparse matrix object
@@ -35,6 +39,7 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
             for j in range(n):
                 if pcm[i,j]==1:
                     cpcm.insert_entry(i,j)
+                    print(f"inserting entry {i},{j}")
     elif isinstance(pcm,scipy.sparse.spmatrix):
         rows, cols = pcm.nonzero()
         for i in range(len(rows)):
