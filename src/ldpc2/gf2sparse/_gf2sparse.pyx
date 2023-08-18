@@ -4,10 +4,32 @@ import numpy as np
 import scipy.sparse
 from typing import Tuple, Union
 
+cdef void print_sparse_matrix(GF2Sparse& mat):
+
+    cdef int m = mat.m
+    cdef int n = mat.n
+
+    cdef int i
+    cdef int j
+
+    out = np.zeros((m,n)).astype(np.uint8)
+
+    cdef GF2Entry e
+
+    for i in range(m):
+        for j in range(n):
+            e = mat.get_entry(i,j)
+            if not e.at_end():
+                out[i,j] = 1
+
+    print(out)
+
 cdef GF2Sparse Py2GF2Sparse(pcm):
     
     cdef int m
     cdef int n
+    cdef int i
+    cdef int j
     cdef int nonzero_count
 
     #check the parity check matrix is the right type
@@ -31,7 +53,7 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
     print(f"nonzero_count = {nonzero_count}")
 
     # Matrix memory allocation
-    cdef GF2Sparse cpcm = GF2Sparse(m,n,nonzero_count) #creates the C++ sparse matrix object
+    cdef GF2Sparse cpcm = GF2Sparse(m,n) #creates the C++ sparse matrix object
 
     #fill sparse matrix
     if isinstance(pcm,np.ndarray):
@@ -49,6 +71,10 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
         raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix.spmatrix object, not {type(pcm)}")
     
 
+    print_sparse_matrix(cpcm)
+    print()
+    print_sparse_matrix(cpcm)
+
     cdef int entry_count = cpcm.entry_count()
 
     cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
@@ -63,14 +89,17 @@ cdef GF2Sparse Py2GF2Sparse(pcm):
     cdef np.ndarray[int, ndim=1] cols2 = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
 
-    for i in range(entry_count-2):
+    for i in range(entry_count):
         rows2[i] = entries[i][0]
         cols2[i] = entries[i][1]
 
     print(f"Entry count {entry_count}")
     print(f"Rows {rows2}")
-    print(f"Cols {cols}")   
+    print(f"Cols {cols2}")   
 
+    GF2Sparse* cpcm_ptr = &cpcm
+
+    print(<void*> cpcm_ptr)
 
     return cpcm
 
@@ -122,6 +151,7 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
 def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     cdef GF2Sparse cpcm = Py2GF2Sparse(pcm)
     print("hello")
+    print_sparse_matrix(cpcm)
     output = GF2Sparse2Py(cpcm)
     return output
 

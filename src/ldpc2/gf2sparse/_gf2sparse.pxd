@@ -7,7 +7,7 @@ from libcpp.memory cimport shared_ptr, make_shared
 cimport numpy as np
 ctypedef np.uint8_t uint8_t
 
-cdef extern from "gf2sparse.hpp" namespace "gf2sparse" nogil:
+cdef extern from "gf2sparse.hpp" namespace "gf2sparse":
     cdef cppclass GF2Entry "gf2sparse::GF2Entry":
         GF2Entry() except +
         int row_index
@@ -26,7 +26,7 @@ cdef extern from "gf2sparse.hpp" namespace "gf2sparse" nogil:
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
 
-cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg" nogil:
+cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
 
     cdef cppclass RowReduce "gf2sparse_linalg::RowReduce<gf2sparse::GF2Entry>":
         RowReduce() except +
