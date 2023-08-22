@@ -518,6 +518,30 @@ public:
 
     }
 
+    std::vector<std::vector<int>> row_adjacency_list(){
+        std::vector<std::vector<int>> adj_list;
+        for(int i = 0; i<this->m; i++){
+            std::vector<int> row;
+            for(auto& e: this->iterate_row(i)){
+                row.push_back(e.col_index);
+            }
+            adj_list.push_back(row);
+        }
+        return adj_list;
+    }
+
+    std::vector<std::vector<int>> col_adjacency_list(){
+        std::vector<std::vector<int>> adj_list;
+        for(int i; i<this->n; i++){
+            std::vector<int> col;
+            for(auto& e: this->iterate_column(i)){
+                col.push_back(e.row_index);
+            }
+            adj_list.push_back(col);
+        }
+        return adj_list;
+    }
+
     /**
     * Returns a vector of vectors, where each vector contains the column indices of the non-zero entries in a row.
     * @return A vector of vectors, where each vector contains the column indices of the non-zero entries in a row.

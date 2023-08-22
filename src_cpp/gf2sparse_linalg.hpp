@@ -466,9 +466,6 @@ template <class GF2MATRIX>
 GF2MATRIX kernel(GF2MATRIX& mat){
 
     auto adj_list = kernel_adjacency_list(mat);
-    // for(auto row: adj_list){
-    //     print_vector(row);
-    // }
     auto ker = GF2MATRIX(adj_list.size(),mat.n);
     ker.csr_insert(adj_list);
 
@@ -489,8 +486,5 @@ int rank(GF2MATRIX& mat){
 }//end namespace gf2sparse_linalg
 
 // typedef gf2sparse_linalg::RowReduce<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> cy_row_reduce;
-
-// using kernel_func = vector<vector<uint8_t>> (*)(gf2sparse::GF2Sparse<gf2sparse::GF2Entry>);
-// kernel_func cy_kernel = gf2sparse_linalg::kernel_adjacency_list<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>>;
 
 #endif

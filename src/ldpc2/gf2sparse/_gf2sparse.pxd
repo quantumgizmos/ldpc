@@ -39,15 +39,15 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
         int rref(bool full_reduce, bool lower_triangular)
         vector[uint8_t]& lu_solve(vector[uint8_t]& y)
 
-    # vector[vector[int]] cy_kernel(GF2Sparse& mat)
+    vector[vector[int]] cy_kernel(GF2Sparse& mat)
 
-cdef class LuDecomposition():
-    cdef int m
-    cdef int n
-    cdef GF2Sparse cpcm
-    cdef GF2Sparse L
-    cdef GF2Sparse U
-    cdef shared_ptr[RowReduce] rr
+# cdef class LuDecomposition():
+#     cdef int m
+#     cdef int n
+#     cdef GF2Sparse cpcm
+#     cdef GF2Sparse L
+#     cdef GF2Sparse U
+#     cdef shared_ptr[RowReduce] rr
 
 
     

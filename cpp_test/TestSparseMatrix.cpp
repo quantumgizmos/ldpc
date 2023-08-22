@@ -508,6 +508,41 @@ TEST(SparseMatrix, nonzero_coordinates){
 
 }
 
+TEST(SparseMatrix, row_adjacency_list){
+    
+        auto mat = sparse_matrix::SparseMatrix<int>(2,3);
+        mat.insert_entry(0,0,1);
+        mat.insert_entry(0,1,1);
+        mat.insert_entry(1,1,1);
+        mat.insert_entry(1,2,1);
+    
+        auto row_adjacency_list = mat.row_adjacency_list();
+    
+        ASSERT_TRUE(row_adjacency_list.size()==2);
+    
+        auto expected_row_adjacency_list = std::vector<std::vector<int>>{{0,1},{1,2}};
+    
+        ASSERT_TRUE(row_adjacency_list==expected_row_adjacency_list);
+    
+}
+
+TEST(SparseMatrix, col_adjacency_list){
+        
+            auto mat = sparse_matrix::SparseMatrix<int>(2,3);
+            mat.insert_entry(0,0,1);
+            mat.insert_entry(0,1,1);
+            mat.insert_entry(1,1,1);
+            mat.insert_entry(1,2,1);
+        
+            auto col_adjacency_list = mat.col_adjacency_list();
+        
+            ASSERT_TRUE(col_adjacency_list.size()==3);
+        
+            auto expected_col_adjacency_list = std::vector<std::vector<int>>{{0},{0,1},{1}};
+        
+            ASSERT_TRUE(col_adjacency_list==expected_col_adjacency_list);
+        
+}
 
 int main(int argc, char **argv)
 {

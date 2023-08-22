@@ -1,4 +1,4 @@
-from ldpc2.gf2sparse import rank, kernel, LuDecomposition
+from ldpc2.gf2sparse import rank, kernel
 import numpy as np
 import scipy.sparse as sp
 
