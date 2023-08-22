@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from scipy.sparse import csr_matrix
 from ldpc2.codes import rep_code, ring_code
-from ldpc2.gf2sparse import io_test, rank
+from ldpc2.gf2sparse import io_test, rank, kernel
 
 def test_constructor_rep_code():
 
@@ -44,6 +44,22 @@ def test_rank_rep_code():
         assert rank(H) == i-1
 
     assert rank(rep_code(1000).T) == 999
+
+def test_kernel_rep_code():
+
+    for i in range(2,10):
+        H = rep_code(i)
+        assert kernel(H).shape == (1, i)
+
+    for i in range(2,10):
+        H = ring_code(i)
+        assert kernel(H).shape == (1, i)
+
+    for i in range(2,10):
+        H = rep_code(i).T
+        assert kernel(H).shape == (i, 1)
+
+    assert kernel(rep_code(1000).T).shape == (1000, 1)
 
 
 

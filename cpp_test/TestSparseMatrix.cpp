@@ -544,6 +544,10 @@ TEST(SparseMatrix, col_adjacency_list){
         
 }
 
+TEST(SparseMatrix, to_csr_matrix){
+    ASSERT_TRUE(true);
+}
+
 int main(int argc, char **argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

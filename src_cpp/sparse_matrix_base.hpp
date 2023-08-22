@@ -74,6 +74,14 @@ class EntryBase {
 };
 
 
+struct CsrMatrix{
+    int m;
+    int n;
+    int entry_count;
+    std::vector<std::vector<int>> row_adjacency_list;
+};
+
+
 /**
  * @brief Template base class for implementing sparse matrices in a doubly linked list format
  * 
@@ -540,6 +548,15 @@ public:
             adj_list.push_back(col);
         }
         return adj_list;
+    }
+
+    CsrMatrix to_csr_matrix(){
+        CsrMatrix csr;
+        csr.m = this->m;
+        csr.n = this->n;
+        csr.entry_count = this->entry_count();
+        csr.row_adjacency_list = this->row_adjacency_list();
+        return csr;
     }
 
     /**

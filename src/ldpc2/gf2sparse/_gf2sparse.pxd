@@ -7,7 +7,15 @@ from libcpp.memory cimport shared_ptr, make_shared
 cimport numpy as np
 ctypedef np.uint8_t uint8_t
 
+cdef extern from "sparse_matrix_base.hpp" namespace "sparse_matrix_base":
+    cdef cppclass CsrMatrix "sparse_matrix_base::CsrMatrix":
+        int m
+        int n
+        vector[vector[int]] row_adjacency_list
+        int entry_count
+
 cdef extern from "gf2sparse.hpp" namespace "gf2sparse":
+
     cdef cppclass GF2Entry "gf2sparse::GF2Entry":
         GF2Entry() except +
         int row_index
@@ -25,6 +33,9 @@ cdef extern from "gf2sparse.hpp" namespace "gf2sparse":
         vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
+        vector[vector[int]] row_adjacency_list()
+        CsrMatrix to_csr()
+
 
 cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
 
@@ -39,7 +50,7 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
         int rref(bool full_reduce, bool lower_triangular)
         vector[uint8_t]& lu_solve(vector[uint8_t]& y)
 
-    vector[vector[int]] cy_kernel(GF2Sparse& mat)
+    CsrMatrix cy_kernel(GF2Sparse* mat)
 
 # cdef class LuDecomposition():
 #     cdef int m

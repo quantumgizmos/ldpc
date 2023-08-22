@@ -65,15 +65,8 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
     
     return cpcm
 
-cdef GF2Sparse2Py(GF2Sparse* cpcm):
 
-
-    cdef int i
-    cdef int m = cpcm.m
-    cdef int n = cpcm.n
-    cdef int entry_count = cpcm.entry_count()
-    cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
-
+cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry_count):
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
@@ -83,6 +76,35 @@ cdef GF2Sparse2Py(GF2Sparse* cpcm):
         cols[i] = entries[i][1]
 
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
+    return smat
+
+cdef csr_to_scipy_sparse(vector[vector[int]] row_adjacency_list, int m, int n, int entry_count):
+    cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
+
+    cdef int row_n
+    cdef entry_i = 0
+    for i in range(m):
+        row_n = row_adjacency_list[i].size()
+        for j in range(row_n):
+            rows[entry_i] = row_adjacency_list[i][j]
+            cols[entry_i] = i
+            entry_i += 1
+        
+    smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
+    return smat
+
+cdef GF2Sparse2Py(GF2Sparse* cpcm):
+
+
+    cdef int i
+    cdef int m = cpcm.m
+    cdef int n = cpcm.n
+    cdef int entry_count = cpcm.entry_count()
+    cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
+
+    smat = coords_to_scipy_sparse(entries, m, n, entry_count)
 
     return smat
 
@@ -97,8 +119,14 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
     return rank
 
 def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
-    
+
     cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
+    cdef CsrMatrix csr = cy_kernel(cpcm)
+    return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
+
+    
+
+
     
 
 
