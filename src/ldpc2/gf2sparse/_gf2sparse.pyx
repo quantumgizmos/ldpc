@@ -67,7 +67,7 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
 
 
 cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry_count):
-    
+
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
@@ -98,16 +98,12 @@ cdef csr_to_scipy_sparse(vector[vector[int]] row_adjacency_list, int m, int n, i
     return smat
 
 cdef GF2Sparse2Py(GF2Sparse* cpcm):
-
-
     cdef int i
     cdef int m = cpcm.m
     cdef int n = cpcm.n
     cdef int entry_count = cpcm.entry_count()
     cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
-
     smat = coords_to_scipy_sparse(entries, m, n, entry_count)
-
     return smat
 
 
@@ -121,19 +117,63 @@ def rank(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->int:
     return rank
 
 def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
-
     cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
     cdef CsrMatrix csr = cy_kernel(cpcm)
+    del cpcm
     return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
-
-    
-
-
-    
-
 
 def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
     output = GF2Sparse2Py(cpcm)
     del cpcm
     return output
+
+cdef class PluDecomposition():
+
+    def __cinit__(self, pcm: Union[scipy.sparse.spmatrix,np.ndarray], full_reduce: bool = False, lower_triangular: bool = True):
+
+        self.MEM_ALLOCATED = False
+        self.Lmat = scipy.sparse.csr_matrix((0,0))
+        self.Umat = scipy.sparse.csr_matrix((0,0))
+        self.Pmat = scipy.sparse.csr_matrix((0,0))
+        self.regen_L = True
+        self.regen_U = True
+        self.regen_P = True
+        cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
+        self.rr = new RowReduce(cpcm[0])
+        self.MEM_ALLOCATED = True
+        self.full_reduce = full_reduce
+        self.lower_triangular = full_reduce
+        self.rr.rref(full_reduce,lower_triangular)
+
+    def lu_solve(self, y: np.ndarray)->np.ndarray:
+
+        if self.full_reduce == True or self.lower_triangular == False:
+            self.rr.rref(False,True)
+            self.regen_plu = True
+        
+        cdef int i
+        cdef vector[uint8_t] y_c
+        
+        y_c.resize(len(y))
+        for i in range(len(y)):
+            y_c[i] = y[i]
+        
+        return self.rr.lu_solve(y_c)
+
+    @property
+    def L(self):
+        cdef CsrMatrix cy_L = self.rr.L.to_csr()
+        self.Lmat = csr_to_scipy_sparse(cy_L.row_adjacency_list, cy_L.m, cy_L.n, cy_L.entry_count)
+        return self.Lmat
+
+    def U(self):
+        cdef CsrMatrix cy_U = self.rr.U.to_csr()
+        self.Umat = csr_to_scipy_sparse(cy_U.row_adjacency_list, cy_U.m, cy_U.n, cy_U.entry_count)
+
+        return self.Umat
+
+    def __del__(self):
+        if self.MEM_ALLOCATED:    
+            del self.rr
+            del self.cpcm

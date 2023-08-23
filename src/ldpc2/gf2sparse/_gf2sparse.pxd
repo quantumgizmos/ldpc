@@ -52,13 +52,15 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
 
     CsrMatrix cy_kernel(GF2Sparse* mat)
 
-# cdef class LuDecomposition():
-#     cdef int m
-#     cdef int n
-#     cdef GF2Sparse cpcm
-#     cdef GF2Sparse L
-#     cdef GF2Sparse U
-#     cdef shared_ptr[RowReduce] rr
+cdef class PluDecomposition():
+    cdef bool full_reduce
+    cdef bool lower_triangular
+    cdef int m
+    cdef int n
+    cdef GF2Sparse* cpcm
+    cdef RowReduce* rr
+
+
 
 
     
