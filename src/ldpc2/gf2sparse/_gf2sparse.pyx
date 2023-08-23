@@ -67,6 +67,7 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
 
 
 cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry_count):
+    
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
@@ -79,19 +80,20 @@ cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry
     return smat
 
 cdef csr_to_scipy_sparse(vector[vector[int]] row_adjacency_list, int m, int n, int entry_count):
+
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
 
-    cdef int row_n
+    cdef int row_n = 0
     cdef entry_i = 0
     for i in range(m):
         row_n = row_adjacency_list[i].size()
         for j in range(row_n):
-            rows[entry_i] = row_adjacency_list[i][j]
-            cols[entry_i] = i
+            rows[entry_i] = i
+            cols[entry_i] = row_adjacency_list[i][j]
             entry_i += 1
-        
+
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
     return smat
 
