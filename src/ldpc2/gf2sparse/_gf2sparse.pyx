@@ -66,7 +66,7 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
     return cpcm
 
 
-cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry_count):
+cdef coords_to_scipy_sparse(vector[vector[int]]& entries, int m, int n, int entry_count):
 
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
@@ -79,7 +79,7 @@ cdef coords_to_scipy_sparse(vector[vector[int]] entries, int m, int n, int entry
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
     return smat
 
-cdef csr_to_scipy_sparse(vector[vector[int]] row_adjacency_list, int m, int n, int entry_count):
+cdef csr_to_scipy_sparse(vector[vector[int]]& row_adjacency_list, int m, int n, int entry_count):
 
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
@@ -136,9 +136,6 @@ cdef class PluDecomposition():
         self.Lmat = scipy.sparse.csr_matrix((0,0))
         self.Umat = scipy.sparse.csr_matrix((0,0))
         self.Pmat = scipy.sparse.csr_matrix((0,0))
-        self.regen_L = True
-        self.regen_U = True
-        self.regen_P = True
         cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
         self.rr = new RowReduce(cpcm[0])
         self.MEM_ALLOCATED = True
@@ -150,7 +147,6 @@ cdef class PluDecomposition():
 
         if self.full_reduce == True or self.lower_triangular == False:
             self.rr.rref(False,True)
-            self.regen_plu = True
         
         cdef int i
         cdef vector[uint8_t] y_c
@@ -163,14 +159,14 @@ cdef class PluDecomposition():
 
     @property
     def L(self):
-        cdef CsrMatrix cy_L = self.rr.L.to_csr()
-        self.Lmat = csr_to_scipy_sparse(cy_L.row_adjacency_list, cy_L.m, cy_L.n, cy_L.entry_count)
+        cdef vector[vector[int]] coords = self.rr.L.nonzero_coordinates()
+        self.Lmat = coords_to_scipy_sparse(coords,self.rr.L.m,self.rr.L.n,self.rr.L.entry_count())
         return self.Lmat
 
+    @property
     def U(self):
-        cdef CsrMatrix cy_U = self.rr.U.to_csr()
-        self.Umat = csr_to_scipy_sparse(cy_U.row_adjacency_list, cy_U.m, cy_U.n, cy_U.entry_count)
-
+        cdef vector[vector[int]] coords = self.rr.U.nonzero_coordinates()
+        self.Umat = coords_to_scipy_sparse(coords,self.rr.U.m,self.rr.U.n,self.rr.U.entry_count())
         return self.Umat
 
     def __del__(self):

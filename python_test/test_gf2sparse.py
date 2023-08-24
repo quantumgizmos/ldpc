@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from scipy.sparse import csr_matrix
 from ldpc2.codes import rep_code, ring_code, hamming_code
-from ldpc2.gf2sparse import io_test, rank, kernel
+from ldpc2.gf2sparse import io_test, rank, kernel, PluDecomposition
 
 def test_constructor_rep_code():
 
@@ -73,6 +73,13 @@ def test_kernel_hamming_code():
         H = hamming_code(i)
         assert kernel(H).shape == (2**i - 1 - i, 2**i - 1)
         assert not ((H@kernel(H).T).data % 2).any()
+
+def test_plu_decomposition():
+    H = hamming_code(3)
+    plu = PluDecomposition(H)
+    L = plu.L
+    U = plu.U
+
 
 
 

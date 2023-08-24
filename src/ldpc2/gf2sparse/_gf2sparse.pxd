@@ -53,6 +53,7 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
     CsrMatrix cy_kernel(GF2Sparse* mat)
 
 cdef class PluDecomposition():
+    cdef bool MEM_ALLOCATED
     cdef bool full_reduce
     cdef bool lower_triangular
     cdef int m

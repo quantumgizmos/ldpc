@@ -9,7 +9,7 @@ from ldpc2.codes import hamming_code,rep_code
 # from ldpc.mod2 import nullspace as kernel_v1
 # from ldpc2.gf2sparse import kernel as kernel_v2
 
-H = rep_code(2)
+H = hamming_code(5)
 
 # r=rank(H.toarray())
 # print(r)
