@@ -133,6 +133,9 @@ cdef class PluDecomposition():
     def __cinit__(self, pcm: Union[scipy.sparse.spmatrix,np.ndarray], full_reduce: bool = False, lower_triangular: bool = True):
 
         self.MEM_ALLOCATED = False
+        self.L_cached = False
+        self.U_cached = False
+        self.P_cached = False
         self.Lmat = scipy.sparse.csr_matrix((0,0))
         self.Umat = scipy.sparse.csr_matrix((0,0))
         self.Pmat = scipy.sparse.csr_matrix((0,0))
@@ -155,19 +158,46 @@ cdef class PluDecomposition():
         for i in range(len(y)):
             y_c[i] = y[i]
         
-        return self.rr.lu_solve(y_c)
+        cdef vector[uint8_t] x = self.rr.lu_solve(y_c)
+        cdef np.ndarray[uint8_t, ndim=1] x_np = np.zeros(x.size(), dtype=np.uint8)
+        for i in range(x.size()):
+            x_np[i] = x[i]
+
+        return x_np
 
     @property
     def L(self):
-        cdef vector[vector[int]] coords = self.rr.L.nonzero_coordinates()
-        self.Lmat = coords_to_scipy_sparse(coords,self.rr.L.m,self.rr.L.n,self.rr.L.entry_count())
+        cdef vector[vector[int]] coords
+        if not self.L_cached:
+            coords = self.rr.L.nonzero_coordinates()
+            self.Lmat = coords_to_scipy_sparse(coords,self.rr.L.m,self.rr.L.n,self.rr.L.entry_count())
+        
+        self.L_cached = True
+        
         return self.Lmat
 
     @property
     def U(self):
-        cdef vector[vector[int]] coords = self.rr.U.nonzero_coordinates()
-        self.Umat = coords_to_scipy_sparse(coords,self.rr.U.m,self.rr.U.n,self.rr.U.entry_count())
+        cdef vector[vector[int]] coords
+        if not self.U_cached:
+            coords = self.rr.U.nonzero_coordinates()
+            self.Umat = coords_to_scipy_sparse(coords,self.rr.U.m,self.rr.U.n,self.rr.U.entry_count())
+        
+        self.U_cached = True
+        
         return self.Umat
+
+    @property
+    def P(self):
+        cdef vector[vector[int]] coords
+        if not self.P_cached:
+            self.rr.build_p_matrix()
+            coords = self.rr.P.nonzero_coordinates()
+            self.Pmat = coords_to_scipy_sparse(coords,self.rr.P.m,self.rr.P.n,self.rr.P.entry_count())
+        
+        self.P_cached = True
+        
+        return self.Pmat
 
     def __del__(self):
         if self.MEM_ALLOCATED:    

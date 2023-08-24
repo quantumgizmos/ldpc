@@ -348,6 +348,11 @@ TEST(GF2Sparse, lu_solve_batch){
         rr.rref(false,true);
         auto x = rr.lu_solve(input_vector);
 
+        // auto LU = rr.L.matmul(rr.U);
+        // rr.build_p_matrix();
+        // auto PLU = rr.P.matmul(LU);
+        // ASSERT_TRUE(matrix == PLU);
+
         vector<uint8_t> output_vector(m,0);
 
         matrix.mulvec(x,output_vector);
@@ -359,6 +364,7 @@ TEST(GF2Sparse, lu_solve_batch){
     }
 
 }
+
 
 TEST(GF2Sparse, lu_solve_batch_vrs){
 

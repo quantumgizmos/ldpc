@@ -46,9 +46,11 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
         vector[int] cols
         GF2Sparse L
         GF2Sparse U
+        GF2Sparse P
         int rank
         int rref(bool full_reduce, bool lower_triangular)
         vector[uint8_t]& lu_solve(vector[uint8_t]& y)
+        void build_p_matrix()
 
     CsrMatrix cy_kernel(GF2Sparse* mat)
 
@@ -56,10 +58,17 @@ cdef class PluDecomposition():
     cdef bool MEM_ALLOCATED
     cdef bool full_reduce
     cdef bool lower_triangular
+    cdef bool L_cached
+    cdef bool U_cached
+    cdef bool P_cached
     cdef int m
     cdef int n
     cdef GF2Sparse* cpcm
     cdef RowReduce* rr
+    cdef object Lmat
+    cdef object Umat
+    cdef object Pmat
+
 
 
 

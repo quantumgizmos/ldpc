@@ -25,6 +25,7 @@ class RowReduce{
         GF2Sparse<ENTRY_OBJ>& A;
         GF2Sparse<> L;
         GF2Sparse<> U;
+        GF2Sparse<> P;
         vector<int> rows;
         vector<int> cols;
         vector<int> inv_rows;
@@ -126,7 +127,8 @@ class RowReduce{
 
         int rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
 
-            if(lower_triangular) this->LOWER_TRIANGULAR = true;
+            this->LOWER_TRIANGULAR = lower_triangular;
+            this->FULL_REDUCE = full_reduce;
             this->set_column_row_orderings(cols,rows);
             this->initiliase_LU();
             int max_rank = min(this->U.m,this->U.n);
@@ -181,14 +183,14 @@ class RowReduce{
                 vector<int> add_rows;
                 for(auto& e: this->U.iterate_column(pivot_index)){
                     int row_index = e.row_index;
-                    if(row_index>this->rank || row_index<this->rank && full_reduce==true){
+                    if(row_index>this->rank || row_index<this->rank && this->FULL_REDUCE==true){
                         add_rows.push_back(row_index);
                     }
                 }
 
                 for(int row: add_rows){
                     this->U.add_rows(row,this->rank);
-                    if(lower_triangular) this->L.insert_entry(row,this->rank);
+                    if(this->LOWER_TRIANGULAR) this->L.insert_entry(row,this->rank);
                     else this->L.add_rows(row,this->rank);
                 }
 
@@ -213,6 +215,18 @@ class RowReduce{
             }
 
             return this->rank;
+
+        }
+
+        void build_p_matrix(){
+
+            if(!this->LU_ALLOCATED || !this->LOWER_TRIANGULAR){
+                this->rref(false,true);
+            }
+            this->P.allocate(this->A.m,this->A.m);
+            for(int i = 0; i<this->A.m; i++){
+                this->P.insert_entry(this->rows[i],i);
+            }
 
         }
 

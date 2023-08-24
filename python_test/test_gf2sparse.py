@@ -75,12 +75,30 @@ def test_kernel_hamming_code():
         assert not ((H@kernel(H).T).data % 2).any()
 
 def test_plu_decomposition():
-    H = hamming_code(3)
-    plu = PluDecomposition(H)
-    L = plu.L
-    U = plu.U
+    
+    CODES = [rep_code,ring_code,hamming_code]
+    
+    for code in CODES:
+        for d in range(2,10):
+            H = code(d)
+            plu = PluDecomposition(H)
+            P = plu.P
+            L = plu.L
+            U = plu.U
+            assert np.array_equal( (P@L@U).toarray() %2, H.toarray() )
 
+def test_lu_solve():
 
+    CODES = [rep_code,ring_code,hamming_code]
+    
+    for code in CODES:
+        for d in range(2,10):
+            H = code(d)
+            plu = PluDecomposition(H)
+            x = np.random.randint(2, size=H.shape[1])
+            y = H@x % 2
+            x_solution = plu.lu_solve(y)
+            assert np.array_equal(H@x_solution % 2, y)
 
 
 if __name__ == "__main__":
