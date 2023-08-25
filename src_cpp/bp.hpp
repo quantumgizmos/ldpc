@@ -576,6 +576,4 @@ class BpDecoder{
 
 } // end namespace bp
 
-typedef bp::BpEntry cybp_entry;
-
 #endif

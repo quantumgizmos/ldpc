@@ -3,51 +3,74 @@
 from libc.stdlib cimport malloc, calloc, free
 from libcpp cimport bool
 from libcpp.vector cimport vector
-from libcpp.memory cimport shared_ptr, make_shared
 cimport numpy as np
 ctypedef np.uint8_t uint8_t
 
-cdef extern from "bp.hpp" namespace "bp" nogil:
+cdef extern from "bp.hpp" namespace "bp":
+    
     cdef const vector[int] NULL_INT_VECTOR
 
-    cdef cppclass BpEntry "cybp_entry":
+    cdef enum BpMethod:
+        PRODUCT_SUM = 0
+        MINIMUM_SUM = 1
+
+
+    cdef enum BpSchedule:
+        SERIAL = 0
+        PARALLEL = 1
+
+    cdef cppclass BpEntry "bp::BpEntry":
         BpEntry() except +
-        uint8_t value
         bool at_end()
 
     cdef cppclass BpSparse "bp::BpSparse":
-        BpSparse(int m, int n, int entry_count) except +
-        BpEntry* insert_entry(int i, int j)
-        BpEntry* get_entry(int i, int j)
-        vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
         int m
         int n
+        BpSparse() except +
+        BpSparse(int m, int n, int entry_count) except +
+        BpEntry& insert_entry(int i, int j)
+        BpEntry& get_entry(int i, int j)
+        vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
+        vector[vector[int]] nonzero_coordinates()
+        int entry_count()
 
     cdef cppclass BpDecoderCpp "bp::BpDecoder":
-        BpDecoderCpp(shared_ptr[BpSparse] pcm, vector[double]& error_channel, int max_iter, int bp_method, double ms_scaling_factor, int schedule, int omp_threads, vector[int] serial_schedule,int random_schedule) except +
-        vector[uint8_t]& decode(vector[uint8_t]& syndrome)
-        vector[uint8_t]& soft_info_decode_serial(vector[double]& soft_syndrome, double cutoff, double sigma)
-        vector[uint8_t] decoding
-        vector[double] log_prob_ratios
-        vector[double] channel_probs
-        vector[double] soft_syndrome
-        int converge
-        int max_iter
-        int omp_thread_count
-        vector[int] serial_schedule_order
-        int random_schedule
-        int iterations
-        int random_serial_schedule
-        int bp_method
-        int schedule
-        double ms_scaling_factor
-        void set_omp_thread_count(int omp_threads)
-
-
+            BpDecoderCpp(
+                BpSparse& parity_check_matrix,
+                vector[double] channel_probabilities,
+                int maximum_iterations,
+                BpMethod bp_method,
+                BpSchedule schedule,
+                double min_sum_scaling_factor,
+                int omp_threads,
+                vector[int] serial_schedule,
+                int random_schedule_seed,
+                bool random_schedule_at_every_iteration) except +
+            BpSparse& pcm
+            vector[double] channel_probabilities
+            int check_count
+            int bit_count
+            int maximum_iterations
+            BpMethod bp_method
+            BpSchedule schedule
+            double ms_scaling_factor
+            vector[uint8_t] decoding
+            vector[uint8_t] candidate_syndrome
+            vector[double] log_prob_ratios
+            vector[double] initial_log_prob_ratios
+            vector[double] soft_syndrome
+            vector[int] serial_schedule_order
+            int iterations
+            int omp_thread_count
+            bool converge
+            unsigned random_schedule_seed
+            bool random_schedule_at_every_iteration
+            vector[uint8_t] decode(vector[uint8_t]& syndrome)
+            void set_omp_thread_count(int count)
 
 cdef class BpDecoderBase:
+    cdef BpSparse *pcm
     cdef int m, n
-    cdef shared_ptr[BpSparse] pcm
     cdef vector[uint8_t] _syndrome
     cdef vector[double] _error_channel
     cdef vector[int] _serial_schedule_order
@@ -58,7 +81,7 @@ cdef class BpDecoderBase:
 cdef class BpDecoder(BpDecoderBase):
     pass
 
-cdef class SoftInfoBpDecoder(BpDecoderBase):
-    cdef double sigma
-    cdef double cutoff
-    pass
+# cdef class SoftInfoBpDecoder(BpDecoderBase):
+#     cdef double sigma
+#     cdef double cutoff
+#     pass
