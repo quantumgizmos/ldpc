@@ -1,9 +1,10 @@
 import pytest
 import numpy as np
-from scipy.sparse import csr_matrix
-from ldpc2.bp_decoder import io_test
+import scipy.sparse
 from ldpc2.codes import rep_code, ring_code, hamming_code
-from ldpc2.bp_decoder import io_test
+from ldpc2.bp_decoder import io_test, BpDecoder
+from ldpc import bp_decoder as bp_decoder_v1
+from ldpc2.monte_carlo_simulation import McSim
 
 
 def test_BpSparse_rep_code():
@@ -30,168 +31,218 @@ def test_BpSparse_rep_code():
         out = io_test(H)
         assert np.array_equal(out.toarray(),H) == True
 
-# def test_constructor():
-#     # test valid input parameters
-#     pcm = np.array([[1,0,1,0],[0,1,1,0],[0,0,1,1]])
-#     decoder = bp_decoder(pcm, error_rate=0.1, max_iter=10, bp_method='product_sum')
-#     assert decoder.check_count == 3
-#     assert decoder.bit_count == 4
-#     assert decoder.bp_method == "product_sum"
-#     assert decoder.max_iter == 10
-#     assert decoder.ms_scaling_factor == 1.0
-#     assert decoder.schedule == "parallel"
-#     assert decoder.omp_thread_count == 1
-#     assert decoder.random_serial_schedule == 0
-#     assert np.array_equal(decoder.serial_schedule_order, np.array([0, 1, 2, 3]))
 
-#     # test invalid input parameters
-#     with pytest.raises(TypeError):
-#         decoder = bp_decoder(5)  # invalid pcm input
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm, error_rate='0.1')  # invalid error_rate input
-#         decoder = bp_decoder(pcm, max_iter=-1)  # invalid max_iter input
-#         decoder = bp_decoder(pcm, bp_method='invalid')  # invalid bp_method input
-#         decoder = bp_decoder(pcm, ms_scaling_factor='1.0')  # invalid ms_scaling_factor input
-#         decoder = bp_decoder(pcm, schedule='invalid')  # invalid schedule input
-#         decoder = bp_decoder(pcm, omp_thread_count='1')  # invalid omp_thread_count input
-#         decoder = bp_decoder(pcm, serial_schedule_order=[0,1])  # invalid serial_schedule_order input
+# Define valid inputs for testing
+valid_pcms = [
+    np.array([[1, 0, 1], [0, 1, 1]]),
+    scipy.sparse.csr_matrix([[1, 0, 1], [0, 1, 1]]),
+]
 
-# def test_bp_decoder_init():
+valid_error_rates = [
+    0.1,
+]
 
-#     # test with numpy ndarray as pcm
-#     pcm = np.array([[1, 0, 1], [0, 1, 1]])
-#     decoder = bp_decoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_serial_schedule=1, serial_schedule_order=[1,2,0])
-#     assert decoder is not None
-#     assert decoder.check_count == 2
-#     assert decoder.bit_count == 3
-#     assert decoder.max_iter == 10
-#     assert decoder.bp_method == "product_sum"
-#     assert decoder.ms_scaling_factor == 0.5
-#     assert decoder.schedule == "parallel"
-#     assert decoder.omp_thread_count == 4
-#     assert decoder.random_serial_schedule == 1
-#     assert np.array_equal(decoder.serial_schedule_order, np.array([1, 2, 0]))
+valid_max_iters = [
+    0,
+    10,
+]
 
-#     # test with scipy.sparse csr_matrix as pcm
-#     pcm = csr_matrix([[1, 0, 1], [0, 1, 1]])
-#     decoder = bp_decoder(pcm, error_channel=[0.1, 0.2, 0.3])
-#     assert decoder is not None
-#     assert decoder.check_count == 2
-#     assert decoder.bit_count == 3
-#     assert decoder.max_iter == 3
-#     assert decoder.bp_method == "product_sum"
-#     assert decoder.ms_scaling_factor == 1.0
-#     assert decoder.schedule == "parallel"
-#     assert decoder.omp_thread_count == 1
-#     assert decoder.random_serial_schedule == 0
-#     assert np.array_equal(decoder.serial_schedule_order, np.array([0, 1, 2]))
+valid_bp_methods = [
+    "product_sum",
+    "minimum_sum",
+]
 
+valid_ms_scaling_factors = [
+    1.0,
+    0.5,
+]
 
-#     # test with invalid pcm type
-#     with pytest.raises(TypeError):
-#         decoder = bp_decoder('invalid', error_rate=0.1)
+valid_schedules = [
+    "parallel",
+    "serial",
+]
 
-#     # test with invalid max_iter type
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm, error_rate=0.1,max_iter='invalid')
+valid_omp_thread_counts = [
+    1,
+    4,
+]
 
-#     # test with invalid max_iter value
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm, error_rate =0.1, max_iter=-1)
+valid_random_schedule_seeds = [
+    42,
+]
 
-#     # test with invalid bp_method value
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm,error_rate=0.1, bp_method='invalid')
+valid_serial_schedule_orders = [
+    None,
+    [1, 0, 2],
+]
 
-#     # test with invalid schedule value
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm,error_rate=0.1, schedule='invalid')
+# Combine valid inputs for parameterized testing
+valid_input_permutations = pytest.mark.parametrize(
+    "pcm, error_rate, max_iter, bp_method, ms_scaling_factor, schedule, omp_thread_count, random_schedule_seed, serial_schedule_order",
+    [
+        (pcm, error, max_iter, bp_method, ms_factor, schedule, omp_count, seed, order)
+        for pcm in valid_pcms
+        for error in valid_error_rates
+        for max_iter in valid_max_iters
+        for bp_method in valid_bp_methods
+        for ms_factor in valid_ms_scaling_factors
+        for schedule in valid_schedules
+        for omp_count in valid_omp_thread_counts
+        for seed in valid_random_schedule_seeds
+        for order in valid_serial_schedule_orders
+    ],
+)
 
-#     # test with invalid ms_scaling_factor value
-#     with pytest.raises(TypeError):
-#         decoder = bp_decoder(pcm,error_rate=0.1, ms_scaling_factor='invalid')
+def test_BpDecoder_init():
 
-#     # test with invalid omp_thread_count value
-#     with pytest.raises(TypeError):
-#         decoder = bp_decoder(pcm, error_rate=0.1,omp_thread_count='invalid')
+    # test with numpy ndarray as pcm
+    pcm = np.array([[1, 0, 1], [0, 1, 1]])
+    decoder = BpDecoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_schedule_seed=1, serial_schedule_order=[1,2,0])
+    assert decoder is not None
+    assert decoder.check_count == 2
+    assert decoder.bit_count == 3
+    assert decoder.max_iter == 10
+    assert decoder.bp_method == "product_sum"
+    assert decoder.ms_scaling_factor == 0.5
+    assert decoder.schedule == "parallel"
+    assert decoder.omp_thread_count == 4
+    assert decoder.random_schedule_seed == 1
+    assert np.array_equal(decoder.serial_schedule_order, np.array([1, 2, 0]))
 
-#     # test with invalid random_serial_schedule value
-#     with pytest.raises(ValueError):
-#         decoder = bp_decoder(pcm, error_rate=0.1, random_serial_schedule='invalid')
-
-#     # test with invalid serial_schedule_order value
-#     with pytest.raises(Exception):
-#         decoder = bp_decoder(pcm, error_rate=0.1, serial_schedule_order=[1, 2])
-
-
-# def test_rep_code_ps():
-
-#     H = rep_code(3)
-
-#     bpd = bp_decoder(H,error_rate=0.1)
-#     assert bpd is not None
-#     print(bpd.bp_method)
-#     assert bpd.bp_method == "product_sum"
-#     assert bpd.schedule == "parallel"
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+    # test with scipy.sparse scipy.sparse.csr_matrix as pcm
+    pcm = scipy.sparse.csr_matrix([[1, 0, 1], [0, 1, 1]])
+    decoder = BpDecoder(pcm, error_channel=[0.1, 0.2, 0.3])
+    assert decoder is not None
+    assert decoder.check_count == 2
+    assert decoder.bit_count == 3
+    assert decoder.max_iter == 3
+    assert decoder.bp_method == "product_sum"
+    assert decoder.ms_scaling_factor == 1.0
+    assert decoder.schedule == "parallel"
+    assert decoder.omp_thread_count == 1
+    assert decoder.random_schedule_seed == 0
+    assert np.array_equal(decoder.serial_schedule_order, np.array([0, 1, 2]))
 
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+    # test with invalid pcm type
+    with pytest.raises(TypeError):
+        decoder = BpDecoder('invalid', error_rate=0.1)
 
-#     bpd.error_channel = np.array([0.1, 0, 0.1])
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+    # test with invalid max_iter type
+    with pytest.raises(ValueError):
+        decoder = BpDecoder(pcm, error_rate=0.1,max_iter='invalid')
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+    # test with invalid max_iter value
+    with pytest.raises(ValueError):
+        decoder = BpDecoder(pcm, error_rate =0.1, max_iter=-1)
 
-# def test_rep_code_ms():
+    # test with invalid bp_method value
+    with pytest.raises(ValueError):
+        decoder = BpDecoder(pcm,error_rate=0.1, bp_method='invalid')
 
-#     H = rep_code(3)
+    # test with invalid schedule value
+    with pytest.raises(ValueError):
+        decoder = BpDecoder(pcm,error_rate=0.1, schedule='invalid')
 
-#     bpd = bp_decoder(H,error_rate=0.1, bp_method='min_sum', ms_scaling_factor=1.0)
-#     assert bpd is not None
-#     assert bpd.bp_method == "minimum_sum"
-#     assert bpd.schedule == "parallel"
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+    # test with invalid ms_scaling_factor value
+    with pytest.raises(TypeError):
+        decoder = BpDecoder(pcm,error_rate=0.1, ms_scaling_factor='invalid')
+
+    # test with invalid omp_thread_count value
+    with pytest.raises(TypeError):
+        decoder = BpDecoder(pcm, error_rate=0.1,omp_thread_count='invalid')
+
+    # test with invalid random_schedule_seed value
+    with pytest.raises(ValueError):
+        decoder = BpDecoder(pcm, error_rate=0.1, random_schedule_seed='invalid')
+
+    # test with invalid serial_schedule_order value
+    with pytest.raises(Exception):
+        decoder = BpDecoder(pcm, error_rate=0.1, serial_schedule_order=[1, 2])
 
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+def test_rep_code_ps():
 
-#     bpd.error_channel = np.array([0.1, 0, 0.1])
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+    H = rep_code(3)
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+    bpd = BpDecoder(H,error_rate=0.1)
+    assert bpd is not None
+    print(bpd.bp_method)
+    assert bpd.bp_method == "product_sum"
+    assert bpd.schedule == "parallel"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+
+def test_rep_code_ms():
+
+    H = rep_code(3)
+
+    bpd = BpDecoder(H,error_rate=0.1, bp_method='min_sum', ms_scaling_factor=1.0)
+    assert bpd is not None
+    assert bpd.bp_method == "minimum_sum"
+    assert bpd.schedule == "parallel"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
     
 
-# def test_rep_code_ps_serial():
+def test_rep_code_ps_serial():
 
-#     H = rep_code(3)
+    H = rep_code(3)
 
-#     bpd = bp_decoder(H,error_rate=0.1,schedule = "serial")
-#     assert bpd is not None
-#     assert bpd.bp_method == "product_sum"
-#     assert bpd.schedule == "serial"
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
-#     assert np.array_equal(bpd.serial_schedule_order,np.array([0,1,2]))
+    bpd = BpDecoder(H,error_rate=0.1,schedule = "serial")
+    assert bpd is not None
+    assert bpd.bp_method == "product_sum"
+    assert bpd.schedule == "serial"
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))
+    assert np.array_equal(bpd.serial_schedule_order,np.array([0,1,2]))
 
-#     bpd.serial_schedule_order = np.array([2,1,0])
+    bpd.serial_schedule_order = np.array([2,1,0])
 
-#     assert np.array_equal(bpd.serial_schedule_order,np.array([2,1,0]))
+    assert np.array_equal(bpd.serial_schedule_order,np.array([2,1,0]))
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([0, 1,0])))
 
-#     bpd.error_channel = np.array([0.1, 0, 0.1])
-#     assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
+    bpd.error_channel = np.array([0.1, 0, 0.1])
+    assert np.array_equal(bpd.error_channel,np.array([0.1, 0, 0.1]))
 
-#     bpd.decode(np.array([1, 1]))
-#     assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+    bpd.decode(np.array([1, 1]))
+    assert(np.array_equal(bpd.decoding, np.array([1, 0, 1])))
+
+def test_vs_ldpc_v1():
+
+    run_count = 1000
+    error_rate = 0.20
+    H = rep_code(100)
+    bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=4)
+    bpd_v1=bp_decoder_v1(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=10)
+    mc1 = McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
+    mc2 = McSim(H, error_rate=error_rate, Decoder=bpd_v1, target_run_count=run_count,seed=42)
+    out1 = mc1.run()
+    out2 = mc2.run()
+
+
+    assert out1['logical_error_rate'] == out2['logical_error_rate']
 
 
 
-
-# if __name__ == "__main__":
-#     test_constructor()
+if __name__ == "__main__":
+    pytest.main()

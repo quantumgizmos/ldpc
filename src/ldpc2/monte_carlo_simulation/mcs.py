@@ -44,7 +44,7 @@ class McSim:
         tqdm_disable=False,
         save_interval=60,
         seed = None,
-        run = True
+        run = False,
     ) -> None:
         """
         Initializes a McSim object with the given parameters.
@@ -90,7 +90,7 @@ class McSim:
         if run:
             self.run()
 
-    def run(self) -> None:
+    def run(self) -> Dict:
         """
         Runs Monte Carlo simulations of the code.
 
@@ -125,12 +125,22 @@ class McSim:
 
             # Update the logical error rate and progress bar
             self.logical_error_rate = self.fail_count / self.run_count
+            self.logical_error_rate_eb = np.sqrt(self.logical_error_rate*(1-self.logical_error_rate)/self.run_count)
             pbar.set_description(
-                f"Physical error rate: {100*self.error_rate:.2f}%; Logical error rate: {100*self.logical_error_rate:.2f}%"
+                f"Physical error rate: {100*self.error_rate:.2f}%; Logical error rate: {100*self.logical_error_rate:.2f}+-{100*self.logical_error_rate_eb:.2f}%"
             )
+        return self.save()
 
 
     def save(self):
-        NotImplemented
+        
+        output_dict = {}
+        output_dict["logical_error_rate"] = self.logical_error_rate
+        output_dict["logical_error_rate_eb"] = self.logical_error_rate_eb
+        output_dict["error_rate"] = self.error_rate
+        output_dict["run_count"] = self.run_count
+        output_dict["fail_count"] = self.fail_count
+        
+        return output_dict
 
 

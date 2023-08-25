@@ -14,7 +14,6 @@ cdef extern from "bp.hpp" namespace "bp":
         PRODUCT_SUM = 0
         MINIMUM_SUM = 1
 
-
     cdef enum BpSchedule:
         SERIAL = 0
         PARALLEL = 1
