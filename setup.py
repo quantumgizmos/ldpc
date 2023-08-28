@@ -29,7 +29,7 @@ this_directory = Path(__file__).parent
 cpp_modules = ["bp_decoder","bposd_decoder","mbp_decoder",
                 "uf_decoder","bf_decoder","bp_decoder2","gf2sparse"]
 
-cpp_modules = ["gf2sparse", "bp_decoder", "bposd_decoder"]
+cpp_modules = ["gf2sparse", "bp_decoder", "bposd_decoder", "bp_flip"]
 
 c_extensions = []
 for module in cpp_modules:

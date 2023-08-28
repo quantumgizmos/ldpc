@@ -8,13 +8,13 @@
 
 TEST(TestFlipDecoder, single_bit_errors) {
 
-    auto pcm = bp::BpSparse::New(4, 8);
-    pcm->insert_entry(0, 1), pcm->insert_entry(0, 2), pcm->insert_entry(0, 3), pcm->insert_entry(0, 4),
-    pcm->insert_entry(1, 0), pcm->insert_entry(1, 2), pcm->insert_entry(1, 3), pcm->insert_entry(1, 5),
-    pcm->insert_entry(2, 0), pcm->insert_entry(2, 1), pcm->insert_entry(2, 3), pcm->insert_entry(2, 6),
-    pcm->insert_entry(3, 0), pcm->insert_entry(3, 1), pcm->insert_entry(3, 2), pcm->insert_entry(3, 7);
+    auto pcm = bp::BpSparse(4, 8);
+    pcm.insert_entry(0, 1), pcm.insert_entry(0, 2), pcm.insert_entry(0, 3), pcm.insert_entry(0, 4),
+    pcm.insert_entry(1, 0), pcm.insert_entry(1, 2), pcm.insert_entry(1, 3), pcm.insert_entry(1, 5),
+    pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
+    pcm.insert_entry(3, 0), pcm.insert_entry(3, 1), pcm.insert_entry(3, 2), pcm.insert_entry(3, 7);
 
-    print_sparse_matrix(*pcm);
+    print_sparse_matrix(pcm);
 
     auto flipD = new flip::FlipDecoder(pcm, 8);
 
@@ -23,11 +23,11 @@ TEST(TestFlipDecoder, single_bit_errors) {
 
     for(int i = 2; i<8; i++){
 
-        auto error = vector<uint8_t>(pcm->n,0);
+        auto error = vector<uint8_t>(pcm.n,0);
         error[i] = 1;
 
-        vector<uint8_t> syndrome(pcm->m, 0);
-        pcm->mulvec(error,syndrome);
+        vector<uint8_t> syndrome(pcm.m, 0);
+        pcm.mulvec(error,syndrome);
 
         auto decoding = flipD->decode(syndrome);
 
@@ -38,15 +38,15 @@ TEST(TestFlipDecoder, single_bit_errors) {
         cout<<"Decoding: ";
         print_vector(decoding);
         cout<<"Decoding syndrome: ";
-        vector<uint8_t> syndrome2(pcm->m, 0);
-        pcm->mulvec(decoding,syndrome2);
+        vector<uint8_t> syndrome2(pcm.m, 0);
+        pcm.mulvec(decoding,syndrome2);
         print_vector(syndrome2);
         cout<<"Converged: "<<flipD->converge<<endl;
         cout<<"Iterations: "<<flipD->iterations<<endl;
 
         cout<<endl;
 
-        for(int j = 0; j<pcm->m; j++){
+        for(int j = 0; j<pcm.m; j++){
             ASSERT_EQ(syndrome[j],syndrome2[j]);
         }
     
@@ -57,19 +57,19 @@ TEST(TestFlipDecoder, single_bit_errors) {
 
 TEST(TestFlipDecoder, two_bit_errors) {
 
-    auto pcm = bp::BpSparse::New(4, 8);
-    pcm->insert_entry(0, 1), pcm->insert_entry(0, 2), pcm->insert_entry(0, 3), pcm->insert_entry(0, 4),
-    pcm->insert_entry(1, 0), pcm->insert_entry(1, 2), pcm->insert_entry(1, 3), pcm->insert_entry(1, 5),
-    pcm->insert_entry(2, 0), pcm->insert_entry(2, 1), pcm->insert_entry(2, 3), pcm->insert_entry(2, 6),
-    pcm->insert_entry(3, 0), pcm->insert_entry(3, 1), pcm->insert_entry(3, 2), pcm->insert_entry(3, 7);
+    auto pcm = bp::BpSparse(4, 8);
+    pcm.insert_entry(0, 1), pcm.insert_entry(0, 2), pcm.insert_entry(0, 3), pcm.insert_entry(0, 4),
+    pcm.insert_entry(1, 0), pcm.insert_entry(1, 2), pcm.insert_entry(1, 3), pcm.insert_entry(1, 5),
+    pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
+    pcm.insert_entry(3, 0), pcm.insert_entry(3, 1), pcm.insert_entry(3, 2), pcm.insert_entry(3, 7);
 
-    print_sparse_matrix(*pcm);
+    print_sparse_matrix(pcm);
 
     auto flipD = new flip::FlipDecoder(pcm, 8);
 
     vector<vector<int>> error_locations;
-    for(int i = 0; i<pcm->n; i++){
-        for(int j = i+1; j<pcm->n; j++){
+    for(int i = 0; i<pcm.n; i++){
+        for(int j = i+1; j<pcm.n; j++){
             error_locations.push_back({i,j});
         }
     }
@@ -78,13 +78,13 @@ TEST(TestFlipDecoder, two_bit_errors) {
 
     for(auto error_indices: error_locations){
 
-        auto error = vector<uint8_t>(pcm->n,0);
+        auto error = vector<uint8_t>(pcm.n,0);
         for(int idx: error_indices){
             error[idx] = 1;
         }
 
-        vector<uint8_t> syndrome(pcm->m, 0);
-        pcm->mulvec(error,syndrome);
+        vector<uint8_t> syndrome(pcm.m, 0);
+        pcm.mulvec(error,syndrome);
 
         auto decoding = flipD->decode(syndrome);
 
@@ -95,15 +95,15 @@ TEST(TestFlipDecoder, two_bit_errors) {
         cout<<"Decoding: ";
         print_vector(decoding);
         cout<<"Decoding syndrome: ";
-        vector<uint8_t> syndrome2(pcm->m, 0);
-        pcm->mulvec(decoding,syndrome2);
+        vector<uint8_t> syndrome2(pcm.m, 0);
+        pcm.mulvec(decoding,syndrome2);
         print_vector(syndrome2);
         cout<<"Converged: "<<flipD->converge<<endl;
         cout<<"Iterations: "<<flipD->iterations<<endl;
 
         cout<<endl;
 
-        for(int j = 0; j<pcm->m; j++){
+        for(int j = 0; j<pcm.m; j++){
             ASSERT_EQ(syndrome[j],syndrome2[j]);
         }
     

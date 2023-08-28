@@ -101,6 +101,9 @@ cdef class BpOsdDecoder(BpDecoderBase):
         constructor. The OSD order used is specified by the `osd_order` parameter passed to the class constructor.
 
         """
+
+        cdef int i
+
         if not len(syndrome) == self.m:
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
         

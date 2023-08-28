@@ -17,7 +17,7 @@ class FlipDecoder
 
 public:
 
-    shared_ptr<bp::BpSparse> pcm;
+    bp::BpSparse& pcm;
     int bit_count;
     int check_count;
     int converge;
@@ -29,11 +29,11 @@ public:
     vector<uint8_t> syndrome;
     vector<uint8_t> decoding;
 
-    FlipDecoder(shared_ptr<bp::BpSparse> pcm, int max_iter=0, int pfreq=0, int seed = 0)
+    FlipDecoder(bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
+        pcm(pcm)
     {
-        this->pcm = pcm;
         this->max_iter = max_iter;
-        if(this->max_iter == 0) this->max_iter = this->pcm->n;
+        if(this->max_iter == 0) this->max_iter = this->pcm.n;
         this->pfreq = pfreq;
         if(this->pfreq == 0) this->pfreq = std::numeric_limits<int>::max();
         this->seed = seed;
@@ -43,9 +43,9 @@ public:
         else{
             this->RNG = new rng::RandomNumberGenerator(this->seed);
             }
-        this->check_count = this->pcm->m;
-        this->bit_count = this->pcm->n;
-        this->decoding.resize(this->pcm->n);
+        this->check_count = this->pcm.m;
+        this->bit_count = this->pcm.n;
+        this->decoding.resize(this->pcm.n);
     }
 
     ~FlipDecoder()
@@ -54,7 +54,7 @@ public:
         delete this->RNG;
     }
 
-    vector<uint8_t> &decode(vector<uint8_t> &synd)
+    vector<uint8_t>& decode(vector<uint8_t> &synd)
     {
 
         std::fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -73,9 +73,9 @@ public:
                 vector<int> unsatisfied_checks;
                 vector<int> satisfied_checks;
 
-                for (auto e : this->pcm->iterate_column_ptr(bit_idx))
+                for (auto& e : this->pcm.iterate_column(bit_idx))
                 {
-                    int check_idx = e->row_index;
+                    int check_idx = e.row_index;
                     if (this->syndrome[check_idx] == 1)
                     {
                         unsatisfied_checks.push_back(check_idx);

@@ -13,4 +13,6 @@ seed = np.random.randint(2**32 -1)
 McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=seed, run=True)
 McSim(H, error_rate=error_rate, Decoder=bpd_v1, target_run_count=run_count,seed=seed, run=True)
 
+from ldpc2.bp_flip import BpFlipDecoder
+
 

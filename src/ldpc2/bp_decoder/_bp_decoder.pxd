@@ -30,6 +30,8 @@ cdef extern from "bp.hpp" namespace "bp":
         BpEntry& insert_entry(int i, int j)
         BpEntry& get_entry(int i, int j)
         vector[uint8_t]& mulvec(vector[uint8_t]& input_vector, vector[uint8_t]& output_vector)
+        vector[uint8_t] mulvec(vector[uint8_t]& input_vector)
+
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
 
