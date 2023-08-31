@@ -74,7 +74,7 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 
 
 
-cdef class BpDecoderBase:
+class BpDecoderBase:
 
     def __init__(self,pcm, **kwargs):
         pass
@@ -468,7 +468,7 @@ cdef class BpDecoderBase:
 
         self.bpd.random_schedule_seed = value
 
-cdef class BpDecoder(BpDecoderBase):
+class BpDecoder(BpDecoderBase):
     """
     Belief propagation decoder for binary linear codes.
 
@@ -609,7 +609,7 @@ cdef class BpDecoder(BpDecoderBase):
         return out
 
 
-# # cdef class SoftInfoBpDecoder(BpDecoderBase):
+# # class SoftInfoBpDecoder(BpDecoderBase):
 # #     """
 # #     A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
 

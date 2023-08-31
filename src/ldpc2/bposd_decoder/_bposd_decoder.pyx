@@ -37,8 +37,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
     osd_method : int, optional
-        The OSD method used. Must be one of {0, 1, 2}, where 0 represents 'OSD_0', 1 represents 'OSD_E', and 2 represents 'OSD_CS',
-        by default 0.
+        The OSD method used.  Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
     osd_order : int, optional
         The OSD order, by default 0.
 
@@ -162,10 +161,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
         Parameters
         ----------
         method : Union[str, int, float]
-            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
-            Alternatively, 'osd_0', '0' or 'osd0' can be used to set the OSD method to 'OSD_0', 'osd_e', 'e' or
-            'exhaustive' can be used to set the OSD method to 'OSD_E', and 'osd_cs', '1', 'cs', 'combination_sweep' or
-            'combination_sweep' can be used to set the OSD method to 'OSD_CS'.
+            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
+            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
         # OSD method
         if str(method).lower() in ['osd_0', '0', 'osd0']:

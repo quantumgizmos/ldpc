@@ -5,6 +5,14 @@
 // #include "ssf.hpp"
 
 
+class BpNode: public sparse_matrix_base::EntryBase<BpNode>{   
+        double bit_to_check_msg=0.0;
+        double check_to_bit_msg=0.0;
+};
+
+auto pcm = GF2Sparse<BpNode>(10,10);
+
+
 using namespace std;
 
 
