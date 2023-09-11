@@ -148,59 +148,59 @@ class BpDecoder{
 
         vector<uint8_t>& bp_decode_parallel(vector<uint8_t>& syndrome){
 
-            converge=0;
+            this->converge=0;
             int CONVERGED = false;
 
-            initialise_log_domain_bp();
+            this->initialise_log_domain_bp();
 
             //main interation loop
-            for(int it=1;it<=maximum_iterations;it++){
+            for(int it=1; it <= this->maximum_iterations; it++){
 
                 if(CONVERGED) continue;
 
-                // std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
-
-                if(bp_method == PRODUCT_SUM){
+                if(this->bp_method == PRODUCT_SUM){
                     #pragma omp for
-                    for(int i=0;i<check_count;i++){
+                    for(int i=0; i < this->check_count; i++){
                         this->candidate_syndrome[i] = 0;
+                        
                         double temp=1.0;
-                        for(auto& e: pcm.iterate_row(i)){
+                        for(auto& e: this->pcm.iterate_row(i)){
                             e.check_to_bit_msg=temp;
                             temp*=tanh(e.bit_to_check_msg/2);
                         }
 
                         temp=1;
-                        for(auto& e: pcm.reverse_iterate_row(i)){
+                        for(auto& e: this->pcm.reverse_iterate_row(i)){
                             e.check_to_bit_msg*=temp;
                             int message_sign = syndrome[i] ? -1.0 : 1.0;
-                            e.check_to_bit_msg = message_sign*log((1+e.check_to_bit_msg)/(1-e.check_to_bit_msg));
+                            e.check_to_bit_msg = message_sign*log((1 + e.check_to_bit_msg)/(1 - e.check_to_bit_msg));
                             temp*=tanh(e.bit_to_check_msg/2);
                         }
                     }
                 }
 
-                else if(bp_method == MINIMUM_SUM){
+                else if(this->bp_method == MINIMUM_SUM){
                     //check to bit updates
                     #pragma omp for
-                    for(int i=0;i<check_count;i++){
+                    for(int i=0; i<check_count; i++){
 
                         this->candidate_syndrome[i] = 0;
-                        int total_sgn,sgn;
+                        int total_sgn;
+                        int sgn;
                         total_sgn=syndrome[i];
-                        double temp = numeric_limits<double>::max();
+                        double temp = std::numeric_limits<double>::max();
 
-                        for(auto& e: pcm.iterate_row(i)){
+                        for(auto& e: this->pcm.iterate_row(i)){
                             if(e.bit_to_check_msg<=0) total_sgn+=1;   
                             e.check_to_bit_msg = temp;
-                            double abs_bit_to_check_msg = abs(e.bit_to_check_msg);
+                            double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
                             if(abs_bit_to_check_msg<temp){
                                 temp = abs_bit_to_check_msg;
                             }
                         }
 
-                        temp = numeric_limits<double>::max();
-                        for(auto& e: pcm.reverse_iterate_row(i)){
+                        temp = std::numeric_limits<double>::max();
+                        for(auto& e: this->pcm.reverse_iterate_row(i)){
                             sgn=total_sgn;
                             if(e.bit_to_check_msg<=0) sgn+=1;
                             if(temp<e.check_to_bit_msg){
@@ -210,7 +210,7 @@ class BpDecoder{
                             int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                             e.check_to_bit_msg *= message_sign*ms_scaling_factor;
                         
-                            double abs_bit_to_check_msg = abs(e.bit_to_check_msg);
+                            double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
                             if(abs_bit_to_check_msg<temp){
                                 temp = abs_bit_to_check_msg;
                             }
@@ -223,31 +223,31 @@ class BpDecoder{
 
                 //compute log probability ratios
                 #pragma omp for
-                for(int i=0;i<bit_count;i++){
-                    double temp=initial_log_prob_ratios[i];
-                    for(auto& e: pcm.iterate_column(i)){
-                        e.bit_to_check_msg=temp;
-                        temp+=e.check_to_bit_msg;
+                for(int i=0; i < this->bit_count; i++){
+                    double temp = initial_log_prob_ratios[i];
+                    for(auto& e: this->pcm.iterate_column(i)){
+                        e.bit_to_check_msg = temp;
+                        temp += e.check_to_bit_msg;
                         // if(isnan(temp)) temp = e.bit_to_check_msg;
 
 
                     }
 
                     //make hard decision on basis of log probability ratio for bit i
-                    log_prob_ratios[i]=temp;
+                    this->log_prob_ratios[i] = temp;
                     // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
-                    if(temp<=0){
-                        decoding[i] = 1;
-                        for(auto& e: pcm.iterate_column(i)){
-                            candidate_syndrome[e.row_index]^=1;                        }
+                    if(temp <= 0){
+                        this->decoding[i] = 1;
+                        for(auto& e: this->pcm.iterate_column(i)){
+                            this->candidate_syndrome[e.row_index] ^= 1;                        }
                     }
-                    else decoding[i]=0;
+                    else this->decoding[i] = 0;
                 }
 
 
 
                 //compute the syndrome for the current candidate decoding solution
-                // candidate_syndrome = pcm.mulvec_parallel(decoding,candidate_syndrome);
+                // candidate_syndrome = this->pcm.mulvec_parallel(decoding,candidate_syndrome);
                 int loop_break = false;
                 CONVERGED = false;
                 #pragma omp barrier
@@ -276,17 +276,17 @@ class BpDecoder{
                 #pragma omp for
                 for(int i=0;i<bit_count;i++){
                     double temp=0;
-                    for(auto& e: pcm.reverse_iterate_column(i)){
-                        e.bit_to_check_msg+=temp;
-                        temp+=e.check_to_bit_msg;
+                    for(auto& e: this->pcm.reverse_iterate_column(i)){
+                        e.bit_to_check_msg += temp;
+                        temp += e.check_to_bit_msg;
                     }
                 }
     
             }
         
 
-            converge=CONVERGED;
-            return decoding;
+            this->converge=CONVERGED;
+            return this->decoding;
 
         }
 
@@ -335,7 +335,7 @@ class BpDecoder{
                         bit_to_check_msg = log_prob_ratios_old[e.col_index] - e.check_to_bit_msg;
                         if(bit_to_check_msg<=0) total_sgn+=1;   
                         e.bit_to_check_msg = temp;
-                        double abs_bit_to_check_msg = abs(bit_to_check_msg);
+                        double abs_bit_to_check_msg = std::abs(bit_to_check_msg);
                         if(abs_bit_to_check_msg < temp){
                             temp = abs_bit_to_check_msg;
                         }
@@ -356,7 +356,7 @@ class BpDecoder{
                         this->log_prob_ratios[e.col_index] += e.check_to_bit_msg;
 
 
-                        double abs_bit_to_check_msg = abs(bit_to_check_msg);
+                        double abs_bit_to_check_msg = std::abs(bit_to_check_msg);
                         if(abs_bit_to_check_msg < temp){
                             temp = abs_bit_to_check_msg;
                         }
@@ -451,7 +451,7 @@ class BpDecoder{
                             temp = numeric_limits<double>::max();
                             for(auto& g: pcm.iterate_row(check_index)){
                                 if(&g != &e){
-                                    double abs_bit_to_check_msg = abs(g.bit_to_check_msg);
+                                    double abs_bit_to_check_msg = std::abs(g.bit_to_check_msg);
                                     if(abs_bit_to_check_msg <temp) temp = abs_bit_to_check_msg;
                                     if(g.bit_to_check_msg<=0) sgn+=1;
                                 }
@@ -578,8 +578,8 @@ class BpDecoder{
 
 //                             for(auto& g: pcm.iterate_row(check_index)){
 //                                 if(&g != &e){
-//                                     if(abs(g.bit_to_check_msg)<temp){
-//                                         temp = abs(g.bit_to_check_msg);
+//                                     if(std::abs(g.bit_to_check_msg)<temp){
+//                                         temp = std::abs(g.bit_to_check_msg);
 //                                     }
 //                                     if(g.bit_to_check_msg<=0) sgn^=1;
 //                                 }
@@ -592,22 +592,22 @@ class BpDecoder{
 //                             //VIRTUAL CHECK NODE UPDATE
 
 //                             //first we calculate the magnitude of the soft syndrome
-//                             double soft_syndrome_magnitude = abs(this->soft_syndrome[check_index]);
+//                             double soft_syndrome_magnitude = std::abs(this->soft_syndrome[check_index]);
                             
 //                             //then we check if the magnitude is less than the cutoff.
   
                                 
 //                             if(soft_syndrome_magnitude<cutoff){
 
-//                                 if(soft_syndrome_magnitude<abs(min_bit_to_check_msg)){
+//                                 if(soft_syndrome_magnitude<std::abs(min_bit_to_check_msg)){
 //                                     propagated_msg = soft_syndrome_magnitude;
 
 //                                     int check_node_sgn = sgn;
 //                                     if(e.bit_to_check_msg<=0) check_node_sgn^=1;
 
 //                                     if(check_node_sgn==syndrome[check_index]){
-//                                         if(abs(e.bit_to_check_msg)<min_bit_to_check_msg){
-//                                             this->soft_syndrome[check_index] = pow(-1,syndrome[check_index])*abs(e.bit_to_check_msg);
+//                                         if(std::abs(e.bit_to_check_msg)<min_bit_to_check_msg){
+//                                             this->soft_syndrome[check_index] = pow(-1,syndrome[check_index])*std::abs(e.bit_to_check_msg);
 //                                         }
 //                                         else{
 //                                             this->soft_syndrome[check_index] = pow(-1,syndrome[check_index])*min_bit_to_check_msg;
