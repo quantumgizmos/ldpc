@@ -157,11 +157,12 @@ class BpDecoder{
 
                 if(CONVERGED) continue;
 
-                std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
+                // std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
 
                 if(bp_method == PRODUCT_SUM){
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
+                        this->candidate_syndrome[i] = 0;
                         double temp=1.0;
                         for(auto& e: pcm.iterate_row(i)){
                             e.check_to_bit_msg=temp;
@@ -171,7 +172,8 @@ class BpDecoder{
                         temp=1;
                         for(auto& e: pcm.reverse_iterate_row(i)){
                             e.check_to_bit_msg*=temp;
-                            e.check_to_bit_msg = pow(-1,syndrome[i])*log((1+e.check_to_bit_msg)/(1-e.check_to_bit_msg));
+                            int message_sign = syndrome[i] ? -1.0 : 1.0;
+                            e.check_to_bit_msg = message_sign*log((1+e.check_to_bit_msg)/(1-e.check_to_bit_msg));
                             temp*=tanh(e.bit_to_check_msg/2);
                         }
                     }
@@ -182,15 +184,17 @@ class BpDecoder{
                     #pragma omp for
                     for(int i=0;i<check_count;i++){
 
+                        this->candidate_syndrome[i] = 0;
                         int total_sgn,sgn;
                         total_sgn=syndrome[i];
                         double temp = numeric_limits<double>::max();
 
                         for(auto& e: pcm.iterate_row(i)){
                             if(e.bit_to_check_msg<=0) total_sgn+=1;   
-                            e.check_to_bit_msg = abs(temp);
-                            if(abs(e.bit_to_check_msg)<temp){
-                                temp = abs(e.bit_to_check_msg);
+                            e.check_to_bit_msg = temp;
+                            double abs_bit_to_check_msg = abs(e.bit_to_check_msg);
+                            if(abs_bit_to_check_msg<temp){
+                                temp = abs_bit_to_check_msg;
                             }
                         }
 
@@ -202,10 +206,12 @@ class BpDecoder{
                                 e.check_to_bit_msg = temp;
                             }
                             
-                            e.check_to_bit_msg*=pow(-1.0,sgn)*ms_scaling_factor;
+                            int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
+                            e.check_to_bit_msg *= message_sign*ms_scaling_factor;
                         
-                            if(abs(e.bit_to_check_msg)<temp){
-                                temp = abs(e.bit_to_check_msg);
+                            double abs_bit_to_check_msg = abs(e.bit_to_check_msg);
+                            if(abs_bit_to_check_msg<temp){
+                                temp = abs_bit_to_check_msg;
                             }
                             
                         }
