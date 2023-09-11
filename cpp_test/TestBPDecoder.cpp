@@ -169,45 +169,6 @@ TEST(BpDecoder, product_sum_parallel){
     
 }
 
-TEST(BpDecoder, min_sum_parallel){
-    
-    int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
-    for (int i = 0; i < (n - 1); i++)
-    {
-        pcm.insert_entry(i, i);
-        pcm.insert_entry(i, (i + 1) % n);
-    }
-    int maximum_iterations = pcm.n;
-    auto channel_probabilities = vector<double>(pcm.n, 0.1);
-
-    // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM, bp::PARALLEL,0.625);
-
-    // Check if member variables are set correctly
-    EXPECT_TRUE(pcm == decoder.pcm);
-    EXPECT_EQ(pcm.m, decoder.check_count);
-    EXPECT_EQ(pcm.n, decoder.bit_count);
-    EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
-    EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
-    EXPECT_EQ(0.625, decoder.ms_scaling_factor);
-    EXPECT_EQ(1, decoder.bp_method);
-    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
-    EXPECT_EQ(1, decoder.omp_thread_count);
-    EXPECT_EQ(0, decoder.random_schedule_seed);
-
-    auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
-
-    auto count = 0;
-    for(auto syndrome: syndromes){
-        auto decoding = decoder.decode(syndrome);
-        ASSERT_EQ(expected_decoding[count], decoding);
-        count++;
-    }
-    
-}
-
 TEST(BpDecoder, ProdSumParallel_RepetitionCode5) {
     int n = 5;
     auto pcm = bp::BpSparse(n - 1, n);
@@ -305,6 +266,86 @@ TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
         ASSERT_EQ(expected_decoding[count], decoding);
         count++;
     }
+}
+
+TEST(BpDecoder, min_sum_parallel){
+    
+    int n = 3;
+    auto pcm = bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++)
+    {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder using input arguments
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM, bp::PARALLEL,0.625);
+
+    // Check if member variables are set correctly
+    EXPECT_TRUE(pcm == decoder.pcm);
+    EXPECT_EQ(pcm.m, decoder.check_count);
+    EXPECT_EQ(pcm.n, decoder.bit_count);
+    EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
+    EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
+    EXPECT_EQ(0.625, decoder.ms_scaling_factor);
+    EXPECT_EQ(1, decoder.bp_method);
+    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(1, decoder.omp_thread_count);
+    EXPECT_EQ(0, decoder.random_schedule_seed);
+
+    auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
+
+    auto count = 0;
+    for(auto syndrome: syndromes){
+        auto decoding = decoder.decode(syndrome);
+        print_vector(decoder.log_prob_ratios);
+        ASSERT_EQ(expected_decoding[count], decoding);
+        count++;
+    }
+    
+}
+
+TEST(BpDecoder, min_sum_single_scan){
+    
+    int n = 3;
+    auto pcm = bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++)
+    {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder using input arguments
+    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM, bp::PARALLEL,0.625);
+
+    // Check if member variables are set correctly
+    EXPECT_TRUE(pcm == decoder.pcm);
+    EXPECT_EQ(pcm.m, decoder.check_count);
+    EXPECT_EQ(pcm.n, decoder.bit_count);
+    EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
+    EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
+    EXPECT_EQ(0.625, decoder.ms_scaling_factor);
+    EXPECT_EQ(1, decoder.bp_method);
+    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(1, decoder.omp_thread_count);
+    EXPECT_EQ(0, decoder.random_schedule_seed);
+
+    auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
+
+    auto count = 0;
+    for(auto syndrome: syndromes){
+        auto decoding = decoder.bp_decode_single_scan(syndrome);
+        print_vector(decoder.log_prob_ratios);
+        ASSERT_EQ(expected_decoding[count], decoding);
+        count++;
+    }
+    
 }
 
 

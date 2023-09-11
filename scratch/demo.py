@@ -1,12 +1,15 @@
-import numpy as np
 from ldpc2.bp_decoder import BpDecoder
+from ldpc2.codes import rep_code
+import numpy as np
 
-H = np.array([[1,1,0],[0,1,1]])
-decoder = BpDecoder(H, error_rate = 0.1)
 
-error = np.array([1,0,0])
-syndrome = H@error %2
+H = rep_code(3)
+decoder = BpDecoder(
+    H, error_rate = 0.1, bp_method = "ps")
 
-decoding = decoder.decode(syndrome)
+decoding = decoder.decode(np.array([1,0]))
 print(decoding)
+
+
+
 

@@ -283,6 +283,116 @@ class BpDecoder{
 
         }
 
+        vector<uint8_t>& bp_decode_single_scan(vector<uint8_t>& syndrome){
+
+            converge=0;
+            int CONVERGED = false;
+
+            vector<double> log_prob_ratios_old;
+            log_prob_ratios_old.resize(bit_count);
+
+            for(int i=0;i<bit_count;i++){
+                this->initial_log_prob_ratios[i] = log((1-this->channel_probabilities[i])/this->channel_probabilities[i]);
+                this->log_prob_ratios[i] = this->initial_log_prob_ratios[i];
+
+            }
+
+            // initialise_log_domain_bp();
+
+            //main interation loop
+            for(int it=1;it<=maximum_iterations;it++){
+
+                if(CONVERGED) continue;
+
+                // std::fill(candidate_syndrome.begin(), candidate_syndrome.end(), 0);
+
+                log_prob_ratios_old = this->log_prob_ratios;
+                
+                if(it != 1) {
+                    this->log_prob_ratios = this->initial_log_prob_ratios;
+                }
+
+                //check to bit updates
+                for(int i=0;i<check_count;i++){
+
+                    this->candidate_syndrome[i] = 0;
+
+                    int total_sgn,sgn;
+                    total_sgn=syndrome[i];
+                    double temp = numeric_limits<double>::max();
+
+                    double bit_to_check_msg;
+
+                    for(auto& e: pcm.iterate_row(i)){
+                        if( it == 1 ) e.check_to_bit_msg = 0;
+                        bit_to_check_msg = log_prob_ratios_old[e.col_index] - e.check_to_bit_msg;
+                        if(bit_to_check_msg<=0) total_sgn+=1;   
+                        e.bit_to_check_msg = temp;
+                        double abs_bit_to_check_msg = abs(bit_to_check_msg);
+                        if(abs_bit_to_check_msg < temp){
+                            temp = abs_bit_to_check_msg;
+                        }
+                    }
+
+                    temp = numeric_limits<double>::max();
+                    for(auto& e: pcm.reverse_iterate_row(i)){
+                        sgn=total_sgn;
+                        if( it == 1 ) e.check_to_bit_msg = 0;
+                        bit_to_check_msg = log_prob_ratios_old[e.col_index] - e.check_to_bit_msg;
+                        if(bit_to_check_msg<=0) sgn+=1;
+                        if(temp<e.bit_to_check_msg){
+                            e.bit_to_check_msg = temp;
+                        }
+                        
+                        e.check_to_bit_msg = pow(-1.0,sgn)*ms_scaling_factor*e.bit_to_check_msg;
+                        this->log_prob_ratios[e.col_index] += e.check_to_bit_msg;
+
+
+                        double abs_bit_to_check_msg = abs(bit_to_check_msg);
+                        if(abs_bit_to_check_msg < temp){
+                            temp = abs_bit_to_check_msg;
+                        }
+                        
+                    }
+
+                    
+                    
+                }
+                
+
+
+                //compute hard decisions and calculate syndrome
+                for(int i=0;i<bit_count;i++){
+                    if(this->log_prob_ratios[i]<=0){
+                        this->decoding[i] = 1;
+                        for(auto& e: pcm.iterate_column(i)){
+                            this->candidate_syndrome[e.row_index]^=1;                        }
+                    }
+                    else this->decoding[i]=0;
+                }
+
+                int loop_break = false;
+                CONVERGED = false;
+
+                if(std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())){
+                    CONVERGED = true;
+                }
+
+                iterations = it;
+
+                if(CONVERGED){
+                    converge = CONVERGED;
+                    return decoding;
+                }
+    
+            }
+        
+
+            converge=CONVERGED;
+            return decoding;
+
+        }
+
         vector<uint8_t>& bp_decode_serial(vector<uint8_t>& syndrome){
 
             int check_index;
