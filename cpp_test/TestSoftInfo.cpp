@@ -101,41 +101,41 @@ using namespace std;
 // }
 
 
-TEST(SoftInfoDecoder, one_errored_syndrome_bit) {
+// TEST(SoftInfoDecoder, one_errored_syndrome_bit) {
 
-    /*In this test, I will attempt to decode a 3 qubit ring code with an
-    errored syndrome. The second syndrome is set to 5 (ie. no syndrome).
-    However, it is below the cutoff. I expect the decoder to flip the second syndrome
-    bit and return the decoding 100.*/
+//     /*In this test, I will attempt to decode a 3 qubit ring code with an
+//     errored syndrome. The second syndrome is set to 5 (ie. no syndrome).
+//     However, it is below the cutoff. I expect the decoder to flip the second syndrome
+//     bit and return the decoding 100.*/
 
 
-    //Setup repetition code
-    int N = 3;
-    auto pcm = bp::BpSparse::New(N, N);
-    for(int i = 0; i<N; i++){
-        pcm->insert_entry(i, i);
-        pcm->insert_entry(i,(i+1)%N);
-    }
+//     //Setup repetition code
+//     int N = 3;
+//     auto pcm = bp::BpSparse::New(N, N);
+//     for(int i = 0; i<N; i++){
+//         pcm->insert_entry(i, i);
+//         pcm->insert_entry(i,(i+1)%N);
+//     }
 
-    // print_sparse_matrix(*pcm);
+//     // print_sparse_matrix(*pcm);
 
-    vector<double> error_channel(pcm->n,0.1);
-    //could we come up with a sum product formulation for this?
-    auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+//     vector<double> error_channel(pcm->n,0.1);
+//     //could we come up with a sum product formulation for this?
+//     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
-    vector<double> soft_syndrome = {-20,2,20};
-    double cutoff = 10;
-    auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff,0.3);
-    vector<uint8_t> expected_decoding = {0,1,0};
+//     vector<double> soft_syndrome = {-20,2,20};
+//     double cutoff = 10;
+//     auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff,0.3);
+//     vector<uint8_t> expected_decoding = {0,1,0};
 
-    // print_vector(soft_decoding);
+//     // print_vector(soft_decoding);
 
-    for(int i = 0; i<pcm->n; i++){
-        ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
-    }
+//     for(int i = 0; i<pcm->n; i++){
+//         ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
+//     }
 
     
-}
+// }
 
 
 

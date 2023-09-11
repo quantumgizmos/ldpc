@@ -18,11 +18,11 @@ bool TEST_WITH_CSR(GF2Sparse<GF2Entry>& matrix, vector<vector<int>> csr_matrix){
         int j = 0;
         set<int> row_set;
         for(auto col : row) row_set.insert(col);
-        for(auto e: matrix.iterate_row_ptr(i)){
+        for(auto& e: matrix.iterate_row(i)){
 
-            if(!e->row_index==i) return false;
-            if(row_set.contains(e->col_index)){
-                row_set.erase(e->col_index); //this ensures there a no duplicates.
+            if(!e.row_index==i) return false;
+            if(row_set.contains(e.col_index)){
+                row_set.erase(e.col_index); //this ensures there a no duplicates.
             }
             else return false;
 

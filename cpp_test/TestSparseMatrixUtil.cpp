@@ -51,13 +51,13 @@ TEST(CopyCols, Stack) {
 }
 
 TEST(CopyCols, SharedPtr) {
-    auto matrix = sparse_matrix::SparseMatrix<int>::New(3, 4);
-    matrix->insert_entry(0, 0, 1);
-    matrix->insert_entry(0, 2, 2);
-    matrix->insert_entry(1, 1, 3);
-    matrix->insert_entry(1, 3, 4);
-    matrix->insert_entry(2, 0, 5);
-    matrix->insert_entry(2, 1, 6);
+    auto matrix = sparse_matrix::SparseMatrix<int>(3, 4);
+    matrix.insert_entry(0, 0, 1);
+    matrix.insert_entry(0, 2, 2);
+    matrix.insert_entry(1, 1, 3);
+    matrix.insert_entry(1, 3, 4);
+    matrix.insert_entry(2, 0, 5);
+    matrix.insert_entry(2, 1, 6);
     auto copy_mat = copy_cols(matrix, {0, 2});
     // print_sparse_matrix(*copy_mat);
 
@@ -67,7 +67,7 @@ TEST(CopyCols, SharedPtr) {
                     << "5 0";
 
     std::stringstream actual_output;
-    actual_output=print_sparse_matrix(*copy_mat,true);
+    actual_output=print_sparse_matrix(copy_mat,true);
 
     EXPECT_EQ(actual_output.str(), expected_output.str());
 
