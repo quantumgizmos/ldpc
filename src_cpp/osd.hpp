@@ -146,7 +146,7 @@ class OsdDecoder{
             vector<uint8_t> t_syndrome;
             t_syndrome.resize(this->pcm.m);
  
-            for(auto candidate_string: this->osd_candidate_strings){
+            for(auto& candidate_string: this->osd_candidate_strings){
 
                 pcm_t.mulvec(candidate_string,t_syndrome);
                 for(int i=0;i<this->pcm.m;i++){
