@@ -4,6 +4,8 @@
 #include "bp.hpp"
 #include "sparse_matrix_util.hpp"
 
+using namespace std;
+
 TEST(BpEntry, init)
 {
     auto e = bp::BpEntry();

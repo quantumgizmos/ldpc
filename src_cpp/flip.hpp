@@ -26,8 +26,8 @@ public:
     int pfreq;
     int seed;
     rng::RandomNumberGenerator* RNG;
-    vector<uint8_t> syndrome;
-    vector<uint8_t> decoding;
+    std::vector<uint8_t> syndrome;
+    std::vector<uint8_t> decoding;
 
     FlipDecoder(bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
         pcm(pcm)
@@ -54,7 +54,7 @@ public:
         delete this->RNG;
     }
 
-    vector<uint8_t>& decode(vector<uint8_t> &synd)
+    std::vector<uint8_t>& decode(std::vector<uint8_t> &synd)
     {
 
         std::fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -70,8 +70,8 @@ public:
             for (int bit_idx = 0; bit_idx < this->bit_count; bit_idx++)
             {
 
-                vector<int> unsatisfied_checks;
-                vector<int> satisfied_checks;
+                std::vector<int> unsatisfied_checks;
+                std::vector<int> satisfied_checks;
 
                 for (auto& e : this->pcm.iterate_column(bit_idx))
                 {

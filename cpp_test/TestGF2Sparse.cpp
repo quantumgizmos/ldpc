@@ -9,6 +9,7 @@
 #include "sparse_matrix.hpp"
 #include "gf2codes.hpp"
 
+using namespace std;
 using namespace gf2sparse;
 
 bool TEST_WITH_CSR(GF2Sparse<GF2Entry>& matrix, vector<vector<int>> csr_matrix){
