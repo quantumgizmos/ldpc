@@ -145,10 +145,7 @@ class OsdDecoder{
 
             vector<uint8_t> t_syndrome;
             t_syndrome.resize(this->pcm.m);
-            vector<uint8_t> candidate_solution;
-            candidate_solution.resize(this->pcm.n);
-
-
+ 
             for(auto candidate_string: this->osd_candidate_strings){
 
                 pcm_t.mulvec(candidate_string,t_syndrome);
@@ -156,7 +153,7 @@ class OsdDecoder{
                     t_syndrome[i] ^= syndrome[i];
                 }
 
-                candidate_solution = this->LuDecomposition->lu_solve(t_syndrome);
+                auto candidate_solution = this->LuDecomposition->lu_solve(t_syndrome);
                 for(int i=0; i<k; i++){
                     candidate_solution[non_pivot_columns[i]]=candidate_string[i];
                 }
