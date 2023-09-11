@@ -116,7 +116,7 @@ cdef class BpDecoderBase:
         self._serial_schedule_order = NULL_INT_VECTOR
 
         ## initialise the decoder with default values
-        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,False)
+        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,True)
 
         ## set the decoder parameters
         self.bp_method = bp_method

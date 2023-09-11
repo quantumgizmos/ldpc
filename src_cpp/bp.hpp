@@ -79,7 +79,7 @@ class BpDecoder{
             int omp_threads = 1,
             vector<int> serial_schedule = NULL_INT_VECTOR,
             int random_schedule_seed = 0,
-            bool random_schedule_at_every_iteration = false):
+            bool random_schedule_at_every_iteration = true):
             pcm(parity_check_matrix) //the parity check matrix is passed in by reference
             {
             
@@ -102,6 +102,7 @@ class BpDecoder{
 
             if(serial_schedule != NULL_INT_VECTOR){
                 this->serial_schedule_order = serial_schedule;
+                this->random_schedule_seed = 0;
             }
             else{
                 this->serial_schedule_order.resize(bit_count);
@@ -418,7 +419,7 @@ class BpDecoder{
 
                 if(CONVERGED) continue;
 
-                if(this->random_schedule_at_every_iteration){
+                if(this->random_schedule_at_every_iteration && this->random_schedule_seed>0){
                     shuffle(serial_schedule_order.begin(), serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
                 }
 
