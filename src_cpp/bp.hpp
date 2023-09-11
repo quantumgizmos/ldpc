@@ -451,11 +451,14 @@ class BpDecoder{
                             temp = numeric_limits<double>::max();
                             for(auto& g: pcm.iterate_row(check_index)){
                                 if(&g != &e){
-                                    if(abs(g.bit_to_check_msg)<temp) temp = abs(g.bit_to_check_msg);
+                                    double abs_bit_to_check_msg = abs(g.bit_to_check_msg);
+                                    if(abs_bit_to_check_msg <temp) temp = abs_bit_to_check_msg;
                                     if(g.bit_to_check_msg<=0) sgn+=1;
                                 }
                             }
-                            e.check_to_bit_msg = ms_scaling_factor*pow(-1,sgn)*temp;
+
+                            double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
+                            e.check_to_bit_msg = ms_scaling_factor*message_sign*temp;
                             e.bit_to_check_msg=log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index]+=e.check_to_bit_msg;
                         }
