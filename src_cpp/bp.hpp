@@ -350,7 +350,8 @@ class BpDecoder{
                             e.bit_to_check_msg = temp;
                         }
                         
-                        e.check_to_bit_msg = pow(-1.0,sgn)*ms_scaling_factor*e.bit_to_check_msg;
+                        int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
+                        e.check_to_bit_msg = message_sign*ms_scaling_factor*e.bit_to_check_msg;
                         this->log_prob_ratios[e.col_index] += e.check_to_bit_msg;
 
 
