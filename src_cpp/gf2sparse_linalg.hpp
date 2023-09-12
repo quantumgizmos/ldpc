@@ -159,7 +159,7 @@ class RowReduce{
                     //finds the total row weight across both L and U for the given row
                     int row_weight = this->U.get_row_degree(row_index) + this->L.get_row_degree(row_index);
 
-                    if(row_index >= this->rank && row_weight<max_row_weight){
+                    if(row_weight<max_row_weight){
                         swap_index = e.row_index;
                         max_row_weight = row_weight;
                     }
