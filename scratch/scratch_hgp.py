@@ -6,6 +6,7 @@ from ldpc2.bposd_decoder import BpOsdDecoder
 from ldpc import bposd_decoder as bposd_decoder_og
 from ldpc import bp_decoder as bp_decoder_og
 from tqdm import tqdm
+from ldpc.codes import ring_code
 
 from ldpc2.noise_models import generate_bsc_error
 
@@ -15,7 +16,9 @@ from bposd.hgp import hgp
 from ldpc2.monte_carlo_simulation import McSim
 
 h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
+# h=ring_code(30)
 qcode = hgp(h,h)
+qcode.test()
 
 hx = sp.csr_matrix(qcode.hx, dtype=np.uint8)
 hz = sp.csr_matrix(qcode.hz, dtype=np.uint8)
@@ -23,15 +26,15 @@ lx = sp.csr_matrix(qcode.lx, dtype=np.uint8)
 lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
 
 run_count = 1000
-error_rate = 0.05
+error_rate = 0.01
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1,osd_order=10,osd_method="osd_e",random_schedule_seed=1)
-osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=50,osd_order=10,osd_method="osd_e")
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1,osd_order=10,osd_method="osd_e",random_schedule_seed=1)
+osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50,osd_order=10,osd_method="osd_e")
 
 
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
-bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1)
+bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
 # bpd = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
 
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
@@ -48,6 +51,8 @@ for DECODER in [osd_og, osd]:
         z = hx@error%2
 
         decoding = DECODER.decode(z)
+
+        assert np.array_equal(hx@decoding%2, z)
 
         residual = (decoding + error) %2
 
