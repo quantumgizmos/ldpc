@@ -262,10 +262,10 @@ class RowReduce{
             //Solve Lb=y with forwared substitution
             for(int row_index=0;row_index<this->rank;row_index++){
                 int row_sum=0;
-                for(auto& e: L.iterate_row(row_index)){
-                    row_sum^=b[e.col_index];
+                for(auto& e: this->L.iterate_row(row_index)){
+                    row_sum ^= this->b[e.col_index];
                 }
-                b[row_index]=row_sum^y[this->rows[row_index]];
+                this->b[row_index]=row_sum^y[this->rows[row_index]];
             }
 
 
@@ -275,13 +275,13 @@ class RowReduce{
             //Solve Ux = b with backwards substitution
             for(int row_index=(this->rank-1);row_index>=0;row_index--){
                 int row_sum=0;
-                for(auto& e: U.iterate_row(row_index)){
-                    row_sum^=x[e.col_index];
+                for(auto& e: this->U.iterate_row(row_index)){
+                    row_sum ^= this->x[e.col_index];
                 }
-                x[this->cols[row_index]] = row_sum^b[row_index];
+                this->x[this->cols[row_index]] = row_sum ^ this->b[row_index];
             }
 
-            return x;
+            return this->x;
        
         }
 
