@@ -132,8 +132,18 @@ class OsdDecoder{
             }
 
             std::vector<int> non_pivot_columns;
+            vector<gf2sparse::GF2Entry*> delete_entries;
             for(int i = this->LuDecomposition->rank; i<this->pcm.n; i++){
-                non_pivot_columns.push_back(this->LuDecomposition->cols[i]);
+                int col = this->LuDecomposition->cols[i];
+                non_pivot_columns.push_back(col);
+                
+                for(auto& e: this->LuDecomposition->U.iterate_column(col)){
+                    delete_entries.push_back(&e);
+                }
+            }
+
+            for (auto e: delete_entries){
+                this->LuDecomposition->U.remove(*e);
             }
             
             for(auto& candidate_string: this->osd_candidate_strings){
