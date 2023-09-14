@@ -25,23 +25,23 @@ hz = sp.csr_matrix(qcode.hz, dtype=np.uint8)
 lx = sp.csr_matrix(qcode.lx, dtype=np.uint8)
 lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
 
-run_count = 1000
-error_rate = 0.03
+run_count = 500
+error_rate = 0.05
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1,osd_order=10,osd_method="osd_e",random_schedule_seed=1)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.93, max_iter=0,omp_thread_count=1,osd_order=0,osd_method="osd_e",random_schedule_seed=42)
 osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=50,osd_order=10,osd_method="osd_e")
 
 
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.925, max_iter=0,omp_thread_count=1, random_schedule_seed = 5)
 bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
 # bpd = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
 
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
-
+# seed = 43
 seed = np.random.randint(0,1000000)
 
-for DECODER in [osd_og, osd]:
+for DECODER in [osd, bp]:
     np.random.seed(seed)
     fail = 0
 
@@ -52,9 +52,14 @@ for DECODER in [osd_og, osd]:
 
         decoding = DECODER.decode(z)
 
-        assert np.array_equal(hx@decoding%2, z)
+        # assert np.array_equal(hx@decoding%2, z)
 
         residual = (decoding + error) %2
+
+        if DECODER == bp:
+            if not DECODER.converge:
+                fail+=1
+                continue
 
         if np.any((lx@residual)%2):
             fail+=1

@@ -3,6 +3,7 @@
 #include "gf2sparse.hpp"
 #include "bp.hpp"
 #include "sparse_matrix_util.hpp"
+#include "gf2codes.hpp"
 
 using namespace std;
 
@@ -58,7 +59,6 @@ TEST(BpDecoderTest, InitializationTest)
     EXPECT_EQ(bp::PRODUCT_SUM, decoder.bp_method);
     EXPECT_EQ(bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
-    EXPECT_EQ(0, decoder.random_schedule_seed);
 }
 
 TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
@@ -96,7 +96,6 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
     EXPECT_EQ(bp_schedule, decoder.schedule);
     EXPECT_EQ(omp_threads, decoder.omp_thread_count);
     EXPECT_EQ(serial_schedule, decoder.serial_schedule_order);
-    EXPECT_EQ(random_schedule, decoder.random_schedule_seed);
     EXPECT_EQ(omp_threads, omp_get_max_threads());
 }
 
@@ -157,7 +156,6 @@ TEST(BpDecoder, product_sum_parallel){
     EXPECT_EQ(0, decoder.bp_method);
     EXPECT_EQ(bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
-    EXPECT_EQ(0, decoder.random_schedule_seed);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
@@ -295,7 +293,6 @@ TEST(BpDecoder, min_sum_parallel){
     EXPECT_EQ(1, decoder.bp_method);
     EXPECT_EQ(bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
-    EXPECT_EQ(0, decoder.random_schedule_seed);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
@@ -335,7 +332,6 @@ TEST(BpDecoder, min_sum_single_scan){
     EXPECT_EQ(1, decoder.bp_method);
     EXPECT_EQ(bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
-    EXPECT_EQ(0, decoder.random_schedule_seed);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0,0,0},{0,0,1},{1,0,0},{0,1,0}};
@@ -348,6 +344,37 @@ TEST(BpDecoder, min_sum_single_scan){
         count++;
     }
     
+}
+
+TEST(BpDecoder, random_schedule_seed){
+
+    {
+        auto pcm = gf2codes::rep_code(3);
+        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
+        auto expected_order = vector<int>{2,3,1};
+        ASSERT_EQ(bpd.random_schedule_seed,0);
+        ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+
+    }
+
+    {
+        auto pcm = gf2codes::rep_code(3);
+        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, bp::NULL_INT_VECTOR, 0);
+        auto expected_order = vector<int>{0,1,2};
+        ASSERT_EQ(bpd.random_schedule_seed,0);
+        ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+
+    }
+
+    {
+        auto pcm = gf2codes::rep_code(3);
+        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, bp::NULL_INT_VECTOR, 4);
+        auto expected_order = vector<int>{0,1,2};
+        ASSERT_EQ(bpd.random_schedule_seed,4);
+        // ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+
+    }
+
 }
 
 

@@ -102,9 +102,8 @@ class BpDecoder{
             else{
                 this->serial_schedule_order.resize(bit_count);
                 for(int i = 0; i < bit_count; i++) this->serial_schedule_order[i] = i;
-                if(random_schedule_seed>0){
-                    random_schedule_seed = std::chrono::system_clock::now().time_since_epoch().count();
-                    shuffle(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
+                if(this->random_schedule_seed == 1){
+                    this->random_schedule_seed = this->random_seed_from_clock();
                 }
             }
 
@@ -118,6 +117,10 @@ class BpDecoder{
         void set_omp_thread_count(int count){
             this->omp_thread_count = count;
             omp_set_num_threads(this->omp_thread_count);
+        }
+
+        unsigned random_seed_from_clock(){
+            return std::chrono::system_clock::now().time_since_epoch().count();
         }
 
 
@@ -372,52 +375,48 @@ class BpDecoder{
         std::vector<uint8_t>& bp_decode_serial(std::vector<uint8_t>& syndrome){
 
             int check_index;
-            converge=0;
-            // int it;
-            int CONVERGED = 0;
-            bool loop_break = false;
+            this->converge=false;
 
             // initialise BP
-
             this->initialise_log_domain_bp();
 
 
 
             for(int it=1;it<=maximum_iterations;it++){
 
-                if(CONVERGED) continue;
-
-                if(this->random_schedule_at_every_iteration && this->random_schedule_seed>0){
-                    shuffle(serial_schedule_order.begin(), serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
+                // std::cout<<(this->random_schedule_seed > -1)<<std::endl;
+                if(this->random_schedule_seed > 0 ){
+                    // std::cout<<"Hello"<<std::endl;
+                    std::shuffle(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), std::default_random_engine(this->random_schedule_seed+it));
                 }
 
-                #pragma omp for
-                for(int bit_index: serial_schedule_order){
+                // print_vector(this->serial_schedule_order);
+
+                for(int bit_index: this->serial_schedule_order){
                     double temp;
-                    log_prob_ratios[bit_index]=std::log((1-channel_probabilities[bit_index])/channel_probabilities[bit_index]);
-                    // cout<<log_prob_ratios[bit_index]<<endl;
+                    this->log_prob_ratios[bit_index]=std::log((1-channel_probabilities[bit_index])/channel_probabilities[bit_index]);
                 
-                    if(bp_method==0){
-                        for(auto& e: pcm.iterate_column(bit_index)){
+                    if(this->bp_method==0){
+                        for(auto& e: this->pcm.iterate_column(bit_index)){
                             check_index = e.row_index;
                             
                             e.check_to_bit_msg=1.0;
-                            for(auto& g: pcm.iterate_row(check_index)){
+                            for(auto& g: this->pcm.iterate_row(check_index)){
                                 if(&g != &e){
                                     e.check_to_bit_msg*=tanh(g.bit_to_check_msg/2);
                                 }
                             }
                             e.check_to_bit_msg = pow(-1,syndrome[check_index])*std::log((1+e.check_to_bit_msg)/(1-e.check_to_bit_msg));
                             e.bit_to_check_msg=log_prob_ratios[bit_index];
-                            log_prob_ratios[bit_index]+=e.check_to_bit_msg;
+                            this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                         }
                     }
-                    else if(bp_method==1){
+                    else if(this->bp_method==1){
                         for(auto& e: pcm.iterate_column(bit_index)){
                             check_index = e.row_index;
                             int sgn=syndrome[check_index];
                             temp = std::numeric_limits<double>::max();
-                            for(auto& g: pcm.iterate_row(check_index)){
+                            for(auto& g: this->pcm.iterate_row(check_index)){
                                 if(&g != &e){
                                     double abs_bit_to_check_msg = std::abs(g.bit_to_check_msg);
                                     if(abs_bit_to_check_msg <temp) temp = abs_bit_to_check_msg;
@@ -428,16 +427,16 @@ class BpDecoder{
                             double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                             e.check_to_bit_msg = ms_scaling_factor*message_sign*temp;
                             e.bit_to_check_msg=log_prob_ratios[bit_index];
-                            log_prob_ratios[bit_index]+=e.check_to_bit_msg;
+                            this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                         }
                     
                     }
 
-                    if(log_prob_ratios[bit_index]<=0) decoding[bit_index] = 1;
-                    else decoding[bit_index]=0;
+                    if(this->log_prob_ratios[bit_index]<=0) this->decoding[bit_index] = 1;
+                    else this->decoding[bit_index]=0;
 
                     temp=0;
-                    for(auto& e: pcm.reverse_iterate_column(bit_index)){
+                    for(auto& e: this->pcm.reverse_iterate_column(bit_index)){
                         e.bit_to_check_msg+=temp;
                         temp += e.check_to_bit_msg;
                     }
@@ -445,32 +444,21 @@ class BpDecoder{
                 }
 
             
-            
-
-                // compute the syndrome for the current candidate decoding solution
-                loop_break = false;
-                CONVERGED = 1;
-
+                // compute the syndrome for the current candidate decoding solution                
+                this->candidate_syndrome = pcm.mulvec(decoding,candidate_syndrome);
                 
-                candidate_syndrome = pcm.mulvec(decoding,candidate_syndrome);
-
-                for(int i=0;i<check_count;i++){
-                    if(loop_break) continue;
-                    if(candidate_syndrome[i]!=syndrome[i]){
-                        CONVERGED=0;
-                        loop_break=true;
-                    }
-
+                this->iterations = it;
+                if(std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())){
+                    this->converge = true;
+                    return this->decoding;
                 }
 
-                iterations = it;
 
-            
 
             }
 
-            converge=CONVERGED;
-            return decoding;
+            // this->converge = false;
+            return this->decoding;
 
         }
 

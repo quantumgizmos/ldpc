@@ -68,6 +68,7 @@ cdef extern from "bp.hpp" namespace "bp":
             bool random_schedule_at_every_iteration
             vector[uint8_t] decode(vector[uint8_t]& syndrome)
             void set_omp_thread_count(int count)
+            int random_seed_from_clock()
 
 cdef class BpDecoderBase:
     cdef BpSparse *pcm
@@ -78,6 +79,7 @@ cdef class BpDecoderBase:
     cdef bool MEMORY_ALLOCATED
     cdef BpDecoderCpp *bpd
     cdef str user_dtype
+    # cdef int random_schedule_seed
     
 cdef class BpDecoder(BpDecoderBase):
     pass
