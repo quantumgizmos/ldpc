@@ -16,11 +16,6 @@
 #include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
 
-
-// using namespace std;
-// using namespace sparse_matrix_base;
-// using namespace gf2sparse;
-
 namespace bp{
 
 enum BpMethod{
