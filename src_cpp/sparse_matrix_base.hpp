@@ -390,11 +390,11 @@ public:
     * 
     * @param j The row index of the new entry.
     * @param i The column index of the new entry.
-    * @return A pointer to the newly created ENTRY_OBJ object.
+    * @return A reference to the newly created ENTRY_OBJ object.
     * @throws std::std::invalid_argument if either i or j is out of bounds.
     * 
     * This function inserts a new entry in the matrix at position (j, i). If an entry
-    * already exists at that position, this function simply returns a pointer to it. 
+    * already exists at that position, this function simply returns a reference to it. 
     * Otherwise, it creates a new entry and inserts it into the matrix, linking it to 
     * the neighboring entries to maintain the doubly linked structure. This function 
     * also updates the row and column weights of the matrix. The row and column weights 
