@@ -352,7 +352,7 @@ TEST(BpDecoder, random_schedule_seed){
         auto pcm = gf2codes::rep_code(3);
         auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
         auto expected_order = vector<int>{2,3,1};
-        ASSERT_EQ(bpd.random_schedule_seed,0);
+        ASSERT_EQ(bpd.random_schedule_seed,-1);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
     }

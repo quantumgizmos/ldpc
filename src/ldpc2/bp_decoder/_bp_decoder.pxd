@@ -64,11 +64,10 @@ cdef extern from "bp.hpp" namespace "bp":
             int iterations
             int omp_thread_count
             bool converge
-            unsigned random_schedule_seed
+            int random_schedule_seed
             bool random_schedule_at_every_iteration
             vector[uint8_t] decode(vector[uint8_t]& syndrome)
             void set_omp_thread_count(int count)
-            int random_seed_from_clock()
 
 cdef class BpDecoderBase:
     cdef BpSparse *pcm

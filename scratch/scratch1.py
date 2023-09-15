@@ -8,7 +8,7 @@ from ldpc2.monte_carlo_simulation import McSim
 run_count = 1000
 error_rate = 0.40
 H = rep_code(1000)
-bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "serial", ms_scaling_factor=1, max_iter=100,omp_thread_count=1, random_schedule_seed = 5)
+bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "serial", ms_scaling_factor=1, max_iter=0,omp_thread_count=1, random_schedule_seed = 5)
 bpd_v1=bp_decoder_v1(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=20)
 seed = np.random.randint(2**32 -1)
 seed = 33

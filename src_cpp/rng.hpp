@@ -53,6 +53,68 @@ namespace rng {
         std::mt19937 gen; /**< The Mersenne Twister random number generator used by the class */
     };
 
+
+    /**
+     * @brief A templated class for shuffling lists of data.
+     *
+     * This class provides the capability to shuffle lists of data of any type using a
+     * random number generator.
+     *
+     * @tparam T The type of data to shuffle.
+     */
+    template <typename T>
+    class RandomListShuffle {
+    public:
+        /**
+         * @brief Default constructor.
+         */
+        RandomListShuffle() = default;
+
+        /**
+         * @brief Constructor that allows specifying a seed.
+         *
+         * This constructor initializes the random number generator with the provided seed.
+         * If the seed is zero, it uses the system clock to generate a seed.
+         *
+         * @param seed The seed for the random number generator.
+         */
+        RandomListShuffle(unsigned int seed) {
+            this->seed(seed);
+        }
+
+        /**
+         * @brief Set the seed for the random number generator.
+         *
+         * This function allows you to set a custom seed for the random number generator.
+         * If the seed is zero, it uses the system clock to generate a seed.
+         *
+         * @param seed The seed for the random number generator.
+         */
+        void seed(unsigned int seed) {
+            if (seed == 0) {
+                // Use the system clock to generate a seed
+                auto now = std::chrono::system_clock::now();
+                seed = static_cast<unsigned int>(now.time_since_epoch().count());
+            }
+            generator.seed(seed);
+        }
+
+        /**
+         * @brief Shuffle a vector of data.
+         *
+         * This function shuffles the elements in the provided vector using the random
+         * number generator.
+         *
+         * @param data The vector of data to be shuffled.
+         */
+        void shuffle(std::vector<T>& data) {
+            std::shuffle(data.begin(), data.end(), generator);
+        }
+
+    private:
+        std::mt19937 generator; ///< The random number generator.
+    };
+
 } // namespace rng
 
 #endif // RNG_HPP

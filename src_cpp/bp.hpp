@@ -15,6 +15,7 @@
 #include "sparse_matrix.hpp"
 #include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
+#include "rng.hpp"
 
 namespace bp{
 
@@ -61,8 +62,9 @@ class BpDecoder{
         int iterations;
         int omp_thread_count;
         bool converge;
-        unsigned random_schedule_seed;
+        int random_schedule_seed;
         bool random_schedule_at_every_iteration;
+        rng::RandomListShuffle<int> rng_list_shuffle; 
 
         BpDecoder(
             BpSparse& parity_check_matrix,
@@ -97,14 +99,12 @@ class BpDecoder{
 
             if(serial_schedule != NULL_INT_VECTOR){
                 this->serial_schedule_order = serial_schedule;
-                this->random_schedule_seed = 0;
+                this->random_schedule_seed = -1;
             }
             else{
                 this->serial_schedule_order.resize(bit_count);
                 for(int i = 0; i < bit_count; i++) this->serial_schedule_order[i] = i;
-                if(this->random_schedule_seed == 1){
-                    this->random_schedule_seed = this->random_seed_from_clock();
-                }
+                this->rng_list_shuffle.seed(this->random_schedule_seed);
             }
 
             //Initialise OMP thread pool
@@ -118,11 +118,6 @@ class BpDecoder{
             this->omp_thread_count = count;
             omp_set_num_threads(this->omp_thread_count);
         }
-
-        unsigned random_seed_from_clock(){
-            return std::chrono::system_clock::now().time_since_epoch().count();
-        }
-
 
         void initialise_log_domain_bp(){
             // initialise BP
@@ -384,11 +379,11 @@ class BpDecoder{
 
             for(int it=1;it<=maximum_iterations;it++){
 
-                // std::cout<<(this->random_schedule_seed > -1)<<std::endl;
-                if(this->random_schedule_seed > 0 ){
-                    // std::cout<<"Hello"<<std::endl;
-                    std::shuffle(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), std::default_random_engine(this->random_schedule_seed+it));
+                if(this->random_schedule_seed > -1 ){
+                    this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                 }
+
+                print_vector(this->serial_schedule_order);
 
                 // print_vector(this->serial_schedule_order);
 

@@ -462,16 +462,12 @@ cdef class BpDecoderBase:
         Raises:
             ValueError: If the input value is not a postive integer.
         """
-        if not isinstance(value, int) or value < -1:
+        if not isinstance(value, int) or value < -2:
             raise ValueError("The value of random_schedule_seed must\
-            be a positive integer.")
+            be a positive integer. Set as -1 to disable to the random\
+            schedule. Set as 0 to use the system clock.")
 
-        if value == 0:
-            self.bpd.random_schedule_seed = self.bpd.random_seed_from_clock()
-        elif value == -1:
-            self.bpd.random_schedule_seed = 0
-        else:
-            self.bpd.random_schedule_seed = value
+        self.bpd.random_schedule_seed = value
 
 cdef class BpDecoder(BpDecoderBase):
     """
