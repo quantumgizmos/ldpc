@@ -4,77 +4,7 @@ import numpy as np
 import scipy.sparse
 from typing import Optional, List, Union
 
-cdef BpSparse* Py2BpSparse(pcm):
-    
-    cdef int m
-    cdef int n
-    cdef int nonzero_count
-
-    #check the parity check matrix is the right type
-    if isinstance(pcm, np.ndarray) or isinstance(pcm, scipy.sparse.spmatrix):
-        pass
-    else:
-        raise TypeError(f"The input matrix is of an invalid type. Please input\
-        a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
-
-    # get the parity check dimensions
-    m, n = pcm.shape[0], pcm.shape[1]
-
-
-    # get the number of nonzero entries in the parity check matrix
-    if isinstance(pcm,np.ndarray):
-        nonzero_count  = int(np.sum( np.count_nonzero(pcm,axis=1) ))
-    elif isinstance(pcm,scipy.sparse.spmatrix):
-        nonzero_count = int(pcm.nnz)
-
-    # Matrix memory allocation
-    cdef BpSparse* cpcm = new BpSparse(m,n,nonzero_count) #creates the C++ sparse matrix object
-
-    #fill sparse matrix
-    if isinstance(pcm,np.ndarray):
-        for i in range(m):
-            for j in range(n):
-                if pcm[i,j]==1:
-                    cpcm.insert_entry(i,j)
-    elif isinstance(pcm,scipy.sparse.spmatrix):
-        rows, cols = pcm.nonzero()
-        for i in range(len(rows)):
-            cpcm.insert_entry(rows[i], cols[i])
-    
-    return cpcm
-
-cdef coords_to_scipy_sparse(vector[vector[int]]& entries, int m, int n, int entry_count):
-
-    cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
-    cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
-    cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
-
-    for i in range(entry_count):
-        rows[i] = entries[i][0]
-        cols[i] = entries[i][1]
-
-    smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
-    return smat
-
-cdef BpSparse2Py(BpSparse* cpcm):
-    cdef int i
-    cdef int m = cpcm.m
-    cdef int n = cpcm.n
-    cdef int entry_count = cpcm.entry_count()
-    cdef vector[vector[int]] entries = cpcm.nonzero_coordinates()
-    smat = coords_to_scipy_sparse(entries, m, n, entry_count)
-    return smat
-
-
-def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
-    cdef BpSparse* cpcm = Py2BpSparse(pcm)
-    output = BpSparse2Py(cpcm)
-    del cpcm
-    return output
-
-
-
-class BpDecoderBase:
+cdef class BpDecoderBase:
 
     def __init__(self,pcm, **kwargs):
         pass
@@ -116,7 +46,7 @@ class BpDecoderBase:
         self._serial_schedule_order = NULL_INT_VECTOR
 
         ## initialise the decoder with default values
-        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,False)
+        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,True)
 
         ## set the decoder parameters
         self.bp_method = bp_method
@@ -462,13 +392,18 @@ class BpDecoderBase:
         Raises:
             ValueError: If the input value is not a postive integer.
         """
-        if not isinstance(value, int) or value < 0:
+        if not isinstance(value, int) or value < -1:
             raise ValueError("The value of random_schedule_seed must\
             be a positive integer.")
 
-        self.bpd.random_schedule_seed = value
+        if value == 0:
+            self.bpd.random_schedule_seed = self.bpd.random_seed_from_clock()
+        elif value == -1:
+            self.bpd.random_schedule_seed = 0
+        else:
+            self.bpd.random_schedule_seed = value
 
-class BpDecoder(BpDecoderBase):
+cdef class BpDecoder(BpDecoderBase):
     """
     Belief propagation decoder for binary linear codes.
 
@@ -609,7 +544,7 @@ class BpDecoder(BpDecoderBase):
         return out
 
 
-# # class SoftInfoBpDecoder(BpDecoderBase):
+# # cdef class SoftInfoBpDecoder(BpDecoderBase):
 # #     """
 # #     A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
 

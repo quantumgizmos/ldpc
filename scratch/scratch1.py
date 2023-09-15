@@ -1,4 +1,5 @@
 from ldpc2.bp_decoder import BpDecoder
+from ldpc2.bposd_decoder import BpOsdDecoder
 import numpy as np
 from ldpc import bp_decoder as bp_decoder_v1
 from ldpc2.codes import rep_code
