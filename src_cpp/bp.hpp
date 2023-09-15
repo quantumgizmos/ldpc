@@ -383,10 +383,6 @@ class BpDecoder{
                     this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                 }
 
-                print_vector(this->serial_schedule_order);
-
-                // print_vector(this->serial_schedule_order);
-
                 for(int bit_index: this->serial_schedule_order){
                     double temp;
                     this->log_prob_ratios[bit_index]=std::log((1-channel_probabilities[bit_index])/channel_probabilities[bit_index]);
