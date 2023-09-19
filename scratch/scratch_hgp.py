@@ -25,10 +25,10 @@ hz = sp.csr_matrix(qcode.hz, dtype=np.uint8)
 lx = sp.csr_matrix(qcode.lx, dtype=np.uint8)
 lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
 
-run_count = 1000
-error_rate = 0.05
+run_count = 10000000
+error_rate = 0.0001
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.93, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
 
 osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
@@ -39,7 +39,7 @@ bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_facto
 seed = 43
 # seed = np.random.randint(0,1000000)
 
-for DECODER in [osd_og, osd]:
+for DECODER in [osd]:
     np.random.seed(seed)
     fail = 0
 
@@ -47,6 +47,8 @@ for DECODER in [osd_og, osd]:
 
         error = generate_bsc_error(hx.shape[1], error_rate)
         z = hx@error%2
+
+        # print(np.count_nonzero(z))
 
         decoding = DECODER.decode(z)
 

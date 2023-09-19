@@ -40,7 +40,6 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
     # get the parity check dimensions
     m, n = pcm.shape[0], pcm.shape[1]
 
-
     # get the number of nonzero entries in the parity check matrix
     if isinstance(pcm,np.ndarray):
         nonzero_count  = int(np.sum( np.count_nonzero(pcm,axis=1) ))
@@ -146,6 +145,7 @@ cdef class PluDecomposition():
         self.lower_triangular = full_reduce
         self.rr.rref(full_reduce,lower_triangular)
 
+
     def lu_solve(self, y: np.ndarray)->np.ndarray:
 
         if self.full_reduce == True or self.lower_triangular == False:
@@ -198,6 +198,23 @@ cdef class PluDecomposition():
         self.P_cached = True
         
         return self.Pmat
+
+    @property
+    def rank(self):
+        return self.rr.rank
+
+    @property
+    def pivots(self):
+        cdef int i
+        cdef int count = 0
+        out = np.zeros(self.rr.rank, dtype=np.int32)
+
+        for i in range(self.rr.pivots.size()):
+            if self.rr.pivots[i] == 1:
+                out[count] = i
+                count+=1
+
+        return out
 
     def __del__(self):
         if self.MEM_ALLOCATED:    

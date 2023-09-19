@@ -5,6 +5,8 @@
 #include "gf2codes.hpp"
 #include <cmath>
 
+using namespace std;
+
 // #include "sparse_matrix.hpp"
 
 TEST(kernel, hamming_code_test) {
@@ -39,6 +41,19 @@ TEST(rank, hamming_code_test) {
 
     
     }
+}
+
+TEST(row_complement_basis, identity_test){
+
+    for(int i = 0; i<5; i++){
+        auto pcm = gf2sparse::identity(5);
+        pcm.remove_entry(i,i);
+        auto complement = gf2sparse_linalg::row_complement_basis(pcm);
+        auto expected = gf2sparse::GF2Sparse<>(1,5);
+        expected.insert_entry(0,i);
+        ASSERT_TRUE(complement==expected);    
+    }
+
 }
 
 

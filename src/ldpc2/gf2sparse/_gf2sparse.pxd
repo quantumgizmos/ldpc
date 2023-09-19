@@ -51,6 +51,7 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
         int rref(bool full_reduce, bool lower_triangular)
         vector[uint8_t]& lu_solve(vector[uint8_t]& y)
         void build_p_matrix()
+        vector[int] pivots
 
     CsrMatrix cy_kernel(GF2Sparse* mat)
 

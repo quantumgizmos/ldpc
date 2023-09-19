@@ -10,29 +10,29 @@
 #include "gf2sparse.hpp"
 #include "sparse_matrix_util.hpp"
 
-using namespace std;
-using namespace gf2sparse;
+// using namespace std; 
+// using namespace gf2sparse;
 
 namespace gf2sparse_linalg{
 
-vector<int> NULL_INT_VECTOR = {};
+std::vector<int> NULL_INT_VECTOR = {};
 
 template <class ENTRY_OBJ>
 class RowReduce{
 
     public:
     
-        GF2Sparse<ENTRY_OBJ>& A;
-        GF2Sparse<> L;
-        GF2Sparse<> U;
-        GF2Sparse<> P;
-        vector<int> rows;
-        vector<int> cols;
-        vector<int> inv_rows;
-        vector<int> inv_cols;
-        vector<bool> pivots;
-        vector<uint8_t> x;
-        vector<uint8_t> b;
+        gf2sparse::GF2Sparse<ENTRY_OBJ>& A;
+        gf2sparse::GF2Sparse<> L;
+        gf2sparse::GF2Sparse<> U;
+        gf2sparse::GF2Sparse<> P;
+        std::vector<int> rows;
+        std::vector<int> cols;
+        std::vector<int> inv_rows;
+        std::vector<int> inv_cols;
+        std::vector<bool> pivots;
+        std::vector<uint8_t> x;
+        std::vector<uint8_t> b;
         bool FULL_REDUCE;
         bool LU_ALLOCATED;
         bool LOWER_TRIANGULAR;
@@ -40,7 +40,7 @@ class RowReduce{
 
         RowReduce() = default;
 
-        RowReduce(GF2Sparse<ENTRY_OBJ>& A): A(A){
+        RowReduce(gf2sparse::GF2Sparse<ENTRY_OBJ>& A): A(A){
 
             this->pivots.resize(this->A.n,false);
             this->cols.resize(this->A.n);
@@ -86,7 +86,7 @@ class RowReduce{
 
         }
         
-        void set_column_row_orderings(vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        void set_column_row_orderings(std::vector<int>& cols = NULL_INT_VECTOR, std::vector<int>& rows = NULL_INT_VECTOR){
             
             if(cols==NULL_INT_VECTOR){
                 for(int i = 0; i<this->A.n; i++){
@@ -95,7 +95,7 @@ class RowReduce{
                 }
             }
             else{
-                if(cols.size()!=this->A.n) throw invalid_argument("Input parameter `cols`\
+                if(cols.size()!=this->A.n) throw std::invalid_argument("Input parameter `cols`\
                 describing the row ordering is of the incorrect length");
                 // this->cols=cols;
                 for(int i = 0; i<this->A.n; i++){
@@ -111,7 +111,7 @@ class RowReduce{
                 }
             }
             else{
-                if(rows.size()!=this->A.m) throw invalid_argument("Input parameter `rows`\
+                if(rows.size()!=this->A.m) throw std::invalid_argument("Input parameter `rows`\
                 describing the row ordering is of the incorrect length");
                 // this->rows=rows;
                 for(int i = 0; i<this->A.m; i++){
@@ -125,13 +125,13 @@ class RowReduce{
 
 
 
-        int rref(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        int rref(bool full_reduce = false, bool lower_triangular = false, std::vector<int>& cols = NULL_INT_VECTOR, std::vector<int>& rows = NULL_INT_VECTOR){
 
             this->LOWER_TRIANGULAR = lower_triangular;
             this->FULL_REDUCE = full_reduce;
             this->set_column_row_orderings(cols,rows);
             this->initiliase_LU();
-            int max_rank = min(this->U.m,this->U.n);
+            int max_rank = std::min(this->U.m,this->U.n);
             this->rank = 0;
             std::fill(this->pivots.begin(),this->pivots.end(), false);
 
@@ -180,7 +180,7 @@ class RowReduce{
 
                 if(this->LOWER_TRIANGULAR) this->L.insert_entry(this->rank,this->rank);
 
-                vector<int> add_rows;
+                std::vector<int> add_rows;
                 for(auto& e: this->U.iterate_column(pivot_index)){
                     int row_index = e.row_index;
                     if(row_index>this->rank || row_index<this->rank && this->FULL_REDUCE==true){
@@ -230,9 +230,9 @@ class RowReduce{
 
         }
 
-        vector<uint8_t>& lu_solve(vector<uint8_t>& y){
+        std::vector<uint8_t>& lu_solve(std::vector<uint8_t>& y){
 
-            if(y.size()!=this->U.m) throw invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
+            if(y.size()!=this->U.m) throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
 
             /*
             Equation: Ax = y
@@ -286,12 +286,12 @@ class RowReduce{
         }
 
 
-        auto rref_vrs(bool full_reduce = false, bool lower_triangular = false, vector<int>& cols = NULL_INT_VECTOR, vector<int>& rows = NULL_INT_VECTOR){
+        auto rref_vrs(bool full_reduce = false, bool lower_triangular = false, std::vector<int>& cols = NULL_INT_VECTOR, std::vector<int>& rows = NULL_INT_VECTOR){
 
             if(lower_triangular) this->LOWER_TRIANGULAR = true;
             this->set_column_row_orderings(cols,rows);
             this->initiliase_LU();
-            int max_rank = min(this->U.m,this->U.n);
+            int max_rank = std::min(this->U.m,this->U.n);
             this->rank = 0;
             std::fill(this->pivots.begin(),this->pivots.end(), false);
 
@@ -340,7 +340,7 @@ class RowReduce{
                 // cout<<endl;
 
 
-                vector<int> add_rows;
+                std::vector<int> add_rows;
                 for(auto& e: this->U.iterate_column(pivot_index)){
                     // int row_index = e.row_index;
                     if(this->inv_rows[e.row_index]>this->rank || this->inv_rows[e.row_index]<this->rank && full_reduce==true){
@@ -381,9 +381,9 @@ class RowReduce{
 
         }
 
-        vector<uint8_t>& lu_solve_vrs(vector<uint8_t>& y){
+        std::vector<uint8_t>& lu_solve_vrs(std::vector<uint8_t>& y){
 
-            if(y.size()!=this->U.m) throw invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
+            if(y.size()!=this->U.m) throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
 
             /*
             Equation: Ax = y
@@ -440,7 +440,7 @@ class RowReduce{
 
 
 template <class GF2MATRIX>
-vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
+std::vector<std::vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
 
 
     auto matT = mat.transpose();
@@ -457,8 +457,8 @@ vector<vector<int>> kernel_adjacency_list(GF2MATRIX& mat){
     int k = n - rank;
     // auto ker = GF2MATRIX::New(k,n);
 
-    vector<vector<int>> ker;
-    ker.resize(k,vector<int>{});
+    std::vector<std::vector<int>> ker;
+    ker.resize(k,std::vector<int>{});
 
     for(int i = rank; i<n; i++){
         for(auto& e: rr.L.iterate_row(i)){
@@ -492,13 +492,46 @@ int rank(GF2MATRIX& mat){
     auto rr = RowReduce(mat);
     rr.rref(false,false);
     return  rr.rank;
-} 
+}
+
+template <class GF2MATRIX>
+GF2MATRIX row_complement_basis(GF2MATRIX& mat){
+    auto matT = mat.transpose();
+    
+    auto id_mat = GF2MATRIX(mat.m, mat.m, mat.m);
+    for(int i = 0; i<mat.m; i++){
+        id_mat.insert_entry(i,i);
+    }
+
+    auto mat_aug = gf2sparse::hstack(matT,id_mat);
+
+    auto rr = RowReduce(mat_aug);
+    rr.rref(false,false);
+
+
+    std::vector<int> basis_rows;
+    for(int  i = 0; i<rr.rank; i++){
+        if(rr.cols[i] >= matT.n){
+            basis_rows.push_back(rr.cols[i] - matT.n); 
+        }
+    }
+
+    GF2MATRIX basis = GF2MATRIX(basis_rows.size(), mat.n);
+    for(int i = 0; i<basis_rows.size(); i++){
+        basis.insert_entry(i,basis_rows[i]);
+    }
+
+    return basis;
+
+
+}
+
 
 
 
 
 }//end namespace gf2sparse_linalg
 
-// typedef gf2sparse_linalg::RowReduce<gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> cy_row_reduce;
+// typedef gf2sparse_linalg::RowReduce<gf2sparse::gf2sparse::GF2Sparse<gf2sparse::GF2Entry>> cy_row_reduce;
 
 #endif

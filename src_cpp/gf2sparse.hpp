@@ -364,7 +364,7 @@ bool operator==(GF2Sparse<ENTRY_OBJ1>& matrix1, GF2Sparse<ENTRY_OBJ2>& matrix2){
  * @return The GF2Sparse identity matrix
  */
 template <class ENTRY_OBJ = GF2Entry>
-GF2Sparse<ENTRY_OBJ> gf2_identity(int n){
+GF2Sparse<ENTRY_OBJ> identity(int n){
     // Create a new GF2Sparse matrix with the given dimensions
     auto matrix = GF2Sparse<ENTRY_OBJ>(n,n);
 
@@ -445,6 +445,33 @@ GF2Sparse<ENTRY_OBJ> hstack(std::vector<GF2Sparse<ENTRY_OBJ>>& mats){
             }
         }
         col_offset+=mat.n;
+    }
+
+    return stacked_mat;
+
+    
+}
+
+template <class ENTRY_OBJ>
+GF2Sparse<ENTRY_OBJ> hstack(GF2Sparse<ENTRY_OBJ>& mat1, GF2Sparse<ENTRY_OBJ>& mat2){
+    
+    int m;
+    int n;
+
+    n = mat1.n + mat2.n;
+    m = mat1.m;
+    if(mat1.m != mat2.m) throw std::invalid_argument("All matrices must have the same number of rows");
+
+    auto stacked_mat = GF2Sparse<ENTRY_OBJ>(m,n);
+
+    for (int i =0; i<m; i++){
+        for(auto& e: mat1.iterate_row(i)){
+            stacked_mat.insert_entry(e.row_index,e.col_index);
+        }
+
+        for(auto& e: mat2.iterate_row(i)){
+            stacked_mat.insert_entry(e.row_index,e.col_index + mat1.n);
+        }
     }
 
     return stacked_mat;

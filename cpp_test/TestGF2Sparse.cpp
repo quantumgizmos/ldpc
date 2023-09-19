@@ -492,7 +492,7 @@ TEST(GF2Sparse,vstack){
 }
 
 TEST(GF2Sparse, kron){
-    auto m1 = gf2sparse::gf2_identity<bp::BpEntry>(100);
+    auto m1 = gf2sparse::identity<bp::BpEntry>(100);
     auto m2 = gf2codes::hamming_code(5);
 
     auto m3 = gf2sparse::kron(m1,m2);
