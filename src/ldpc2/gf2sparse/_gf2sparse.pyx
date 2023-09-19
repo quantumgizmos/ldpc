@@ -121,6 +121,12 @@ def kernel(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatri
     del cpcm
     return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
 
+def row_complement_basis(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+    cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
+    cdef CsrMatrix csr = cy_row_complement_basis(cpcm)
+    del cpcm
+    return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
+
 def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
     output = GF2Sparse2Py(cpcm)

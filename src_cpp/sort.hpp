@@ -47,7 +47,7 @@ int cmp(const void *a, const void *b)
 }
 
 
-void soft_decision_col_sort(vector<double>& soft_decisions, vector<int>& cols, int N){
+void soft_decision_col_sort(std::vector<double>& soft_decisions, std::vector<int>& cols, int N){
     struct str *objects;
     objects=new str[N];
     for (int i = 0; i < N; i++)

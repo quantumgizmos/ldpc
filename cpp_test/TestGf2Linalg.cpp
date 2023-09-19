@@ -54,6 +54,17 @@ TEST(row_complement_basis, identity_test){
         ASSERT_TRUE(complement==expected);    
     }
 
+    // cout<<endl;
+
+    auto pcm = gf2sparse::GF2Sparse<>(1,4);
+    for(int i = 0; i<4; i++) pcm.insert_entry(0,i);
+
+    // print_sparse_matrix(pcm);
+
+    auto complement = gf2sparse_linalg::row_complement_basis(pcm);  
+
+    print_sparse_matrix(complement);
+
 }
 
 

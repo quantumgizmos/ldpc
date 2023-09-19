@@ -5,6 +5,7 @@
 #include "sparse_matrix_util.hpp"
 #include "flip.hpp"
 
+using namespace std;
 
 TEST(TestFlipDecoder, single_bit_errors) {
 

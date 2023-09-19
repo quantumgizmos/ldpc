@@ -104,7 +104,7 @@ struct Cluster{
 
     int add_bit_node_to_cluster(int bit_index){
 
-        // cout<<"Add bit node function. Bit: "<<bit_index<<endl;
+        // std::cout<<"Add bit node function. Bit: "<<bit_index<<std::endl;
 
         auto bit_membership = this->global_bit_membership[bit_index];
         if(bit_membership == this) return 0; //if the bit is already in the cluster terminate.
@@ -143,27 +143,27 @@ struct Cluster{
 
     void merge_with_cluster(Cluster* cl2){
 
-        // cout<<"Hello from merge function"<<endl;
+        // std::cout<<"Hello from merge function"<<std::endl;
 
         for(auto bit_index: cl2->bit_nodes){
             this->bit_nodes.insert(bit_index);
             this->global_bit_membership[bit_index] = this;
         }
 
-        // cout<<"bit nodes copied"<<endl;
+        // std::cout<<"bit nodes copied"<<std::endl;
 
         for(auto check_index: cl2->check_nodes){
             this->check_nodes.insert(check_index);
             this->global_check_membership[check_index] = this;
         }
 
-        // cout<<"check nodes copied"<<endl;
+        // std::cout<<"check nodes copied"<<std::endl;
 
         for(auto check_index: cl2->boundary_check_nodes){
             this->boundary_check_nodes.insert(check_index);
         }
 
-        // cout<<"boundary check nodes copied"<<endl;
+        // std::cout<<"boundary check nodes copied"<<std::endl;
 
         cl2->active = false;
         for(auto j: cl2->enclosed_syndromes){
@@ -199,10 +199,10 @@ struct Cluster{
 
         }
 
-        // cout<<"Before merge"<<endl;
+        // std::cout<<"Before merge"<<std::endl;
 
-        // for(auto cl: merge_list) cout<<cl<<" ";
-        // cout<<endl;
+        // for(auto cl: merge_list) std::cout<<cl<<" ";
+        // std::cout<<std::endl;
 
         for(auto cl: merge_list){
             this->merge_with_cluster(cl);
@@ -245,7 +245,7 @@ struct Cluster{
                 this->spanning_tree_check_roots[root1] = root0;
             }
             else{
-                // cout<<bit_index<<endl;
+                // std::cout<<bit_index<<std::endl;
                 this->spanning_tree_bits.erase(bit_index);
             }
         }
@@ -570,7 +570,7 @@ class UfDecoder{
         //     delete[] global_bit_membership;
         //     delete[] global_check_membership;
 
-        //     // cout<<"hello from end of C++ function"<<endl;
+        //     // std::cout<<"hello from end of C++ function"<<std::endl;
 
         //     return this->decoding;
 
@@ -593,7 +593,7 @@ class UfDecoder{
         //         }
         //     }
 
-        //     // cout<<"After cluster initialisation"<<endl;
+        //     // std::cout<<"After cluster initialisation"<<std::endl;
         //     int count = 0;
         //     while(invalid_clusters.size()>0){
 
@@ -627,7 +627,7 @@ class UfDecoder{
         //     delete[] global_bit_membership;
         //     delete[] global_check_membership;
 
-        //     // cout<<"hello from end of C++ function"<<endl;
+        //     // std::cout<<"hello from end of C++ function"<<std::endl;
 
         //     return this->decoding;
 
@@ -636,28 +636,28 @@ class UfDecoder{
 };
 
 void Cluster::print(){
-        cout<<"........."<<endl;
-        cout<<"Cluster ID: "<<this->cluster_id<<endl;
-        cout<<"Active: "<<this->active<<endl;
-        cout<<"Enclosed syndromes: ";
-        for(auto i: this->enclosed_syndromes) cout<<i<<" ";
-        cout<<endl;
-        cout<<"Cluster bits: ";
-        for(auto i: this->bit_nodes) cout<<i<<" ";
-        cout<<endl;
-        cout<<"Cluster checks: ";
-        for(auto i: this->check_nodes) cout<<i<<" ";
-        cout<<endl;
-        cout<<"Candidate bits: ";
-        for(auto i: this->candidate_bit_nodes) cout<<i<<" ";
-        cout<<endl;
-        cout<<"Boundary Checks: ";
-        for(auto i: this->boundary_check_nodes) cout<<i<<" ";
-        cout<<endl;
-        cout<<"Spanning tree: ";
-        for(auto i: this->spanning_tree_bits) cout<<i<<" ";
-        cout<<endl;
-        cout<<"........."<<endl;
+        std::cout<<"........."<<std::endl;
+        std::cout<<"Cluster ID: "<<this->cluster_id<<std::endl;
+        std::cout<<"Active: "<<this->active<<std::endl;
+        std::cout<<"Enclosed syndromes: ";
+        for(auto i: this->enclosed_syndromes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Cluster bits: ";
+        for(auto i: this->bit_nodes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Cluster checks: ";
+        for(auto i: this->check_nodes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Candidate bits: ";
+        for(auto i: this->candidate_bit_nodes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Boundary Checks: ";
+        for(auto i: this->boundary_check_nodes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Spanning tree: ";
+        for(auto i: this->spanning_tree_bits) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"........."<<std::endl;
     }
 
 

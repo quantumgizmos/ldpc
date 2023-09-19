@@ -54,6 +54,7 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "gf2sparse_linalg":
         vector[int] pivots
 
     CsrMatrix cy_kernel(GF2Sparse* mat)
+    CsrMatrix cy_row_complement_basis(GF2Sparse* mat)
 
 cdef class PluDecomposition():
     cdef bool MEM_ALLOCATED

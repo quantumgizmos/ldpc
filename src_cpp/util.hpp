@@ -9,9 +9,9 @@
 
 namespace util{
 
-vector<uint8_t> decimal_to_binary(int decimal_nubmer,int binary_string_length, bool reverse=false)
+std::vector<uint8_t> decimal_to_binary(int decimal_nubmer,int binary_string_length, bool reverse=false)
 {
-   vector<uint8_t> binary_number;
+   std::vector<uint8_t> binary_number;
    int divisor;
    int remainder;
    divisor=decimal_nubmer;
@@ -30,12 +30,12 @@ vector<uint8_t> decimal_to_binary(int decimal_nubmer,int binary_string_length, b
    return  binary_number;
 }
 
-vector<uint8_t> decimal_to_binary_reverse(int decimal_nubmer,int binary_string_length)
+std::vector<uint8_t> decimal_to_binary_reverse(int decimal_nubmer,int binary_string_length)
 {
    return decimal_to_binary(decimal_nubmer,binary_string_length,true);
 }
 
-int binary_to_decimal(vector<uint8_t> binary_number)
+int binary_to_decimal(std::vector<uint8_t> binary_number)
 {
     int decimal_number = 0;
     int power = 0;

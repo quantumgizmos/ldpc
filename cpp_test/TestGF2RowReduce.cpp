@@ -8,6 +8,7 @@
 #include "io.hpp"
 #include <string>
 
+using namespace std;
 using namespace gf2sparse;
 using namespace gf2sparse_linalg;
 

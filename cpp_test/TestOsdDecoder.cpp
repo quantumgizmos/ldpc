@@ -6,6 +6,8 @@
 #include "osd.hpp"
 #include "gf2codes.hpp"
 
+using namespace std;
+
 TEST(OsdDecoder, rep_code_test1){
 
     auto rep_code = gf2codes::rep_code<bp::BpEntry>(3);

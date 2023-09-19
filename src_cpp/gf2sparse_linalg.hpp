@@ -498,10 +498,13 @@ template <class GF2MATRIX>
 GF2MATRIX row_complement_basis(GF2MATRIX& mat){
     auto matT = mat.transpose();
     
-    auto id_mat = GF2MATRIX(mat.m, mat.m, mat.m);
-    for(int i = 0; i<mat.m; i++){
+    auto id_mat = GF2MATRIX(matT.m, matT.m, matT.m);
+    for(int i = 0; i<matT.m; i++){
         id_mat.insert_entry(i,i);
     }
+
+
+    // print_sparse_matrix(id_mat);
 
     auto mat_aug = gf2sparse::hstack(matT,id_mat);
 
@@ -521,9 +524,17 @@ GF2MATRIX row_complement_basis(GF2MATRIX& mat){
         basis.insert_entry(i,basis_rows[i]);
     }
 
+    // print_sparse_matrix(basis);
+    // std::cout<<std::endl;
+
     return basis;
 
 
+}
+
+//cython helper
+sparse_matrix_base::CsrMatrix cy_row_complement_basis(gf2sparse::GF2Sparse<gf2sparse::GF2Entry>* mat){
+    return row_complement_basis(*mat).to_csr_matrix();
 }
 
 
