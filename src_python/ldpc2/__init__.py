@@ -1,6 +1,7 @@
 import pkg_resources
 __version__ = pkg_resources.get_distribution('ldpc2').version
 
+from ldpc2 import bp_decoder
 
 # import warnings
 

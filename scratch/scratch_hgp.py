@@ -8,6 +8,8 @@ from ldpc import bp_decoder as bp_decoder_og
 from tqdm import tqdm
 from ldpc.codes import ring_code
 
+from ldpc2.bp_decoder import bp_decoder as bp_og_syntax_decoder
+
 from ldpc2.noise_models import generate_bsc_error
 
 from bposd.css import css_code
@@ -29,17 +31,20 @@ run_count = 1000
 error_rate = 0.05
 
 osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.93, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
 
 osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
+
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
 bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
+bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
+
 # bpd = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
 
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
 seed = 43
 # seed = np.random.randint(0,1000000)
 
-for DECODER in [osd, osd_og]:
+for DECODER in []:
     np.random.seed(seed)
     fail = 0
 
@@ -67,9 +72,9 @@ for DECODER in [osd, osd_og]:
     print(f"ler: {fail/run_count}")
 
 
-exit(22)
+# exit(22)
 
-for DECODER in [bp_og,bp]:
+for DECODER in [bp, bp_og, bp_og_syntax]:
     np.random.seed(seed)
     fail = 0
 
