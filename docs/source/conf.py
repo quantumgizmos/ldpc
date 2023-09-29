@@ -1,7 +1,7 @@
 import os
 import sys
 import ldpc2
-sys.path.insert(0, ldpc2.get_include())
+sys.path.insert(0, ldpc2.__file__)
 
 # Configuration file for the Sphinx documentation builder.
 #
