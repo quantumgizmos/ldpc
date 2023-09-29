@@ -9,6 +9,7 @@ from tqdm import tqdm
 from ldpc.codes import ring_code
 
 from ldpc2.bp_decoder import bp_decoder as bp_og_syntax_decoder
+from ldpc2.bposd_decoder import bposd_decoder as osd_og_syntax_decoder
 
 from ldpc2.noise_models import generate_bsc_error
 
@@ -33,6 +34,7 @@ error_rate = 0.05
 osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
 
 osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
+osd_og_syntax = osd_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
 
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
 bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
@@ -44,7 +46,7 @@ bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms
 seed = 43
 # seed = np.random.randint(0,1000000)
 
-for DECODER in []:
+for DECODER in [osd, osd_og, osd_og_syntax]:
     np.random.seed(seed)
     fail = 0
 

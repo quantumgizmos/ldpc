@@ -61,6 +61,25 @@ class bp_decoder(BpDecoder):
             bp_method=bp_method,
             ms_scaling_factor=ms_scaling_factor
             )
+    
+    @property
+    def channel_probs(self):
+        return self.error_channel
+    
+    def update_channel_probs(self,channel):
+        """
+        Function updates the channel probabilities for each bit in the BP decoder.
+
+        Parameters
+        ----------
+        channel: numpy.ndarray
+            A list of the channel probabilities for each bit
+
+        Returns
+        -------
+        NoneType
+        """
+        self.error_channel = channel
         
 
 

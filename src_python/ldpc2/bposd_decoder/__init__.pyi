@@ -269,5 +269,3 @@ cdef class BpOsdDecoder(BpDecoderBase):
         for i in range(self.n):
             out[i] = self.osdD.osdw_decoding[i]
         return out
-
-bposd_decoder = BpOsdDecoder
