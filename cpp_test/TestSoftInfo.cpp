@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 #include "bp.hpp"
-#include "gf2sparse.hpp"
-#include "gf2sparse_linalg.hpp"
-#include "sparse_matrix_util.hpp"
+#include "udlr.hpp"
+
 #include "osd.hpp"
 
 using namespace std;
@@ -34,8 +33,8 @@ using namespace std;
 //         hard_syndrome[j] = 1;
 
 
-//         // print_vector(soft_syndrome);
-//         // print_sparse_matrix(*pcm);
+//         // udlr::sparse_matrix_util::print_vector(soft_syndrome);
+//         // udlr::sparse_matrix_util::print_sparse_matrix(*pcm);
 
 
 
@@ -52,8 +51,8 @@ using namespace std;
 //         for(auto bit: bpd->decoding) soft_decoding.push_back(bit);
 
 //         // cout<<"Decoding: "<<j<<endl;
-//         // print_vector(normal_decoding);
-//         // print_vector(soft_decoding);
+//         // udlr::sparse_matrix_util::print_vector(normal_decoding);
+//         // udlr::sparse_matrix_util::print_vector(soft_decoding);
 
 //         for(int i = 0; i<pcm->n; i++){
 //             ASSERT_EQ(normal_decoding[i],soft_decoding[i]);
@@ -79,7 +78,7 @@ using namespace std;
 //         pcm->insert_entry(i,(i+1)%N);
 //     }
 
-//     // print_sparse_matrix(*pcm);
+//     // udlr::sparse_matrix_util::print_sparse_matrix(*pcm);
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
@@ -117,7 +116,7 @@ using namespace std;
 //         pcm->insert_entry(i,(i+1)%N);
 //     }
 
-//     // print_sparse_matrix(*pcm);
+//     // udlr::sparse_matrix_util::print_sparse_matrix(*pcm);
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
@@ -128,7 +127,7 @@ using namespace std;
 //     auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff,0.3);
 //     vector<uint8_t> expected_decoding = {0,1,0};
 
-//     // print_vector(soft_decoding);
+//     // udlr::sparse_matrix_util::print_vector(soft_decoding);
 
 //     for(int i = 0; i<pcm->n; i++){
 //         ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
@@ -152,7 +151,7 @@ using namespace std;
 //         pcm->insert_entry(i,(i+1)%N);
 //     }
 
-//     // print_sparse_matrix(*pcm);
+//     // udlr::sparse_matrix_util::print_sparse_matrix(*pcm);
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
@@ -165,7 +164,7 @@ using namespace std;
 //     auto soft_decoding =bpd->soft_info_decode_serial(soft_syndrome,cutoff);
 //     vector<uint8_t> expected_decoding = {0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-//     // print_vector(soft_decoding);
+//     // udlr::sparse_matrix_util::print_vector(soft_decoding);
 
 //     for(int i = 0; i<pcm->n; i++){
 //         ASSERT_EQ(soft_decoding[i],expected_decoding[i]);

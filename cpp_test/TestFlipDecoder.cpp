@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include "bp.hpp"
-#include "gf2sparse.hpp"
-#include "gf2sparse_linalg.hpp"
-#include "sparse_matrix_util.hpp"
+#include "udlr.hpp"
 #include "flip.hpp"
 
 using namespace std;
@@ -15,7 +13,7 @@ TEST(TestFlipDecoder, single_bit_errors) {
     pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
     pcm.insert_entry(3, 0), pcm.insert_entry(3, 1), pcm.insert_entry(3, 2), pcm.insert_entry(3, 7);
 
-    print_sparse_matrix(pcm);
+    udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
     auto flipD = new flip::FlipDecoder(pcm, 8);
 
@@ -33,15 +31,15 @@ TEST(TestFlipDecoder, single_bit_errors) {
         auto decoding = flipD->decode(syndrome);
 
         cout<<"Error: ";
-        print_vector(error);
+        udlr::sparse_matrix_util::print_vector(error);
         cout<<"Syndrome: ";
-        print_vector(syndrome);
+        udlr::sparse_matrix_util::print_vector(syndrome);
         cout<<"Decoding: ";
-        print_vector(decoding);
+        udlr::sparse_matrix_util::print_vector(decoding);
         cout<<"Decoding syndrome: ";
         vector<uint8_t> syndrome2(pcm.m, 0);
         pcm.mulvec(decoding,syndrome2);
-        print_vector(syndrome2);
+        udlr::sparse_matrix_util::print_vector(syndrome2);
         cout<<"Converged: "<<flipD->converge<<endl;
         cout<<"Iterations: "<<flipD->iterations<<endl;
 
@@ -64,7 +62,7 @@ TEST(TestFlipDecoder, two_bit_errors) {
     pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
     pcm.insert_entry(3, 0), pcm.insert_entry(3, 1), pcm.insert_entry(3, 2), pcm.insert_entry(3, 7);
 
-    print_sparse_matrix(pcm);
+    udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
     auto flipD = new flip::FlipDecoder(pcm, 8);
 
@@ -90,15 +88,15 @@ TEST(TestFlipDecoder, two_bit_errors) {
         auto decoding = flipD->decode(syndrome);
 
         cout<<"Error: ";
-        print_vector(error);
+        udlr::sparse_matrix_util::print_vector(error);
         cout<<"Syndrome: ";
-        print_vector(syndrome);
+        udlr::sparse_matrix_util::print_vector(syndrome);
         cout<<"Decoding: ";
-        print_vector(decoding);
+        udlr::sparse_matrix_util::print_vector(decoding);
         cout<<"Decoding syndrome: ";
         vector<uint8_t> syndrome2(pcm.m, 0);
         pcm.mulvec(decoding,syndrome2);
-        print_vector(syndrome2);
+        udlr::sparse_matrix_util::print_vector(syndrome2);
         cout<<"Converged: "<<flipD->converge<<endl;
         cout<<"Iterations: "<<flipD->iterations<<endl;
 

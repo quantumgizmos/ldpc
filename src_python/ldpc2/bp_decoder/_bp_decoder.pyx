@@ -3,6 +3,7 @@
 import numpy as np
 import scipy.sparse
 from typing import Optional, List, Union
+import warnings
 
 cdef BpSparse* Py2BpSparse(pcm):
     
@@ -426,6 +427,8 @@ cdef class BpDecoderBase:
         Returns:
             int: The number of threads used.
         """
+        if self.bpd.omp_thread_count != 1:
+            warnings.warn("The OpenMP functionality is not yet implemented")
         return self.bpd.omp_thread_count
 
     @omp_thread_count.setter
@@ -442,6 +445,8 @@ cdef class BpDecoderBase:
             raise TypeError("The omp_thread_count must be specified as a\
             positive integer.")
         self.bpd.set_omp_thread_count(value)
+        if self.bpd.omp_thread_count != 1:
+            warnings.warn("The OpenMP functionality is not yet implemented")
 
     @property
     def random_schedule_seed(self) -> int:

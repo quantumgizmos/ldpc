@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
-#include "sparse_matrix_util.hpp"
-#include "gf2sparse.hpp"
+#include "udlr.hpp"
 #include "gf2codes.hpp"
 #include "union_find.hpp"
 
@@ -10,7 +9,7 @@ using namespace uf;
 TEST(UfDecoder, single_bit_error) {
 
     auto pcm1 = gf2codes::ring_code(10);
-    // print_sparse_matrix(pcm1);
+    // udlr::sparse_matrix_util::print_sparse_matrix(pcm1);
 
     auto ufd = UfDecoder(pcm1);
 

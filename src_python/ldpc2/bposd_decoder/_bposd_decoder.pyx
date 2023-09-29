@@ -51,7 +51,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
     def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = False, serial_schedule_order: Optional[List[int]] = None, osd_method: int = 0,
+                 random_schedule_seed: Optional[int] = False, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
                  osd_order: int = 0):
         
         self.MEMORY_ALLOCATED=False
@@ -67,7 +67,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
     def __del__(self):
         if self.MEMORY_ALLOCATED:
-            del self.osd
+            del self.osdD
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """

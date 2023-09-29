@@ -6,15 +6,13 @@
 #include <iterator>
 #include <cmath> 
 #include <limits>
-#include <omp.h>
+// #include <omp.h>
 #include <random>
 #include <chrono>       
 #include <stdexcept> // required for std::runtime_error
 #include <set>
 
-#include "sparse_matrix.hpp"
-#include "sparse_matrix_util.hpp"
-#include "gf2sparse.hpp"
+#include "udlr.hpp"
 #include "rng.hpp"
 
 namespace bp{
@@ -31,7 +29,7 @@ enum BpSchedule{
 
 const std::vector<int> NULL_INT_VECTOR = {};
 
-class BpEntry: public sparse_matrix_base::EntryBase<BpEntry>{ 
+class BpEntry: public udlr::sparse_matrix_base::EntryBase<BpEntry>{ 
     public:  
         double bit_to_check_msg=0.0;
         double check_to_bit_msg=0.0;
@@ -39,7 +37,7 @@ class BpEntry: public sparse_matrix_base::EntryBase<BpEntry>{
 };
 
 
-typedef gf2sparse::GF2Sparse<BpEntry> BpSparse;
+typedef udlr::gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
 class BpDecoder{
@@ -108,15 +106,16 @@ class BpDecoder{
             }
 
             //Initialise OMP thread pool
-            this->omp_thread_count = omp_threads;
-            this->set_omp_thread_count(this->omp_thread_count);
+            // this->omp_thread_count = omp_threads;
+            // this->set_omp_thread_count(this->omp_thread_count);
         }
 
         ~BpDecoder() = default;
 
         void set_omp_thread_count(int count){
             this->omp_thread_count = count;
-            omp_set_num_threads(this->omp_thread_count);
+            // omp_set_num_threads(this->omp_thread_count);
+            // NotImplemented
         }
 
         void initialise_log_domain_bp(){
@@ -595,19 +594,19 @@ class BpDecoder{
 
 //                     // cout<<"Iteration: "<<it<<"; Bit index: "<<unsigned(bit_index)<<endl;
 //                     // cout<<"Decoding: ";
-//                     // print_vector(decoding);
+//                     // udlr::sparse_matrix_util::print_vector(decoding);
 //                     // cout<<"Log Prob Ratios: ";
-//                     // print_vector(log_prob_ratios);
+//                     // udlr::sparse_matrix_util::print_vector(log_prob_ratios);
 //                     // cout<<"Syndrome: ";
-//                     // print_vector(syndrome);
+//                     // udlr::sparse_matrix_util::print_vector(syndrome);
 //                     // cout<<"Soft Syndrome: ";
-//                     // print_vector(this->soft_syndrome);
+//                     // udlr::sparse_matrix_util::print_vector(this->soft_syndrome);
 //                     // cout<<endl;
 
 //                 }
 
 //                 // cout<<"Soft Syndrome: ";
-//                 // print_vector(this->soft_syndrome);
+//                 // udlr::sparse_matrix_util::print_vector(this->soft_syndrome);
 
             
             
