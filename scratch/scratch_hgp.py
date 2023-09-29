@@ -33,7 +33,7 @@ error_rate = 0.05
 
 osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
 
-osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
+osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
 osd_og_syntax = osd_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
 
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
@@ -46,7 +46,7 @@ bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms
 seed = 43
 # seed = np.random.randint(0,1000000)
 
-for DECODER in [osd, osd_og, osd_og_syntax]:
+for DECODER in [osd_og, osd_og_syntax]:
     np.random.seed(seed)
     fail = 0
 
@@ -76,7 +76,7 @@ for DECODER in [osd, osd_og, osd_og_syntax]:
 
 # exit(22)
 
-for DECODER in [bp, bp_og, bp_og_syntax]:
+for DECODER in [bp_og, bp_og_syntax]:
     np.random.seed(seed)
     fail = 0
 
