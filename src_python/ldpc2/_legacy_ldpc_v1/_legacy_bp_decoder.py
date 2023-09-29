@@ -27,10 +27,6 @@ class bp_decoder(BpDecoder):
         Sets the min-sum scaling factor for the min-sum BP method
     channel_probs: list, optional
         This parameter can be used to set the initial error channel across all bits.
-    input_vector_type: str, optional
-        Use this paramter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector'.
-        Note, it is only necessary to specify this value when the parity check matrix is square. When the
-        parity matrix is non-square the input vector type is inferred automatically from its length.
     '''
 
     def __init__(self,parity_check_matrix,**kwargs):
