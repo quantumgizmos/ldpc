@@ -1,8 +1,0 @@
-graft src
-recursive-include *.pxd
-recursive-include *.pyi
-recursive-include py.typed
-include LICENSE
-include README.md
-
-

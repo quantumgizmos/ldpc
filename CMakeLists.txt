@@ -14,7 +14,7 @@ project(main
 set(CMAKE_CXX_STANDARD 20)
 
 # Enable OpenMP support for parallel programming
-SET(CMAKE_CXX_FLAGS  "-fopenmp")
+# SET(CMAKE_CXX_FLAGS  "-fopenmp")
 
 # Enable C++11 features required by RapidCSV library
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
