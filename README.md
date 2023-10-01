@@ -14,15 +14,15 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 
 `ldpc` is still a work in progress. Things that still need to be done:
 - More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681).
-- The LU decomposition routine needs to optimised (it is still slower than the `mod2sparse` version) (getting there...)
+- ~~The LU decomposition routine needs to optimised (it is still slower than the `mod2sparse` version) (getting there...)~~
 - Functions need to be properly documented.
-- Proper test coverage is required (in progress).
+- Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
 - The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
-- Soft syndrome BP (https://arxiv.org/abs/2205.02341) (almost done)
-- Layered schedules (hybrid serial + parallel) (in progress)
+- ~~Soft syndrome BP (https://arxiv.org/abs/2205.02341) ~~
+- Layered schedules (hybrid serial + parallel) (in progress). Serial version complete. Hybrid possible with OpenMp?
 - Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
 - Generalised BP (https://arxiv.org/abs/2212.03214)
-- Make a Cython wrapper for the `GF2Sparse<T>` data structure
+- ~~Make a Cython wrapper for the `GF2Sparse<T>` data structure~~
 
 ## Dependencies
 
