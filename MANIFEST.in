@@ -1,0 +1,4 @@
+graft src_python
+recursive-include *.pxd
+recursive-include *.pyi
+recursive-include py.typed

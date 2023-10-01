@@ -10,9 +10,8 @@ Welcome to LDPC's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   test.md
-   ldpc2/ldpc2
-
+   ldpc2/codes
+   ldpc2/bp_decoder
 
 
 

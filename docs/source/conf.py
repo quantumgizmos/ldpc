@@ -1,7 +1,8 @@
 import os
 import sys
 import ldpc2
-sys.path.insert(0, ldpc2.__file__)
+ldpc2_path = os.path.dirname(ldpc2.__file__)
+sys.path.insert(0, ldpc2_path)
 
 # Configuration file for the Sphinx documentation builder.
 #
