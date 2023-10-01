@@ -14,12 +14,12 @@ jobs:
     steps:
 
     - name: Give GitHub Actions access to qec-codes/udlr
-    - uses: webfactory/ssh-agent@v0.5.4
+      uses: webfactory/ssh-agent@v0.5.4
       with:
         ssh-private-key: ${{ secrets.UDLR_ACCESS_SSH }}
     
     - name: Checkout out repo and submodules
-    - uses: actions/checkout@v3
+      uses: actions/checkout@v3
       with:
         submodules: true
 
