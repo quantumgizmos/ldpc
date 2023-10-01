@@ -13,10 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Give GitHub Actions access to qec-codes/udlr
-      uses: webfactory/ssh-agent@v0.5.4
-      with:
-        ssh-private-key: ${{ secrets.UDLR_ACCESS_SSH }}
+    - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.UDLR_ACCESS_SSH }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
     
     - name: Checkout out repo and submodules
       uses: actions/checkout@v3
