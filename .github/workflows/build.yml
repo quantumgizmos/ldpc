@@ -80,16 +80,17 @@ jobs:
       with:
         path: wheelhouse/*.whl
 
-  # upload_pypi:
-  #   needs: [ build_wheels, build_sdist ]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         name: artifact
-  #         path: dist
-  #     - uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         password: ${{ secrets.UDLR_PYPI }}
-  #         skip_existing: true
-  #         verbose: true
+  upload_pypi:
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.LDPC_TEST_PYPI }}
+          repository_url: https://test.pypi.org/legacy/
+          skip_existing: true
+          verbose: true
