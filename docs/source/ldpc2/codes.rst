@@ -1,6 +1,6 @@
-Codes
-=====
+Codes 
+======
 
 .. automodule:: ldpc2.codes
-   :imported-members:
-   :members:
+   :members: hamming_code, rep_code, ring_code
+   :noindex:

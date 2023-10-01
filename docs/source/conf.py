@@ -1,8 +1,11 @@
 import os
 import sys
 import ldpc2
+import udlr
 ldpc2_path = os.path.dirname(ldpc2.__file__)
-sys.path.insert(0, ldpc2_path)
+udlr_path = os.path.dirname(udlr.__file__)
+
+sys.path.insert(0, [ldpc2_path,udlr_path] )
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -20,7 +23,7 @@ version = ldpc2.__version__
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx_rtd_theme',"myst_parser", 'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon']
+extensions = ['sphinx_rtd_theme','myst_parser', 'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon']
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -43,6 +46,8 @@ html_context = {
   'github_url': 'https://github.com/quantumgizmos/ldpc/docs'
 }
 
+# Sidebars
+html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
 
 html_static_path = ['_static']
 
