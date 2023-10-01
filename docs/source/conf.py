@@ -1,11 +1,11 @@
 import os
 import sys
-import ldpc2
+import ldpc
 import udlr
-ldpc2_path = os.path.dirname(ldpc2.__file__)
+ldpc_path = os.path.dirname(ldpc.__file__)
 udlr_path = os.path.dirname(udlr.__file__)
 
-sys.path.insert(0, [ldpc2_path,udlr_path] )
+sys.path.insert(0, [ldpc_path,udlr_path] )
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -15,10 +15,10 @@ sys.path.insert(0, [ldpc2_path,udlr_path] )
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'LDPC2'
+project = 'ldpc'
 copyright = '2023, Joschka Roffe'
 author = 'Joschka Roffe'
-version = ldpc2.__version__
+version = ldpc.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -23,8 +23,8 @@ c_extensions = []
 for module in cpp_modules:
     c_extensions.append(
         Extension(
-            name=f"ldpc2.{module}._{module}",
-            sources=[f"src_python/ldpc2/{module}/_{module}.pyx"],
+            name=f"ldpc.{module}._{module}",
+            sources=[f"src_python/ldpc/{module}/_{module}.pyx"],
             libraries=[],
             library_dirs=[],
             include_dirs=[np.get_include(),'src_cpp', 'include/robin_map','include/udlr/src_cpp'],

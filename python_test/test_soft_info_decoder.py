@@ -1,5 +1,5 @@
 import pytest
-from ldpc2.bp_decoder import SoftInfoBpDecoder
+from ldpc.bp_decoder import SoftInfoBpDecoder
 import numpy as np
 
 def test_errored_close_to_zero():

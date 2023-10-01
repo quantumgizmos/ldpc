@@ -1,1 +1,0 @@
-from ldpc2.bf_decoder._bf_decoder cimport *

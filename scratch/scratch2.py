@@ -1,5 +1,5 @@
-from ldpc2.codes import rep_code, ring_code
-from ldpc2.noise_models import generate_bsc_error
+from ldpc.codes import rep_code, ring_code
+from ldpc.noise_models import generate_bsc_error
 
 H = ring_code(2)
 
@@ -10,8 +10,8 @@ print(H.toarray())
 
 # print(H.toarray())
 
-from ldpc2.bp_decoder import BpDecoder, bp_decoder
-from ldpc2.bposd_decoder import BpOsdDecoder
+from ldpc.bp_decoder import BpDecoder, bp_decoder
+from ldpc.bposd_decoder import BpOsdDecoder
 
 # BpDecoder(H, error_rate=0.2, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=100,omp_thread_count=1)
 

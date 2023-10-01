@@ -1,22 +1,22 @@
 import numpy as np
 import scipy.sparse as sp
 
-from ldpc2.bp_decoder import BpDecoder
-from ldpc2.bposd_decoder import BpOsdDecoder
+from ldpc.bp_decoder import BpDecoder
+from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc import bposd_decoder as bposd_decoder_og
 from ldpc import bp_decoder as bp_decoder_og
 from tqdm import tqdm
 from ldpc.codes import ring_code
 
-from ldpc2.bp_decoder import bp_decoder as bp_og_syntax_decoder
-from ldpc2.bposd_decoder import bposd_decoder as osd_og_syntax_decoder
+from ldpc.bp_decoder import bp_decoder as bp_og_syntax_decoder
+from ldpc.bposd_decoder import bposd_decoder as osd_og_syntax_decoder
 
-from ldpc2.noise_models import generate_bsc_error
+from ldpc.noise_models import generate_bsc_error
 
 from bposd.css import css_code
 from bposd.hgp import hgp
 
-from ldpc2.monte_carlo_simulation import McSim
+from ldpc.monte_carlo_simulation import McSim
 
 h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
 # h=ring_code(30)

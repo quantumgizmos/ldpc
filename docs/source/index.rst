@@ -8,12 +8,12 @@ Welcome to LDPC's documentation!
 
 .. toctree::
    :maxdepth: 4
-   :caption: LDPC2 API:
+   :caption: ldpc API:
 
-   ldpc2/codes
-   ldpc2/gf2sparse
-   ldpc2/bp_decoder
-   ldpc2/bposd_decoder
+   ldpc/codes
+   ldpc/gf2sparse
+   ldpc/bp_decoder
+   ldpc/bposd_decoder
 
 
 

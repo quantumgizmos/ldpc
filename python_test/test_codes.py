@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sp
 from typing import List
 
-from ldpc2.codes import rep_code, ring_code,hamming_code
+from ldpc.codes import rep_code, ring_code,hamming_code
 
 
 @pytest.mark.parametrize("distance, expected_output", [

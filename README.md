@@ -1,4 +1,4 @@
-# ldpc2
+# ldpc
 
 A C++ rewrite of the `LDPC` package for decoding low density parity check checks. New features include:
 
@@ -12,7 +12,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 
 ## ToDos
 
-`LDPC2` is still a work in progress. Things that still need to be done:
+`ldpc` is still a work in progress. Things that still need to be done:
 - More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681).
 - The LU decomposition routine needs to optimised (it is still slower than the `mod2sparse` version) (getting there...)
 - Functions need to be properly documented.
@@ -30,7 +30,7 @@ The only dependency is `robin_set` implementation of unordered sets, /Copyright 
 
 ## Python - Installation from source
 
-The C++ source code can be found in src_cpp. Python bindings are implemented using Cython and can be found in src/ldpc2. To install the Python version of the repository follows the instructions below: 
+The C++ source code can be found in src_cpp. Python bindings are implemented using Cython and can be found in src/ldpc. To install the Python version of the repository follows the instructions below: 
 
 - Download the repo.
 - Navigate to the root.
@@ -38,8 +38,8 @@ The C++ source code can be found in src_cpp. Python bindings are implemented usi
 Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```
-git clone git@github.com:quantumgizmos/ldpc2.git
-cd ldpc2
+git clone git@github.com:quantumgizmos/ldpc.git
+cd ldpc
 pip install -Ue
 ```
 

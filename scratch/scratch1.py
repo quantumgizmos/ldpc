@@ -1,9 +1,9 @@
-from ldpc2.bp_decoder import BpDecoder
-from ldpc2.bposd_decoder import BpOsdDecoder
+from ldpc.bp_decoder import BpDecoder
+from ldpc.bposd_decoder import BpOsdDecoder
 import numpy as np
 from ldpc import bp_decoder as bp_decoder_v1
-from ldpc2.codes import rep_code
-from ldpc2.monte_carlo_simulation import McSim
+from ldpc.codes import rep_code
+from ldpc.monte_carlo_simulation import McSim
 
 run_count = 1000
 error_rate = 0.40
@@ -17,4 +17,4 @@ McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=see
 
 print(bpd.random_schedule_seed)
 
-from ldpc2.bp_flip import BpFlipDecoder
+from ldpc.bp_flip import BpFlipDecoder

@@ -1,10 +1,10 @@
 import pytest
 import numpy as np
 import scipy.sparse
-from ldpc2.codes import rep_code, ring_code, hamming_code
-from ldpc2.bp_decoder import io_test, BpDecoder
+from ldpc.codes import rep_code, ring_code, hamming_code
+from ldpc.bp_decoder import io_test, BpDecoder
 from ldpc import bp_decoder as bp_decoder_v1
-from ldpc2.monte_carlo_simulation import McSim
+from ldpc.monte_carlo_simulation import McSim
 
 
 def test_BpSparse_rep_code():

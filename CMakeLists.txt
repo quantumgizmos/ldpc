@@ -7,7 +7,7 @@ enable_testing()
 
 # Define the main project and add a description
 project(main
-    DESCRIPTION "LDPC2 - Software for for classical and quantum low density parity check codes"
+    DESCRIPTION "ldpc - Software for for classical and quantum low density parity check codes"
     LANGUAGES CXX)
 
 # Set the C++ standard to C++20
@@ -21,19 +21,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### Library Configuration
 
-# Define an interface library named ldpc2 that only includes headers
-add_library(ldpc2 INTERFACE)
+# Define an interface library named ldpc that only includes headers
+add_library(ldpc INTERFACE)
 
-# Add the src_cpp and include directories to the include path for any target that links with ldpc2
-target_include_directories(ldpc2 INTERFACE src_cpp include/robin_map include/udlr/src_cpp)
+# Add the src_cpp and include directories to the include path for any target that links with ldpc
+target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/udlr/src_cpp)
 
 ### Executable Configuration
 
 # Add an executable named main, which depends on the main.cpp file
 add_executable(main cpp_example/main.cpp)
 
-# Link the ldpc2 library to the main executable
-target_link_libraries(main ldpc2)
+# Link the ldpc library to the main executable
+target_link_libraries(main ldpc)
 
 ## Install GoogleTest
 
@@ -56,7 +56,7 @@ FetchContent_MakeAvailable(GoogleTest)
 
 # Define the cpp_test project and add a description
 project(cpp_test
-    DESCRIPTION "Tests for LDPC2"
+    DESCRIPTION "Tests for ldpc"
     LANGUAGES CXX)
 
 # Include the GoogleTest library in the project
@@ -72,13 +72,13 @@ add_executable(TestUnionFind cpp_test/TestUnionFind.cpp)
 
 
 
-# Link the ldpc2 and gtest_main libraries to the test executables
-target_link_libraries(TestBPDecoder gtest_main ldpc2)
-target_link_libraries(TestOsdDecoder gtest_main ldpc2)
-target_link_libraries(TestSoftInfo gtest_main ldpc2)
-target_link_libraries(TestFlipDecoder gtest_main ldpc2)
-target_link_libraries(TestGf2Codes gtest_main ldpc2)
-target_link_libraries(TestUnionFind gtest_main ldpc2)
+# Link the ldpc and gtest_main libraries to the test executables
+target_link_libraries(TestBPDecoder gtest_main ldpc)
+target_link_libraries(TestOsdDecoder gtest_main ldpc)
+target_link_libraries(TestSoftInfo gtest_main ldpc)
+target_link_libraries(TestFlipDecoder gtest_main ldpc)
+target_link_libraries(TestGf2Codes gtest_main ldpc)
+target_link_libraries(TestUnionFind gtest_main ldpc)
 
 
 

@@ -3,7 +3,7 @@ requires = ["cython>=3.0.2","setuptools>=68.2.2","numpy>=1.24.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ldpc2"
+name = "ldpc"
 
 description = "A C++ Sparse Matrix Library"
 readme = "README.md"
@@ -24,5 +24,5 @@ version = "2.0"
 
 [tool.setuptools.packages.find]
 where = ["src_python"]  
-include = ["ldpc2","ldpc2.*"]
+include = ["ldpc","ldpc.*"]
 
