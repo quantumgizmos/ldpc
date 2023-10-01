@@ -11,6 +11,8 @@ Welcome to LDPC's documentation!
    :caption: Contents:
 
    test.md
+   ldpc2/ldpc2
+
 
 
 

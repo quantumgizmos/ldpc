@@ -11,14 +11,15 @@ sys.path.insert(0, ldpc2.__file__)
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'LDPC'
+project = 'LDPC2'
 copyright = '2023, Joschka Roffe'
 author = 'Joschka Roffe'
+version = ldpc2.__version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx_rtd_theme',"myst_parser"]
+extensions = ['sphinx_rtd_theme',"myst_parser", 'sphinx.ext.autodoc', 'sphinx.ext.coverage', 'sphinx.ext.napoleon']
 
 templates_path = ['_templates']
 exclude_patterns = []
