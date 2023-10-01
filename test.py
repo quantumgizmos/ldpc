@@ -1,6 +1,9 @@
-from ldpc.bp_decoder import bp_decoder
-from udlr.gf2sparse import PluDecomposition
+from ldpc.bp_decoder import BpDecoder
+# from udlr.gf2sparse import PluDecomposition
+import ldpc
 
-PluDecomposition()
+print(ldpc.__file__)
 
-bp_decoder()
+from ldpc.codes import hamming_code
+
+print(hamming_code(3))
