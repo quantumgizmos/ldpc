@@ -14,6 +14,7 @@ Welcome to LDPC's documentation!
    ldpc/gf2sparse
    ldpc/bp_decoder
    ldpc/bposd_decoder
+   ldpc/monte_carlo_simulation
 
 
 

@@ -12,7 +12,7 @@ class McSim:
     Class for running Monte Carlo simulations of a given error-correcting code using syndrome-based decoding.
 
     Parameters:
-    ----------
+    -------------
     parity_check_matrix : Union[np.ndarray, sp.csr_matrix]
         The parity check matrix of the code
     error_rate : float
