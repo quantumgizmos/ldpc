@@ -1,4 +1,4 @@
-# ldpc
+# LDPC version 2
 
 A C++ rewrite of the `LDPC` package for decoding low density parity check checks. New features include:
 
