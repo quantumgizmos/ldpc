@@ -45,9 +45,10 @@ pip install -Ue
 
 This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
-```bash
+```
 pip install -U numpy scipy udlr
 pip install
+```
 
 ## Quickstart
 
