@@ -52,10 +52,10 @@ jobs:
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
           # macosx universal2
-          {os: macos-latest, dist: cp38-macosx_universal2},
-          {os: macos-latest, dist: cp39-macosx_universal2},
-          {os: macos-latest, dist: cp310-macosx_universal2},
-          {os: macos-latest, dist: cp311-macosx_universal2},
+          # {os: macos-latest, dist: cp38-macosx_universal2},
+          # {os: macos-latest, dist: cp39-macosx_universal2},
+          # {os: macos-latest, dist: cp310-macosx_universal2},
+          # {os: macos-latest, dist: cp311-macosx_universal2},
           # windows amd64
           {os: windows-latest, dist: cp38-win_amd64},
           {os: windows-latest, dist: cp39-win_amd64},

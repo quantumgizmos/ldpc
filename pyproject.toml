@@ -20,7 +20,7 @@ dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.9.3",
 ]
-version = "2.0.1"
+version = "2.0.2"
 
 [tool.setuptools.packages.find]
 where = ["src_python"]  
