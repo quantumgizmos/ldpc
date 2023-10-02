@@ -15,18 +15,15 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 `ldpc` is still a work in progress. Things that still need to be done:
 - More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681).
 - ~~The LU decomposition routine needs to optimised (it is still slower than the `mod2sparse` version) (getting there...)~~
-- Functions need to be properly documented.
-- Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
-- The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
-- ~~Soft syndrome BP (https://arxiv.org/abs/2205.02341) ~~
+- ~~Soft syndrome BP (https://arxiv.org/abs/2205.02341)~~
+- ~~Make a Cython wrapper for the `GF2Sparse<T>` data structure~~
 - Layered schedules (hybrid serial + parallel) (in progress). Serial version complete. Hybrid possible with OpenMp?
 - Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
 - Generalised BP (https://arxiv.org/abs/2212.03214)
-- ~~Make a Cython wrapper for the `GF2Sparse<T>` data structure~~
-
-## Dependencies
-
-The only dependency is `robin_set` implementation of unordered sets, /Copyright (c) 2017 Thibaut Goetghebuer-Planchon/. This is used in the union find decoder.
+- Functions need to be properly documented (in progress)
+- Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
+- The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
+- STIM integration for circuit level noise.
 
 ## Python - Installation from source
 
@@ -34,19 +31,22 @@ The C++ source code can be found in src_cpp. Python bindings are implemented usi
 
 - Download the repo.
 - Navigate to the root.
+- Download submodules `git submodule update --init --recursive`
 - Pip install with `python>=3.8`.
 Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```
-git clone git@github.com:quantumgizmos/ldpc.git
-cd ldpc
+git clone git@github.com:qec-codes/ldpc2.git
+cd ldpc2
+git submodule update --init --recursive
 pip install -Ue
 ```
 
-## Installation from PyPi
+## Installation from Test PyPi
 
-Not yet implemented.
+This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
-## C++ usage
-
-This is a header only package. See `cpp_test` directory for examples of use.
+```
+pip install -U numpy scipy
+pip install -i https://test.pypi.org/simple/ ldpc
+```
