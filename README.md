@@ -47,7 +47,7 @@ This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8.
 
 ```
 pip install -U numpy scipy udlr
-pip install
+pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
 ## Quickstart
@@ -177,7 +177,8 @@ codeword_basis.toarray()
 
 
 ```python
-# Finally, you can use the `gf2sparse.PluDecomposition` class to build your own linear alebra routines. Eg. we can write a rref function
+# Finally, you can use the `gf2sparse.PluDecomposition` class to build your
+# own linear algebra routines. Eg. we can write a rref function
 import scipy.sparse
 import numpy as np
 import udlr.gf2sparse as gf2sparse
