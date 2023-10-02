@@ -267,7 +267,7 @@ The belief propagation decoder in LDPCv2 has undergone a complete rewrite to add
 
 - Serial (and layered) schedules.
 - Sparse matrix input for all decoders.
-- $\approx 30\%$ improvement in speed.
+- approx. 30% improvement in speed.
 
 
 
@@ -292,7 +292,7 @@ dec
 
 
 
-    array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0])
+    array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
 
 
 
@@ -310,7 +310,7 @@ decoder = BpDecoder(H, error_rate = 0.01, schedule = "serial")
 
 ## BP+OSD Decoding
 
-For decoding quantum codes, it is sometimes better to use a belief propagation + ordered statistics decoder (BP+OSD). The BP+OSD implementation in LDPCv2 is more scalable than the LDPCv1. The perforance improvments can be attributed to a new row reduction routine that preserves sparsity as much as possible.
+For decoding quantum codes, it is sometimes better to use a belief propagation + ordered statistics decoder (BP+OSD). The BP+OSD implementation in LDPCv2 is more scalable than the LDPCv1. The perforance improvements can be attributed to a new row reduction routine that preserves sparsity as much as possible.
 
 
 
@@ -368,8 +368,3 @@ dec
     array([0, 0, 0, ..., 0, 0, 0])
 
 
-
-
-```python
-
-```
