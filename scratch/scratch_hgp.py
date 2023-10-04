@@ -3,8 +3,6 @@ import scipy.sparse as sp
 
 from ldpc.bp_decoder import BpDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
-from ldpc import bposd_decoder as bposd_decoder_og
-from ldpc import bp_decoder as bp_decoder_og
 from tqdm import tqdm
 from ldpc.codes import ring_code
 
@@ -13,40 +11,43 @@ from ldpc.bposd_decoder import bposd_decoder as osd_og_syntax_decoder
 
 from ldpc.noise_models import generate_bsc_error
 
-from bposd.css import css_code
-from bposd.hgp import hgp
+from qec.css import CssCode
+from qec.hgp import HyperGraphProductCode
+from qec.codes import ToricCode
 
 from ldpc.monte_carlo_simulation import McSim
 
 h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
 # h=ring_code(30)
-qcode = hgp(h,h)
-qcode.test()
+qcode = HyperGraphProductCode(h,h)
 
-hx = sp.csr_matrix(qcode.hx, dtype=np.uint8)
-hz = sp.csr_matrix(qcode.hz, dtype=np.uint8)
-lx = sp.csr_matrix(qcode.lx, dtype=np.uint8)
-lz = sp.csr_matrix(qcode.lz, dtype=np.uint8)
+qcode = ToricCode(15)
+
+print(qcode)
+
+hx = qcode.hx
+hz = qcode.hz
+lx = qcode.lx
+lz = qcode.lz
 
 run_count = 1000
-error_rate = 0.05
+error_rate = 0.01
 
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=5,osd_method="osd_e",random_schedule_seed=0)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ps', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=50,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
 
-osd_og = bposd_decoder_og(hx,error_rate=error_rate, bp_method='ps_log', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
-osd_og_syntax = osd_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
+from python_bp import PyBp
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
-bp_og = bp_decoder_og(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
-bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
+pybp = PyBp(hx.toarray(),error_rate=error_rate, max_iter=50)
 
-# bpd = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=50,omp_thread_count=1)
+# osd_og_syntax = osd_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
+# bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
 
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
-seed = 43
-# seed = np.random.randint(0,1000000)
+seed = 40
 
-for DECODER in [osd_og, osd_og_syntax]:
+
+for DECODER in []:
     np.random.seed(seed)
     fail = 0
 
@@ -76,7 +77,7 @@ for DECODER in [osd_og, osd_og_syntax]:
 
 # exit(22)
 
-for DECODER in [bp_og, bp_og_syntax]:
+for DECODER in [bp,pybp]:
     np.random.seed(seed)
     fail = 0
 
