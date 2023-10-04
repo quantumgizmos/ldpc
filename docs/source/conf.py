@@ -5,7 +5,8 @@ import udlr
 ldpc_path = os.path.dirname(ldpc.__file__)
 udlr_path = os.path.dirname(udlr.__file__)
 
-sys.path.insert(0, [ldpc_path,udlr_path] )
+sys.path.insert(0, ldpc_path )
+sys.path.insert(0, udlr_path )
 
 # Configuration file for the Sphinx documentation builder.
 #
