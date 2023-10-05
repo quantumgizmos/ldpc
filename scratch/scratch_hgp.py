@@ -21,7 +21,7 @@ h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
 # h=ring_code(30)
 qcode = HyperGraphProductCode(h,h)
 
-qcode = ToricCode(80)
+qcode = ToricCode(20)
 
 print(qcode)
 

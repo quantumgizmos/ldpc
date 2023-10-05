@@ -110,15 +110,20 @@ class OsdDecoder{
 
             soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
 
+            if(this->osd_order == 0){
+                this->osd0_decoding = this->osdw_decoding =  this->LuDecomposition->fast_solve(syndrome,this->column_ordering);
+                return this->osd0_decoding;
+            }
+
             //row reduce the matrix according to the new column ordering
             this->LuDecomposition->rref(false,true,this->column_ordering);
 
             //find the OSD0 solution
             this->osd0_decoding = this->osdw_decoding = LuDecomposition->lu_solve(syndrome);
 
-            if(osd_order==0){
-                return this->osd0_decoding;
-            }
+            // if(osd_order==0){
+            //     return this->osd0_decoding;
+            // }
 
             double candidate_weight, osd_min_weight;
 
