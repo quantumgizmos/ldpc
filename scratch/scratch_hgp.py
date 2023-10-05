@@ -21,7 +21,7 @@ h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
 # h=ring_code(30)
 qcode = HyperGraphProductCode(h,h)
 
-qcode = ToricCode(20)
+# qcode = ToricCode(200)
 
 print(qcode)
 
@@ -31,20 +31,20 @@ lx = qcode.lx
 lz = qcode.lz
 
 run_count = 1000
-error_rate = 0.01
+error_rate = 0.05
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 0)
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=10,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=0,omp_thread_count=1, random_schedule_seed = 0)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=0,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
 
-from python_bp import PyBp
+# from python_bp import PyBp
 
-pybp = PyBp(hx.toarray(),error_rate=error_rate, max_iter=50)
+# pybp = PyBp(hx.toarray(),error_rate=error_rate, max_iter=50)
 
 # osd_og_syntax = osd_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ps', ms_scaling_factor=0.625, max_iter=10,osd_order=5,osd_method="osd_e")
 # bp_og_syntax = bp_og_syntax_decoder(hx,error_rate=error_rate, bp_method='ms', ms_scaling_factor=0.625, max_iter=10)
 
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
-seed = 40
+seed = 55
 
 
 for DECODER in [bp,osd]:
