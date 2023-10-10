@@ -21,7 +21,7 @@ h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
 # h=ring_code(30)
 qcode = HyperGraphProductCode(h,h)
 
-# qcode = ToricCode(200)
+qcode = ToricCode(40)
 
 print(qcode)
 
@@ -31,10 +31,10 @@ lx = qcode.lx
 lz = qcode.lz
 
 run_count = 1000
-error_rate = 0.05
+error_rate = 0.01
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=0,omp_thread_count=1, random_schedule_seed = 0)
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=0,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=20,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
 
 # from python_bp import PyBp
 
