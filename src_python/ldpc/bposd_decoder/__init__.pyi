@@ -1,11 +1,9 @@
-#cython: language_level=3, boundscheck=False, wraparound=False, initializedcheck=False, cdivision=True, embedsignature=True
-# distutils: language = c++
 import numpy as np
 import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
-
-cdef class BpOsdDecoder(BpDecoderBase):
+from ldpc.bp_decoder cimport BpSparse, BpDecoderBase
+class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
 
@@ -37,8 +35,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
     osd_method : int, optional
-        The OSD method used. Must be one of {0, 1, 2}, where 0 represents 'OSD_0', 1 represents 'OSD_E', and 2 represents 'OSD_CS',
-        by default 0.
+        The OSD method used.  Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
     osd_order : int, optional
         The OSD order, by default 0.
 
@@ -49,26 +46,6 @@ cdef class BpOsdDecoder(BpDecoderBase):
     method deallocates memory if it has been allocated.
     """
 
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_serial_schedule: Optional[int] = False, serial_schedule_order: Optional[List[int]] = None, osd_method: int = 0,
-                 osd_order: int = 0):
-        
-        self.MEMORY_ALLOCATED=False
-
-        ## set up OSD with default values and channel probs from BP
-        self.osdD = new OsdDecoderCpp(self.pcm, -1, 0, self.bpd.channel_probs)
-        self.osd_order=osd_order
-        self.osd_method=osd_method
-
-        self.osdD.osd_setup()
-
-        self.MEMORY_ALLOCATED=True
-
-    def __del__(self):
-        if self.MEMORY_ALLOCATED:
-            del self.osd
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """
@@ -101,31 +78,6 @@ cdef class BpOsdDecoder(BpDecoderBase):
         constructor. The OSD order used is specified by the `osd_order` parameter passed to the class constructor.
 
         """
-        if not len(syndrome) == self.m:
-            raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
-        
-        zero_syndrome = True
-        
-        for i in range(self.m):
-            self._syndrome[i] = syndrome[i]
-            if self._syndrome[i]:
-                zero_syndrome = False
-        if zero_syndrome:
-            return np.zeros(self.n, dtype=syndrome.dtype)
-        
-        self.bpd.decode(self._syndrome)
-        out = np.zeros(self.n, dtype=syndrome.dtype)
-
-        if self.bpd.converge:
-            for i in range(self.n):
-                out[i] = self.bpd.decoding[i]
-        else:
-            self.osdD.decode(self._syndrome, self.bpd.log_prob_ratios)
-            for i in range(self.n):
-                out[i] = self.osdD.osdw_decoding[i]
-
-        return out
-
 
 
     @property
@@ -139,14 +91,6 @@ cdef class BpOsdDecoder(BpDecoderBase):
             A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
             has been set, returns `None`.
         """
-        if self.osdD.osd_method == 0:
-            return 'OSD_0'
-        elif self.osdD.osd_method == 1:
-            return 'OSD_E'
-        elif self.osdD.osd_method == 2:
-            return 'OSD_CS'
-        else:
-            return None
 
 
     @osd_method.setter
@@ -157,22 +101,9 @@ cdef class BpOsdDecoder(BpDecoderBase):
         Parameters
         ----------
         method : Union[str, int, float]
-            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
-            Alternatively, 'osd_0', '0' or 'osd0' can be used to set the OSD method to 'OSD_0', 'osd_e', 'e' or
-            'exhaustive' can be used to set the OSD method to 'OSD_E', and 'osd_cs', '1', 'cs', 'combination_sweep' or
-            'combination_sweep' can be used to set the OSD method to 'OSD_CS'.
+            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
+            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
-        # OSD method
-        if str(method).lower() in ['osd_0', '0', 'osd0']:
-            self.osdD.osd_method = 0
-            self.osdD.osd_order = 0
-        elif str(method).lower() in ['osd_e', 'e', 'exhaustive']:
-            self.osdD.osd_method = 1
-        elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep']:
-            self.osdD.osd_method = 2
-        else:
-            raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following methods:\
-                'OSD_0', 'OSD_E' or 'OSD_CS'.")
 
 
     @property
@@ -185,7 +116,6 @@ cdef class BpOsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
-        return self.osdD.osd_order
 
 
     @osd_order.setter
@@ -209,15 +139,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
             If the OSD method is 'OSD_E' and the order is greater than 15.
 
         """
-        # OSD order
-        if order < 0:
-            raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
 
-        if self.osdD.osd_method == 0 and order > 15:
-            warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not "
-                        "recommended. Use the 'osd_cs' method instead.")
-
-        self.osdD.osd_order = order
 
     @property
     def decoding(self) -> np.ndarray:
@@ -227,10 +149,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
-        out = np.zeros(self.n).astype(int)
-        for i in range(self.n):
-            out[i] = self.osD.osdw_decoding[i]
-        return out
+
 
     @property
     def osd0_decoding(self) -> np.ndarray:
@@ -240,16 +159,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
-        out = np.zeros(self.n).astype(int)
 
-        if self.bpd.converge:
-            for i in range(self.n):
-                out[i] = self.bpd.decoding[i]
-            return out
-
-        for i in range(self.n):
-            out[i] = self.osdD.osd0_decoding[i]
-        return out
 
     @property
     def osdw_decoding(self) -> np.ndarray:
@@ -259,13 +169,4 @@ cdef class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
-        out = np.zeros(self.n).astype(int)
 
-        if self.bpd.converge:
-            for i in range(self.n):
-                out[i] = self.bpd.decoding[i]
-            return out
-
-        for i in range(self.n):
-            out[i] = self.osdD.osdw_decoding[i]
-        return out

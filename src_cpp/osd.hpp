@@ -118,8 +118,10 @@ class OsdDecoder{
             //row reduce the matrix according to the new column ordering
             this->LuDecomposition->rref(false,true,this->column_ordering);
 
-            //find the OSD0 solution
+            // find the OSD0 solution
             this->osd0_decoding = this->osdw_decoding = LuDecomposition->lu_solve(syndrome);
+
+            // this->osd0_decoding = this->LuDecomposition->fast_solve(syndrome,this->column_ordering);
 
             // if(osd_order==0){
             //     return this->osd0_decoding;
