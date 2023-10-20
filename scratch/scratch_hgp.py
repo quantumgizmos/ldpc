@@ -18,23 +18,34 @@ from qec.codes import ToricCode
 from ldpc.monte_carlo_simulation import McSim
 
 h = np.loadtxt("scratch/16_4_6.txt", dtype=int)
+
+hx = sp.load_npz("scratch/3d_ldpc_hx.npz").astype(np.uint8)
+hz = sp.load_npz("scratch/3d_ldpc_hz.npz").astype(np.uint8)
+lx = sp.load_npz("scratch/3d_ldpc_lx.npz").astype(np.uint8)
+lz = sp.load_npz("scratch/3d_ldpc_lz.npz").astype(np.uint8)
+
+# hx = hz
+# lx = lz
+
+
 # h=ring_code(30)
-qcode = HyperGraphProductCode(h,h)
+# qcode = HyperGraphProductCode(h,h)
+
 
 # qcode = ToricCode(20)
 
-print(qcode)
+# print(qcode)
 
-hx = qcode.hx
-hz = qcode.hz
-lx = qcode.lx
-lz = qcode.lz
+# hx = qcode.hx
+# hz = qcode.hz
+# lx = qcode.lx
+# lz = qcode.lz
 
 run_count = 10000
-error_rate = 0.05
+error_rate = 0.07
 
-bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.9, max_iter=20,omp_thread_count=1,osd_order=10,osd_method="osd_e",random_schedule_seed=10)
+bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=0,osd_method="osd_e",random_schedule_seed=10)
 
 # from python_bp import PyBp
 
@@ -46,6 +57,9 @@ osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel"
 # McSim(hx, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
 seed = 23
 
+
+min_logical = hz.shape[1]
+print(hz.shape[0],hz.shape[1])
 
 for DECODER in [osd]:
     np.random.seed(seed)
@@ -71,8 +85,13 @@ for DECODER in [osd]:
 
         if np.any((lx@residual)%2):
             fail+=1
+            if(np.sum(residual)<min_logical):
+                min_logical = np.sum(residual)
+                # print(f"New min logical: {min_logical}")
+            
 
     print(f"ler: {fail/run_count}")
+    print(f"min logical: {min_logical}")
 
 
 # exit(22)

@@ -2,7 +2,6 @@ import numpy as np
 import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
-from ldpc.bp_decoder cimport BpSparse, BpDecoderBase
 class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
