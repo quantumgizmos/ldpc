@@ -29,7 +29,7 @@ qcode = HyperGraphProductCode(h,h)
 # qcode.test()
 
 
-qcode = ToricCode(10)
+# qcode = ToricCode(40)
 
 # print(qcode)
 
@@ -42,8 +42,8 @@ run_count = 1000
 error_rate = 0.05
 
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=20,omp_thread_count=1, random_schedule_seed = 0)
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
-bpuf = BeliefFindDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=20,omp_thread_count=1, random_schedule_seed = 4, matrix_solve = True, bits_per_step = 1)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
+bpuf = BeliefFindDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 4, matrix_solve = True, bits_per_step = 1)
 
 seed = 23
 
