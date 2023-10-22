@@ -14,6 +14,8 @@
 #include <robin_map.h>
 #include <robin_set.h>
 
+#include "udlr.hpp"
+
 
 namespace uf{
 
@@ -313,98 +315,102 @@ struct Cluster{
         return erasure;
     }
 
-    // bp::BpSparse* convert_to_matrix(const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
+    bp::BpSparse convert_to_matrix(const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
 
-    //     this->matrix_to_cluster_bit_map.clear();
-    //     this->matrix_to_cluster_check_map.clear();
-    //     this->cluster_to_matrix_bit_map.clear();
-    //     this->cluster_to_matrix_check_map.clear();
+        this->matrix_to_cluster_bit_map.clear();
+        this->matrix_to_cluster_check_map.clear();
+        this->cluster_to_matrix_bit_map.clear();
+        this->cluster_to_matrix_check_map.clear();
 
 
-    //     if(bit_weights!=NULL_DOUBLE_VECTOR){
-    //         std::vector<double> cluster_bit_weights;
-    //         std::vector<int> bit_nodes_temp;
-    //         for(int bit: this->bit_nodes){
-    //             cluster_bit_weights.push_back(bit_weights[bit]);
-    //             bit_nodes_temp.push_back(bit);
-    //         }
-    //         auto sorted_indices = sort_indices(cluster_bit_weights);
-    //         int count = 0;
-    //         for(int i: sorted_indices){
-    //             int bit_index = bit_nodes_temp[i];
-    //             this->matrix_to_cluster_bit_map.push_back(bit_index);
-    //             this->cluster_to_matrix_bit_map[bit_index] = count;
-    //             count++;
-    //         }
-    //     }
+        if(bit_weights!=NULL_DOUBLE_VECTOR){
+            std::vector<double> cluster_bit_weights;
+            std::vector<int> bit_nodes_temp;
+            for(int bit: this->bit_nodes){
+                cluster_bit_weights.push_back(bit_weights[bit]);
+                bit_nodes_temp.push_back(bit);
+            }
+            auto sorted_indices = sort_indices(cluster_bit_weights);
+            int count = 0;
+            for(int i: sorted_indices){
+                int bit_index = bit_nodes_temp[i];
+                this->matrix_to_cluster_bit_map.push_back(bit_index);
+                this->cluster_to_matrix_bit_map[bit_index] = count;
+                count++;
+            }
+        }
 
-    //     else{
-    //         int count = 0;
-    //         for(int bit_index: this->bit_nodes){
-    //             this->matrix_to_cluster_bit_map.push_back(bit_index);
-    //             this->cluster_to_matrix_bit_map[bit_index] = count;
-    //             count++;
-    //         }
+        else{
+            int count = 0;
+            for(int bit_index: this->bit_nodes){
+                this->matrix_to_cluster_bit_map.push_back(bit_index);
+                this->cluster_to_matrix_bit_map[bit_index] = count;
+                count++;
+            }
 
-    //     }
+        }
     
-    //     int count = 0;
+        int count = 0;
 
-    //     for(int check_index: this->check_nodes){
-    //         this->matrix_to_cluster_check_map.push_back(check_index);
-    //         this->cluster_to_matrix_check_map[check_index] = count;
-    //         count++;
-    //     }
+        for(int check_index: this->check_nodes){
+            this->matrix_to_cluster_check_map.push_back(check_index);
+            this->cluster_to_matrix_check_map[check_index] = count;
+            count++;
+        }
 
-    //     bp::BpSparse* cluster_pcm = new bp::BpSparse(this->check_nodes.size(),this->bit_nodes.size());
+        auto cluster_pcm = bp::BpSparse(this->check_nodes.size(),this->bit_nodes.size());
 
-    //     for(int check_index: this->check_nodes){
-    //         for(auto& e: this->pcm.iterate_row(check_index)){
-    //             int bit_index = e.col_index;
-    //             if(this->bit_nodes.contains(bit_index)){
-    //                 int matrix_bit_index = cluster_to_matrix_bit_map[bit_index];
-    //                 int matrix_check_index = cluster_to_matrix_check_map[check_index];
-    //                 cluster_pcm.insert_entry(matrix_check_index,matrix_bit_index,1);
-    //             }
-    //         }
-    //     }
+        for(int check_index: this->check_nodes){
+            for(auto& e: this->pcm.iterate_row(check_index)){
+                int bit_index = e.col_index;
+                if(this->bit_nodes.contains(bit_index)){
+                    int matrix_bit_index = cluster_to_matrix_bit_map[bit_index];
+                    int matrix_check_index = cluster_to_matrix_check_map[check_index];
+                    cluster_pcm.insert_entry(matrix_check_index,matrix_bit_index);
+                }
+            }
+        }
 
-    //     return cluster_pcm;
+        return cluster_pcm;
 
-    // }
+    }
 
 
-    // std::vector<int> invert_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights){
-    //     auto cluster_pcm = this->convert_to_matrix(bit_weights);
-    //     std::vector<uint8_t> cluster_syndrome;
-    //     for(int check_index: check_nodes) cluster_syndrome.push_back(syndrome[check_index]);
+    std::vector<int> invert_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights){
+        
+        auto cluster_pcm = this->convert_to_matrix(bit_weights);
+        
+        std::vector<uint8_t> cluster_syndrome;
+        for(int check_index: check_nodes){
+            cluster_syndrome.push_back(syndrome[check_index]);
+        }
 
-    //     std::vector<uint8_t> cluster_solution;
-    //     cluster_solution.resize(this->bit_nodes.size(),0);
-    //     cluster_solution = cluster_pcm.lu_solve(cluster_syndrome,cluster_solution);
-    //     std::vector<uint8_t> candidate_cluster_syndrome;
-    //     candidate_cluster_syndrome.resize(cluster_syndrome.size());
-    //     candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution,candidate_cluster_syndrome);
+        auto rr = udlr::gf2sparse_linalg::RowReduce(cluster_pcm);
+        auto cluster_solution = rr.fast_solve(cluster_syndrome);
+        
+        auto candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution);
 
-    //     bool equal = true;
-    //     for(int i =0; i<cluster_syndrome.size(); i++){
-    //         if(cluster_syndrome[i]!=candidate_cluster_syndrome[i]){
-    //             equal = false;
-    //             break;
-    //         }
-    //     }
+        bool equal = true;
+        for(int i =0; i<cluster_syndrome.size(); i++){
+            if(cluster_syndrome[i]!=candidate_cluster_syndrome[i]){
+                equal = false;
+                break;
+            }
+        }
 
-    //     this->cluster_decoding.clear();
-    //     this->valid = equal;
-    //     for(int i = 0; i<cluster_solution.size(); i++){
-    //         if(cluster_solution[i] == 1) this->cluster_decoding.push_back(this->matrix_to_cluster_bit_map[i]);
-    //     }
+        this->cluster_decoding.clear();
+        this->valid = equal;
+        for(int i = 0; i<cluster_solution.size(); i++){
+            if(cluster_solution[i] == 1){
+                this->cluster_decoding.push_back(this->matrix_to_cluster_bit_map[i]);
+            }
+        }
 
-    //     delete cluster_pcm;
+        // delete cluster_pcm;
 
-    //     return this->cluster_decoding;
+        return this->cluster_decoding;
 
-    // }
+    }
 
     // std::vector<int> bposd_decode(const std::vector<uint8_t>& syndrome){
     //     auto cluster_pcm = this->convert_to_matrix();
@@ -523,58 +529,64 @@ class UfDecoder{
         }
 
 
-        // std::vector<uint8_t>& matrix_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
+        std::vector<uint8_t>& matrix_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
 
-        //     fill(this->decoding.begin(), this->decoding.end(), 0);
+            fill(this->decoding.begin(), this->decoding.end(), 0);
 
-        //     std::vector<Cluster*> clusters;
-        //     std::vector<Cluster*> invalid_clusters;
-        //     Cluster** global_bit_membership = new Cluster*[pcm.n]();
-        //     Cluster** global_check_membership = new Cluster*[pcm.m]();
+            std::vector<Cluster*> clusters;
+            std::vector<Cluster*> invalid_clusters;
+            Cluster** global_bit_membership = new Cluster*[pcm.n]();
+            Cluster** global_check_membership = new Cluster*[pcm.m]();
 
-        //     for(int i =0; i<this->pcm.m; i++){
-        //         if(syndrome[i] == 1){
-        //             Cluster* cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership);
-        //             clusters.push_back(cl);
-        //             invalid_clusters.push_back(cl);
-        //         }
-        //     }
+            for(int i =0; i<this->pcm.m; i++){
+                if(syndrome[i] == 1){
+                    Cluster* cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership);
+                    clusters.push_back(cl);
+                    invalid_clusters.push_back(cl);
+                }
+            }
 
-        //     while(invalid_clusters.size()>0){
+            while(invalid_clusters.size()>0){
 
-        //         for(auto cl: invalid_clusters){
-        //             if(cl->active){
-        //                 cl->grow_cluster(bit_weights,bits_per_step);
-        //                 auto cluster_decoding = cl->invert_decode(syndrome,bit_weights);
-        //             }
-        //         }
+                for(auto cl: invalid_clusters){
+                    if(cl->active){
+                        cl->grow_cluster(bit_weights,bits_per_step);
+                        auto cluster_decoding = cl->invert_decode(syndrome,bit_weights);
+                    }
+                }
 
-        //         invalid_clusters.clear();
-        //         for(auto cl: clusters){
-        //             if(cl->active == true && cl->valid == false){
-        //                 invalid_clusters.push_back(cl);
-        //             }
-        //         }
+                // for(auto cl: invalid_clusters){
+                //     if(cl->active){
+                //         auto cluster_decoding = cl->invert_decode(syndrome,bit_weights);
+                //     }
+                // }
 
-        //         sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
+                invalid_clusters.clear();
+                for(auto cl: clusters){
+                    if(cl->active == true && cl->valid == false){
+                        invalid_clusters.push_back(cl);
+                    }
+                }
 
-        //     }
+                sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
 
-        //     for(auto cl: clusters){
-        //         if(cl->active){
-        //             for(int bit: cl->cluster_decoding) this->decoding[bit] = 1;
-        //         }
-        //         delete cl;
-        //     }
+            }
 
-        //     delete[] global_bit_membership;
-        //     delete[] global_check_membership;
+            for(auto cl: clusters){
+                if(cl->active){
+                    for(int bit: cl->cluster_decoding) this->decoding[bit] = 1;
+                }
+                delete cl;
+            }
 
-        //     // std::cout<<"hello from end of C++ function"<<std::endl;
+            delete[] global_bit_membership;
+            delete[] global_check_membership;
 
-        //     return this->decoding;
+            // std::cout<<"hello from end of C++ function"<<std::endl;
 
-        // }
+            return this->decoding;
+
+        }
 
         // std::vector<uint8_t>& bposd_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
 

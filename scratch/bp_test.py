@@ -1,4 +1,4 @@
-from ldpc.bf_decoder import bp_decoder
+from ldpc.belief_find_decoder import bp_decoder
 import numpy as np
 import scipy.sparse
 

@@ -3,7 +3,7 @@
 import numpy as np
 from scipy.sparse import spmatrix
 
-cdef class uf_decoder:
+cdef class UnionFindDecoder:
 
     def __cinit__(self,pcm, error_rate=None, error_channel=None, bits_per_step = 1):
 

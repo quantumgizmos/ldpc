@@ -2,6 +2,7 @@
 #include "udlr.hpp"
 #include "gf2codes.hpp"
 #include "union_find.hpp"
+#include "util.hpp"
 
 using namespace std;
 using namespace uf;
@@ -46,6 +47,29 @@ TEST(UfDecoder, weighted_cluster_growth) {
     auto expected_decoding = vector<uint8_t>{1,0,1,1,1,1,1};
     ASSERT_EQ(decoding,expected_decoding);
   
+
+}
+
+TEST(UfDecoder, HammingCode){
+
+    int m = 5;
+
+    auto pcm = gf2codes::hamming_code(m);
+
+    auto ufd = UfDecoder(pcm);
+
+    // auto syndrome = vector<uint8_t>(pcm.n,0);
+
+    for(int i = 0; i < std::pow(2,m); i++){
+
+        // udlr::sparse_matrix_util::print_vector(util::decimal_to_binary(i,m));
+
+        auto syndrome = util::decimal_to_binary(i,m);
+        auto decoding = ufd.matrix_decode(syndrome);
+        auto decoding_syndrome = pcm.mulvec(decoding);
+        ASSERT_EQ(decoding_syndrome,syndrome);
+
+    }
 
 }
 
