@@ -129,7 +129,7 @@ class bpcsr_decoder{
                 llr = log((1-error_rate)/error_rate);
             }
 
-            // udlr::sparse_matrix_util::print_vector(this->bit_to_check);
+            // ldpc::sparse_matrix_util::print_vector(this->bit_to_check);
 
             for(int iter = 1; iter<=this->max_iter; iter++){
 
@@ -192,7 +192,7 @@ class bpcsr_decoder{
                     else this->decoding[bit] = 0;
                 }
 
-                // udlr::sparse_matrix_util::print_vector(log_prob_ratios);
+                // ldpc::sparse_matrix_util::print_vector(log_prob_ratios);
                 this->pcm->mulvec(this->decoding,this->candidate_syndrome);
                 this->converge = true;
                 for(int i = 0; i<this->check_count; i++){
@@ -224,8 +224,8 @@ class bpcsr_decoder{
 
             }
 
-            // udlr::sparse_matrix_util::print_vector(syndrome);
-            // udlr::sparse_matrix_util::print_vector(candidate_syndrome);
+            // ldpc::sparse_matrix_util::print_vector(syndrome);
+            // ldpc::sparse_matrix_util::print_vector(candidate_syndrome);
 
 
             return this->decoding;

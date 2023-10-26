@@ -46,7 +46,7 @@ pip install -Ue
 This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
 ```
-pip install -U numpy scipy udlr
+pip install -U numpy scipy ldpc
 pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
@@ -126,12 +126,12 @@ H.toarray()
 
 # Calculating code properties
 
-Code properties can be calculated with the help of GF2 linear algebra functions in the `udlr.gf2sparse` package. This module is a Python wrapper for my *Up-Down-Left-Right* (UDLR) sparse matrix library written in C++ (this can be installed from https://github.com/qec-codes/udlr). See examples below
+Code properties can be calculated with the help of GF2 linear algebra functions in the `ldpc.gf2sparse` package. This module is a Python wrapper for my *Up-Down-Left-Right* (ldpc) sparse matrix library written in C++ (this can be installed from https://github.com/qec-codes/ldpc). See examples below
 
 
 ```python
 from ldpc.codes import hamming_code
-import udlr.gf2sparse as gf2sparse
+import ldpc.gf2sparse as gf2sparse
 
 # The rank 4 Hamming code
 H = hamming_code(4)
@@ -181,7 +181,7 @@ codeword_basis.toarray()
 # own linear algebra routines. Eg. we can write a rref function
 import scipy.sparse
 import numpy as np
-import udlr.gf2sparse as gf2sparse
+import ldpc.gf2sparse as gf2sparse
 from typing import Tuple,List
 from ldpc.codes import hamming_code
 
@@ -236,11 +236,11 @@ H_rref.toarray()
 
 
 
-The `udlr.gf2sparse` library is fast. E.g. the RREF of a $32,767$ bit Hamming code can be computed in $<1s$
+The `ldpc.gf2sparse` library is fast. E.g. the RREF of a $32,767$ bit Hamming code can be computed in $<1s$
 
 
 ```python
-import udlr.gf2sparse as gf2sparse
+import ldpc.gf2sparse as gf2sparse
 from ldpc.codes import hamming_code
 
 H = hamming_code(15)

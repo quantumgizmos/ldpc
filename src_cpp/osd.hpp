@@ -6,10 +6,11 @@
 #include <iterator>
 #include <cmath> 
 #include <limits>
+
 #include "bp.hpp"
-#include "udlr.hpp"
 #include "sort.hpp"
 #include "util.hpp"
+#include "gf2sparse_linalg.hpp"
 
 namespace ldpc::osd{
 
@@ -33,7 +34,7 @@ class OsdDecoder{
         std::vector<uint8_t> osdw_decoding;
         std::vector<std::vector<uint8_t>> osd_candidate_strings;
         std::vector<int> column_ordering;
-        udlr::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>* LuDecomposition;
+        ldpc::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>* LuDecomposition;
         
         OsdDecoder(
             ldpc::bp::BpSparse& parity_check_matrix,
@@ -61,7 +62,7 @@ class OsdDecoder{
             
             if(this->osd_method == OSD_OFF) return 0;
 
-            this->LuDecomposition = new udlr::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>(this->pcm);
+            this->LuDecomposition = new ldpc::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>(this->pcm);
             this->column_ordering.resize(this->pcm.n);
             int osd_candidate_string_count;
             this->LuDecomposition->rref(false,true); 
@@ -137,7 +138,7 @@ class OsdDecoder{
             }
 
             std::vector<int> non_pivot_columns;
-            std::vector<udlr::gf2sparse::GF2Entry*> delete_entries;
+            std::vector<ldpc::gf2sparse::GF2Entry*> delete_entries;
             for(int i = this->LuDecomposition->rank; i<this->pcm.n; i++){
                 int col = this->LuDecomposition->cols[i];
                 non_pivot_columns.push_back(col);

@@ -14,7 +14,8 @@
 #include <robin_map.h>
 #include <robin_set.h>
 
-#include "udlr.hpp"
+#include "gf2sparse_linalg.hpp"
+#include "bp.hpp"
 
 namespace ldpc::uf{
 
@@ -393,7 +394,7 @@ struct Cluster{
             cluster_syndrome.push_back(syndrome[check_index]);
         }
 
-        auto rr = udlr::gf2sparse_linalg::RowReduce(cluster_pcm);
+        auto rr = ldpc::gf2sparse_linalg::RowReduce(cluster_pcm);
         auto cluster_solution = rr.fast_solve(cluster_syndrome);
         
         auto candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution);
@@ -441,7 +442,7 @@ struct Cluster{
 
 
 
-            auto rr = udlr::gf2sparse_linalg::RowReduce(cluster_pcm);
+            auto rr = ldpc::gf2sparse_linalg::RowReduce(cluster_pcm);
             auto cluster_solution = rr.fast_solve(cluster_syndrome);
             
             auto candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution);
@@ -757,7 +758,7 @@ class UfDecoder{
 
 
             std::cout<<"HEllo3"<<std::endl;
-            udlr::sparse_matrix_util::print_vector(this->decoding);
+            ldpc::sparse_matrix_util::print_vector(this->decoding);
 
 
             return this->decoding;

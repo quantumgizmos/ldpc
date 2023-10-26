@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "bp.hpp"
-#include "udlr.hpp"
+#include "ldpc.hpp"
 #include "osd.hpp"
 #include "gf2codes.hpp"
 
@@ -41,14 +41,14 @@ TEST(OsdDecoder, PrintsCorrectly) {
     pcm.insert_entry(1, 0);
     pcm.insert_entry(2, 0);
 
-    // udlr::sparse_matrix_util::print_sparse_matrix(pcm);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     auto error = vector<uint8_t>{0, 1, 1, 1};
     auto error_channel = vector<double>{0.1,0.1,0.1,0.1};
     auto syndrome = pcm.mulvec(error);
 
     // cout<<endl;
-    // udlr::sparse_matrix_util::print_vector(syndrome);
+    // ldpc::sparse_matrix_util::print_vector(syndrome);
 
     // cout<<endl;
 
@@ -59,29 +59,29 @@ TEST(OsdDecoder, PrintsCorrectly) {
     auto syndrome2 = pcm.mulvec(decoding);
 
     // cout<<endl;
-    // udlr::sparse_matrix_util::print_vector(syndrome2);
+    // ldpc::sparse_matrix_util::print_vector(syndrome2);
 
     ASSERT_TRUE(syndrome == syndrome2);
 
 
-    auto LU = udlr::gf2sparse_linalg::RowReduce(pcm);
+    auto LU = ldpc::gf2sparse_linalg::RowReduce(pcm);
     LU.rref(false,true);
     LU.lu_solve(syndrome);
 
     auto syndrome3 = pcm.mulvec(decoding);
 
-    // udlr::sparse_matrix_util::print_vector(syndrome3);
-    // udlr::sparse_matrix_util::print_vector(LU.rows);
+    // ldpc::sparse_matrix_util::print_vector(syndrome3);
+    // ldpc::sparse_matrix_util::print_vector(LU.rows);
 
     auto LUpcm = LU.L.matmul(LU.U);
 
-    // udlr::sparse_matrix_util::print_sparse_matrix(LUpcm);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(LUpcm);
 
     // cout<<endl;
 
-    // udlr::sparse_matrix_util::print_sparse_matrix(LU.L);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(LU.L);
     // cout<<endl;
-    // udlr::sparse_matrix_util::print_sparse_matrix(LU.U);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(LU.U);
 
     ASSERT_TRUE(syndrome == syndrome3);
 
@@ -164,14 +164,14 @@ TEST(OsdDecoder, DecodeHammingCode) {
     pcm.insert_entry(1, 1); pcm.insert_entry(1, 2); pcm.insert_entry(1, 5); pcm.insert_entry(1, 6);
     pcm.insert_entry(2, 0); pcm.insert_entry(2, 2); pcm.insert_entry(2, 4); pcm.insert_entry(2, 6);
 
-    // udlr::sparse_matrix_util::print_sparse_matrix(pcm);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     // Create a received codeword with a single-bit error
     auto error = vector<uint8_t>{0, 1, 0, 1, 0, 1, 1};
     auto syndrome = vector<uint8_t>{0, 0, 0};
     pcm.mulvec(error, syndrome);
 
-    // udlr::sparse_matrix_util::print_vector(syndrome);
+    // ldpc::sparse_matrix_util::print_vector(syndrome);
 
     // Create a vector of log-likelihood ratios for the received codeword
     auto error_channel = vector<double>{0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
@@ -208,7 +208,7 @@ TEST(OsdDecoder, DecodeHammingCode) {
     // Verify that the decoded codeword is valid by computing the syndrome
     auto syndrome2 = vector<uint8_t>{0, 0, 0};
     pcm.mulvec(decoding, syndrome2);
-    // udlr::sparse_matrix_util::print_vector(decoding);
+    // ldpc::sparse_matrix_util::print_vector(decoding);
     for (int i = 0; i < 3; i++) {
         ASSERT_EQ(syndrome[i], syndrome2[i]);
     }

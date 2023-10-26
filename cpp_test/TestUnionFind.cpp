@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "udlr.hpp"
+#include "ldpc.hpp"
 #include "gf2codes.hpp"
 #include "union_find.hpp"
 #include "util.hpp"
@@ -11,7 +11,7 @@ using namespace ldpc::uf;
 TEST(UfDecoder, single_bit_error) {
 
     auto pcm1 = ldpc::gf2codes::ring_code(10);
-    // udlr::sparse_matrix_util::print_sparse_matrix(pcm1);
+    // ldpc::sparse_matrix_util::print_sparse_matrix(pcm1);
 
     auto ufd = UfDecoder(pcm1);
 
@@ -65,7 +65,7 @@ TEST(UfDecoder, weighted_cluster_growth) {
 
 //     for(int i = 0; i < std::pow(2,m); i++){
 
-//         udlr::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
+//         ldpc::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
 
 //         auto syndrome = ldpc::util::decimal_to_binary(i,m);
 //         bpd.decode(syndrome);
@@ -93,7 +93,7 @@ TEST(UfDecoder, HammingCode2){
 
     for(int i = 0; i < std::pow(2,m); i++){
 
-        // udlr::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
+        // ldpc::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
 
         auto syndrome = ldpc::util::decimal_to_binary(i,m);
         auto decoding = ufd.matrix_decode(syndrome);

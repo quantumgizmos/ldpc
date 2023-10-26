@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
-#include "udlr.hpp"
+#include "ldpc.hpp"
 #include "gf2codes.hpp"
 
 TEST(TestRepCode, init) {
 
     int n = 10;
     auto pcm = ldpc::gf2codes::rep_code(n);
-    udlr::sparse_matrix_util::print_sparse_matrix(pcm);
+    ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n,n);
     ASSERT_EQ(pcm.m,n-1);
@@ -26,7 +26,7 @@ TEST(TestRingCode, init) {
 
     int n = 10;
     auto pcm = ldpc::gf2codes::ring_code(n);
-    udlr::sparse_matrix_util::print_sparse_matrix(pcm);
+    ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n,n);
     ASSERT_EQ(pcm.m,n);
@@ -57,7 +57,7 @@ TEST(TestHammingCode, init) {
     int k = n - r;
 
     auto pcm = ldpc::gf2codes::hamming_code(r);
-    udlr::sparse_matrix_util::print_sparse_matrix(pcm);
+    ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n, n);
     ASSERT_EQ(pcm.m, r);

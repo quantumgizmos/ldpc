@@ -5,9 +5,10 @@
 #include <memory>
 #include <iterator>
 #include <cmath>
-#include "bp.hpp"
 #include <random>
 #include <chrono>
+
+#include "bp.hpp"
 #include "rng.hpp"
 
 

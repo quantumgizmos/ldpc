@@ -12,7 +12,8 @@
 #include <stdexcept> // required for std::runtime_error
 #include <set>
 
-#include "udlr.hpp"
+#include "sparse_matrix_base.hpp"
+#include "gf2sparse.hpp"
 #include "rng.hpp"
 
 namespace ldpc::bp{
@@ -29,7 +30,7 @@ enum BpSchedule{
 
 const std::vector<int> NULL_INT_VECTOR = {};
 
-class BpEntry: public udlr::sparse_matrix_base::EntryBase<BpEntry>{ 
+class BpEntry: public ldpc::sparse_matrix_base::EntryBase<BpEntry>{ 
     public:  
         double bit_to_check_msg=0.0;
         double check_to_bit_msg=0.0;
@@ -37,7 +38,7 @@ class BpEntry: public udlr::sparse_matrix_base::EntryBase<BpEntry>{
 };
 
 
-typedef udlr::gf2sparse::GF2Sparse<BpEntry> BpSparse;
+typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
 class BpDecoder{
@@ -594,19 +595,19 @@ class BpDecoder{
 
 //                     // cout<<"Iteration: "<<it<<"; Bit index: "<<unsigned(bit_index)<<endl;
 //                     // cout<<"Decoding: ";
-//                     // udlr::sparse_matrix_util::print_vector(decoding);
+//                     // ldpc::sparse_matrix_util::print_vector(decoding);
 //                     // cout<<"Log Prob Ratios: ";
-//                     // udlr::sparse_matrix_util::print_vector(log_prob_ratios);
+//                     // ldpc::sparse_matrix_util::print_vector(log_prob_ratios);
 //                     // cout<<"Syndrome: ";
-//                     // udlr::sparse_matrix_util::print_vector(syndrome);
+//                     // ldpc::sparse_matrix_util::print_vector(syndrome);
 //                     // cout<<"Soft Syndrome: ";
-//                     // udlr::sparse_matrix_util::print_vector(this->soft_syndrome);
+//                     // ldpc::sparse_matrix_util::print_vector(this->soft_syndrome);
 //                     // cout<<endl;
 
 //                 }
 
 //                 // cout<<"Soft Syndrome: ";
-//                 // udlr::sparse_matrix_util::print_vector(this->soft_syndrome);
+//                 // ldpc::sparse_matrix_util::print_vector(this->soft_syndrome);
 
             
             

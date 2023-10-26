@@ -117,7 +117,7 @@ for module in cpp_modules:
             sources=[f"src_python/ldpc/{module}/_{module}.pyx"],
             libraries=[],
             library_dirs=[],
-            include_dirs=[np.get_include(),'src_cpp', 'include/robin_map','include/udlr/src_cpp'],
+            include_dirs=[np.get_include(),'src_cpp', 'include/robin_map','include/ldpc/src_cpp'],
             extra_compile_args=compile_flags,
             extra_link_args=[],
             language="c++",

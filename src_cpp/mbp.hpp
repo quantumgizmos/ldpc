@@ -49,7 +49,7 @@ class mbp_sparse: public SparseMatrix<uint8_t,mbp_entry>{
         }
 
         int print(){
-            udlr::sparse_matrix_util::print_sparse_matrix(*this);
+            ldpc::sparse_matrix_util::print_sparse_matrix(*this);
             return 1;
         }
 

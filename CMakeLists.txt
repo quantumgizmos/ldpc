@@ -25,7 +25,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(ldpc INTERFACE)
 
 # Add the src_cpp and include directories to the include path for any target that links with ldpc
-target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/udlr/src_cpp)
+target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/rapidcsv)
 
 ### Executable Configuration
 
@@ -70,6 +70,12 @@ add_executable(TestFlipDecoder cpp_test/TestFlipDecoder.cpp)
 add_executable(TestGf2Codes cpp_test/TestGf2Codes.cpp)
 add_executable(TestUnionFind cpp_test/TestUnionFind.cpp)
 
+add_executable(TestSparseMatrix cpp_test/TestSparseMatrix.cpp)
+add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
+add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
+add_executable(TestGF2RowReduce cpp_test/TestGF2RowReduce.cpp)
+add_executable(TestGf2Linalg cpp_test/TestGf2Linalg.cpp)
+
 
 
 # Link the ldpc and gtest_main libraries to the test executables
@@ -80,7 +86,11 @@ target_link_libraries(TestFlipDecoder gtest_main ldpc)
 target_link_libraries(TestGf2Codes gtest_main ldpc)
 target_link_libraries(TestUnionFind gtest_main ldpc)
 
-
+target_link_libraries(TestSparseMatrix gtest_main ldpc)
+target_link_libraries(TestSparseMatrixUtil gtest_main ldpc)
+target_link_libraries(TestGF2Sparse gtest_main ldpc)
+target_link_libraries(TestGF2RowReduce gtest_main ldpc)
+target_link_libraries(TestGf2Linalg gtest_main ldpc)
 
 # Discover and run tests using GoogleTest
 gtest_discover_tests(TestBPDecoder)
@@ -88,5 +98,11 @@ gtest_discover_tests(TestOsdDecoder)
 gtest_discover_tests(TestFlipDecoder)
 gtest_discover_tests(TestGf2Codes)
 gtest_discover_tests(TestUnionFind)
+
+gtest_discover_tests(TestSparseMatrix)
+gtest_discover_tests(TestSparseMatrixUtil)
+gtest_discover_tests(TestGF2Sparse)
+gtest_discover_tests(TestGF2RowReduce)
+gtest_discover_tests(TestGf2Linalg)
 
 

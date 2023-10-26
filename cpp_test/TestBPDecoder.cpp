@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "udlr.hpp"
+#include "ldpc.hpp"
 #include "bp.hpp"
 #include "gf2codes.hpp"
 
@@ -27,7 +27,7 @@ TEST(BpSparse, init)
     }
 
     auto expected = "1 1 0\n0 1 1";
-    ASSERT_EQ(udlr::sparse_matrix_util::print_sparse_matrix(pcm, true).str(), expected);
+    ASSERT_EQ(ldpc::sparse_matrix_util::print_sparse_matrix(pcm, true).str(), expected);
 }
 
 TEST(BpDecoderTest, InitializationTest)
@@ -298,7 +298,7 @@ TEST(BpDecoder, min_sum_parallel){
     auto count = 0;
     for(auto syndrome: syndromes){
         auto decoding = decoder.decode(syndrome);
-        udlr::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
+        ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
         ASSERT_EQ(expected_decoding[count], decoding);
         count++;
     }
@@ -337,7 +337,7 @@ TEST(BpDecoder, min_sum_single_scan){
     auto count = 0;
     for(auto syndrome: syndromes){
         auto decoding = decoder.bp_decode_single_scan(syndrome);
-        udlr::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
+        ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
         ASSERT_EQ(expected_decoding[count], decoding);
         count++;
     }
