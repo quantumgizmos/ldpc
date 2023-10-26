@@ -53,6 +53,7 @@ struct Cluster{
     std::vector<int> matrix_to_cluster_check_map;
     tsl::robin_map<int,int> cluster_to_matrix_check_map;
 
+    Cluster() = default;
 
     Cluster(bp::BpSparse& parity_check_matrix, int syndrome_index, Cluster** ccm, Cluster** bcm):
         pcm(parity_check_matrix){
@@ -87,6 +88,10 @@ struct Cluster{
 
         std::vector<int> erase_boundary_check;
         this->candidate_bit_nodes.clear();
+
+        // std::cout<<"After candidate bits"<<std::endl;
+
+
         for(int check_index: boundary_check_nodes){
             bool erase = true;
             for(auto& e: this->pcm.iterate_row(check_index)){
@@ -97,6 +102,8 @@ struct Cluster{
             }
             if(erase) erase_boundary_check.push_back(check_index);
         }
+
+
 
         for(int check_index: erase_boundary_check){
             this->boundary_check_nodes.erase(check_index);
@@ -175,7 +182,9 @@ struct Cluster{
 
     int grow_cluster(const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 0){
         if(!this->active) return 0; 
+
         this->get_candidate_bit_nodes();
+
 
         this->merge_list.clear();
 
@@ -412,52 +421,95 @@ struct Cluster{
 
     }
 
-    // std::vector<int> bposd_decode(const std::vector<uint8_t>& syndrome){
-    //     auto cluster_pcm = this->convert_to_matrix();
-    //     std::vector<uint8_t> cluster_syndrome;
-    //     for(int check_index: check_nodes) cluster_syndrome.push_back(syndrome[check_index]);
-
-    //     std::vector<uint8_t> cluster_solution;
-    //     cluster_solution.resize(this->bit_nodes.size(),0);
+    std::vector<int> invert_decode2(const std::vector<uint8_t>& syndrome, std::vector<double>& bit_weights){
         
-    //     std::vector<double> bp_channel_probs;
-    //     bp_channel_probs.resize(cluster_pcm.n,0.05);
-
-    //     BPDecoder* bpd = new BPDecoder(cluster_pcm,bp_channel_probs,0,0,0,1);
-    //     bposd_decoder* bposd = new bposd_decoder(bpd,0,0);
+        auto cluster_pcm = this->convert_to_matrix(bit_weights);
         
-    //     cluster_solution = cluster_pcm.lu_solve(cluster_syndrome,cluster_solution);
-        
-        
-    //     std::vector<uint8_t> candidate_cluster_syndrome;
-    //     candidate_cluster_syndrome.resize(cluster_syndrome.size());
-    //     candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution,candidate_cluster_syndrome);
+        std::cout<<"After cluter pcm gen"<<std::endl;
 
-    //     bool equal = true;
-    //     for(int i =0; i<cluster_syndrome.size(); i++){
-    //         if(cluster_syndrome[i]!=candidate_cluster_syndrome[i]){
-    //             equal = false;
-    //             break;
-    //         }
-    //     }
+        std::vector<uint8_t> cluster_syndrome;
+        int synd_weight = 0;
+        for(int check_index: check_nodes){
+            cluster_syndrome.push_back(syndrome[check_index]);
+            synd_weight += syndrome[check_index];
+        }
 
-    //     this->cluster_decoding.clear();
-    //     this->valid = equal;
-    //     for(int i = 0; i<cluster_solution.size(); i++){
-    //         if(cluster_solution[i] == 1) this->cluster_decoding.push_back(this->matrix_to_cluster_bit_map[i]);
-    //     }
+        // std::cout<<"HEllo"<<std::endl;
 
-    //     delete bposd;
-    //     delete bpd;
-    //     delete cluster_pcm;
+        this->cluster_decoding.clear();
+        bool equal;
+        if(synd_weight > 0){
 
-    //     return this->cluster_decoding;
 
-    // }
+
+            auto rr = udlr::gf2sparse_linalg::RowReduce(cluster_pcm);
+            auto cluster_solution = rr.fast_solve(cluster_syndrome);
+            
+            auto candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution);
+
+
+
+            equal = true;
+            for(int i =0; i<cluster_syndrome.size(); i++){
+                if(cluster_syndrome[i]!=candidate_cluster_syndrome[i]){
+                    equal = false;
+                    break;
+                }
+            }
+
+
+            for(int i = 0; i<cluster_solution.size(); i++){
+                if(cluster_solution[i] == 1){
+                    this->cluster_decoding.push_back(this->matrix_to_cluster_bit_map[i]);
+                }
+            }
+
+        }
+        else{
+            equal = false;
+        }
+
+        this->valid = equal;
+
+
+        // std::cout<<"HEllo2"<<std::endl;
+
+
+        return this->cluster_decoding;
+
+    }
+
 
     void print();
 
 };
+
+
+Cluster* bit_cluster(bp::BpSparse& parity_check_matrix, int bit_index, Cluster** ccm, Cluster** bcm){
+
+    Cluster* cl = new Cluster(parity_check_matrix, bit_index, ccm, bcm);
+
+
+    cl->global_check_membership[bit_index] = NULL;
+    cl->global_bit_membership[bit_index] = cl;
+    cl->bit_nodes.insert(bit_index);
+    cl->check_nodes.clear();
+    cl->enclosed_syndromes.clear();
+    cl->boundary_check_nodes.clear();
+
+
+    for(auto& e: cl->pcm.iterate_column(bit_index)){
+        int check_index = e.row_index;
+        cl->check_nodes.insert(check_index);
+        cl->boundary_check_nodes.insert(check_index);
+        cl->global_check_membership[check_index] = cl;
+    }
+
+    return cl;
+
+}
+
+
 
 
 class UfDecoder{
@@ -588,62 +640,130 @@ class UfDecoder{
 
         }
 
-        // std::vector<uint8_t>& bposd_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
+        std::vector<uint8_t>& bit_cluster_decode(const std::vector<uint8_t>& syndrome, std::vector<double>& bit_weights, int bits_per_step = 1, int cluster_count = 10){
 
-        //     fill(this->decoding.begin(), this->decoding.end(), 0);
+            fill(this->decoding.begin(), this->decoding.end(), 0);
 
-        //     std::vector<Cluster*> clusters;
-        //     std::vector<Cluster*> invalid_clusters;
-        //     Cluster** global_bit_membership = new Cluster*[pcm.n]();
-        //     Cluster** global_check_membership = new Cluster*[pcm.m]();
+            std::vector<Cluster*> clusters;
+            std::vector<Cluster*> invalid_clusters;
+            Cluster** global_bit_membership = new Cluster*[pcm.n]();
+            Cluster** global_check_membership = new Cluster*[pcm.m]();
 
-        //     for(int i =0; i<this->pcm.m; i++){
-        //         if(syndrome[i] == 1){
-        //             Cluster* cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership);
-        //             clusters.push_back(cl);
-        //             invalid_clusters.push_back(cl);
-        //         }
-        //     }
+            std::vector<int> sparse_syndrome;
 
-        //     // std::cout<<"After cluster initialisation"<<std::endl;
-        //     int count = 0;
-        //     while(invalid_clusters.size()>0){
 
-        //         for(auto cl: invalid_clusters){
-        //             if(cl->active){
-        //                 cl->grow_cluster();
-        //                 if(count>2) auto cluster_decoding = cl->bposd_decode(syndrome);
-        //             }
-        //         }
+            for(int i =0; i<this->pcm.m; i++){
+                if(syndrome[i] == 1){
+                    sparse_syndrome.push_back(i);
+                }
+            }
 
-        //         invalid_clusters.clear();
-        //         for(auto cl: clusters){
-        //             if(cl->active == true && cl->valid == false){
-        //                 invalid_clusters.push_back(cl);
-        //             }
-        //         }
 
-        //         count++;
+            std::vector<int> col_indices;
+            for(int i = 0; i<this->pcm.n; i++){
+                col_indices.push_back(i);
+            }
 
-        //         sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
+            soft_decision_col_sort(bit_weights, col_indices, this->pcm.n);
 
-        //     }
+            int max_clusters = std::min(cluster_count, pcm.n);
 
-        //     for(auto cl: clusters){
-        //         if(cl->active){
-        //             for(int bit: cl->cluster_decoding) this->decoding[bit] = 1;
-        //         }
-        //         delete cl;
-        //     }
+            for(int i = 0; i < max_clusters; i++){
 
-        //     delete[] global_bit_membership;
-        //     delete[] global_check_membership;
+                int bit_index = col_indices[i];
 
-        //     // std::cout<<"hello from end of C++ function"<<std::endl;
+                Cluster* cl = new Cluster(this->pcm, bit_index, global_check_membership, global_bit_membership);
+                cl->active=true;
+                cl->valid=false;
+                cl->cluster_id = bit_index;
+                cl->boundary_check_nodes.clear();
+                cl->check_nodes.clear();
+                cl->enclosed_syndromes.clear();
+                cl->global_check_membership[bit_index] = NULL;
+                cl->global_bit_membership[bit_index] = cl;
 
-        //     return this->decoding;
+                clusters.push_back(cl);
+                invalid_clusters.push_back(cl);
 
-        // }
+            }
+
+            // while(invalid_clusters.size()>0){
+
+            //     for(auto cl: invalid_clusters){
+            //         if(cl->active){
+            //             std::cout<<cl<<std::endl;
+            //             cl->print();
+
+            //             cl->grow_cluster(bit_weights,bits_per_step);
+            //             std::cout<<"HEllo64"<<std::endl;
+
+            //             auto cluster_decoding = cl->invert_decode2(syndrome,bit_weights);
+            //              std::cout<<"HEllo66"<<std::endl;
+            //         }
+            //     }
+
+               
+
+            //     invalid_clusters.clear();
+            //     for(auto cl: clusters){
+            //         if(cl->active == true && cl->valid == false){
+            //             invalid_clusters.push_back(cl);
+            //         }
+            //     }
+
+
+
+            //     sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
+
+            //     bool exit_while = true;
+            //     for(auto synd_index: sparse_syndrome){
+            //         auto cl = global_check_membership[synd_index];
+            //         if(cl==NULL){
+            //             exit_while = false;
+            //         }
+            //         else if (cl->valid == false){
+            //             exit_while = false;
+            //         }
+                    
+            //     }
+
+
+
+            //     if(exit_while) break;
+
+
+
+            // }
+
+
+
+
+            for(auto cl: clusters){
+                if(cl->active){
+                    for(int bit: cl->cluster_decoding) this->decoding[bit] = 1;
+                }
+                // delete cl;
+            }
+
+
+            std::cout<<"HEllo7"<<std::endl;
+
+
+            // delete[] global_bit_membership;
+            // delete[] global_check_membership;
+
+            // std::cout<<"hello from end of C++ function"<<std::endl;
+
+
+
+
+            std::cout<<"HEllo3"<<std::endl;
+            udlr::sparse_matrix_util::print_vector(this->decoding);
+
+
+            return this->decoding;
+
+        }
 
 };
 

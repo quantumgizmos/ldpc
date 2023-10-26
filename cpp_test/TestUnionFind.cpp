@@ -3,6 +3,7 @@
 #include "gf2codes.hpp"
 #include "union_find.hpp"
 #include "util.hpp"
+#include "bp.hpp"
 
 using namespace std;
 using namespace uf;
@@ -51,6 +52,36 @@ TEST(UfDecoder, weighted_cluster_growth) {
 }
 
 TEST(UfDecoder, HammingCode){
+
+    int m = 3;
+
+    auto pcm = gf2codes::hamming_code(m);
+
+    auto ufd = UfDecoder(pcm);
+    auto error_channel = std::vector<double>(pcm.n,0.1);
+    auto bpd = bp::BpDecoder(pcm,error_channel,pcm.n,bp::MINIMUM_SUM,bp::PARALLEL,0.9);
+
+    // auto syndrome = vector<uint8_t>(pcm.n,0);
+
+    for(int i = 0; i < std::pow(2,m); i++){
+
+        udlr::sparse_matrix_util::print_vector(util::decimal_to_binary(i,m));
+
+        auto syndrome = util::decimal_to_binary(i,m);
+        bpd.decode(syndrome);
+        auto decoding = ufd.bit_cluster_decode(syndrome,bpd.log_prob_ratios,1,3);
+
+        auto decoding_syndrome = pcm.mulvec(decoding);
+        ASSERT_EQ(decoding_syndrome,syndrome);
+        std::cout<<"HEllo55"<<std::endl;
+
+
+    }
+
+}
+
+
+TEST(UfDecoder, HammingCode2){
 
     int m = 5;
 
