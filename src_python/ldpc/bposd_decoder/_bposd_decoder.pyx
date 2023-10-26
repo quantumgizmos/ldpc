@@ -556,4 +556,4 @@ cdef class BpOsdDecoder(BpDecoderBase):
 #             out[i] = self.osdD.osdw_decoding[i]
 #         return out
 
-bposd_decoder = BpOsdDecoder
+# bposd_decoder = BpOsdDecoder

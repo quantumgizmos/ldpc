@@ -77,8 +77,13 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 
 cdef class BpDecoderBase:
 
-    def __init__(self,pcm, **kwargs):
-        pass
+    """
+    Bp Decoder base class
+    """
+
+
+    # def __init__(self,pcm, **kwargs):
+    #     pass
 
     def __cinit__(self,pcm, **kwargs):
 

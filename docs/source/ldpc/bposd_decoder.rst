@@ -1,8 +1,7 @@
 BP+OSD Decoder
 ==============
 
-.. autoclass:: ldpc.bposd_decoder.BpOsdDecoder
+.. autoclass:: ldpc.bposd_decoder
    :members:
-   :inherited-members:
-   :undoc-members:
    :show-inheritance:
+   :noindex:

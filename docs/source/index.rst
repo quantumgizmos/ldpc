@@ -15,6 +15,8 @@ Welcome to LDPC's documentation!
    ldpc/bp_decoder
    ldpc/bposd_decoder
    ldpc/monte_carlo_simulation
+   ldpc/belief_find_decoder
+
 
 
 

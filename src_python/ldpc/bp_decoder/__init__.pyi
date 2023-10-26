@@ -4,6 +4,11 @@ from typing import Optional, List, Union
 import warnings
 def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 class BpDecoderBase:
+    """
+    Bp Decoder base class
+    """
+
+
     def __init__(self,pcm, **kwargs):
         """
         Docstring test
