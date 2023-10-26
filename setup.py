@@ -104,7 +104,7 @@ else:
 
 this_directory = Path(__file__).parent
 
-cpp_modules = ["bp_decoder", "bposd_decoder", "bp_flip", "belief_find_decoder"]
+cpp_modules = ["bp_decoder", "bposd_decoder", "bp_flip", "belief_find_decoder", "gf2sparse"]
 
 c_extensions = []
 for module in cpp_modules:
