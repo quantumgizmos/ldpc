@@ -15,7 +15,7 @@
 #include "udlr.hpp"
 #include "rng.hpp"
 
-namespace bp{
+namespace ldpc::bp{
 
 enum BpMethod{
     PRODUCT_SUM = 0,
@@ -62,7 +62,7 @@ class BpDecoder{
         bool converge;
         int random_schedule_seed;
         bool random_schedule_at_every_iteration;
-        rng::RandomListShuffle<int> rng_list_shuffle; 
+        ldpc::rng::RandomListShuffle<int> rng_list_shuffle; 
 
         BpDecoder(
             BpSparse& parity_check_matrix,

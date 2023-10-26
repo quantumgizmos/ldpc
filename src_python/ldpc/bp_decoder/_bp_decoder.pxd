@@ -6,7 +6,7 @@ from libcpp.vector cimport vector
 cimport numpy as np
 ctypedef np.uint8_t uint8_t
 
-cdef extern from "bp.hpp" namespace "bp":
+cdef extern from "bp.hpp" namespace "ldpc::bp":
     
     cdef const vector[int] NULL_INT_VECTOR
 
@@ -18,11 +18,11 @@ cdef extern from "bp.hpp" namespace "bp":
         SERIAL = 0
         PARALLEL = 1
 
-    cdef cppclass BpEntry "bp::BpEntry":
+    cdef cppclass BpEntry "ldpc::bp::BpEntry":
         BpEntry() except +
         bool at_end()
 
-    cdef cppclass BpSparse "bp::BpSparse":
+    cdef cppclass BpSparse "ldpc::bp::BpSparse":
         int m
         int n
         BpSparse() except +
@@ -35,7 +35,7 @@ cdef extern from "bp.hpp" namespace "bp":
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
 
-    cdef cppclass BpDecoderCpp "bp::BpDecoder":
+    cdef cppclass BpDecoderCpp "ldpc::bp::BpDecoder":
             BpDecoderCpp(
                 BpSparse& parity_check_matrix,
                 vector[double] channel_probabilities,

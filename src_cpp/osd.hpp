@@ -11,7 +11,7 @@
 #include "sort.hpp"
 #include "util.hpp"
 
-namespace osd{
+namespace ldpc::osd{
 
 
 enum OsdMethod{
@@ -27,16 +27,16 @@ class OsdDecoder{
         OsdMethod osd_method;
         int osd_order;
         int k, bit_count, check_count;
-        bp::BpSparse& pcm;
+        ldpc::bp::BpSparse& pcm;
         std::vector<double>& channel_probabilities;
         std::vector<uint8_t> osd0_decoding;
         std::vector<uint8_t> osdw_decoding;
         std::vector<std::vector<uint8_t>> osd_candidate_strings;
         std::vector<int> column_ordering;
-        udlr::gf2sparse_linalg::RowReduce<bp::BpEntry>* LuDecomposition;
+        udlr::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>* LuDecomposition;
         
         OsdDecoder(
-            bp::BpSparse& parity_check_matrix,
+            ldpc::bp::BpSparse& parity_check_matrix,
             OsdMethod osd_method,
             int osd_order,
             std::vector<double>& channel_probs):
@@ -61,7 +61,7 @@ class OsdDecoder{
             
             if(this->osd_method == OSD_OFF) return 0;
 
-            this->LuDecomposition = new udlr::gf2sparse_linalg::RowReduce<bp::BpEntry>(this->pcm);
+            this->LuDecomposition = new udlr::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>(this->pcm);
             this->column_ordering.resize(this->pcm.n);
             int osd_candidate_string_count;
             this->LuDecomposition->rref(false,true); 
@@ -74,7 +74,7 @@ class OsdDecoder{
             if(this->osd_method == EXHAUSTIVE){
                 osd_candidate_string_count = pow(2,this->osd_order);
                 for(int i=1; i<osd_candidate_string_count; i++){
-                    this->osd_candidate_strings.push_back(util::decimal_to_binary_reverse(i,k));
+                    this->osd_candidate_strings.push_back(ldpc::util::decimal_to_binary_reverse(i,k));
                 }
             }
 
@@ -108,7 +108,7 @@ class OsdDecoder{
 
         std::vector<uint8_t>& decode(std::vector<uint8_t>& syndrome, std::vector<double>& log_prob_ratios) {
 
-            soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
+            ldpc::sort::soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
 
             if(this->osd_order == 0){
                 this->osd0_decoding = this->osdw_decoding =  this->LuDecomposition->fast_solve(syndrome,this->column_ordering);

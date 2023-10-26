@@ -13,7 +13,7 @@
 #include "rng.hpp"
 #include "util.hpp"
 
-namespace ssf{
+namespace ldpc::ssf{
 
 int hamming_weight(vector<uint8_t> v){
     int count = 0;
@@ -36,7 +36,7 @@ public:
     map<int,vector<uint8_t>> lookup_table;
     
         
-    SsfCluster(shared_ptr<bp::BpSparse> pcm, int check_node){
+    SsfCluster(shared_ptr<ldpc::bp::BpSparse> pcm, int check_node){
 
         set<int> bit_nodes;
         set<int> check_nodes;
@@ -104,19 +104,19 @@ private:
 
 public:
 
-    shared_ptr<bp::BpSparse> pcm;
+    shared_ptr<ldpc::bp::BpSparse> pcm;
     int bit_count;
     int check_count;
     int converge;
     int iterations;
     int max_iter;
 
-    // vector<shared_ptr<bp::BpSparse>> stab_clusters;
+    // vector<shared_ptr<ldpc::bp::BpSparse>> stab_clusters;
 
     vector<uint8_t> syndrome;
     vector<uint8_t> decoding;
 
-    SmallSetFlipDecoder(shared_ptr<bp::BpSparse> pcm, int max_iter=0)
+    SmallSetFlipDecoder(shared_ptr<ldpc::bp::BpSparse> pcm, int max_iter=0)
     {
         this->pcm = pcm;
         this->max_iter = max_iter;

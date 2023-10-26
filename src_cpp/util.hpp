@@ -6,8 +6,7 @@
 #include <iterator>
 #include <cmath> 
 
-
-namespace util{
+namespace ldpc::util{
 
 std::vector<uint8_t> decimal_to_binary(int decimal_nubmer,int binary_string_length, bool reverse=false)
 {
@@ -48,6 +47,5 @@ int binary_to_decimal(std::vector<uint8_t> binary_number)
 
 
 }//end namespace util
-
 
 #endif

@@ -1,6 +1,9 @@
 #ifndef SORT_H
 #define SORT_H
 
+namespace ldpc::sort{
+
+
 struct str
 {
     double value;
@@ -68,6 +71,7 @@ void soft_decision_col_sort(std::vector<double>& soft_decisions, std::vector<int
 //https://stackoverflow.com/a/36714204
 //Integer sort version Modified slighty to sort indices in ascending order.
 
+} //end namespace ldpc::sort
 
 
 #endif

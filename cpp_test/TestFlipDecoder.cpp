@@ -7,7 +7,7 @@ using namespace std;
 
 TEST(TestFlipDecoder, single_bit_errors) {
 
-    auto pcm = bp::BpSparse(4, 8);
+    auto pcm = ldpc::bp::BpSparse(4, 8);
     pcm.insert_entry(0, 1), pcm.insert_entry(0, 2), pcm.insert_entry(0, 3), pcm.insert_entry(0, 4),
     pcm.insert_entry(1, 0), pcm.insert_entry(1, 2), pcm.insert_entry(1, 3), pcm.insert_entry(1, 5),
     pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
@@ -15,7 +15,7 @@ TEST(TestFlipDecoder, single_bit_errors) {
 
     udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
-    auto flipD = new flip::FlipDecoder(pcm, 8);
+    auto flipD = new ldpc::flip::FlipDecoder(pcm, 8);
 
 
     cout<<endl;
@@ -56,7 +56,7 @@ TEST(TestFlipDecoder, single_bit_errors) {
 
 TEST(TestFlipDecoder, two_bit_errors) {
 
-    auto pcm = bp::BpSparse(4, 8);
+    auto pcm = ldpc::bp::BpSparse(4, 8);
     pcm.insert_entry(0, 1), pcm.insert_entry(0, 2), pcm.insert_entry(0, 3), pcm.insert_entry(0, 4),
     pcm.insert_entry(1, 0), pcm.insert_entry(1, 2), pcm.insert_entry(1, 3), pcm.insert_entry(1, 5),
     pcm.insert_entry(2, 0), pcm.insert_entry(2, 1), pcm.insert_entry(2, 3), pcm.insert_entry(2, 6),
@@ -64,7 +64,7 @@ TEST(TestFlipDecoder, two_bit_errors) {
 
     udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
-    auto flipD = new flip::FlipDecoder(pcm, 8);
+    auto flipD = new ldpc::flip::FlipDecoder(pcm, 8);
 
     vector<vector<int>> error_locations;
     for(int i = 0; i<pcm.n; i++){

@@ -16,8 +16,7 @@
 
 #include "udlr.hpp"
 
-
-namespace uf{
+namespace ldpc::uf{
 
 const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
@@ -30,7 +29,7 @@ std::vector<int> sort_indices(std::vector<double>& B){
 
 
 struct Cluster{
-    bp::BpSparse& pcm;
+    ldpc::bp::BpSparse& pcm;
     int cluster_id;
     bool active;
     bool valid;
@@ -55,7 +54,7 @@ struct Cluster{
 
     Cluster() = default;
 
-    Cluster(bp::BpSparse& parity_check_matrix, int syndrome_index, Cluster** ccm, Cluster** bcm):
+    Cluster(ldpc::bp::BpSparse& parity_check_matrix, int syndrome_index, Cluster** ccm, Cluster** bcm):
         pcm(parity_check_matrix){
         
         this->active=true;
@@ -324,7 +323,7 @@ struct Cluster{
         return erasure;
     }
 
-    bp::BpSparse convert_to_matrix(const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
+    ldpc::bp::BpSparse convert_to_matrix(const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR){
 
         this->matrix_to_cluster_bit_map.clear();
         this->matrix_to_cluster_check_map.clear();
@@ -367,7 +366,7 @@ struct Cluster{
             count++;
         }
 
-        auto cluster_pcm = bp::BpSparse(this->check_nodes.size(),this->bit_nodes.size());
+        auto cluster_pcm = ldpc::bp::BpSparse(this->check_nodes.size(),this->bit_nodes.size());
 
         for(int check_index: this->check_nodes){
             for(auto& e: this->pcm.iterate_row(check_index)){
@@ -485,7 +484,7 @@ struct Cluster{
 };
 
 
-Cluster* bit_cluster(bp::BpSparse& parity_check_matrix, int bit_index, Cluster** ccm, Cluster** bcm){
+Cluster* bit_cluster(ldpc::bp::BpSparse& parity_check_matrix, int bit_index, Cluster** ccm, Cluster** bcm){
 
     Cluster* cl = new Cluster(parity_check_matrix, bit_index, ccm, bcm);
 
@@ -516,13 +515,13 @@ class UfDecoder{
 
     private:
         bool weighted;
-        bp::BpSparse& pcm;
+        ldpc::bp::BpSparse& pcm;
 
     public:
         std::vector<uint8_t> decoding;
         int bit_count;
         int check_count;
-        UfDecoder(bp::BpSparse& parity_check_matrix): pcm(parity_check_matrix){
+        UfDecoder(ldpc::bp::BpSparse& parity_check_matrix): pcm(parity_check_matrix){
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
@@ -561,7 +560,7 @@ class UfDecoder{
                     }
                 }
 
-                sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
+                std::sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
 
             }
 
@@ -620,7 +619,7 @@ class UfDecoder{
                     }
                 }
 
-                sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
+                std::sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
 
             }
 
@@ -664,7 +663,7 @@ class UfDecoder{
                 col_indices.push_back(i);
             }
 
-            soft_decision_col_sort(bit_weights, col_indices, this->pcm.n);
+            ldpc::sort::soft_decision_col_sort(bit_weights, col_indices, this->pcm.n);
 
             int max_clusters = std::min(cluster_count, pcm.n);
 

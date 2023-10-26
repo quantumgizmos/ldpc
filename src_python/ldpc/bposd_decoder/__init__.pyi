@@ -40,7 +40,7 @@ class BpOsdDecoder(BpDecoderBase):
 
     Notes
     -----
-    This class makes use of the C++ module `osd::OsdDecoderCpp` for implementing the OSD decoder. The `__cinit__` method
+    This class makes use of the C++ module `ldpc::osd::OsdDecoderCpp` for implementing the OSD decoder. The `__cinit__` method
     initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__del__`
     method deallocates memory if it has been allocated.
     """

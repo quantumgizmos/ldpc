@@ -7,9 +7,9 @@ cimport numpy as np
 from ldpc.bp_decoder cimport BpSparse, BpDecoderBase
 ctypedef np.uint8_t uint8_t
 
-cdef extern from "flip.hpp" namespace "flip" nogil:
+cdef extern from "flip.hpp" namespace "ldpc::flip" nogil:
 
-    cdef cppclass FlipDecoderCpp "flip::FlipDecoder":
+    cdef cppclass FlipDecoderCpp "ldpc::flip::FlipDecoder":
         FlipDecoderCpp(BpSparse& pcm, int max_iter, int pfreq, int seed) except +
         vector[uint8_t]& decode(vector[uint8_t]& syndrome)
         vector[uint8_t] decoding

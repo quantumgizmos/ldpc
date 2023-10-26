@@ -14,7 +14,7 @@ using namespace std;
 
 //     //Setup repetition code
 //     int N = 4;
-//     auto pcm = bp::BpSparse::New(N-1, N);
+//     auto pcm = ldpc::bp::BpSparse::New(N-1, N);
 //     for(int i = 0; i<N-1; i++){
 //         pcm->insert_entry(i, i);
 //         pcm->insert_entry(i,i+1);
@@ -22,7 +22,7 @@ using namespace std;
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
-//     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+//     auto bpd = new ldpc::bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
 //     for (int j = 0; j<(N-1); j++){
         
@@ -72,7 +72,7 @@ using namespace std;
 
 //     //Setup repetition code
 //     int N = 3;
-//     auto pcm = bp::BpSparse::New(N, N);
+//     auto pcm = ldpc::bp::BpSparse::New(N, N);
 //     for(int i = 0; i<N; i++){
 //         pcm->insert_entry(i, i);
 //         pcm->insert_entry(i,(i+1)%N);
@@ -82,7 +82,7 @@ using namespace std;
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
-//     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+//     auto bpd = new ldpc::bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
 //     vector<double> soft_syndrome(pcm->m,2);
 //     soft_syndrome[0]=-1;
@@ -110,7 +110,7 @@ using namespace std;
 
 //     //Setup repetition code
 //     int N = 3;
-//     auto pcm = bp::BpSparse::New(N, N);
+//     auto pcm = ldpc::bp::BpSparse::New(N, N);
 //     for(int i = 0; i<N; i++){
 //         pcm->insert_entry(i, i);
 //         pcm->insert_entry(i,(i+1)%N);
@@ -120,7 +120,7 @@ using namespace std;
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
-//     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+//     auto bpd = new ldpc::bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
 //     vector<double> soft_syndrome = {-20,2,20};
 //     double cutoff = 10;
@@ -145,7 +145,7 @@ using namespace std;
 
 //     //Setup repetition code
 //     int N = 20;
-//     auto pcm = bp::BpSparse::New(N, N);
+//     auto pcm = ldpc::bp::BpSparse::New(N, N);
 //     for(int i = 0; i<N; i++){
 //         pcm->insert_entry(i, i);
 //         pcm->insert_entry(i,(i+1)%N);
@@ -155,7 +155,7 @@ using namespace std;
 
 //     vector<double> error_channel(pcm->n,0.1);
 //     //could we come up with a sum product formulation for this?
-//     auto bpd = new bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
+//     auto bpd = new ldpc::bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
 
 //     vector<double> soft_syndrome(pcm->m,100);
 //     soft_syndrome[0]=-100;

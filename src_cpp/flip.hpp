@@ -10,14 +10,15 @@
 #include <chrono>
 #include "rng.hpp"
 
-namespace flip{
+
+namespace ldpc::flip{
 
 class FlipDecoder
 {
 
 public:
 
-    bp::BpSparse& pcm;
+    ldpc::bp::BpSparse& pcm;
     int bit_count;
     int check_count;
     int converge;
@@ -25,11 +26,11 @@ public:
     int max_iter;
     int pfreq;
     int seed;
-    rng::RandomNumberGenerator* RNG;
+    ldpc::rng::RandomNumberGenerator* RNG;
     std::vector<uint8_t> syndrome;
     std::vector<uint8_t> decoding;
 
-    FlipDecoder(bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
+    FlipDecoder(ldpc::bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
         pcm(pcm)
     {
         this->max_iter = max_iter;
@@ -38,10 +39,10 @@ public:
         if(this->pfreq == 0) this->pfreq = std::numeric_limits<int>::max();
         this->seed = seed;
         if (this->seed == 0){
-            this->RNG = new rng::RandomNumberGenerator();
+            this->RNG = new ldpc::rng::RandomNumberGenerator();
         }
         else{
-            this->RNG = new rng::RandomNumberGenerator(this->seed);
+            this->RNG = new ldpc::rng::RandomNumberGenerator(this->seed);
             }
         this->check_count = this->pcm.m;
         this->bit_count = this->pcm.n;

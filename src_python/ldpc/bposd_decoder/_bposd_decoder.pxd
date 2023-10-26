@@ -7,7 +7,7 @@ cimport numpy as np
 from ldpc.bp_decoder cimport BpSparse, BpDecoderBase
 ctypedef np.uint8_t uint8_t
 
-cdef extern from "osd.hpp" namespace "osd" nogil:
+cdef extern from "osd.hpp" namespace "ldpc::osd" nogil:
 
     cdef enum OsdMethod:
         OSD_OFF = 0
@@ -15,7 +15,7 @@ cdef extern from "osd.hpp" namespace "osd" nogil:
         EXHAUSTIVE = 2
         COMBINATION_SWEEP = 3
 
-    cdef cppclass OsdDecoderCpp "osd::OsdDecoder":
+    cdef cppclass OsdDecoderCpp "ldpc::osd::OsdDecoder":
         OsdDecoderCpp(BpSparse& parity_check_matrix, OsdMethod osd_method, int osd_order, vector[double] channel_probabilities) except +
         vector[uint8_t]& decode(vector[uint8_t]& syndrome, vector[double]& log_prob_ratios)
         vector[uint8_t] osd0_decoding

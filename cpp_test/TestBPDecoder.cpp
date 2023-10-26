@@ -7,7 +7,7 @@ using namespace std;
 
 TEST(BpEntry, init)
 {
-    auto e = bp::BpEntry();
+    auto e = ldpc::bp::BpEntry();
     ASSERT_EQ(e.row_index, -100);
     ASSERT_EQ(e.col_index, -100);
     ASSERT_EQ(e.at_end(), true);
@@ -19,7 +19,7 @@ TEST(BpSparse, init)
 {
 
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -34,7 +34,7 @@ TEST(BpDecoderTest, InitializationTest)
 {
     // Define input arguments for initialization
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -44,7 +44,7 @@ TEST(BpDecoderTest, InitializationTest)
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterationsations);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterationsations);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm.gf2_equal(pcm));
@@ -54,8 +54,8 @@ TEST(BpDecoderTest, InitializationTest)
     EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
     EXPECT_EQ(maximum_iterationsations, decoder.maximum_iterations);
     EXPECT_EQ(0.625, decoder.ms_scaling_factor);
-    EXPECT_EQ(bp::PRODUCT_SUM, decoder.bp_method);
-    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(ldpc::bp::PRODUCT_SUM, decoder.bp_method);
+    EXPECT_EQ(ldpc::bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
 }
 
@@ -63,7 +63,7 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
 {
     // Define input arguments for initialization
     int n = 4;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -73,15 +73,15 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest)
     auto channel_probabilities = vector<double>{0.1, 0.2, 0.3, 0.4};
 
     // Define optional input parameters
-    bp::BpMethod bp_method = bp::MINIMUM_SUM;
+    ldpc::bp::BpMethod bp_method = ldpc::bp::MINIMUM_SUM;
     double min_sum_scaling_factor = 0.5;
-    bp::BpSchedule bp_schedule = bp::SERIAL;
+    ldpc::bp::BpSchedule bp_schedule = ldpc::bp::SERIAL;
     int omp_threads = 4;
     vector<int> serial_schedule{1, 3, 0, 2};
     int random_schedule = 0;
 
     // Initialize decoder using input arguments and optional parameters
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp_method, bp_schedule, min_sum_scaling_factor, omp_threads, serial_schedule, random_schedule);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp_method, bp_schedule, min_sum_scaling_factor, omp_threads, serial_schedule, random_schedule);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -101,7 +101,7 @@ TEST(BpDecoderTest, InitialiseLogDomainBpTest)
 {
     // Define input arguments for initialization
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -111,7 +111,7 @@ TEST(BpDecoderTest, InitialiseLogDomainBpTest)
     auto channel_probabilities = vector<double>{0.1, 0.2, 0.3};
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations);
 
     // Call initialise_log_domain_bp() function
     decoder.initialise_log_domain_bp();
@@ -132,7 +132,7 @@ TEST(BpDecoderTest, InitialiseLogDomainBpTest)
 TEST(BpDecoder, product_sum_parallel){
     
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -142,7 +142,7 @@ TEST(BpDecoder, product_sum_parallel){
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::PRODUCT_SUM,bp::PARALLEL,79879879);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,ldpc::bp::PRODUCT_SUM,ldpc::bp::PARALLEL,79879879);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -152,7 +152,7 @@ TEST(BpDecoder, product_sum_parallel){
     EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
     EXPECT_EQ(79879879, decoder.ms_scaling_factor);
     EXPECT_EQ(0, decoder.bp_method);
-    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(ldpc::bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
@@ -169,7 +169,7 @@ TEST(BpDecoder, product_sum_parallel){
 
 TEST(BpDecoder, ProdSumParallel_RepetitionCode5) {
     int n = 5;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++) {
         pcm.insert_entry(i, i);
         pcm.insert_entry(i, (i + 1) % n);
@@ -178,7 +178,7 @@ TEST(BpDecoder, ProdSumParallel_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::PRODUCT_SUM, bp::PARALLEL,4324234);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::PARALLEL,4324234);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -194,7 +194,7 @@ TEST(BpDecoder, ProdSumParallel_RepetitionCode5) {
 
 TEST(BpDecoder, MinSum_RepetitionCode5) {
     int n = 5;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++) {
         pcm.insert_entry(i, i);
         pcm.insert_entry(i, (i + 1) % n);
@@ -203,7 +203,7 @@ TEST(BpDecoder, MinSum_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::MINIMUM_SUM, bp::PARALLEL, 1);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 1);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -219,7 +219,7 @@ TEST(BpDecoder, MinSum_RepetitionCode5) {
 
 TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
     int n = 5;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++) {
         pcm.insert_entry(i, i);
         pcm.insert_entry(i, (i + 1) % n);
@@ -228,7 +228,7 @@ TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::PRODUCT_SUM, bp::SERIAL, 4324234);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 4324234);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -244,7 +244,7 @@ TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
 
 TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
     int n = 5;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++) {
         pcm.insert_entry(i, i);
         pcm.insert_entry(i, (i + 1) % n);
@@ -253,7 +253,7 @@ TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp::MINIMUM_SUM, bp::SERIAL,1);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL,1);
 
     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 1, 0, 1}, {1, 0, 1, 0}, {1, 1, 1, 1}};
     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 1, 1, 0}, {0, 1, 1, 0, 0}, {0, 1, 0, 1, 0}};
@@ -269,7 +269,7 @@ TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
 TEST(BpDecoder, min_sum_parallel){
     
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -279,7 +279,7 @@ TEST(BpDecoder, min_sum_parallel){
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM, bp::PARALLEL,0.625);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL,0.625);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -289,7 +289,7 @@ TEST(BpDecoder, min_sum_parallel){
     EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
     EXPECT_EQ(0.625, decoder.ms_scaling_factor);
     EXPECT_EQ(1, decoder.bp_method);
-    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(ldpc::bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
@@ -308,7 +308,7 @@ TEST(BpDecoder, min_sum_parallel){
 TEST(BpDecoder, min_sum_single_scan){
     
     int n = 3;
-    auto pcm = bp::BpSparse(n - 1, n);
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
     for (int i = 0; i < (n - 1); i++)
     {
         pcm.insert_entry(i, i);
@@ -318,7 +318,7 @@ TEST(BpDecoder, min_sum_single_scan){
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
     // Initialize decoder using input arguments
-    auto decoder = bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,bp::MINIMUM_SUM, bp::PARALLEL,0.625);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations,ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL,0.625);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -328,7 +328,7 @@ TEST(BpDecoder, min_sum_single_scan){
     EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
     EXPECT_EQ(0.625, decoder.ms_scaling_factor);
     EXPECT_EQ(1, decoder.bp_method);
-    EXPECT_EQ(bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(ldpc::bp::PARALLEL, decoder.schedule);
     EXPECT_EQ(1, decoder.omp_thread_count);
 
     auto syndromes = vector<vector<uint8_t>>{{0,0},{0,1},{1,0},{1,1}};
@@ -347,8 +347,8 @@ TEST(BpDecoder, min_sum_single_scan){
 TEST(BpDecoder, random_schedule_seed){
 
     {
-        auto pcm = gf2codes::rep_code(3);
-        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
+        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
         auto expected_order = vector<int>{2,3,1};
         ASSERT_EQ(bpd.random_schedule_seed,-1);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
@@ -356,8 +356,8 @@ TEST(BpDecoder, random_schedule_seed){
     }
 
     {
-        auto pcm = gf2codes::rep_code(3);
-        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, bp::NULL_INT_VECTOR, 0);
+        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
         auto expected_order = vector<int>{0,1,2};
         ASSERT_EQ(bpd.random_schedule_seed,0);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
@@ -365,8 +365,8 @@ TEST(BpDecoder, random_schedule_seed){
     }
 
     {
-        auto pcm = gf2codes::rep_code(3);
-        auto bpd = bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, bp::MINIMUM_SUM, bp::SERIAL, 0.625, 1, bp::NULL_INT_VECTOR, 4);
+        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
         auto expected_order = vector<int>{0,1,2};
         ASSERT_EQ(bpd.random_schedule_seed,4);
         // ASSERT_EQ(expected_order, bpd.serial_schedule_order);

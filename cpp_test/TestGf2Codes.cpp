@@ -5,7 +5,7 @@
 TEST(TestRepCode, init) {
 
     int n = 10;
-    auto pcm = gf2codes::rep_code(n);
+    auto pcm = ldpc::gf2codes::rep_code(n);
     udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n,n);
@@ -25,7 +25,7 @@ TEST(TestRepCode, init) {
 TEST(TestRingCode, init) {
 
     int n = 10;
-    auto pcm = gf2codes::ring_code(n);
+    auto pcm = ldpc::gf2codes::ring_code(n);
     udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n,n);
@@ -56,7 +56,7 @@ TEST(TestHammingCode, init) {
     int n = (1 << r) - 1;
     int k = n - r;
 
-    auto pcm = gf2codes::hamming_code(r);
+    auto pcm = ldpc::gf2codes::hamming_code(r);
     udlr::sparse_matrix_util::print_sparse_matrix(pcm);
 
     ASSERT_EQ(pcm.n, n);

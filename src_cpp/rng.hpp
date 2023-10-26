@@ -1,6 +1,6 @@
 /**
  * @file rng.hpp
- * @brief Defines the rng::RandomNumberGenerator class, which generates random double values between 0 and 1
+ * @brief Defines the ldpc::rng::RandomNumberGenerator class, which generates random double values between 0 and 1
  */
 
 #ifndef RNG_HPP
@@ -9,7 +9,7 @@
 #include <random>
 #include <chrono> // for std::chrono::system_clock
 
-namespace rng {
+namespace ldpc::rng {
 
     /**
      * @brief Generates random double values between 0 and 1 using a Mersenne Twister random number generator
