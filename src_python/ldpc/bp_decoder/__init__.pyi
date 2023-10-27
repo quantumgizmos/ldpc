@@ -9,12 +9,6 @@ class BpDecoderBase:
     """
 
 
-    def __init__(self,pcm, **kwargs):
-        """
-        Docstring test
-        """
-
-
     @property
     def error_rate(self) -> np.ndarray:
         """
