@@ -29,6 +29,8 @@ extensions = ['sphinx_rtd_theme','myst_parser', 'sphinx.ext.autodoc', 'sphinx.ex
 templates_path = ['_templates']
 exclude_patterns = []
 
+autodoc_default_flags = ['members', 'inherited-members']
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 

@@ -2,6 +2,8 @@ BP Decoder
 ==========
 
 .. autoclass:: ldpc.bp_decoder.BpDecoder
-   :members:
+   :members: BpDecoder
+   :inherited-members:
+   :undoc-members:
    :show-inheritance:
    :noindex:

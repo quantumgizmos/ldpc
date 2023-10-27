@@ -288,49 +288,6 @@ class BpDecoder(BpDecoderBase):
         The seed for the random serial schedule, by default 0. If set to 0, the seed is set according the system clock.
     serial_schedule_order : Optional[List[int]], optional
         The custom order for serial scheduling, by default None.
-
-    Attributes
-    ----------
-    pcm : BpSparse
-        The internal representation of the parity check matrix in the decoder.
-    bp_method : str
-        The currently set belief propagation method: 'product_sum' or 'minimum_sum'.
-    max_iter : int
-        The maximum number of iterations allowed for decoding.
-    ms_scaling_factor : float
-        The scaling factor for the minimum sum method.
-    schedule : str
-        The currently set scheduling method for belief propagation: 'parallel' or 'serial'.
-    omp_thread_count : int
-        The number of OpenMP threads used by the decoder.
-    random_schedule_seed : int
-        The seed value for random serial scheduling.
-    serial_schedule_order : Union[None, np.ndarray]
-        The order for serial scheduling, or None if no schedule has been set.
-
-    Methods
-    -------
-    decode(syndrome: np.ndarray) -> np.ndarray:
-        Decode the input syndrome using the belief propagation decoding algorithm.
-
-    Properties
-    ----------
-    error_rate : np.ndarray
-        The current error rate vector.
-    error_channel : np.ndarray
-        The current error channel vector.
-    log_prob_ratios : np.ndarray
-        The current log probability ratio vector.
-    converge : bool
-        Whether the decoder has converged.
-    iter : int
-        The number of iterations performed by the decoder.
-    check_count : int
-        The number of rows in the parity check matrix.
-    bit_count : int
-        The number of columns in the parity check matrix.
-    decoding : np.ndarray
-        The current decoded output.
     """
 
 
