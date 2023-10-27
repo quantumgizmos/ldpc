@@ -12,7 +12,7 @@ def test_errored_close_to_zero():
     pcm += np.roll(pcm, 1, axis=1)
     
     cutoff = 10
-    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0,cutoff=10)
+    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0,cutoff=10.0)
 
     soft_syndrome = np.full(n, 2)
     soft_syndrome[0] = -1
@@ -31,7 +31,7 @@ def test_one_errored_syndrome_bit():
     pcm = np.eye(n, dtype=int)
     pcm += np.roll(pcm, 1, axis=1)
 
-    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10)
+    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0)
 
     soft_syndrome = np.array([-20, 1, 20])
     expected_decoding = np.array([0, 1, 0])
@@ -48,7 +48,7 @@ def test_long_rep_code():
     pcm = np.eye(n, dtype=int)
     pcm += np.roll(pcm, 1, axis=1)
 
-    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10)
+    sbpd = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0)
 
     soft_syndrome = np.full(n, 100)
     soft_syndrome[0] = -100
