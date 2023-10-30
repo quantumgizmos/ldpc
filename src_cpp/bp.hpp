@@ -28,6 +28,12 @@ namespace ldpc::bp{
         PARALLEL = 1,
     };
 
+    enum BpInputType {
+        SYNDROME = 0,
+        RECEIVED_VECTOR = 1,
+        AUTO = 2
+    };
+
     const std::vector<int> NULL_INT_VECTOR = {};
 
 class BpEntry: public ldpc::sparse_matrix_base::EntryBase<BpEntry>{ 
@@ -50,6 +56,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         int maximum_iterations;
         BpMethod bp_method;
         BpSchedule schedule;
+        BpInputType bp_input_type;
         double ms_scaling_factor;
         std::vector<uint8_t> decoding;
         std::vector<uint8_t> candidate_syndrome;
@@ -75,7 +82,8 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 int omp_threads = 1,
                 std::vector<int> serial_schedule = NULL_INT_VECTOR,
                 int random_schedule_seed = 0,
-                bool random_schedule_at_every_iteration = true) :
+                bool random_schedule_at_every_iteration = true,
+                BpInputType bp_input_type = AUTO) :
                 pcm(parity_check_matrix) //the parity check matrix is passed in by reference
         {
 
@@ -95,6 +103,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             this->omp_thread_count = omp_threads;
             this->random_schedule_seed = random_schedule_seed;
             this->random_schedule_at_every_iteration = random_schedule_at_every_iteration;
+            this->bp_input_type = bp_input_type;
 
             if (serial_schedule != NULL_INT_VECTOR) {
                 this->serial_schedule_order = serial_schedule;
@@ -130,10 +139,19 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             }
         }
 
-        std::vector<uint8_t> decode(std::vector<uint8_t> &syndrome) {
+        std::vector<uint8_t> decode(std::vector<uint8_t> &input_vector) {
 
-            if (schedule == PARALLEL) return bp_decode_parallel(syndrome);
-            else if (schedule == SERIAL) return bp_decode_serial(syndrome);
+
+            if((this->bp_input_type == AUTO && input_vector.size() != this->check_count) || this->bp_input_type == RECEIVED_VECTOR){
+                auto syndrome = pcm.mulvec(input_vector);
+                if (schedule == PARALLEL) return bp_decode_parallel(syndrome);
+                else if (schedule == SERIAL) return bp_decode_serial(syndrome);
+                else throw std::runtime_error("Invalid BP schedule");
+            }
+
+
+            if (schedule == PARALLEL) return bp_decode_parallel(input_vector);
+            else if (schedule == SERIAL) return bp_decode_serial(input_vector);
             else throw std::runtime_error("Invalid BP schedule");
 
         }

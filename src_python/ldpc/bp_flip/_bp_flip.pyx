@@ -34,25 +34,25 @@ cdef class BpFlipDecoder(BpDecoderBase):
         zero_syndrome = True
         
         for i in range(self.m):
-            self._syndrome[i] = syndrome[i]
-            if self._syndrome[i]:
+            self._input_vector[i] = syndrome[i]
+            if self._input_vector[i]:
                 zero_syndrome = False
         if zero_syndrome:
             self.bpd.converge = True
             return np.zeros(self.n, dtype=syndrome.dtype)
         
-        self.flipD.decode(self._syndrome)
+        self.flipD.decode(self._input_vector)
 
         cdef vector[uint8_t] flip_syndrome = self.pcm.mulvec(self.flipD.decoding)
         
         # a = []
         for i in range(self.pcm.m):
-            self._syndrome[i] ^= flip_syndrome[i]
+            self._input_vector[i] ^= flip_syndrome[i]
             # a.append(flip_syndrome[i])
 
         # print(a)
 
-        self.bpd.decode(self._syndrome)
+        self.bpd.decode(self._input_vector)
         out = np.zeros(self.n, dtype=syndrome.dtype)
 
         for i in range(self.n):

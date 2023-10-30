@@ -14,6 +14,11 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
         PRODUCT_SUM = 0
         MINIMUM_SUM = 1
 
+    cdef enum BpInputType:
+        SYNDROME = 0
+        RECEIVED_VECTOR = 1
+        AUTO = 2
+
     cdef enum BpSchedule:
         SERIAL = 0
         PARALLEL = 1
@@ -46,7 +51,8 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
                 int omp_threads,
                 vector[int] serial_schedule,
                 int random_schedule_seed,
-                bool random_schedule_at_every_iteration) except +
+                bool random_schedule_at_every_iteration,
+                BpInputType bp_input_type) except +
             BpSparse& pcm
             vector[double] channel_probabilities
             int check_count
@@ -69,11 +75,12 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             vector[uint8_t] decode(vector[uint8_t]& syndrome)
             vector[uint8_t] soft_info_decode_serial(vector[double]& soft_syndrome, double cutoff, double sigma)
             void set_omp_thread_count(int count)
+            BpInputType bp_input_type
 
 cdef class BpDecoderBase:
     cdef BpSparse *pcm
     cdef int m, n
-    cdef vector[uint8_t] _syndrome
+    cdef vector[uint8_t] _input_vector
     cdef vector[double] _error_channel
     cdef vector[int] _serial_schedule_order
     cdef bool MEMORY_ALLOCATED

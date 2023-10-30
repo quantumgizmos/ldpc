@@ -40,7 +40,7 @@ class BpDecoderBase:
 
 
     @error_channel.setter
-    def error_channel(self, value: Optional[List[float]]) -> None:
+    def error_channel(self, value: Union[Optional[List[float]],np.ndarray]) -> None:
         """
         Sets the error channel for the decoder.
 
@@ -51,6 +51,26 @@ class BpDecoderBase:
 
 
     def update_channel_probs(self, value: List[float]) -> None:
+    @property
+    def input_vector_type(self)-> str:
+        """
+        Returns the current input vector type.
+
+        Returns:
+            str: The current input vector type.
+        """
+
+
+    @input_vector_type.setter
+    def input_vector_type(self, input_type: str):
+        """
+        Sets the input vector type.
+
+        Args:
+            input_type (str): The input vector type to be set. Must be either 'syndrome' or 'received_vector'.
+        """
+
+
     @property
     def log_prob_ratios(self) -> np.ndarray:
         """
@@ -288,17 +308,21 @@ class BpDecoder(BpDecoderBase):
         The seed for the random serial schedule, by default 0. If set to 0, the seed is set according the system clock.
     serial_schedule_order : Optional[List[int]], optional
         The custom order for serial scheduling, by default None.
+    input_vector_type: str, optional
+        Use this paramter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
+        Note, it is only necessary to specify this value when the parity check matrix is square. When the
+        parity matrix is non-square the input vector type is inferred automatically from its length.
     """
 
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-    def decode(self, syndrome: np.ndarray) -> np.ndarray:
+    def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
-        Decode the input syndrome using belief propagation decoding algorithm.
+        Decode the input input_vector using belief propagation decoding algorithm.
 
         Parameters
         ----------
-        syndrome : numpy.ndarray
+        input_vector : numpy.ndarray
             A 1D numpy array of length equal to the number of rows in the parity check matrix.
 
         Returns
@@ -309,7 +333,7 @@ class BpDecoder(BpDecoderBase):
         Raises
         ------
         ValueError
-            If the length of the input syndrome does not match the number of rows in the parity check matrix.
+            If the length of the input input_vector does not match the number of rows in the parity check matrix.
         """
 
 
@@ -352,7 +376,6 @@ class SoftInfoBpDecoder(BpDecoderBase):
     """
 
 
-    def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
     def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
         """
         Decode the input syndrome using the soft information belief propagation decoding algorithm.

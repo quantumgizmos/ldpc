@@ -27,6 +27,10 @@ class bp_decoder(BpDecoder):
         Sets the min-sum scaling factor for the min-sum BP method
     channel_probs: list, optional
         This parameter can be used to set the initial error channel across all bits.
+    input_vector_type: str, optional
+        Use this paramter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
+        Note, it is only necessary to specify this value when the parity check matrix is square. When the
+        parity matrix is non-square the input vector type is inferred automatically from its length.
     '''
 
     def __init__(self,parity_check_matrix,**kwargs):
@@ -39,6 +43,18 @@ class bp_decoder(BpDecoder):
         ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
         channel_probs=kwargs.get("channel_probs",None)
         input_vector_type=kwargs.get("input_vector_type",-1)
+
+        #Input vector type
+        if type(input_vector_type) is int:
+            input_vector_type =  input_vector_type
+        elif type(input_vector_type) is str and input_vector_type == "syndrome":
+            input_vector_type = 0
+        elif type(input_vector_type) is str and input_vector_type == "received_vector":
+            input_vector_type = 1
+        else:
+            raise Exception(f"TypeError: input_vector type must be either 'syndrome' or 'received_vector'. Not {input_vector_type}")
+
+
 
         #BP method
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
@@ -55,7 +71,8 @@ class bp_decoder(BpDecoder):
             error_channel=channel_probs,
             max_iter=max_iter,
             bp_method=bp_method,
-            ms_scaling_factor=ms_scaling_factor
+            ms_scaling_factor=ms_scaling_factor,
+            input_vector_type=input_vector_type
             )
     
     @property

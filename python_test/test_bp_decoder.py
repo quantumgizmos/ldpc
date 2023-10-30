@@ -97,7 +97,7 @@ def test_BpDecoder_init():
 
     # test with numpy ndarray as pcm
     pcm = np.array([[1, 0, 1], [0, 1, 1]])
-    decoder = BpDecoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_schedule_seed=1, serial_schedule_order=[1,2,0])
+    decoder = BpDecoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_schedule_seed=1, serial_schedule_order=[1,2,0],input_vector_type = "syndrome")
     assert decoder is not None
     assert decoder.check_count == 2
     assert decoder.bit_count == 3
@@ -108,10 +108,11 @@ def test_BpDecoder_init():
     assert decoder.omp_thread_count == 4
     assert decoder.random_schedule_seed == 1
     assert np.array_equal(decoder.serial_schedule_order, np.array([1, 2, 0]))
+    assert np.array_equal(decoder.input_vector_type, "syndrome")
 
     # test with scipy.sparse scipy.sparse.csr_matrix as pcm
     pcm = scipy.sparse.csr_matrix([[1, 0, 1], [0, 1, 1]])
-    decoder = BpDecoder(pcm, error_channel=[0.1, 0.2, 0.3])
+    decoder = BpDecoder(pcm, error_channel=[0.1, 0.2, 0.3],input_vector_type = "syndrome")
     assert decoder is not None
     assert decoder.check_count == 2
     assert decoder.bit_count == 3
@@ -122,6 +123,7 @@ def test_BpDecoder_init():
     assert decoder.omp_thread_count == 1
     assert decoder.random_schedule_seed == 0
     assert np.array_equal(decoder.serial_schedule_order, np.array([0, 1, 2]))
+    assert np.array_equal(decoder.input_vector_type, "syndrome")
 
 
     # test with invalid pcm type
@@ -129,7 +131,7 @@ def test_BpDecoder_init():
         decoder = BpDecoder('invalid', error_rate=0.1)
 
     # test with invalid max_iter type
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         decoder = BpDecoder(pcm, error_rate=0.1,max_iter='invalid')
 
     # test with invalid max_iter value
@@ -153,7 +155,7 @@ def test_BpDecoder_init():
         decoder = BpDecoder(pcm, error_rate=0.1,omp_thread_count='invalid')
 
     # test with invalid random_schedule_seed value
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         decoder = BpDecoder(pcm, error_rate=0.1, random_schedule_seed='invalid')
 
     # test with invalid serial_schedule_order value
@@ -165,7 +167,7 @@ def test_rep_code_ps():
 
     H = rep_code(3)
 
-    bpd = BpDecoder(H,error_rate=0.1)
+    bpd = BpDecoder(H,error_rate=0.1,input_vector_type = "syndrome")
     assert bpd is not None
     print(bpd.bp_method)
     assert bpd.bp_method == "product_sum"

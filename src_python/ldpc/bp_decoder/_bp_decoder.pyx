@@ -81,10 +81,6 @@ cdef class BpDecoderBase:
     Bp Decoder base class
     """
 
-
-    # def __init__(self,pcm, **kwargs):
-    #     pass
-
     def __cinit__(self,pcm, **kwargs):
 
         error_rate=kwargs.get("error_rate",None)
@@ -97,6 +93,9 @@ cdef class BpDecoderBase:
         random_schedule_seed = kwargs.get("random_schedule_seed", 0)
         serial_schedule_order = kwargs.get("serial_schedule_order", None)
         
+        # input_vector_type = kwargs.get("input_vector_type", "auto")
+        # print(kwargs.get("input_vector_type"))
+        # print("input vector type:", input_vector_type)
         
         """
         Docstring test
@@ -118,11 +117,13 @@ cdef class BpDecoderBase:
 
         # allocate vectors for decoder input
         self._error_channel.resize(self.n) #C++ vector for the error channel
-        self._syndrome.resize(self.m) #C++ vector for the syndrome
+        self._input_vector.resize(self.m) #C++ vector for the syndrome
         self._serial_schedule_order = NULL_INT_VECTOR
 
+
+
         ## initialise the decoder with default values
-        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,True)
+        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,True,SYNDROME)
 
         ## set the decoder parameters
         self.bp_method = bp_method
@@ -140,6 +141,9 @@ cdef class BpDecoderBase:
         else:
             raise ValueError("Please specify the error channel. Either: 1) error_rate: float or 2) error_channel:\
             list of floats of length equal to the block length of the code {self.n}.")
+
+
+        
 
         self.MEMORY_ALLOCATED=True
 
@@ -189,7 +193,7 @@ cdef class BpDecoderBase:
         return out
 
     @error_channel.setter
-    def error_channel(self, value: Optional[List[float]]) -> None:
+    def error_channel(self, value: Union[Optional[List[float]],np.ndarray]) -> None:
         """
         Sets the error channel for the decoder.
 
@@ -205,6 +209,51 @@ cdef class BpDecoderBase:
 
     def update_channel_probs(self, value: List[float]) -> None:
         self.error_channel = value
+
+
+    @property
+    def input_vector_type(self)-> str:
+        """
+        Returns the current input vector type.
+
+        Returns:
+            str: The current input vector type.
+        """
+        if self.bpd.bp_input_type == SYNDROME:
+            return 'syndrome'
+        elif self.bpd.bp_input_type == RECEIVED_VECTOR:
+            return 'received_vector'
+        elif self.bpd.bp_input_type == AUTO:
+            return 'auto'
+        else:
+            raise ValueError(f"The input vector type is invalid. \
+                    Please choose from the following methods: \
+                    'input_vector_type=syndrome', 'input_vector_type=received_vector'")
+
+
+    @input_vector_type.setter
+    def input_vector_type(self, input_type: str):
+        """
+        Sets the input vector type.
+
+        Args:
+            input_type (str): The input vector type to be set. Must be either 'syndrome' or 'received_vector'.
+        """
+        if input_type.lower() in ['auto', 'a', '2']:
+            if self.m == self.n:
+                raise ValueError("Please specify the input vector type. Either: 1) input_vector_type: 'syndrome' or 2) input_vector_type:\
+                'received_vector'.")
+            else:
+                self.bpd.bp_input_type = AUTO
+
+        elif input_type.lower() in ['syndrome', 's', '0']:
+            self.bpd.bp_input_type = SYNDROME
+        elif input_type.lower() in ['received_vector', 'r', '1']:
+            self.bpd.bp_input_type = RECEIVED_VECTOR
+        else:
+            raise ValueError(f"The input vector type '{input_type}' is invalid. \
+                    Please choose from the following methods: \
+                    'input_vector_type=syndrome', 'input_vector_type=received_vector'")
 
 
     @property
@@ -509,28 +558,35 @@ cdef class BpDecoder(BpDecoderBase):
         The seed for the random serial schedule, by default 0. If set to 0, the seed is set according the system clock.
     serial_schedule_order : Optional[List[int]], optional
         The custom order for serial scheduling, by default None.
+    input_vector_type: str, optional
+        Use this paramter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
+        Note, it is only necessary to specify this value when the parity check matrix is square. When the
+        parity matrix is non-square the input vector type is inferred automatically from its length.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto"):
+
+        self.input_vector_type = input_vector_type
+
         pass
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto"):
         
         pass
 
-    def decode(self, syndrome: np.ndarray) -> np.ndarray:
+    def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
-        Decode the input syndrome using belief propagation decoding algorithm.
+        Decode the input input_vector using belief propagation decoding algorithm.
 
         Parameters
         ----------
-        syndrome : numpy.ndarray
+        input_vector : numpy.ndarray
             A 1D numpy array of length equal to the number of rows in the parity check matrix.
 
         Returns
@@ -541,23 +597,23 @@ cdef class BpDecoder(BpDecoderBase):
         Raises
         ------
         ValueError
-            If the length of the input syndrome does not match the number of rows in the parity check matrix.
+            If the length of the input input_vector does not match the number of rows in the parity check matrix.
         """
         
-        if not len(syndrome)==self.m:
-            raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
+        if not len(input_vector)==self.m or len(input_vector)==self.n:
+            raise ValueError(f"The input_vector must have length {self.m} (for syndrome decoding) or length {self.n} (for received vector decoding). Not length {len(input_vector)}.")
         cdef int i
-        cdef bool zero_syndrome = True
-        DTYPE = syndrome.dtype
+        cdef bool zero_input_vector = True
+        DTYPE = input_vector.dtype
         
         for i in range(self.m):
-            self._syndrome[i] = syndrome[i]
-            if self._syndrome[i]: zero_syndrome = False
-        if zero_syndrome:
+            self._input_vector[i] = input_vector[i]
+            if self._input_vector[i]: zero_input_vector = False
+        if zero_input_vector:
             self.bpd.converge = True
             return np.zeros(self.n,dtype=DTYPE)
         
-        self.bpd.decode(self._syndrome)
+        self.bpd.decode(self._input_vector)
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
@@ -615,14 +671,13 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
         self.sigma = sigma
         self.schedule = "serial"
         self.bp_method = "minimum_sum"
+        self.input_vector_type = "syndrome"
 
-        pass
+    # def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
+    #              error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+    #              ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0, input_vector_type: str = "syndrome"):
 
-    def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
-
-        pass
+    #     pass
 
     def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
         """

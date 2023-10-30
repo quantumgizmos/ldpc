@@ -39,22 +39,22 @@ hz = qcode.hz
 lx = qcode.lx
 lz = qcode.lz
 
-run_count = 1000
-error_rate = 0.10
+run_count = 10000
+error_rate = 0.05
 
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 10)
-osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
-bpuf = BeliefFindDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1, random_schedule_seed = 4, matrix_solve = False, bits_per_step = 1)
-uf = UnionFindDecoder(hx,matrix_solve=False)
+osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=4)
+bpuf = BeliefFindDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1, random_schedule_seed = 4, matrix_solve = True, bits_per_step = 1, input_vector_type="syndrome")
+uf = UnionFindDecoder(hx,matrix_solve=True)
 
 
-seed = 23
+seed = 42
 
 
 min_logical = hz.shape[1]
 print(hz.shape[0],hz.shape[1])
 
-for DECODER in [uf,bp,osd,bpuf]:
+for DECODER in [uf,osd,bpuf]:
     np.random.seed(seed)
     fail = 0
 
