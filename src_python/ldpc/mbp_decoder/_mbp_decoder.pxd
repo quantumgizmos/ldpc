@@ -5,7 +5,7 @@ from libcpp cimport bool
 from libcpp.vector cimport vector
 cimport numpy as np
 cimport cython
-from ldpc.uf_decoder cimport uf_decoder_cpp
+from ldpc.union_find_decoder cimport union_find_decoder_cpp
 from ldpc.bp_decoder cimport bp_sparse
 
 ctypedef np.uint8_t uint8_t

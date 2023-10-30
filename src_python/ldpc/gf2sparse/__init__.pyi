@@ -45,17 +45,17 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 
 
 class PluDecomposition():
+    """
+    Initialise the PLU Decomposition with a given parity check matrix.
+    
+    Parameters:
+        pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix for PLU Decomposition.
+        full_reduce (bool, optional): Flag to indicate if full row reduction is required. Default is False.
+        lower_triangular (bool, optional): Flag to indicate if the result should be in lower triangular form. Default is True.
+    """
+
+
     def __init__(self, pcm: Union[scipy.sparse.spmatrix, np.ndarray], full_reduce: bool = False, lower_triangular: bool = True) -> None:
-        """
-        Initialise the PLU Decomposition with a given parity check matrix.
-        
-        Parameters:
-            pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix for PLU Decomposition.
-            full_reduce (bool, optional): Flag to indicate if full row reduction is required. Default is False.
-            lower_triangular (bool, optional): Flag to indicate if the result should be in lower triangular form. Default is True.
-        """
-
-
     def lu_solve(self, y: np.ndarray) -> np.ndarray:
         """
         Solve the LU decomposition problem for a given array 'y'.

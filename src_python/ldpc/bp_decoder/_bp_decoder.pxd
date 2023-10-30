@@ -83,6 +83,7 @@ cdef class BpDecoderBase:
 cdef class BpDecoder(BpDecoderBase):
     pass
 
+
 # cdef class SoftInfoBpDecoder(BpDecoderBase):
 #     cdef double sigma
 #     cdef double cutoff

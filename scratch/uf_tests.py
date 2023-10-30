@@ -9,6 +9,7 @@ from ldpc.codes import ring_code
 from ldpc.bp_decoder import bp_decoder as bp_og_syntax_decoder
 from ldpc.bposd_decoder import bposd_decoder as osd_og_syntax_decoder
 from ldpc.belief_find_decoder import BeliefFindDecoder
+from ldpc.union_find_decoder import UnionFindDecoder
 
 from ldpc.noise_models import generate_bsc_error
 
@@ -39,11 +40,13 @@ lx = qcode.lx
 lz = qcode.lz
 
 run_count = 1000
-error_rate = 0.05
+error_rate = 0.10
 
 bp = BpDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="serial", ms_scaling_factor=0.625, max_iter=10,omp_thread_count=1, random_schedule_seed = 10)
 osd = BpOsdDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1,osd_order=0,osd_method="osd_cs",random_schedule_seed=10)
 bpuf = BeliefFindDecoder(hx,error_rate=error_rate, bp_method='ms', schedule="parallel", ms_scaling_factor=0.625, max_iter=5,omp_thread_count=1, random_schedule_seed = 4, matrix_solve = False, bits_per_step = 1)
+uf = UnionFindDecoder(hx,matrix_solve=False)
+
 
 seed = 23
 
@@ -51,7 +54,7 @@ seed = 23
 min_logical = hz.shape[1]
 print(hz.shape[0],hz.shape[1])
 
-for DECODER in [bp,osd,bpuf]:
+for DECODER in [uf,bp,osd,bpuf]:
     np.random.seed(seed)
     fail = 0
 
@@ -63,6 +66,7 @@ for DECODER in [bp,osd,bpuf]:
         # print(np.count_nonzero(z))
 
         decoding = DECODER.decode(z)
+
 
         # assert np.array_equal(hx@decoding%2, z)
 

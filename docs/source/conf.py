@@ -50,7 +50,7 @@ html_context = {
 }
 
 # Sidebars
-html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
+html_sidebars = { '**': ['globaltoc.html', 'sourcelink.html', 'searchbox.html'] }
 
 html_static_path = ['_static']
 
