@@ -17,6 +17,7 @@ Welcome to LDPC's documentation!
    ldpc/bposd_decoder
    ldpc/union_find_decoder
    ldpc/monte_carlo_simulation
+   ldpc/soft_info_belief_propagation.rst
    
 
 
