@@ -453,16 +453,12 @@ namespace bp {
 
         std::vector<uint8_t> &
         soft_info_decode_serial(std::vector<double> &soft_info_syndrome, double cutoff, double sigma) {
-            // compute the syndrome log-likelihoods
+            // compute the syndrome log-likelihoods and initialize hard syndrome
+            std::vector<uint8_t> syndrome;
             this->soft_syndrome = soft_info_syndrome;
             for (int i = 0; i < this->check_count; i++) {
                 this->soft_syndrome[i] = 2 * this->soft_syndrome[i] / (sigma * sigma);
-            }
-
-            // compute the hard syndrome from the log-likelihoods
-            std::vector<uint8_t> syndrome;
-            for (double value: this->soft_syndrome) {
-                if (value <= 0) {
+                if (this->soft_syndrome[i] <= 0) {
                     syndrome.push_back(1);
                 } else {
                     syndrome.push_back(0);
@@ -471,7 +467,7 @@ namespace bp {
 
             int check_index;
             this->converge = false;
-            int CONVERGED = 0;
+            bool CONVERGED = false;
             bool loop_break = false;
             // initialise BP
             this->initialise_log_domain_bp();
@@ -482,13 +478,14 @@ namespace bp {
                     continue;
                 }
                 if (this->random_schedule_at_every_iteration && omp_thread_count == 1) {
+                    // reorder schedule elements randomly
                     shuffle(serial_schedule_order.begin(), serial_schedule_order.end(),
                             std::default_random_engine(random_schedule_seed));
                 }
 
                 check_indices_updated.clear();
 #pragma omp for
-                for (int bit_index: serial_schedule_order) {
+                for (auto bit_index: serial_schedule_order) {
                     double temp;
                     log_prob_ratios[bit_index] = std::log(
                             (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
@@ -509,10 +506,9 @@ namespace bp {
                         }
                         double min_bit_to_check_msg = temp;
                         double propagated_msg = min_bit_to_check_msg;
-                        // VIRTUAL CHECK NODE UPDATE
-                        // first we calculate the magnitude of the soft syndrome
                         double soft_syndrome_magnitude = std::abs(this->soft_syndrome[check_index]);
-                        // then we check if the magnitude is less than the cutoff.
+
+                        // if the soft syndrome magnitude is below cutoff, we apply the virtual update rules
                         if (soft_syndrome_magnitude < cutoff) {
                             if (soft_syndrome_magnitude < std::abs(min_bit_to_check_msg)) {
                                 propagated_msg = soft_syndrome_magnitude;
@@ -520,6 +516,7 @@ namespace bp {
                                 if (check_nbr.bit_to_check_msg <= 0) {
                                     check_node_sgn ^= 1;
                                 }
+                                // now we check whether we have to update the soft syndrome magnitude and sign
                                 if (check_node_sgn == syndrome[check_index]) {
                                     if (std::abs(check_nbr.bit_to_check_msg) < min_bit_to_check_msg) {
                                         this->soft_syndrome[check_index] =
@@ -554,8 +551,8 @@ namespace bp {
                 }
                 // compute the syndrome for the current candidate decoding solution
                 loop_break = false;
-                CONVERGED = 1;
-                for (int i = 0; i < soft_info_syndrome.size(); i++) {
+                CONVERGED = true;
+                for (auto i = 0; i < soft_info_syndrome.size(); i++) {
                     if (soft_info_syndrome[i] <= 0) {
                         candidate_syndrome[i] = 1;
                     } else {
@@ -563,12 +560,9 @@ namespace bp {
                     }
                 }
                 candidate_syndrome = pcm.mulvec(decoding, candidate_syndrome);
-                for (int i = 0; i < check_count; i++) {
-                    if (loop_break) {
-                        continue;
-                    }
+                for (auto i = 0; i < check_count && !loop_break; i++) {
                     if (candidate_syndrome[i] != syndrome[i]) {
-                        CONVERGED = 0;
+                        CONVERGED = false;
                         loop_break = true;
                     }
                 }
