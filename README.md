@@ -338,6 +338,30 @@ dec
 
     array([0, 0, 0, ..., 0, 0, 0])
 
+## Soft Syndrome Minimum-Sum Algorithm
+When considering continuous syndrome error models, it has been shown to be useful to make use
+of the soft information in the decoding. In Ravendraan et al. 2022 (https://arxiv.org/abs/2205.02341) 
+it is shown that the soft syndrome can be used to improve the performance of minimum sum BP decoding.
+
+The soft syndrome min-sum algorithm (SSMSA) is implemented in the `SoftInfoBpDecoder` class.
+
+```python
+from ldpc.bposd_decoder import SoftInfoBpDecoder
+from ldpc.codes import hamming_code
+import numpy as np
+
+# Rank 10 Hamming code
+pcm = hamming_code(10)
+
+# Call the decoder class
+decoder = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=pcm.shape[0], ms_scaling_factor=1.0, cutoff=10.0)
+
+syndrome = np.array([-10., -10., -10., -10., 10., 10., 10., 10., 10., 10.])
+
+dec = decoder.decode(syndrome)
+print(dec)
+```
+    array([0, 0, 0, ..., 0, 0, 0])
 
 
 # Random Serial Schedules
