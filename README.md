@@ -38,7 +38,7 @@ Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Win
 git clone git@github.com:qec-codes/ldpc2.git
 cd ldpc2
 git submodule update --init --recursive
-pip install -Ue
+pip install -Ue .
 ```
 
 ## Installation from Test PyPi

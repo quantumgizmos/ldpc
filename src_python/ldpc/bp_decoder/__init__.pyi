@@ -322,3 +322,69 @@ class BpDecoder(BpDecoderBase):
             np.ndarray: A numpy array containing the current decoded output.
         """
 
+
+class SoftInfoBpDecoder(BpDecoderBase):
+    """
+    A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
+
+    This class implements a modified version of the belief propagation decoding algorithm that accounts for
+    uncertainty in the syndrome readout using a serial belief propagation schedule. The decoder uses a minimum
+    sum method as the belief propagation variant. For more information on the algorithm, please see the original
+    research paper at https://arxiv.org/abs/2205.02341.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, spmatrix]
+        The parity check matrix for the code.
+    error_rate : Optional[float]
+        The probability of a bit being flipped in the received codeword.
+    error_channel : Optional[List[float]]
+        A list of probabilities that specify the probability of each bit being flipped in the received codeword.
+        Must be of length equal to the block length of the code.
+    max_iter : Optional[int]
+        The maximum number of iterations for the decoding algorithm.
+    bp_method : Optional[str]
+        The variant of belief propagation method to be used. The default value is 'minimum_sum'.
+    ms_scaling_factor : Optional[float]
+        The scaling factor used in the minimum sum method. The default value is 1.0.
+    cutoff : Optional[float]
+        The threshold value below which syndrome soft information is used.
+    """
+
+
+    def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
+    def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
+        """
+        Decode the input syndrome using the soft information belief propagation decoding algorithm.
+
+        Parameters
+        ----------
+        soft_info_syndrome: np.ndarray
+            A 1-dimensional numpy array containing the soft information of the syndrome.
+
+        Returns
+        -------
+        np.ndarray
+            A 1-dimensional numpy array containing the decoded output.
+        """
+
+
+    @property
+    def soft_syndrome(self) -> np.ndarray:
+        """
+        Returns the current soft syndrome.
+
+        Returns:
+            np.ndarray: A numpy array containing the current soft syndrome.
+        """
+
+
+    @property
+    def decoding(self) -> np.ndarray:
+        """
+        Returns the current decoded output.
+
+        Returns:
+            np.ndarray: A numpy array containing the current decoded output.
+        """
+

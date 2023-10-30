@@ -67,6 +67,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             int random_schedule_seed
             bool random_schedule_at_every_iteration
             vector[uint8_t] decode(vector[uint8_t]& syndrome)
+            vector[uint8_t] soft_info_decode_serial(vector[double]& soft_syndrome, double cutoff, double sigma)
             void set_omp_thread_count(int count)
 
 cdef class BpDecoderBase:
@@ -83,8 +84,7 @@ cdef class BpDecoderBase:
 cdef class BpDecoder(BpDecoderBase):
     pass
 
-
-# cdef class SoftInfoBpDecoder(BpDecoderBase):
-#     cdef double sigma
-#     cdef double cutoff
-#     pass
+cdef class SoftInfoBpDecoder(BpDecoderBase):
+    cdef double sigma
+    cdef double cutoff
+    pass
