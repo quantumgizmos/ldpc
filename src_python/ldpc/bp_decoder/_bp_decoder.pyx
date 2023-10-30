@@ -615,105 +615,105 @@ cdef class BpDecoder(BpDecoderBase):
         return out
 
 
-# # cdef class SoftInfoBpDecoder(BpDecoderBase):
-# #     """
-# #     A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
+cdef class SoftInfoBpDecoder(BpDecoderBase):
+    """
+    A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
 
-# #     This class implements a modified version of the belief propagation decoding algorithm that accounts for
-# #     uncertainty in the syndrome readout using a serial belief propagation schedule. The decoder uses a minimum
-# #     sum method as the belief propagation variant. For more information on the algorithm, please see the original
-# #     research paper at https://arxiv.org/abs/2205.02341.
+    This class implements a modified version of the belief propagation decoding algorithm that accounts for
+    uncertainty in the syndrome readout using a serial belief propagation schedule. The decoder uses a minimum
+    sum method as the belief propagation variant. For more information on the algorithm, please see the original
+    research paper at https://arxiv.org/abs/2205.02341.
 
-# #     Parameters
-# #     ----------
-# #     pcm : Union[np.ndarray, spmatrix]
-# #         The parity check matrix for the code.
-# #     error_rate : Optional[float]
-# #         The probability of a bit being flipped in the received codeword.
-# #     error_channel : Optional[List[float]]
-# #         A list of probabilities that specify the probability of each bit being flipped in the received codeword.
-# #         Must be of length equal to the block length of the code.
-# #     max_iter : Optional[int]
-# #         The maximum number of iterations for the decoding algorithm.
-# #     bp_method : Optional[str]
-# #         The variant of belief propagation method to be used. The default value is 'minimum_sum'.
-# #     ms_scaling_factor : Optional[float]
-# #         The scaling factor used in the minimum sum method. The default value is 1.0.
-# #     cutoff : Optional[float]
-# #         The threshold value below which syndrome soft information is used.
-# #     """
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, spmatrix]
+        The parity check matrix for the code.
+    error_rate : Optional[float]
+        The probability of a bit being flipped in the received codeword.
+    error_channel : Optional[List[float]]
+        A list of probabilities that specify the probability of each bit being flipped in the received codeword.
+        Must be of length equal to the block length of the code.
+    max_iter : Optional[int]
+        The maximum number of iterations for the decoding algorithm.
+    bp_method : Optional[str]
+        The variant of belief propagation method to be used. The default value is 'minimum_sum'.
+    ms_scaling_factor : Optional[float]
+        The scaling factor used in the minimum sum method. The default value is 1.0.
+    cutoff : Optional[float]
+        The threshold value below which syndrome soft information is used.
+    """
 
-# #     def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-# #                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-# #                  ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
 
-# #         self.cutoff = cutoff
-# #         if not isinstance(sigma,float) or sigma <= 0:
-# #             raise ValueError("The sigma value must be a float greater than 0.")
-# #         self.sigma = sigma
-# #         self.schedule = "serial"
-# #         self.bp_method = "minimum_sum"
+        self.cutoff = cutoff
+        if not isinstance(sigma,float) or sigma <= 0:
+            raise ValueError("The sigma value must be a float greater than 0.")
+        self.sigma = sigma
+        self.schedule = "serial"
+        self.bp_method = "minimum_sum"
 
-# #         pass
+        pass
 
-# #     def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-# #                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-# #                  ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
-        
-# #         pass
+    def __init__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
 
-# #     def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
-# #         """
-# #         Decode the input syndrome using the soft information belief propagation decoding algorithm.
+        pass
 
-# #         Parameters
-# #         ----------
-# #         soft_info_syndrome: np.ndarray
-# #             A 1-dimensional numpy array containing the soft information of the syndrome.
+    def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
+        """
+        Decode the input syndrome using the soft information belief propagation decoding algorithm.
 
-# #         Returns
-# #         -------
-# #         np.ndarray
-# #             A 1-dimensional numpy array containing the decoded output.
-# #         """
-            
-# #         cdef vector[np.float64_t] soft_syndrome
-# #         soft_syndrome.resize(self.m)
-# #         for i in range(self.m):
-# #             soft_syndrome[i] = soft_info_syndrome[i]
-        
-# #         self.bpd.soft_info_decode_serial(soft_syndrome,self.cutoff, self.sigma)
+        Parameters
+        ----------
+        soft_info_syndrome: np.ndarray
+            A 1-dimensional numpy array containing the soft information of the syndrome.
 
-# #         out = np.zeros(self.n,dtype=np.uint8)
-# #         for i in range(self.n): out[i] = self.bpd.decoding[i]
-# #         return out
-        
-# #     @property
-# #     def soft_syndrome(self) -> np.ndarray:
-# #         """
-# #         Returns the current soft syndrome.
+        Returns
+        -------
+        np.ndarray
+            A 1-dimensional numpy array containing the decoded output.
+        """
 
-# #         Returns:
-# #             np.ndarray: A numpy array containing the current soft syndrome.
-# #         """
-# #         out = np.zeros(self.m)
-# #         for i in range(self.m):
-# #             out[i] = self.bpd.soft_syndrome[i]
-# #         return out
+        cdef vector[np.float64_t] soft_syndrome
+        soft_syndrome.resize(self.m)
+        for i in range(self.m):
+            soft_syndrome[i] = soft_info_syndrome[i]
+
+        self.bpd.soft_info_decode_serial(soft_syndrome,self.cutoff, self.sigma)
+
+        out = np.zeros(self.n,dtype=np.uint8)
+        for i in range(self.n): out[i] = self.bpd.decoding[i]
+        return out
+
+    @property
+    def soft_syndrome(self) -> np.ndarray:
+        """
+        Returns the current soft syndrome.
+
+        Returns:
+            np.ndarray: A numpy array containing the current soft syndrome.
+        """
+        out = np.zeros(self.m)
+        for i in range(self.m):
+            out[i] = self.bpd.soft_syndrome[i]
+        return out
 
 
-# #     @property
-# #     def decoding(self) -> np.ndarray:
-# #         """
-# #         Returns the current decoded output.
+    @property
+    def decoding(self) -> np.ndarray:
+        """
+        Returns the current decoded output.
 
-# #         Returns:
-# #             np.ndarray: A numpy array containing the current decoded output.
-# #         """
-# #         out = np.zeros(self.n).astype(int)
-# #         for i in range(self.n):
-# #             out[i] = self.bpd.decoding[i]
-# #         return out
+        Returns:
+            np.ndarray: A numpy array containing the current decoded output.
+        """
+        out = np.zeros(self.n).astype(int)
+        for i in range(self.n):
+            out[i] = self.bpd.decoding[i]
+        return out
 
 
 
