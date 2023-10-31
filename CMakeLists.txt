@@ -1,43 +1,37 @@
-# Set the minimum version of CMake required
+# Set the minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.10)
 
-##enable testing
+# Enable the testing functionality provided by CMake
 enable_testing()
 
-
-# Define the main project and add a description
+# Define the main project, its description, and the languages used
 project(main
-    DESCRIPTION "ldpc - Software for for classical and quantum low density parity check codes"
+    DESCRIPTION "ldpc - Software for classical and quantum low density parity check codes"
     LANGUAGES CXX)
 
-# Set the C++ standard to C++20
+# Set the C++ standard to C++20 for this project
 set(CMAKE_CXX_STANDARD 20)
 
-# Enable OpenMP support for parallel programming
-# SET(CMAKE_CXX_FLAGS  "-fopenmp")
-
-# Enable C++11 features required by RapidCSV library
+# Ensure that the necessary C++11 features are available, as required by the RapidCSV library
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-### Library Configuration
+### Library Configuration Section ###
 
-# Define an interface library named ldpc that only includes headers
+# Define an interface library named 'ldpc' which only includes headers
 add_library(ldpc INTERFACE)
 
-# Add the src_cpp and include directories to the include path for any target that links with ldpc
+# Add specific directories to the include path for any target that links with the 'ldpc' library
 target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/rapidcsv)
 
-### Executable Configuration
+### Executable Configuration Section ###
 
-# Add an executable named main, which depends on the main.cpp file
+# Add an executable target named 'main', which is built from the 'main.cpp' source file
 add_executable(main cpp_example/main.cpp)
 
-# Link the ldpc library to the main executable
+# Link the 'ldpc' library to the 'main' executable target
 target_link_libraries(main ldpc)
 
-## Install GoogleTest
-
-### Library Configuration
+### GoogleTest Configuration Section ###
 
 # Download the GoogleTest library as a subdirectory of the current project
 include(FetchContent)
@@ -52,9 +46,9 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Make the GoogleTest library available to the project
 FetchContent_MakeAvailable(GoogleTest)
 
-### Test Configuration
+### Test Configuration Section ###
 
-# Define the cpp_test project and add a description
+# Define a separate project for the tests, its description, and the languages used
 project(cpp_test
     DESCRIPTION "Tests for ldpc"
     LANGUAGES CXX)
@@ -62,54 +56,28 @@ project(cpp_test
 # Include the GoogleTest library in the project
 include(GoogleTest)
 
-# Add test executables for SparseMatrix, SparseMatrixUtil, GF2Sparse, GF2RowReduce, and BPDecoder
-add_executable(TestBPDecoder cpp_test/TestBPDecoder.cpp)
-add_executable(TestOsdDecoder cpp_test/TestOsdDecoder.cpp)
-add_executable(TestSoftInfo cpp_test/TestSoftInfo.cpp)
-add_executable(TestFlipDecoder cpp_test/TestFlipDecoder.cpp)
-add_executable(TestGf2Codes cpp_test/TestGf2Codes.cpp)
-add_executable(TestUnionFind cpp_test/TestUnionFind.cpp)
+# List of test executables
+set(TEST_EXECUTABLES
+    TestBPDecoder
+    TestOsdDecoder
+    TestSoftInfo
+    TestFlipDecoder
+    TestGf2Codes
+    TestUnionFind
+    TestSparseMatrix
+    TestSparseMatrixUtil
+    TestGF2Sparse
+    TestGF2RowReduce
+    TestGf2Linalg
+    TestGf2Dense
+)
 
-add_executable(TestSparseMatrix cpp_test/TestSparseMatrix.cpp)
-add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
-add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
-add_executable(TestGF2RowReduce cpp_test/TestGF2RowReduce.cpp)
-add_executable(TestGf2Linalg cpp_test/TestGf2Linalg.cpp)
-add_executable(TestGf2Dense cpp_test/TestGf2Dense.cpp)
-
-
-
-
-# Link the ldpc and gtest_main libraries to the test executables
-target_link_libraries(TestBPDecoder gtest_main ldpc)
-target_link_libraries(TestOsdDecoder gtest_main ldpc)
-target_link_libraries(TestSoftInfo gtest_main ldpc)
-target_link_libraries(TestFlipDecoder gtest_main ldpc)
-target_link_libraries(TestGf2Codes gtest_main ldpc)
-target_link_libraries(TestUnionFind gtest_main ldpc)
-
-
-target_link_libraries(TestSparseMatrix gtest_main ldpc)
-target_link_libraries(TestSparseMatrixUtil gtest_main ldpc)
-target_link_libraries(TestGF2Sparse gtest_main ldpc)
-target_link_libraries(TestGF2RowReduce gtest_main ldpc)
-target_link_libraries(TestGf2Linalg gtest_main ldpc)
-target_link_libraries(TestGf2Dense gtest_main ldpc)
-
-
-# Discover and run tests using GoogleTest
-gtest_discover_tests(TestBPDecoder)
-gtest_discover_tests(TestOsdDecoder)
-gtest_discover_tests(TestFlipDecoder)
-gtest_discover_tests(TestGf2Codes)
-gtest_discover_tests(TestUnionFind)
-
-gtest_discover_tests(TestSparseMatrix)
-gtest_discover_tests(TestSparseMatrixUtil)
-gtest_discover_tests(TestGF2Sparse)
-gtest_discover_tests(TestGF2RowReduce)
-gtest_discover_tests(TestGf2Linalg)
-gtest_discover_tests(TestGf2Dense)
-
-
-
+# Loop through the list of test executables to:
+# - Add each executable target
+# - Link the necessary libraries (gtest_main and ldpc)
+# - Discover and register the tests with CTest
+foreach(TEST ${TEST_EXECUTABLES})
+    add_executable(${TEST} cpp_test/${TEST}.cpp)  # Add the test executable
+    target_link_libraries(${TEST} gtest_main ldpc)  # Link the libraries
+    gtest_discover_tests(${TEST})  # Discover and register the tests
+endforeach()
