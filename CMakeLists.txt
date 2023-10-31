@@ -75,6 +75,8 @@ add_executable(TestSparseMatrixUtil cpp_test/TestSparseMatrixUtil.cpp)
 add_executable(TestGF2Sparse cpp_test/TestGF2Sparse.cpp)
 add_executable(TestGF2RowReduce cpp_test/TestGF2RowReduce.cpp)
 add_executable(TestGf2Linalg cpp_test/TestGf2Linalg.cpp)
+add_executable(TestGf2Dense cpp_test/TestGf2Dense.cpp)
+
 
 
 
@@ -86,11 +88,14 @@ target_link_libraries(TestFlipDecoder gtest_main ldpc)
 target_link_libraries(TestGf2Codes gtest_main ldpc)
 target_link_libraries(TestUnionFind gtest_main ldpc)
 
+
 target_link_libraries(TestSparseMatrix gtest_main ldpc)
 target_link_libraries(TestSparseMatrixUtil gtest_main ldpc)
 target_link_libraries(TestGF2Sparse gtest_main ldpc)
 target_link_libraries(TestGF2RowReduce gtest_main ldpc)
 target_link_libraries(TestGf2Linalg gtest_main ldpc)
+target_link_libraries(TestGf2Dense gtest_main ldpc)
+
 
 # Discover and run tests using GoogleTest
 gtest_discover_tests(TestBPDecoder)
@@ -104,5 +109,7 @@ gtest_discover_tests(TestSparseMatrixUtil)
 gtest_discover_tests(TestGF2Sparse)
 gtest_discover_tests(TestGF2RowReduce)
 gtest_discover_tests(TestGf2Linalg)
+gtest_discover_tests(TestGf2Dense)
+
 
 

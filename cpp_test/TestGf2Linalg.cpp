@@ -2,7 +2,6 @@
 #include "sparse_matrix_util.hpp"
 #include "gf2sparse.hpp"
 #include "gf2sparse_linalg.hpp"
-#include "gf2dense.hpp"
 #include <cmath>
 
 #include <random>
@@ -260,132 +259,9 @@ TEST(kernel, rnd_binary_matrix){
 
 }
 
-
-TEST(gf2dense, rank) {
-
-    for(int i=3; i<10;i++){
-        auto pcm1 = hamming_code(i);
-        auto pcm2 = hamming_code(i);
-        auto pcm0 = ldpc::gf2sparse::GF2Sparse<ldpc::gf2sparse::GF2Entry>(pcm1.m,pcm1.n);
-        auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
-        auto pcm = ldpc::gf2sparse::vstack(mats);
-
-        std::vector<std::vector<int>> mat_csc;
-        for(int col = 0; col<pcm.n; col++){
-            mat_csc.push_back(std::vector<int>{});
-            for(auto e: pcm.iterate_column(col)){
-                mat_csc[col].push_back(e.row_index);
-            }
-        }
-
-        int r = ldpc::gf2dense::rank(pcm.m, pcm.n, mat_csc);
-
-        ASSERT_EQ(r,i);
-
-    
-    }
-}
-
-TEST(gf2dense, rep_code_test){
-
-    auto pcm1 = ring_code(3);
-
-
-    auto pcm0 = ldpc::gf2sparse::GF2Sparse<ldpc::gf2sparse::GF2Entry>(3,3);
-    auto mats = vector<decltype(pcm0)>{pcm0,pcm1};
-    auto pcm = ldpc::gf2sparse::vstack(mats);
-
-
-    std::vector<std::vector<int>> mat_csc;
-    for(int col = 0; col<pcm.n; col++){
-        mat_csc.push_back(std::vector<int>{});
-        for(auto e: pcm.iterate_column(col)){
-            mat_csc[col].push_back(e.row_index);
-        }
-    }
-
-    int rank = ldpc::gf2dense::rank(6,3,mat_csc);
-
-
-
-    ASSERT_EQ(rank, 2);
-
-
-}
-
 double sparsity = 0.01;
 int check_count = 400;
 int bit_count = 400;
-
-TEST(gf2dense, sparse_kernel_rnd_binary_matrix){
-    int m, n;
-    m=check_count;
-    n=bit_count;
-
-    auto rnd_csr = random_csr_matrix(m,n,sparsity);
-
-    auto rnd_mat = GF2Sparse<>(m,n);
-
-    rnd_mat.csr_insert(rnd_csr);
-
-    // print_sparse_matrix(rnd_mat);
-
-    auto ker = ldpc::gf2dense::sparse_kernel(m,n,rnd_csr);
-
-
-
-    auto ker_mat = GF2Sparse<>(m,n);
-
-    for(int i=0; i<n; i++){
-        for(int row : ker[i]){
-            ker_mat.insert_entry(row,i);
-        }
-    }
-
-    auto kerT = ker_mat.transpose();
-
-    auto ker0 = rnd_mat.matmul(kerT);
-
-    auto expected = GF2Sparse<>(m,n);
-
-    ASSERT_TRUE(ker0==expected);
-
-}
-
-TEST(gf2dense, kernel_rnd_binary_matrix){
-    int m, n;
-    m=check_count;
-    n=bit_count;
-
-    auto rnd_csr = random_csr_matrix(m,n,sparsity);
-
-    auto rnd_mat = GF2Sparse<>(m,n);
-
-    rnd_mat.csr_insert(rnd_csr);
-
-    // print_sparse_matrix(rnd_mat);
-
-    auto ker = ldpc::gf2dense::kernel(m,n,rnd_csr);
-
-
-
-    auto ker_mat = GF2Sparse<>(m,n);
-
-    for(int i=0; i<n; i++){
-        for(int row : ker[i]){
-            ker_mat.insert_entry(row,i);
-        }
-    }
-
-    auto kerT = ker_mat.transpose();
-
-    auto ker0 = rnd_mat.matmul(kerT);
-
-    auto expected = GF2Sparse<>(m,n);
-
-    ASSERT_TRUE(ker0==expected);
-
-}
 
 
 TEST(gf2sparse, kernel_sparse){
