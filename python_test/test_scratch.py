@@ -22,10 +22,10 @@ if __name__ == "__main__":
 
     # input_vector = np.array([1,0,1,0,1])
 
-    input_vector = np.array([1,0,1])
+    input_vector = np.array([0,0,1])
 
-    bpd = bp_decoder(H,error_probs=[0.1,0.1,0.1], input_vector_type='auto')
+    bpd = bp_decoder(H,error_rate=0.1, input_vector_type='auto', bp_method="ms")
 
     print(bpd.decode(input_vector))
 
-    print(bpd.input_vector_type)
+    print(bpd.error_channel)

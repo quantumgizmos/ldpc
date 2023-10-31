@@ -4,7 +4,7 @@ from ldpc.bp_decoder import BpDecoder, BpDecoderBase
 from scipy.sparse import spmatrix
 import warnings
 
-class bp_decoder(BpDecoder):
+class bp_decoder():
     '''
     Legacy ldpc_v1 function
     ----------
@@ -33,25 +33,44 @@ class bp_decoder(BpDecoder):
         parity matrix is non-square the input vector type is inferred automatically from its length.
     '''
 
-    def __init__(self,parity_check_matrix,**kwargs):
+    def __new__(cls,parity_check_matrix, error_rate = None, max_iter = 0, bp_method="ps", ms_scaling_factor = 1.0, channel_probs=[None], input_vector_type = "auto"):
         warnings.warn("This is the old syntax for the `bp_decoder` from `ldpc v1`. Use the `BpDecoder` class from `ldpc v2` for additional features.")
 
-        #Load in optional parameters (and set defaults)
-        error_rate=kwargs.get("error_rate",None)
-        max_iter=kwargs.get("max_iter",0)
-        bp_method=kwargs.get("bp_method",0)
-        ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
-        channel_probs=kwargs.get("channel_probs",[None])
-        input_vector_type=kwargs.get("input_vector_type",-1)
+        # #Load in optional parameters (and set defaults)
+        # error_rate=kwargs.get("error_rate",None)
+        # max_iter=kwargs.get("max_iter",0)
+        # bp_method=kwargs.get("bp_method",0)
+        # ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
+        # channel_probs=kwargs.get("channel_probs",[None])
+        # input_vector_type=kwargs.get("input_vector_type", "auto")
 
+
+        #error channel setup
+        error_channel = np.zeros(parity_check_matrix.shape[1]).astype(float)
+        if channel_probs[0]!=None:
+            for j in range(parity_check_matrix.shape[1]): error_channel[j]=channel_probs[j]
+            # self.error_rate=np.mean(channel_probs)
+        if channel_probs[0]!=None:
+            if len(channel_probs)!=parity_check_matrix.shape[1]:
+                raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={parity_check_matrix.shape[1]}.")
+        elif error_rate != 0:
+            pass
+        else:
+            raise ValueError(f"Either the error_rate or channel_probs must be specified.")
 
         if channel_probs[0]!=None:
-            if len(channel_probs)!=self.n:
-                raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
+            for j in range(parity_check_matrix.shape[1]): error_channel[j]=channel_probs[j]
+            # self.error_rate=np.mean(channel_probs)
+        else:
+            error_channel = None
+
+
 
         #Input vector type
         if type(input_vector_type) is int and input_vector_type == -1:
             input_vector_type =  "auto"
+        elif type(input_vector_type) is str and input_vector_type == "auto":
+            input_vector_type = "auto"
         elif type(input_vector_type) is str and input_vector_type == "syndrome":
             input_vector_type = "syndrome"
         elif type(input_vector_type) is str and input_vector_type == "received_vector":
@@ -60,13 +79,7 @@ class bp_decoder(BpDecoder):
             raise Exception(f"TypeError: input_vector type must be either 'syndrome', 'received_vector' or 'auto'. Not {input_vector_type}")
 
 
-        #error channel setup
 
-        error_channel = np.zeros(parity_check_matrix.shape[1])
-
-        if channel_probs[0]!=None:
-            for j in range(self.n): error_channel[j]=channel_probs[j]
-            # self.error_rate=np.mean(channel_probs)
 
 
         #BP method
@@ -78,15 +91,10 @@ class bp_decoder(BpDecoder):
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum'")
         
-        super().__init__(
-            parity_check_matrix,
-            error_rate=error_rate,
-            error_channel=error_channel,
-            max_iter=max_iter,
-            bp_method=bp_method,
-            ms_scaling_factor=ms_scaling_factor,
-            input_vector_type=input_vector_type
-            )
+        print("error_channel", error_channel)
+
+        return BpDecoder(parity_check_matrix, error_rate=error_rate, max_iter=max_iter, bp_method=bp_method,
+                         ms_scaling_factor=ms_scaling_factor, error_channel=error_channel, input_vector_type=input_vector_type)
     
     @property
     def channel_probs(self):
