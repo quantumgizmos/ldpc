@@ -151,9 +151,19 @@ class BpOsdDecoder(BpDecoderBase):
 
 
     @property
+    def bp_decoding(self) -> np.ndarray:
+        """
+        Returns the current BP decoding output.
+
+        Returns:
+            np.ndarray: A numpy array containing the BP decoding output.
+        """
+
+
+    @property
     def osd0_decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Returns the current OSD-0 decoding output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
@@ -163,7 +173,7 @@ class BpOsdDecoder(BpDecoderBase):
     @property
     def osdw_decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Returns the current OSD-W decoding output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.

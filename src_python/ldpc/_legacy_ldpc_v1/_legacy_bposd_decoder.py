@@ -80,8 +80,8 @@ class bposd_decoder(BpOsdDecoder):
 
 
         self.error_rate = error_rate
-        self.max_iter = max_iter
-        self.ms_scaling_factor = ms_scaling_factor
+        self.max_iter = int(max_iter)
+        self.ms_scaling_factor = float(ms_scaling_factor)
         self.bp_method = bp_method
         self.osd_method = osd_method
         self.osd_order = osd_order

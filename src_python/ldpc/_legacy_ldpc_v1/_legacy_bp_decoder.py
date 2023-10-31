@@ -33,7 +33,7 @@ class bp_decoder(BpDecoder):
         parity matrix is non-square the input vector type is inferred automatically from its length.
     '''
 
-    def __init__(self,parity_check_matrix, error_rate = None, max_iter = 0, bp_method="ps", ms_scaling_factor = 1.0, channel_probs=[None], input_vector_type = "auto"):
+    def __init__(self,parity_check_matrix, error_rate = None, max_iter = 0, bp_method="ps", ms_scaling_factor = 1.0, channel_probs=[None], input_vector_type = "auto", error_channel = None):
         warnings.warn("This is the old syntax for the `bp_decoder` from `ldpc v1`. Use the `BpDecoder` class from `ldpc v2` for additional features.")
 
         #error channel setup
@@ -78,10 +78,10 @@ class bp_decoder(BpDecoder):
                             'minimum_sum'")
         
         self.bp_method = bp_method
-        self.max_iter = max_iter
+        self.max_iter = int(max_iter)
         self.error_channel = error_channel
         self.error_rate = error_rate
-        self.ms_scaling_factor = ms_scaling_factor
+        self.ms_scaling_factor = float(ms_scaling_factor)
         self.input_vector_type = input_vector_type
 
         # return BpDecoder(parity_check_matrix, error_rate=error_rate, max_iter=max_iter, bp_method=bp_method,

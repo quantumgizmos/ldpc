@@ -92,6 +92,7 @@ cdef class BpDecoderBase:
         omp_thread_count = kwargs.get("omp_thread_count", 1)
         random_schedule_seed = kwargs.get("random_schedule_seed", 0)
         serial_schedule_order = kwargs.get("serial_schedule_order", None)
+        channel_probs = kwargs.get("channel_probs", [None])
         
         # input_vector_type = kwargs.get("input_vector_type", "auto")
         # print(kwargs.get("input_vector_type"))
@@ -133,6 +134,11 @@ cdef class BpDecoderBase:
         self.serial_schedule_order = serial_schedule_order
         self.random_schedule_seed = random_schedule_seed
         self.omp_thread_count = omp_thread_count
+
+        ## the ldpc_v1 backwards compatibility
+        if isinstance(channel_probs, list) or isinstance(channel_probs, np.ndarray):
+            if(len(channel_probs)>0) and (channel_probs[0] is not None):
+                error_channel = channel_probs
 
         if error_channel is not None:
             self.error_channel = error_channel

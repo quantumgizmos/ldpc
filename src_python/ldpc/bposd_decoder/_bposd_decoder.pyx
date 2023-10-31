@@ -52,7 +52,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
-                 osd_order: int = 0, input_vector_type: str = "syndrome"):
+                 osd_order: int = 0, input_vector_type: str = "syndrome", **kwargs):
         
         self.MEMORY_ALLOCATED=False
 
@@ -238,9 +238,24 @@ cdef class BpOsdDecoder(BpDecoderBase):
         return out
 
     @property
+    def bp_decoding(self) -> np.ndarray:
+        """
+        Returns the current BP decoding output.
+
+        Returns:
+            np.ndarray: A numpy array containing the BP decoding output.
+        """
+        out = np.zeros(self.n).astype(int)
+        for i in range(self.n):
+            out[i] = self.bpd.decoding[i]
+        return out
+
+    
+
+    @property
     def osd0_decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Returns the current OSD-0 decoding output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
@@ -259,7 +274,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
     @property
     def osdw_decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Returns the current OSD-W decoding output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
