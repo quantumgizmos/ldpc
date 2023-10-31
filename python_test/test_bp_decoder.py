@@ -169,7 +169,7 @@ def test_rep_code_ps():
 
     bpd = BpDecoder(H,error_rate=0.1,input_vector_type = "syndrome")
     assert bpd is not None
-    print(bpd.bp_method)
+    # print(bpd.bp_method)
     assert bpd.bp_method == "product_sum"
     assert bpd.schedule == "parallel"
     assert np.array_equal(bpd.error_channel,np.array([0.1, 0.1, 0.1]))

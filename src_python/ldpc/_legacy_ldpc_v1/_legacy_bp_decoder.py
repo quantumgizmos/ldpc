@@ -45,14 +45,14 @@ class bp_decoder(BpDecoder):
         input_vector_type=kwargs.get("input_vector_type",-1)
 
         #Input vector type
-        if type(input_vector_type) is int:
-            input_vector_type =  input_vector_type
+        if type(input_vector_type) is int and input_vector_type == -1:
+            input_vector_type =  "auto"
         elif type(input_vector_type) is str and input_vector_type == "syndrome":
-            input_vector_type = 0
+            input_vector_type = "syndrome"
         elif type(input_vector_type) is str and input_vector_type == "received_vector":
-            input_vector_type = 1
+            input_vector_type = "received_vector"
         else:
-            raise Exception(f"TypeError: input_vector type must be either 'syndrome' or 'received_vector'. Not {input_vector_type}")
+            raise Exception(f"TypeError: input_vector type must be either 'syndrome', 'received_vector' or 'auto'. Not {input_vector_type}")
 
 
 
