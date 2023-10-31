@@ -1,3 +1,0 @@
-[submodule "include/ldpc"]
-	path = include/ldpc
-	url = git@github.com:qec-codes/ldpc.git
