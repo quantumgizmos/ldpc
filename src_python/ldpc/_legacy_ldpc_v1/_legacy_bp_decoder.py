@@ -1,6 +1,6 @@
 import scipy.sparse
 import numpy as np
-from ldpc.bp_decoder import BpDecoder
+from ldpc.bp_decoder import BpDecoder, BpDecoderBase
 from scipy.sparse import spmatrix
 import warnings
 
@@ -41,8 +41,13 @@ class bp_decoder(BpDecoder):
         max_iter=kwargs.get("max_iter",0)
         bp_method=kwargs.get("bp_method",0)
         ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
-        channel_probs=kwargs.get("channel_probs",None)
+        channel_probs=kwargs.get("channel_probs",[None])
         input_vector_type=kwargs.get("input_vector_type",-1)
+
+
+        if channel_probs[0]!=None:
+            if len(channel_probs)!=self.n:
+                raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={self.n}.")
 
         #Input vector type
         if type(input_vector_type) is int and input_vector_type == -1:
@@ -55,6 +60,14 @@ class bp_decoder(BpDecoder):
             raise Exception(f"TypeError: input_vector type must be either 'syndrome', 'received_vector' or 'auto'. Not {input_vector_type}")
 
 
+        #error channel setup
+
+        error_channel = np.zeros(parity_check_matrix.shape[1])
+
+        if channel_probs[0]!=None:
+            for j in range(self.n): error_channel[j]=channel_probs[j]
+            # self.error_rate=np.mean(channel_probs)
+
 
         #BP method
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
@@ -65,10 +78,10 @@ class bp_decoder(BpDecoder):
                             Please choose from the following methods:'product_sum',\
                             'minimum_sum'")
         
-        BpDecoder(
+        super().__init__(
             parity_check_matrix,
             error_rate=error_rate,
-            error_channel=channel_probs,
+            error_channel=error_channel,
             max_iter=max_iter,
             bp_method=bp_method,
             ms_scaling_factor=ms_scaling_factor,

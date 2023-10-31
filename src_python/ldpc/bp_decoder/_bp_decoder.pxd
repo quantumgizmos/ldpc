@@ -80,7 +80,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
 cdef class BpDecoderBase:
     cdef BpSparse *pcm
     cdef int m, n
-    cdef vector[uint8_t] _input_vector
+    cdef vector[uint8_t] _syndrome
     cdef vector[double] _error_channel
     cdef vector[int] _serial_schedule_order
     cdef bool MEMORY_ALLOCATED
@@ -89,6 +89,7 @@ cdef class BpDecoderBase:
     # cdef int random_schedule_seed
     
 cdef class BpDecoder(BpDecoderBase):
+    cdef vector[uint8_t] _received_vector
     pass
 
 cdef class SoftInfoBpDecoder(BpDecoderBase):

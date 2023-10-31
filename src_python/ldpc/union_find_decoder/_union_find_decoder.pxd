@@ -23,7 +23,7 @@ cdef class UnionFindDecoder():
     cdef bool MEMORY_ALLOCATED
     cdef uf_decoder_cpp* ufd
     cdef BpSparse* pcm
-    cdef vector[uint8_t] _input_vector
+    cdef vector[uint8_t] _syndrome
     cdef vector[double] uf_llrs
     cdef bool matrix_solve
     cdef int bits_per_step

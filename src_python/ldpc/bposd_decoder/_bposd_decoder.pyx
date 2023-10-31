@@ -110,21 +110,21 @@ cdef class BpOsdDecoder(BpDecoderBase):
         zero_syndrome = True
         
         for i in range(self.m):
-            self._input_vector[i] = syndrome[i]
-            if self._input_vector[i]:
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]:
                 zero_syndrome = False
         if zero_syndrome:
             self.bpd.converge = True
             return np.zeros(self.n, dtype=syndrome.dtype)
         
-        self.bpd.decode(self._input_vector)
+        self.bpd.decode(self._syndrome)
         out = np.zeros(self.n, dtype=syndrome.dtype)
 
         if self.bpd.converge:
             for i in range(self.n):
                 out[i] = self.bpd.decoding[i]
         else:
-            self.osdD.decode(self._input_vector, self.bpd.log_prob_ratios)
+            self.osdD.decode(self._syndrome, self.bpd.log_prob_ratios)
             for i in range(self.n):
                 out[i] = self.osdD.osdw_decoding[i]
 
@@ -388,8 +388,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
 #         # zero_syndrome = True
         
 #         # for i in range(self.m):
-#         #     self._input_vector[i] = syndrome[i]
-#         #     if self._input_vector[i]:
+#         #     self._syndrome[i] = syndrome[i]
+#         #     if self._syndrome[i]:
 #         #         zero_syndrome = False
 #         # if zero_syndrome:
 #         #     return np.zeros(self.n, dtype=syndrome.dtype)
@@ -403,11 +403,11 @@ cdef class BpOsdDecoder(BpDecoderBase):
 #         else:
 #             for i in range(self.m): ##this copies out the value of the soft syndrome and translates it to a hard syndrome
 #                 if self.bpd.soft_syndrome[i]<=0:
-#                     self._input_vector[i] = 1
+#                     self._syndrome[i] = 1
 #                 else:
-#                     self._input_vector[i] = 0
+#                     self._syndrome[i] = 0
 
-#             self.osdD.decode(self._input_vector, self.bpd.log_prob_ratios)
+#             self.osdD.decode(self._syndrome, self.bpd.log_prob_ratios)
 #             for i in range(self.n):
 #                 out[i] = self.osdD.osdw_decoding[i]
 

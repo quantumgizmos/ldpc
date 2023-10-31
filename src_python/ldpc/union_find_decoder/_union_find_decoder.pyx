@@ -76,7 +76,7 @@ cdef class UnionFindDecoder:
         self.m, self.n = pcm.shape[0], pcm.shape[1]
 
         self.ufd = new uf_decoder_cpp(self.pcm[0])
-        self._input_vector.resize(self.m) #C vector for the syndrome
+        self._syndrome.resize(self.m) #C vector for the syndrome
         self.uf_llrs.resize(self.n) #C vector for the log-likehood ratios
         self.matrix_solve = matrix_solve
         self.MEMORY_ALLOCATED=True
@@ -125,8 +125,8 @@ cdef class UnionFindDecoder:
         
         cdef zero_syndrome = True
         for i in range(self.m):
-            self._input_vector[i] = syndrome[i]
-            if self._input_vector[i]:
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]:
                 zero_syndrome = False
         if zero_syndrome:
             return np.zeros(self.n,dtype=DTYPE)
@@ -144,16 +144,16 @@ cdef class UnionFindDecoder:
 
         if self.matrix_solve:
             if llrs is not None:
-                self.ufd.decoding = self.ufd.matrix_decode(self._input_vector, self.uf_llrs,self.bits_per_step)
+                self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, self.uf_llrs,self.bits_per_step)
             else:
-                self.ufd.decoding = self.ufd.matrix_decode(self._input_vector, NULL_DOUBLE_VECTOR,self.bits_per_step)
+                self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, NULL_DOUBLE_VECTOR,self.bits_per_step)
 
         else:
             if llrs is not None:
               
-                self.ufd.decoding = self.ufd.peel_decode(self._input_vector, self.uf_llrs,self.bits_per_step)
+                self.ufd.decoding = self.ufd.peel_decode(self._syndrome, self.uf_llrs,self.bits_per_step)
             else:
-                self.ufd.decoding = self.ufd.peel_decode(self._input_vector, NULL_DOUBLE_VECTOR,self.bits_per_step)
+                self.ufd.decoding = self.ufd.peel_decode(self._syndrome, NULL_DOUBLE_VECTOR,self.bits_per_step)
         
 
         out = np.zeros(self.n,dtype=DTYPE)

@@ -98,23 +98,23 @@ cdef class BeliefFindDecoder(BpDecoderBase):
         DTYPE = syndrome.dtype
         
         for i in range(self.m):
-            self._input_vector[i] = syndrome[i]
-            if self._input_vector[i]:
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]:
                 zero_syndrome = False
         if zero_syndrome:
             self.bpd.converge = True
             return np.zeros(self.n,dtype=DTYPE)
 
-        self.bpd.decoding = self.bpd.decode(self._input_vector)
+        self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
         if self.bpd.converge:
             for i in range(self.n): out[i] = self.bpd.decoding[i]
 
         if not self.bpd.converge:
             if self.matrix_solve:
-                self.ufd.decoding = self.ufd.matrix_decode(self._input_vector, self.bpd.log_prob_ratios,self.bits_per_step)
+                self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
             else:
-                self.ufd.decoding = self.ufd.peel_decode(self._input_vector, self.bpd.log_prob_ratios,self.bits_per_step)
+                self.ufd.decoding = self.ufd.peel_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
             for i in range(self.n):
                 # self.bf_decoding[i] = self.ufd.decoding[i]^self.bpd.decoding[i]
                 out[i] = self.ufd.decoding[i]

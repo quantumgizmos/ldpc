@@ -142,11 +142,23 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         std::vector<uint8_t> decode(std::vector<uint8_t> &input_vector) {
 
 
-            if((this->bp_input_type == AUTO && input_vector.size() != this->check_count) || this->bp_input_type == RECEIVED_VECTOR){
+            if((this->bp_input_type == AUTO && input_vector.size() == this->bit_count) || this->bp_input_type == RECEIVED_VECTOR){
                 auto syndrome = pcm.mulvec(input_vector);
-                if (schedule == PARALLEL) return bp_decode_parallel(syndrome);
-                else if (schedule == SERIAL) return bp_decode_serial(syndrome);
+                std::vector<uint8_t> rv_decoding;
+                if (schedule == PARALLEL){
+                    rv_decoding = bp_decode_parallel(syndrome);
+                }
+                else if (schedule == SERIAL){
+                    rv_decoding = bp_decode_serial(syndrome);
+                }
                 else throw std::runtime_error("Invalid BP schedule");
+
+                for(int i = 0; i<this->bit_count; i++){
+                    this->decoding[i] = rv_decoding[i] ^ input_vector[i];
+                }
+
+                return this->decoding;
+
             }
 
 

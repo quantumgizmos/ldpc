@@ -375,6 +375,27 @@ TEST(BpDecoder, random_schedule_seed){
 
 }
 
+//received vector decoding
+TEST(BpDecoder, ProdSumSerial_RepCode5) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code(n);
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder using input arguments
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 4324234,ldpc::bp::AUTO);
+
+    auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1}, {0, 1, 1, 0, 0}, {1, 0, 0, 1, 1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}};
+
+    auto count = 0;
+    for (auto received_vector : received_vectors) {
+        auto decoding = decoder.decode(received_vector);
+        ASSERT_EQ(expected_decoding[count], decoding);
+        count++;
+    }
+}
+
 
 int main(int argc, char **argv)
 {

@@ -117,7 +117,7 @@ cdef class BpDecoderBase:
 
         # allocate vectors for decoder input
         self._error_channel.resize(self.n) #C++ vector for the error channel
-        self._input_vector.resize(self.m) #C++ vector for the syndrome
+        self._syndrome.resize(self.m) #C++ vector for the syndrome
         self._serial_schedule_order = NULL_INT_VECTOR
 
 
@@ -565,18 +565,19 @@ cdef class BpDecoder(BpDecoderBase):
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs):
 
         self.input_vector_type = input_vector_type
+        self._received_vector.resize(self.n) #C++ vector for the received vector
 
         pass
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs):
         
         pass
 
@@ -600,20 +601,37 @@ cdef class BpDecoder(BpDecoderBase):
             If the length of the input input_vector does not match the number of rows in the parity check matrix.
         """
         
-        if not len(input_vector)==self.m or len(input_vector)==self.n:
+        if(self.bpd.bp_input_type == SYNDROME and not len(input_vector)==self.m):
+            raise ValueError(f"The input_vector must have length {self.m} (for syndrome decoding). Not length {len(input_vector)}.")
+        elif(self.bpd.bp_input_type == RECEIVED_VECTOR and not len(input_vector)==self.n):
+            raise ValueError(f"The input_vector must have length {self.n} (for received vector decoding). Not length {len(input_vector)}.")
+        elif(self.bpd.bp_input_type == AUTO and not (len(input_vector)==self.m or len(input_vector)==self.n)):
             raise ValueError(f"The input_vector must have length {self.m} (for syndrome decoding) or length {self.n} (for received vector decoding). Not length {len(input_vector)}.")
+
         cdef int i
         cdef bool zero_input_vector = True
         DTYPE = input_vector.dtype
+
+        cdef int len_input_vector = len(input_vector)
         
-        for i in range(self.m):
-            self._input_vector[i] = input_vector[i]
-            if self._input_vector[i]: zero_input_vector = False
-        if zero_input_vector:
-            self.bpd.converge = True
-            return np.zeros(self.n,dtype=DTYPE)
+        if(self.bpd.bp_input_type == SYNDROME or (self.bpd.bp_input_type == AUTO and len(input_vector)==self.m)):
+            for i in range(len_input_vector):
+                self._syndrome[i] = input_vector[i]
+                if self._syndrome[i]: zero_input_vector = False
+            if zero_input_vector:
+                self.bpd.converge = True
+                return np.zeros(len_input_vector,dtype=DTYPE)
+            self.bpd.decode(self._syndrome)
+
+        elif(self.bpd.bp_input_type == RECEIVED_VECTOR or (self.bpd.bp_input_type == AUTO and len(input_vector)==self.n)):
+            for i in range(len_input_vector):
+                self._received_vector[i] = input_vector[i]
+                if self._received_vector[i]: zero_input_vector = False
+            if zero_input_vector:
+                self.bpd.converge = True
+                return np.zeros(len_input_vector,dtype=DTYPE)
+            self.bpd.decode(self._received_vector)
         
-        self.bpd.decode(self._input_vector)
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
         return out
@@ -663,7 +681,7 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
 
     def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0):
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0, **kwargs):
 
         self.cutoff = cutoff
         if not isinstance(sigma,float) or sigma <= 0:
