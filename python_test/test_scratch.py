@@ -28,4 +28,5 @@ if __name__ == "__main__":
 
     print(bpd.decode(input_vector))
 
+    bpd.update_channel_probs(np.array([0.2,0.1,0.1]))
     print(bpd.error_channel)

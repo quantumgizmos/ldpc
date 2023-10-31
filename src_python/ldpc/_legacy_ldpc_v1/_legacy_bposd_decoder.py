@@ -1,6 +1,7 @@
 from scipy.sparse import spmatrix
 from scipy.special import comb as nCr
 from ldpc.bposd_decoder import BpOsdDecoder
+import numpy as np 
 import warnings
 
 class bposd_decoder(BpOsdDecoder):
@@ -31,21 +32,9 @@ class bposd_decoder(BpOsdDecoder):
 
     '''
     
-    def __init__(self,parity_check_matrix,**kwargs):
+    def __init__(self,parity_check_matrix, error_rate = None, max_iter = 0, bp_method="ps", ms_scaling_factor = 1.0, channel_probs=[None], osd_method = "osd_0", osd_order = 0):
 
         warnings.warn("This is the old syntax for the `bposd_decoder` from `ldpc v1`. Use the `BpOsdDecoder` class from `ldpc v2` for additional features.")
-
-        #Load in optional parameters (and set defaults)
-        error_rate=kwargs.get("error_rate",None)
-        max_iter=kwargs.get("max_iter",0)
-        bp_method=kwargs.get("bp_method",0)
-        ms_scaling_factor=kwargs.get("ms_scaling_factor",1.0)
-        channel_probs=kwargs.get("channel_probs",None)
-        input_vector_type=kwargs.get("input_vector_type",-1)
-
-        #OSD specific input parameters
-        osd_method=kwargs.get("osd_method",1)
-        osd_order=kwargs.get("osd_order",-1)
 
         #BP method
         if str(bp_method).lower() in ['prod_sum','product_sum','ps','0','prod sum']:
@@ -70,15 +59,33 @@ class bposd_decoder(BpOsdDecoder):
             raise ValueError(f"ERROR: OSD method '{osd_method}' invalid. Please choose from the following methods: 'OSD_0', 'OSD_E' or 'OSD_CS'.")
 
 
-        BpOsdDecoder(
-            parity_check_matrix,
-            error_rate=error_rate,
-            error_channel=channel_probs,
-            max_iter=max_iter,
-            bp_method=bp_method,
-            ms_scaling_factor=ms_scaling_factor,
-            osd_method=osd_method,
-            osd_order=osd_order)
+        #error channel setup
+        error_channel = np.zeros(parity_check_matrix.shape[1]).astype(float)
+        if channel_probs[0]!=None:
+            for j in range(parity_check_matrix.shape[1]): error_channel[j]=channel_probs[j]
+            # self.error_rate=np.mean(channel_probs)
+        if channel_probs[0]!=None:
+            if len(channel_probs)!=parity_check_matrix.shape[1]:
+                raise ValueError(f"The length of the channel probability vector must be eqaul to the block length n={parity_check_matrix.shape[1]}.")
+        elif error_rate != 0:
+            pass
+        else:
+            raise ValueError(f"Either the error_rate or channel_probs must be specified.")
+
+        if channel_probs[0]!=None:
+            for j in range(parity_check_matrix.shape[1]): error_channel[j]=channel_probs[j]
+            # self.error_rate=np.mean(channel_probs)
+        else:
+            error_channel = None
+
+
+        self.error_rate = error_rate
+        self.max_iter = max_iter
+        self.ms_scaling_factor = ms_scaling_factor
+        self.bp_method = bp_method
+        self.osd_method = osd_method
+        self.osd_order = osd_order
+        self.error_channel = error_channel
         
     @property
     def channel_probs(self):

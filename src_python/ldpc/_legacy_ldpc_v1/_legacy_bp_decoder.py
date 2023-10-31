@@ -55,8 +55,6 @@ class bp_decoder(BpDecoder):
         else:
             error_channel = None
 
-
-
         #Input vector type
         if type(input_vector_type) is int and input_vector_type == -1:
             input_vector_type =  "auto"
