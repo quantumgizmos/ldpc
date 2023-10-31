@@ -346,7 +346,7 @@ it is shown that the soft syndrome can be used to improve the performance of min
 The soft syndrome min-sum algorithm (SSMSA) is implemented in the `SoftInfoBpDecoder` class.
 
 ```python
-from ldpc.bposd_decoder import SoftInfoBpDecoder
+from ldpc.bp_decoder import SoftInfoBpDecoder
 from ldpc.codes import hamming_code
 import numpy as np
 
