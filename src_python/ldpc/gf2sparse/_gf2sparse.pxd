@@ -4,6 +4,8 @@ from libc.stdlib cimport malloc, calloc, free
 from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.memory cimport shared_ptr, make_shared
+from cython.view cimport array as carray
+
 cimport numpy as np
 ctypedef np.uint8_t uint8_t
 
@@ -55,6 +57,12 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "ldpc::gf2sparse_linalg":
 
     CsrMatrix cy_kernel(GF2Sparse* mat)
     CsrMatrix cy_row_complement_basis(GF2Sparse* mat)
+
+from libcpp.vector cimport vector
+
+cdef extern from "gf2dense.hpp" namespace "ldpc::gf2dense":
+    int gf2dense_rank(int row_count, int col_count, vector[vector[int]]& mat)
+    vector[vector[int]] gf2dense_kernel "ldpc::gf2dense::kernel" (int row_count, int col_count, vector[vector[int]]& mat) 
 
 cdef class PluDecomposition():
     cdef bool _MEM_ALLOCATED

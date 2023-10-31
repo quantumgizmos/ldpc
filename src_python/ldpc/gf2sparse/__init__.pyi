@@ -2,6 +2,12 @@ import numpy as np
 import scipy.sparse
 from typing import Tuple, Union
 from libc.stdint cimport uintptr_t
+def csc_to_scipy_sparse(vector[vector[int]]& col_adjacency_list):
+    """
+    Converts CSC matrix to sparse matrix
+    """
+
+
 def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     """
     Calculate the rank of a given parity check matrix.
@@ -14,9 +20,21 @@ def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     """
 
 
-def kernel(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy.sparse.spmatrix:
+def nullspace(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method = "dense") -> scipy.sparse.spmatrix:
     """
     Calculate the kernel of a given parity check matrix.
+    
+    Parameters:
+        pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix for kernel calculation.
+        
+    Returns:
+        scipy.sparse.spmatrix: The kernel of the parity check matrix.
+    """
+
+
+def kernel(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method = "dense") -> scipy.sparse.spmatrix:
+    """
+    Calculate the kernel of a given parity check matrix (same as the nullspace).
     
     Parameters:
         pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix for kernel calculation.

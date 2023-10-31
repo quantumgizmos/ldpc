@@ -98,6 +98,39 @@ cdef csr_to_scipy_sparse(vector[vector[int]]& row_adjacency_list, int m, int n, 
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
     return smat
 
+def csc_to_scipy_sparse(vector[vector[int]]& col_adjacency_list):
+    """
+    Converts CSC matrix to sparse matrix
+    """
+    # Determine column count
+    cdef int n = col_adjacency_list.size()
+
+    # Determine row count and entry count
+    cdef int m = 0
+    cdef int entry_count = 0
+    cdef int col_n = 0
+    for j in range(n):
+        col_n = col_adjacency_list[j].size()
+        entry_count += col_n
+        for i in range(col_n):
+            if col_adjacency_list[j][i] >= m:
+                m = col_adjacency_list[j][i] + 1
+
+    cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
+    cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
+
+    cdef int entry_i = 0
+    for j in range(n):
+        col_n = col_adjacency_list[j].size()
+        for i in range(col_n):
+            rows[entry_i] = col_adjacency_list[j][i]
+            cols[entry_i] = j
+            entry_i += 1
+
+    smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
+    return smat
+
 cdef GF2Sparse2Py(GF2Sparse* cpcm):
     cdef int i
     cdef int m = cpcm.m
@@ -107,6 +140,62 @@ cdef GF2Sparse2Py(GF2Sparse* cpcm):
     smat = coords_to_scipy_sparse(entries, m, n, entry_count)
     return smat
 
+cdef vector[vector[int]] Py2CscList(pcm: Union[scipy.sparse.spmatrix, np.ndarray]):
+    
+    cdef int rows
+    cdef int cols
+    cdef vector[vector[int]] csc_list
+    cdef int[:] indices
+    cdef int[:] indptr
+    # cdef int[:] data
+    cdef int col, row, idx
+
+    csc = scipy.sparse.csc_matrix(pcm)
+
+    # Get the dimensions of the matrix
+    rows = csc.shape[0]
+    cols = csc.shape[1]
+
+    # Get the data, indices, and indptr from the CSC matrix
+    indices = csc.indices
+    indptr = csc.indptr
+    # data = csc.data
+
+    # Fill the vector of vectors with the data from the CSC matrix
+    
+    for col in range(cols):
+        csc_list.push_back(vector[int]())
+        for idx in range(indptr[col], indptr[col + 1]):
+            csc_list[col].push_back(indices[idx])
+
+    return csc_list
+
+cdef vector[vector[int]] Py2CsrList(pcm: Union[scipy.sparse.spmatrix, np.ndarray]):
+
+    cdef int rows
+    cdef int cols
+    cdef vector[vector[int]] csr_list
+    cdef int[:] indices
+    cdef int[:] indptr
+    cdef int row, col, idx
+
+    csr = scipy.sparse.csr_matrix(pcm)  # Convert to CSR format
+
+    # Get the dimensions of the matrix
+    rows = csr.shape[0]
+    cols = csr.shape[1]
+
+    # Get the indices and indptr from the CSR matrix
+    indices = csr.indices
+    indptr = csr.indptr
+
+    # Fill the vector of vectors with the data from the CSR matrix
+    for row in range(rows):
+        csr_list.push_back(vector[int]())
+        for idx in range(indptr[row], indptr[row + 1]):
+            csr_list[row].push_back(indices[idx])
+
+    return csr_list
 
 def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     """
@@ -126,7 +215,7 @@ def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     del cpcm
     return rank
 
-def kernel(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy.sparse.spmatrix:
+def nullspace(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method = "dense") -> scipy.sparse.spmatrix:
     """
     Calculate the kernel of a given parity check matrix.
     
@@ -136,10 +225,47 @@ def kernel(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy.sparse.spmatr
     Returns:
         scipy.sparse.spmatrix: The kernel of the parity check matrix.
     """
-    cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
-    cdef CsrMatrix csr = cy_kernel(cpcm)
-    del cpcm
-    return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
+
+    cdef vector[vector[int]] csr_list
+    cdef vector[vector[int]] csr_ker
+    cdef GF2Sparse* cpcm
+    cdef CsrMatrix csrf
+
+    #check the parity check matrix is the right type
+    if isinstance(pcm, np.ndarray) or isinstance(pcm, scipy.sparse.spmatrix):
+        pass
+    else:
+        raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
+
+    # get the parity check dimensions
+    row_count, col_count = pcm.shape[0], pcm.shape[1]
+
+    if method == "dense":
+
+        csr_list = Py2CsrList(pcm)
+        csr_ker = gf2dense_kernel(row_count, col_count, csr_list)
+        return csc_to_scipy_sparse(csr_ker)
+
+    elif method == "sparse":
+        cpcm = Py2GF2Sparse(pcm)
+        csr = cy_kernel(cpcm)
+        del cpcm
+        return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
+
+    else:
+        raise ValueError(f"Invalid method. Please use 'dense' or 'sparse'")
+
+def kernel(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method = "dense") -> scipy.sparse.spmatrix:
+    """
+    Calculate the kernel of a given parity check matrix (same as the nullspace).
+    
+    Parameters:
+        pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix for kernel calculation.
+        
+    Returns:
+        scipy.sparse.spmatrix: The kernel of the parity check matrix.
+    """
+    return nullspace(pcm, method)
 
 def row_complement_basis(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy.sparse.spmatrix:
     """
