@@ -3,20 +3,20 @@
 A C++ rewrite of the `LDPC` package for decoding low density parity check checks. New features include:
 
 - A new C++ template class `GF2Sparse`. This is a more flexible implementation of the `mod2sparse` data structure used in the LDPCv1. This will make it much easier to expand the package.
-- Serial (and custom) schedules for the classical BP decoder.
-- An implementation of weighted union find (with Peeling and inversion solvers).
-- An implementation of belief-find (https://arxiv.org/abs/2203.04948)
+- Serial (and layered) schedules for the BP decoder.
+- Run-time improvements for BP+OSD OSD-0, OSD_E and OSD_E.
+- An implementation of the Delfosse-Nickerson union-find decoder (https://arxiv.org/abs/1709.06218).
+- Variants of union find where cluster growth is guided the qubit error channe (https://arxiv.org/abs/2004.04693).
+- Belief-find. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails (https://arxiv.org/abs/2203.04948). Here, the cluster growth is guided by the log-likelihood ratios returned by BP.
+- Union-find with inversion solving (https://arxiv.org/abs/2103.08049).
+- Belief-find with inversion solving (first implementation I am aware of).
 - An implementation of the Kuo and Lai memory belief propagation decoder (https://arxiv.org/abs/2104.13659)
 - Flip and P-flip decoders (https://aps.arxiv.org/abs/2212.06985)
 
 ## ToDos
 
-`ldpc` is still a work in progress. Things that still need to be done:
+`LDPCv2` is still a work in progress. Things that still need to be done:
 - More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681).
-- ~~The LU decomposition routine needs to optimised (it is still slower than the `mod2sparse` version) (getting there...)~~
-- ~~Soft syndrome BP (https://arxiv.org/abs/2205.02341)~~
-- ~~Make a Cython wrapper for the `GF2Sparse<T>` data structure~~
-- Layered schedules (hybrid serial + parallel) (in progress). Serial version complete. Hybrid possible with OpenMp?
 - Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
 - Generalised BP (https://arxiv.org/abs/2212.03214)
 - Functions need to be properly documented (in progress)
@@ -30,14 +30,12 @@ The C++ source code can be found in src_cpp. Python bindings are implemented usi
 
 - Download the repo.
 - Navigate to the root.
-- Download submodules `git submodule update --init --recursive`
 - Pip install with `python>=3.8`.
 Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```
-git clone git@github.com:qec-codes/ldpc2.git
-cd ldpc2
-git submodule update --init --recursive
+git clone git@github.com:qec-codes/ldpc.git
+cd ldpc
 pip install -Ue .
 ```
 
@@ -50,7 +48,10 @@ pip install -U numpy scipy ldpc
 pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
-## Quickstart
+
+
+
+<!-- ## Quickstart
 
 I have included some *demo* codes in the `ldpc.codes` module. By default, parity check matrices are now represented as `scipy.sparse.csr_matrix` objects.
 
@@ -392,4 +393,4 @@ dec
 
     array([0, 0, 0, ..., 0, 0, 0])
 
-
+ -->
