@@ -22,7 +22,7 @@ dependencies = [
     "tqdm",
     "ldpc"
 ]
-version = "2.0.2"
+version = "2.0.3"
 
 [tool.setuptools.packages.find]
 where = ["src_python"]  
