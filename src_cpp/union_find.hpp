@@ -13,6 +13,7 @@
 #include "osd.hpp"
 #include <robin_map.h>
 #include <robin_set.h>
+#include <numeric>
 
 #include "gf2sparse_linalg.hpp"
 #include "bp.hpp"

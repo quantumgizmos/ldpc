@@ -48,9 +48,6 @@ pip install -U numpy scipy ldpc
 pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
-
-
-
 <!-- ## Quickstart
 
 I have included some *demo* codes in the `ldpc.codes` module. By default, parity check matrices are now represented as `scipy.sparse.csr_matrix` objects.
