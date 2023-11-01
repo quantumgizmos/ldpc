@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-     - release
+     - release_v2
 
 jobs:
   build_sdist:
