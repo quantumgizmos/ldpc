@@ -6,7 +6,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - Serial (and layered) schedules for the BP decoder.
 - Run-time improvements for BP+OSD OSD-0, OSD_E and OSD_E.
 - An implementation of the Delfosse-Nickerson union-find decoder (https://arxiv.org/abs/1709.06218).
-- Variants of union find where cluster growth is guided the qubit error channe (https://arxiv.org/abs/2004.04693).
+- Variants of union find where cluster growth is guided the qubit error channel (https://arxiv.org/abs/2004.04693).
 - Belief-find. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails (https://arxiv.org/abs/2203.04948). Here, the cluster growth is guided by the log-likelihood ratios returned by BP.
 - Union-find with inversion solving (https://arxiv.org/abs/2103.08049).
 - Belief-find with inversion solving (first implementation I am aware of).
@@ -44,7 +44,7 @@ pip install -Ue .
 This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
 ```
-pip install -U numpy scipy ldpc
+pip install -U numpy scipy tqdm pytest
 pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
