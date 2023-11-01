@@ -1,41 +1,90 @@
 name: Build
 
 on:
+  workflow_dispatch:
+  pull_request:
   push:
     branches:
-      - release
+     - release
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest,windows-latest,macos-latest]
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
   build_sdist:
-    name: Build sdist
+    name: Build SDist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
-      - name: Build sdist
-        run: pipx run build --sdist
-      - name: Install sdist
-        run: python -m pip install --verbose dist/*.tar.gz
-      - uses: actions/upload-artifact@v3
-        with:
-          path: dist/*.tar.gz
+
+    - name: Checkout out repo and submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+
+  build_wheels:
+    runs-on: ${{ matrix.os_dist.os }}
+    env:
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      CIBW_ARCHS_MACOS: "arm64 x86_64"
+      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
+    strategy:
+      fail-fast: false
+      matrix:
+        os_dist: [
+          # macosx x86_64
+          {os: macos-latest, dist: cp38-macosx_x86_64},
+          {os: macos-latest, dist: cp39-macosx_x86_64},
+          {os: macos-latest, dist: cp310-macosx_x86_64},
+          {os: macos-latest, dist: cp311-macosx_x86_64},
+
+          # macosx arm64
+          {os: macos-latest, dist: cp38-macosx_arm64},
+          {os: macos-latest, dist: cp39-macosx_arm64},
+          {os: macos-latest, dist: cp310-macosx_arm64},
+          {os: macos-latest, dist: cp311-macosx_arm64},
+
+          # macosx universal2
+          # {os: macos-latest, dist: cp38-macosx_universal2},
+          # {os: macos-latest, dist: cp39-macosx_universal2},
+          # {os: macos-latest, dist: cp310-macosx_universal2},
+          # {os: macos-latest, dist: cp311-macosx_universal2},
+          # windows amd64
+          {os: windows-latest, dist: cp38-win_amd64},
+          {os: windows-latest, dist: cp39-win_amd64},
+          {os: windows-latest, dist: cp310-win_amd64},
+          {os: windows-latest, dist: cp311-win_amd64},
+
+          # ubuntu x86_64
+          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+
+        ]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - uses: pypa/cibuildwheel@v2.11.1
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v3
+      with:
+        path: wheelhouse/*.whl
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
@@ -47,6 +96,7 @@ jobs:
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_PASSWORD }}
-          skip_existing: true
+          password: ${{ secrets.LDPC_TEST_PYPI }}
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
           verbose: true

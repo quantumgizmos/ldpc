@@ -1,5 +1,5 @@
 .. LDPC documentation master file, created by
-   sphinx-quickstart on Tue Dec 14 10:45:47 2021.
+   sphinx-quickstart on Fri Sep 29 23:33:25 2023.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -7,31 +7,25 @@ Welcome to LDPC's documentation!
 ================================
 
 .. toctree::
-   :maxdepth: 1
-   :titlesonly:
-   :caption: Quickstart
+   :maxdepth: 4
+   :caption: ldpc API:
 
-   installation.md
-   pcm.ipynb
-
-.. toctree::
-   :maxdepth: 10
-   :caption: Belief propagation (BP) decoding
-
-   bp_decoding_example.ipynb
-
-.. toctree::
-   :maxdepth: 1
-   :titlesonly:
-   :caption: LDPC Python API
-
-   ldpc/ldpc_decoder
-   ldpc/osd_decoder
-   ldpc/codes.md
-   ldpc/code_util.md
-   ldpc/ldpc_mod2
+   ldpc/codes
+   ldpc/gf2sparse
+   ldpc/bp_decoder
+   ldpc/belief_find_decoder
+   ldpc/bposd_decoder
+   ldpc/union_find_decoder
+   ldpc/monte_carlo_simulation
+   ldpc/soft_info_belief_propagation.rst
+   
 
 
-   ldpc/index
 
 
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

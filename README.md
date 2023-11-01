@@ -1,61 +1,393 @@
-![](https://github.com/quantumgizmos/ldpc/workflows/Build/badge.svg)
+# LDPC version 2
 
-# LDPC
-This module provides a suite of tools for building and benmarking low density parity check (LDPC) codes. Features include functions for mod2 (binary) arithmatic and a fast implementation of the belief propagation decoder.
+A C++ rewrite of the `LDPC` package for decoding low density parity check checks. New features include:
 
-## Documentation
+- A new C++ template class `GF2Sparse`. This is a more flexible implementation of the `mod2sparse` data structure used in the LDPCv1. This will make it much easier to expand the package.
+- Serial (and layered) schedules for the BP decoder.
+- Run-time improvements for BP+OSD OSD-0, OSD_E and OSD_E.
+- An implementation of the Delfosse-Nickerson union-find decoder (https://arxiv.org/abs/1709.06218).
+- Variants of union find where cluster growth is guided the qubit error channe (https://arxiv.org/abs/2004.04693).
+- Belief-find. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails (https://arxiv.org/abs/2203.04948). Here, the cluster growth is guided by the log-likelihood ratios returned by BP.
+- Union-find with inversion solving (https://arxiv.org/abs/2103.08049).
+- Belief-find with inversion solving (first implementation I am aware of).
+- An implementation of the Kuo and Lai memory belief propagation decoder (https://arxiv.org/abs/2104.13659)
+- Flip and P-flip decoders (https://aps.arxiv.org/abs/2212.06985)
 
-The full documentation can be found [here](https://roffe.eu/software/ldpc/index.html).
+## ToDos
 
-## Installation from PyPi (recommended method)
+`LDPCv2` is still a work in progress. Things that still need to be done:
+- More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681).
+- Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
+- Generalised BP (https://arxiv.org/abs/2212.03214)
+- Functions need to be properly documented (in progress)
+- Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
+- The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
+- STIM integration for circuit level noise.
 
-Installtion from [PyPi](https://pypi.org/project/ldpc/) requires Python>=3.8.
-To install via pip, run:
+## Python - Installation from source
+
+The C++ source code can be found in src_cpp. Python bindings are implemented using Cython and can be found in src/ldpc. To install the Python version of the repository follows the instructions below: 
+
+- Download the repo.
+- Navigate to the root.
+- Pip install with `python>=3.8`.
+Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```
-pip install -U ldpc
-```
-
-## Installation (from source)
-
-Installation from source requires Python>=3.6 and a local C compiler (eg. 'gcc' in Linux or 'clang' in Windows). The LDPC package can then be installed by running:
-
-```
-git clone https://github.com/quantumgizmos/ldpc.git
+git clone git@github.com:qec-codes/ldpc.git
 cd ldpc
-pip install -e ldpc
+pip install -Ue .
 ```
 
-## Dependencies
-This package makes use of the `mod2sparse` data structure from Radford Neal's [Software for Low Density Parity Check Codes](https://www.cs.toronto.edu/~radford/ftp/LDPC-2012-02-11/index.html) C package.
+## Installation from Test PyPi
 
-## Attribution
-
-If you use this software in your research please cite as follows:
+This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
 ```
-@software{Roffe_LDPC_Python_tools_2022,
-author = {Roffe, Joschka},
-title = {{LDPC: Python tools for low density parity check codes}},
-url = {https://pypi.org/project/ldpc/},
-year = {2022}
-}
+pip install -U numpy scipy ldpc
+pip install -i https://test.pypi.org/simple/ ldpc
 ```
 
-If you have used the BP+OSD class for quantum error correction, please also cite the following paper:
+<!-- ## Quickstart
 
+I have included some *demo* codes in the `ldpc.codes` module. By default, parity check matrices are now represented as `scipy.sparse.csr_matrix` objects.
+
+
+```python
+from ldpc.codes import hamming_code
+
+H = hamming_code(3)
+
+H
 ```
-@article{roffe_decoding_2020,
-   title={Decoding across the quantum low-density parity-check code landscape},
-   volume={2},
-   ISSN={2643-1564},
-   url={http://dx.doi.org/10.1103/PhysRevResearch.2.043423},
-   DOI={10.1103/physrevresearch.2.043423},
-   number={4},
-   journal={Physical Review Research},
-   publisher={American Physical Society (APS)},
-   author={Roffe, Joschka and White, David R. and Burton, Simon and Campbell, Earl},
-   year={2020},
-   month={Dec}
-}
+
+
+
+
+    <3x7 sparse matrix of type '<class 'numpy.uint8'>'
+    	with 12 stored elements in Compressed Sparse Row format>
+
+
+
+
+```python
+## To get the dense representaiton of the code, we can use the `scipy.sparse.toarray()` method
+H.toarray()
 ```
+
+
+
+
+    array([[0, 0, 0, 1, 1, 1, 1],
+           [0, 1, 1, 0, 0, 1, 1],
+           [1, 0, 1, 0, 1, 0, 1]], dtype=uint8)
+
+
+
+
+```python
+# Ring code
+
+from ldpc.codes import ring_code
+
+H = ring_code(4)
+H.toarray()
+```
+
+
+
+
+    array([[1, 1, 0, 0],
+           [0, 1, 1, 0],
+           [0, 0, 1, 1],
+           [1, 0, 0, 1]], dtype=uint8)
+
+
+
+
+```python
+# Full rank repetition code
+
+from ldpc.codes import rep_code
+H = rep_code(4)
+H.toarray()
+```
+
+
+
+
+    array([[1, 1, 0, 0],
+           [0, 1, 1, 0],
+           [0, 0, 1, 1]], dtype=uint8)
+
+
+
+# Calculating code properties
+
+Code properties can be calculated with the help of GF2 linear algebra functions in the `ldpc.gf2sparse` package. This module is a Python wrapper for my *Up-Down-Left-Right* (ldpc) sparse matrix library written in C++ (this can be installed from https://github.com/qec-codes/ldpc). See examples below
+
+
+```python
+from ldpc.codes import hamming_code
+import ldpc.gf2sparse as gf2sparse
+
+# The rank 4 Hamming code
+H = hamming_code(4)
+
+# Physical bits
+physical_bit_count = H.shape[1]
+
+# Logical bits (by the Rank-Nullity Theorem)
+logical_bit_count = physical_bit_count - gf2sparse.rank(H)
+
+# Print code parameters
+print(f"[n = {physical_bit_count}, k = {logical_bit_count}]")
+```
+
+    [n = 15, k = 11]
+
+
+
+```python
+# You can also get a basis of the codewords using the kernel function
+
+codeword_basis = gf2sparse.kernel(H)
+
+codeword_basis.toarray()
+```
+
+
+
+
+    array([[1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+           [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+           [1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+           [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+           [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
+           [0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+           [1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1]], dtype=uint8)
+
+
+
+
+```python
+# Finally, you can use the `gf2sparse.PluDecomposition` class to build your
+# own linear algebra routines. Eg. we can write a rref function
+import scipy.sparse
+import numpy as np
+import ldpc.gf2sparse as gf2sparse
+from typing import Tuple,List
+from ldpc.codes import hamming_code
+
+def rref(H: scipy.sparse.spmatrix) -> Tuple[List[int], scipy.sparse.spmatrix]:
+    """
+    Compute the Reduced Row Echelon Form (RREF) of a given sparse matrix.
+
+    Parameters
+    ----------
+    H : scipy.sparse.spmatrix
+        The input sparse matrix for which the RREF is to be computed.
+
+    Returns
+    -------
+    Tuple[List[int], scipy.sparse.spmatrix]
+        A tuple containing the pivot columns and the RREF of the input matrix.
+        - The first element is a list of integers representing the pivot columns.
+        - The second element is the RREF of the input matrix as a scipy.sparse.spmatrix.
+    """
+    
+    # Initialise the PLU decomposition class with the input matrix H.
+    # We set `full_reduce = False`. This means the funciton does not reduced entries above the diagonal
+    # We set `lower_triangular=False`. This means the function does not calculate the lower triangular component
+    # of the decmomposition.
+    plu_H = gf2sparse.PluDecomposition(H, full_reduce=False, lower_triangular=False)  
+    
+    # Extract the upper triangular matrix (U) from the PLU decomposition to get the RREF
+    rref_H = plu_H.U
+    
+    # Extract the pivot columns from the PLU decomposition
+    pivots_columns = plu_H.pivots
+
+    # Return a tuple containing the pivot columns and the RREF of H
+    return (pivots_columns, rref_H)
+
+pivots, H_rref = rref(H)
+
+pivots
+H_rref.toarray()
+```
+
+
+
+
+    array([[1, 0, 1, ..., 1, 0, 1],
+           [0, 1, 1, ..., 0, 1, 1],
+           [0, 0, 0, ..., 1, 1, 1],
+           ...,
+           [0, 0, 0, ..., 1, 1, 1],
+           [0, 0, 0, ..., 1, 1, 1],
+           [0, 0, 0, ..., 1, 1, 1]], dtype=uint8)
+
+
+
+The `ldpc.gf2sparse` library is fast. E.g. the RREF of a $32,767$ bit Hamming code can be computed in $<1s$
+
+
+```python
+import ldpc.gf2sparse as gf2sparse
+from ldpc.codes import hamming_code
+
+H = hamming_code(15)
+
+print(f"[n = {H.shape[1]}, k = {H.shape[1]-gf2sparse.rank(H)}]")
+rref(H)
+```
+
+    [n = 32767, k = 32752]
+
+
+
+
+
+    (array([    0,     1,     3,     7,    15,    31,    63,   127,   255,
+              511,  1023,  2047,  4095,  8191, 16383], dtype=int32),
+     <15x32767 sparse matrix of type '<class 'numpy.uint8'>'
+     	with 245760 stored elements in Compressed Sparse Row format>)
+
+
+
+## Belief propagation decoding
+
+The belief propagation decoder in LDPCv2 has undergone a complete rewrite to add new functionality and make it easier to extend. There is also new syntax to bring the packge in line with modern Python standards (however, the old syntax should still work). New features include:
+
+- Serial (and layered) schedules.
+- Sparse matrix input for all decoders.
+- approx. 30% improvement in speed.
+
+
+
+
+```python
+from ldpc.bp_decoder import BpDecoder
+from ldpc.codes import hamming_code
+import numpy as np
+
+# Rank 4 Hamming code
+H = hamming_code(4)
+
+# Call the decoder class
+decoder = BpDecoder(H, error_rate = 0.1, bp_method="minimum_sum", ms_scaling_factor=0.9, schedule="serial")
+
+syndrome = np.array([1,1,1,1])
+
+dec = decoder.decode(syndrome)
+dec
+```
+
+
+
+
+    array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
+
+
+
+The sparse matrix input means that the decoder can now be initialised by quickly. E.g. let's initialise a decoder for a massive $1$ million bit repetition code.
+
+
+```python
+from ldpc.bp_decoder import BpDecoder
+from ldpc.codes import rep_code
+import numpy as np
+
+H = rep_code(1_000_000)
+decoder = BpDecoder(H, error_rate = 0.01, schedule = "serial")
+```
+
+## BP+OSD Decoding
+
+For decoding quantum codes, it is sometimes better to use a belief propagation + ordered statistics decoder (BP+OSD). The BP+OSD implementation in LDPCv2 is more scalable than the LDPCv1. The perforance improvements can be attributed to a new row reduction routine that preserves sparsity as much as possible.
+
+
+
+
+```python
+from ldpc.bposd_decoder import BpOsdDecoder
+from ldpc.codes import hamming_code
+import numpy as np
+
+# Rank 10 Hamming code
+H = hamming_code(10)
+
+# Call the decoder class
+decoder = BpOsdDecoder(H, error_rate = 0.1, bp_method="minimum_sum", ms_scaling_factor=0.9, schedule="serial", osd_method = "Exhaustive", osd_order = 5)
+
+syndrome = np.array([1,1,1,1,0,0,0,0,0,0])
+
+dec = decoder.decode(syndrome)
+dec
+```
+
+
+
+
+    array([0, 0, 0, ..., 0, 0, 0])
+
+## Soft Syndrome Minimum-Sum Algorithm
+When considering continuous syndrome error models, it has been shown to be useful to make use
+of the soft information in the decoding. In Ravendraan et al. 2022 (https://arxiv.org/abs/2205.02341) 
+it is shown that the soft syndrome can be used to improve the performance of minimum sum BP decoding.
+
+The soft syndrome min-sum algorithm (SSMSA) is implemented in the `SoftInfoBpDecoder` class.
+
+```python
+from ldpc.bp_decoder import SoftInfoBpDecoder
+from ldpc.codes import hamming_code
+import numpy as np
+
+# Rank 10 Hamming code
+pcm = hamming_code(10)
+
+# Call the decoder class
+decoder = SoftInfoBpDecoder(pcm, error_rate=0.1, max_iter=pcm.shape[0], ms_scaling_factor=1.0, cutoff=10.0)
+
+syndrome = np.array([-10., -10., -10., -10., 10., 10., 10., 10., 10., 10.])
+
+dec = decoder.decode(syndrome)
+print(dec)
+```
+    array([0, 0, 0, ..., 0, 0, 0])
+
+
+# Random Serial Schedules
+
+In Du Crest et al. 2023 (https://arxiv.org/abs/2308.13377v1) it is shown that using a random schedule at each iteration can improve convergence. Random scheduling can now be activated in the LDPCv2 by setting a nonzero `random_schedule_seed` when the decoder is initialised. 
+
+
+
+```python
+from ldpc.bposd_decoder import BpOsdDecoder
+from ldpc.codes import hamming_code
+import numpy as np
+
+# Rank 10 Hamming code
+H = hamming_code(10)
+
+# Call the decoder class
+decoder = BpOsdDecoder(H, error_rate = 0.1, bp_method="minimum_sum", ms_scaling_factor=0.9, schedule="serial", osd_method = "Exhaustive", osd_order = 5, random_schedule_seed = 10)
+
+syndrome = np.array([1,1,1,1,0,0,0,0,0,0])
+
+dec = decoder.decode(syndrome)
+dec
+```
+
+
+
+
+    array([0, 0, 0, ..., 0, 0, 0])
+
+ -->

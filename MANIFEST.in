@@ -1,9 +1,4 @@
-include src/ldpc/README.md
-include src/ldpc/LICENSE
-include src/ldpc/VERSION
-include src/ldpc/*.pxd
-include src/ldpc/*.pyx
-include src/ldpc/include/*.h
-include src/ldpc/include/*.c
-include src/ldpc/include/COPYRIGHT
-include src/ldpc/include/README.md
+graft src_python
+recursive-include *.pxd
+recursive-include *.pyi
+recursive-include py.typed
