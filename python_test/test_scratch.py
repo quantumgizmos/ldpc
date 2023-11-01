@@ -24,9 +24,11 @@ if __name__ == "__main__":
 
     input_vector = np.array([0,0,1])
 
-    bpd = bp_decoder(H,error_rate=0.1, input_vector_type='auto', bp_method="ms")
+    bpd = bp_decoder(H,error_rate=0.1, input_vector_type='auto', bp_method="ms", channel_probs=[0.1,0.1,0.1])
 
     print(bpd.decode(input_vector))
 
     bpd.update_channel_probs(np.array([0.2,0.1,0.1]))
     print(bpd.error_channel)
+
+    print(bpd.channel_probs)

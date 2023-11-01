@@ -54,6 +54,10 @@ cdef class BpOsdDecoder(BpDecoderBase):
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
                  osd_order: int = 0, input_vector_type: str = "syndrome", **kwargs):
         
+        for key in kwargs.keys():
+            if key not in ["channel_probs"]:
+                raise ValueError(f"Unknown parameter '{key}' passed to the BpDecoder constructor.")
+        
         self.MEMORY_ALLOCATED=False
 
         ## set up OSD with default values and channel probs from BP

@@ -213,8 +213,15 @@ cdef class BpDecoderBase:
             for i in range(self.n):
                 self.bpd.channel_probabilities[i] = value[i]
 
-    def update_channel_probs(self, value: List[float]) -> None:
+    def update_channel_probs(self, value: Union[List[float],np.ndarray]) -> None:
         self.error_channel = value
+
+    @property
+    def channel_probs(self) -> np.ndarray:
+        out = np.zeros(self.n).astype(float)
+        for i in range(self.n):
+            out[i] = self.bpd.channel_probabilities[i]
+        return out
 
 
     @property
@@ -574,6 +581,10 @@ cdef class BpDecoder(BpDecoderBase):
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs):
+
+        for key in kwargs.keys():
+            if key not in ["channel_probs"]:
+                raise ValueError(f"Unknown parameter '{key}' passed to the BpDecoder constructor.")
 
         self.input_vector_type = input_vector_type
         self._received_vector.resize(self.n) #C++ vector for the received vector

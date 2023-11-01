@@ -50,7 +50,9 @@ class BpDecoderBase:
         """
 
 
-    def update_channel_probs(self, value: List[float]) -> None:
+    def update_channel_probs(self, value: Union[List[float],np.ndarray]) -> None:
+    @property
+    def channel_probs(self) -> np.ndarray:
     @property
     def input_vector_type(self)-> str:
         """
