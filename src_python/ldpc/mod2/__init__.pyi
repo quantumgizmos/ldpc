@@ -56,6 +56,7 @@ def row_complement_basis(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy
     """
 
 
+def pivot_rows(mat: Union[np.ndarray,scipy.sparse.spmatrix]):
 def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     """
     Test function

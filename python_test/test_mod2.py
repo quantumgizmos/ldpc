@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
+import scipy.sparse
 from scipy.sparse import csr_matrix
-from ldpc.gf2sparse import io_test, rank, kernel, PluDecomposition
+from ldpc.mod2 import io_test, rank, kernel, PluDecomposition, pivot_rows
 from ldpc.codes import rep_code, ring_code, hamming_code
 
 def test_constructor_rep_code():
@@ -71,14 +72,44 @@ def test_kernel_rep_code():
 def test_kernel_hamming_code_dense():
     for i in range(3,12):
         H = hamming_code(i)
-        assert kernel(H, method = "dense").shape == (2**i - 1 - i, 2**i - 1)
-        assert not ((H@kernel(H).T).data % 2).any()
+        ker = kernel(H, method = "dense")
+        assert ker.shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@ker.T).data % 2).any()
 
 def test_kernel_hamming_code_sparse():
     for i in range(3,12):
         H = hamming_code(i)
-        assert kernel(H, method = "sparse").shape == (2**i - 1 - i, 2**i - 1)
-        assert not ((H@kernel(H).T).data % 2).any()
+        ker = kernel(H, method = "sparse")
+        assert ker.shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@ker.T).data % 2).any()
+
+from ldpc.mod2 import nullspace as np_nullspace
+def test_kernel_hamming_code_numpy():
+    for i in range(3,12):
+        H = hamming_code(i)
+        ker = np_nullspace(H)
+        assert ker.shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@ker.T) % 2).any()
+
+
+def test_kernel_rep_code_dense():
+    for i in range(3,100):
+        H = rep_code(i)
+        # assert kernel(H, method = "dense").shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@kernel(H, method="dense").T).data % 2).any()
+
+def test_kernel_rep_code_sparse():
+    for i in range(3,100):
+        H = rep_code(i)
+        # assert kernel(H, method = "sparse").shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@kernel(H, method="sparse").T).data % 2).any()
+
+from ldpc.mod2.mod2_numpy import nullspace as np_nullspace
+def test_kernel_rep_code_numpy():
+    for i in range(3,100):
+        H = rep_code(i)
+        # assert np_nullspace(H).shape == (2**i - 1 - i, 2**i - 1)
+        assert not ((H@np_nullspace(H).T) % 2).any()
 
 def test_plu_decomposition():
     
@@ -105,6 +136,15 @@ def test_lu_solve():
             y = H@x % 2
             x_solution = plu.lu_solve(y)
             assert np.array_equal(H@x_solution % 2, y)
+
+def test_pivot_rows():
+
+    H = hamming_code(3)
+    mat = scipy.sparse.vstack([np.zeros(shape=(3,7)),H])
+
+    pivots = pivot_rows(mat)
+
+    assert np.array_equal(pivots, np.array([3,4,5]))
 
 
 if __name__ == "__main__":

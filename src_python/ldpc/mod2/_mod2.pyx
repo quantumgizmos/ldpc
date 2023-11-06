@@ -282,6 +282,15 @@ def row_complement_basis(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy
     del cpcm
     return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
 
+def pivot_rows(mat: Union[np.ndarray,scipy.sparse.spmatrix]):
+    cdef int i
+    cdef vector[vector[int]] mat_csr = Py2CsrList(mat)
+    cdef vector[int] pivots = pivot_rows_cpp(mat.shape[0], mat.shape[1], mat_csr)
+    out = np.zeros(pivots.size()).astype(int)
+    for i in range(pivots.size()):
+        out[i] = pivots[i]
+    return out
+
 def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     """
     Test function

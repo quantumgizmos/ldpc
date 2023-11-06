@@ -206,3 +206,27 @@ TEST(gf2dense, rep_code_test){
 
 
 }
+
+TEST(pivot_rows, hamming_code_test) {
+
+    for(int i=3; i<10;i++){
+        auto pcm1 = hamming_code(i);
+        auto pcm2 = hamming_code(i);
+        auto pcm0 = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(pcm1.m,pcm1.n);
+        auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
+        auto pcm = ldpc::gf2sparse::vstack(mats);
+
+        ldpc::gf2dense::CsrMatrix pcm_csr;
+
+        for(int i = 0; i<pcm.m; i++){
+            pcm_csr.push_back(vector<int>{});
+            for(auto e: pcm.iterate_row(i)){
+                pcm_csr[i].push_back(e.col_index);
+            }
+        }
+            
+        auto pivot_rows = ldpc::gf2dense::pivot_rows(pcm.m, pcm.n, pcm_csr);
+        // print_vector(pivot_rows);
+        ASSERT_EQ(pivot_rows.size(),i);
+    }
+}

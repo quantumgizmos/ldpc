@@ -237,10 +237,8 @@ CscMatrix kernel(int row_count, int col_count, CsrMatrix& csr_mat){
 }
 
 std::vector<int> pivot_rows(int row_count, int col_count, CsrMatrix& csr_mat){
-
     auto plu = PluDecomposition(col_count,row_count,csr_mat);
     plu.rref(false);
-    
     return plu.pivot_cols;
 }
 

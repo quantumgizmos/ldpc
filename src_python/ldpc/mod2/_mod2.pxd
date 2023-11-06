@@ -62,7 +62,8 @@ from libcpp.vector cimport vector
 
 cdef extern from "gf2dense.hpp" namespace "ldpc::gf2dense":
     int gf2dense_rank(int row_count, int col_count, vector[vector[int]]& mat)
-    vector[vector[int]] gf2dense_kernel "ldpc::gf2dense::kernel" (int row_count, int col_count, vector[vector[int]]& mat) 
+    vector[vector[int]] gf2dense_kernel "ldpc::gf2dense::kernel" (int row_count, int col_count, vector[vector[int]]& mat)
+    vector[int] pivot_rows_cpp "ldpc::gf2dense::pivot_rows" (int row_count, int col_count, vector[vector[int]]& mat)
 
 cdef class PluDecomposition():
     cdef bool _MEM_ALLOCATED
