@@ -1,187 +1,196 @@
 import numpy as np
 from itertools import combinations
-from ldpc.mod2 import reduced_row_echelon, nullspace, row_span, rank
+import ldpc.mod2
 import scipy.sparse
 from scipy.special import comb as nCr
+from typing import Union, Tuple, List
 
 
-def construct_generator_matrix(H):
+def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) -> scipy.sparse.spmatrix:
     '''
-    Constructs a generator matrix from a parity check H. The generator matrix G satisfies the condition::
-                    
-        H@G.T = 0.
-    
-    Each of the columns of the generator matrix is a nullspace vector of
-    the matrix H.
-    
-    
+    Constructs a generator matrix G from a given parity check matrix H. 
+    The generator matrix G is formed such that it satisfies the condition H * G.T = 0 (mod 2), 
+    where G.T represents the transpose of G and the multiplication is carried out in GF(2).
+
+    Each row of the generator matrix G is a vector in the null space of H, 
+    meaning that when matrix H is multiplied by any of these vectors, 
+    the result is a zero vector, satisfying the parity check condition.
+
     Parameters
     ----------
-    H: numpy.ndarray
-        A binary matrix in numpy.ndarray format.
-    
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        A binary matrix representing the parity check matrix H, 
+        which can be either a dense numpy array or a sparse matrix.
+
     Returns
     -------
-    numpy.ndarray
-        The generator matrix in numpy.ndarray format
-    
+    scipy.sparse.spmatrix
+        The generator matrix G as a sparse matrix, which provides efficient storage 
+        and performance for matrices that are large or have a high sparsity.
+
     Examples
     --------
-    >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
-    >>> G=construct_generator_matrix(H)
-    >>> assert (H@G.T%2).any()==False
-    >>> print(G)
+    >>> H = np.array([[0, 0, 0, 1, 1, 1, 1],
+                      [0, 1, 1, 0, 0, 1, 1],
+                      [1, 0, 1, 0, 1, 0, 1]])
+    >>> G = construct_generator_matrix(H)
+    >>> assert (H @ G.T % 2).nnz == 0  # Verifying that H * G.T is a zero matrix in GF(2)
+    >>> print(G.toarray())  # Convert the sparse matrix G to a dense array for printing
     [[1 1 1 0 0 0 0]
      [0 1 1 1 1 0 0]
      [0 1 0 1 0 1 0]
      [0 0 1 1 0 0 1]]
 
+    Note
+    ----
+    The function assumes that the input matrix H is a valid parity check matrix 
+    and does not perform any checks for this condition. It is the user's responsibility 
+    to ensure that H is properly formed.
+
+    The function uses the `mod2.nullspace` method from the `ldpc` package to find the null space.
+
     '''
-
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
-
-    return nullspace(H)
+    return ldpc.mod2.nullspace(pcm)
 
 
-def systematic_form(H):
-    '''
-    Converts H into systematic form so that::
+# def systematic_form(H):
+#     '''
+#     Converts H into systematic form so that::
         
-        H=[I,A]
+#         H=[I,A]
 
 
-    Parameters
-    ----------
-    H: numpy.ndarray
-        A parity check matrix
+#     Parameters
+#     ----------
+#     H: numpy.ndarray
+#         A parity check matrix
 
-    Returns
-    -------
-    numpy.ndarray
-        The parity check matrix in systematic form
-    '''
+#     Returns
+#     -------
+#     numpy.ndarray
+#         The parity check matrix in systematic form
+#     '''
 
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
+#     if(isinstance(H, scipy.sparse.spmatrix)):
+#         H = H.toarray()
 
-    return reduced_row_echelon(H)[0]
-
-
-def codewords(H):
-    '''
-    Computes all of the the codewords of the code corresponding to the parity check matrix H. The codewords are given by the span of the nullspace.
-
-    Parameters
-    ----------
-
-    H: numpy.ndarray
-        A parity check matrix.
-
-    Returns
-    -------
-    numpy.ndarray
-        A matrix where each row corresponds to a codeword
-
-    Note
-    ----
-    If you want to calculate a basis of the codewords use `ldpc.mod2.nullspace`.
-
-    Examples
-    --------
-    >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
-    >>> print(codewords(H))
-    [[0 0 0 0 0 0 0]
-     [0 0 0 1 1 1 1]
-     [0 0 1 0 1 1 0]
-     [0 0 1 1 0 0 1]
-     [0 1 0 0 1 0 1]
-     [0 1 0 1 0 1 0]
-     [0 1 1 0 0 1 1]
-     [0 1 1 1 1 0 0]
-     [1 0 0 0 0 1 1]
-     [1 0 0 1 1 0 0]
-     [1 0 1 0 1 0 1]
-     [1 0 1 1 0 1 0]
-     [1 1 0 0 1 1 0]
-     [1 1 0 1 0 0 1]
-     [1 1 1 0 0 0 0]
-     [1 1 1 1 1 1 1]]
-    '''
-
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
-
-    _, n = H.shape
-    zero_cw = np.zeros(n).astype(int)  # zero codewords
-    cw = row_span(nullspace(H))  # nonzero codewords
-    cw = np.vstack([zero_cw, cw])
-
-    return cw
+#     return reduced_row_echelon(H)[0]
 
 
-def compute_code_distance(H):
-    '''
-    Computes the distance of the code given by parity check matrix H. The code distance is given by the minimum weight of a nonzero codeword.
+# def codewords(H):
+#     '''
+#     Computes all of the the codewords of the code corresponding to the parity check matrix H. The codewords are given by the span of the nullspace.
 
-    Note
-    ----
-    The runtime of this function scales exponentially with the block size. In practice, computing the code distance of codes with block lengths greater than ~10 will be very slow.
+#     Parameters
+#     ----------
 
-    Parameters
-    ----------
-    H: numpy.ndarray
-        The parity check matrix
+#     H: numpy.ndarray
+#         A parity check matrix.
+
+#     Returns
+#     -------
+#     numpy.ndarray
+#         A matrix where each row corresponds to a codeword
+
+#     Note
+#     ----
+#     If you want to calculate a basis of the codewords use `ldpc.mod2.nullspace`.
+
+#     Examples
+#     --------
+#     >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
+#     >>> print(codewords(H))
+#     [[0 0 0 0 0 0 0]
+#      [0 0 0 1 1 1 1]
+#      [0 0 1 0 1 1 0]
+#      [0 0 1 1 0 0 1]
+#      [0 1 0 0 1 0 1]
+#      [0 1 0 1 0 1 0]
+#      [0 1 1 0 0 1 1]
+#      [0 1 1 1 1 0 0]
+#      [1 0 0 0 0 1 1]
+#      [1 0 0 1 1 0 0]
+#      [1 0 1 0 1 0 1]
+#      [1 0 1 1 0 1 0]
+#      [1 1 0 0 1 1 0]
+#      [1 1 0 1 0 0 1]
+#      [1 1 1 0 0 0 0]
+#      [1 1 1 1 1 1 1]]
+#     '''
+
+#     if(isinstance(H, scipy.sparse.spmatrix)):
+#         H = H.toarray()
+
+#     _, n = H.shape
+#     zero_cw = np.zeros(n).astype(int)  # zero codewords
+#     cw = row_span(nullspace(H))  # nonzero codewords
+#     cw = np.vstack([zero_cw, cw])
+
+#     return cw
+
+
+# def compute_code_distance(H):
+#     '''
+#     Computes the distance of the code given by parity check matrix H. The code distance is given by the minimum weight of a nonzero codeword.
+
+#     Note
+#     ----
+#     The runtime of this function scales exponentially with the block size. In practice, computing the code distance of codes with block lengths greater than ~10 will be very slow.
+
+#     Parameters
+#     ----------
+#     H: numpy.ndarray
+#         The parity check matrix
     
-    Returns
-    -------
-    int
-        The code distance
-    '''
+#     Returns
+#     -------
+#     int
+#         The code distance
+#     '''
 
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
+#     if(isinstance(H, scipy.sparse.spmatrix)):
+#         H = H.toarray()
 
-    ker=nullspace(H)
+#     ker=nullspace(H)
 
-    if len(ker)==0: return np.inf #return np.inf if the kernel is empty (eg. infinite code distance)
+#     if len(ker)==0: return np.inf #return np.inf if the kernel is empty (eg. infinite code distance)
 
-    cw=row_span(ker) #nonzero codewords
+#     cw=row_span(ker) #nonzero codewords
 
-    return np.min(np.sum(cw, axis=1))
+#     return np.min(np.sum(cw, axis=1))
 
 
-def get_code_parameters(H):
-    """
-    Returns the code parameters in [n,k,d] notation where n is the block length, k is the number of encoed bits and d is the code distance.
+# def get_code_parameters(H):
+#     """
+#     Returns the code parameters in [n,k,d] notation where n is the block length, k is the number of encoed bits and d is the code distance.
 
-    Parameters
-    ----------
-    H: numpy.ndarray
-        The parity check matrix
+#     Parameters
+#     ----------
+#     H: numpy.ndarray
+#         The parity check matrix
 
-    Returns
-    -------
-    n: int
-        The block length
-    k: int
-        The number of encoded bits
-    d: int
-        The code distance
-    r: int
-        The rank of the parity check matrix
-    m: int
-        The number of checks (rows in the parity check matrix)
-    """
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
+#     Returns
+#     -------
+#     n: int
+#         The block length
+#     k: int
+#         The number of encoded bits
+#     d: int
+#         The code distance
+#     r: int
+#         The rank of the parity check matrix
+#     m: int
+#         The number of checks (rows in the parity check matrix)
+#     """
+#     if(isinstance(H, scipy.sparse.spmatrix)):
+#         H = H.toarray()
 
-    m, n = H.shape
-    r = rank(H)
-    k = n - r
-    d = compute_code_distance(H)
+#     m, n = H.shape
+#     r = rank(H)
+#     k = n - r
+#     d = compute_code_distance(H)
 
-    return n, k, d, r, m
+#     return n, k, d, r, m
 
 
 

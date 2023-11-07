@@ -2,7 +2,7 @@ import numpy as np
 
 from ldpc.codes import hamming_code, rep_code
 
-from ldpc.gf2sparse import nullspace
+from ldpc.mod2 import nullspace
 
 from ldpc.bp_decoder import bp_decoder, BpDecoder
 
