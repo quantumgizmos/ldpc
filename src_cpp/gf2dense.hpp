@@ -3,8 +3,14 @@
 
 #include <vector>
 #include <iterator>
+#include <chrono>
+#include <climits>
+#include <random>
+
+#include "util.hpp"
 #include "gf2sparse.hpp"
 #include "sparse_matrix_util.hpp"
+#include "rng.hpp"
 
 namespace ldpc{
 namespace gf2dense{
@@ -241,6 +247,157 @@ std::vector<int> pivot_rows(int row_count, int col_count, CsrMatrix& csr_mat){
     plu.rref(false);
     return plu.pivot_cols;
 }
+
+CsrMatrix row_span(int row_count, int col_count, CsrMatrix& csr_mat){
+
+    int row_permutations = std::pow(2,row_count);
+    
+    CsrMatrix row_span;
+    
+    for(int i = 0; i<row_permutations; i++){
+        
+        std::vector<uint8_t> current_row(col_count,0);
+
+        auto row_add_indices = ldpc::util::decimal_to_binary_sparse(i,row_count);
+
+        for (auto row_index: row_add_indices){
+            for(auto col_index: csr_mat[row_index]){
+                current_row[col_index] ^= 1;
+            }
+        }
+
+        std::vector<int> current_row_sparse;
+        for(int j = 0; j<col_count; j++){
+            if(current_row[j] == 1){
+                current_row_sparse.push_back(j);
+            }
+        }
+
+        row_span.push_back(current_row_sparse);
+
+    }
+
+    return row_span;
+
+}
+
+struct DistanceStruct{
+    int min_distance = INT_MAX;
+    std::vector<std::vector<int>> min_weight_words;
+};
+
+DistanceStruct compute_code_distance(int row_count, int col_count, CsrMatrix& csr_mat, double timeout_seconds = 0, int number_of_words_to_save = 100){
+
+    DistanceStruct distance_struct;
+    distance_struct.min_weight_words.resize(number_of_words_to_save, std::vector<int>{});
+    
+    int cc = 0;
+    for(auto word: csr_mat){
+        if(word.size() < distance_struct.min_distance){
+            distance_struct.min_distance = word.size();
+        }
+        if(cc<number_of_words_to_save){
+            distance_struct.min_weight_words[cc] = word;
+        }
+    }
+
+    double sample_prob = 2.0/double(row_count);
+
+    int max_weight_saved_word = INT_MAX;
+
+    int row_permutations = std::pow(2,row_count);
+    auto rand_gen = ldpc::rng::RandomNumberGenerator();
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    int count = 0;
+    while(true){
+        count++;
+
+        // auto rand = rand_gen.random_int(row_permutations-1);
+        // auto row_add_indices = ldpc::util::decimal_to_binary_sparse(rand,row_count);
+
+        std::vector<int> row_add_indices;
+        for(int i = 0; i<row_count; i++){
+            if(rand_gen.random_double() < sample_prob){
+                row_add_indices.push_back(i);
+            }
+        }
+
+        std::vector<uint8_t> current_row(col_count,0);
+        for (auto row_index: row_add_indices){
+            for(auto col_index: csr_mat[row_index]){
+                current_row[col_index] ^= 1;
+            }
+        }
+
+
+        std::vector<int> current_row_sparse;
+        for(int j = 0; j<col_count; j++){
+            if(current_row[j] == 1){
+                current_row_sparse.push_back(j);
+            }
+        }
+
+        int current_row_size = current_row_sparse.size();
+        
+        if(current_row_size == 0) continue;
+
+        if(current_row_size < distance_struct.min_distance){
+            distance_struct.min_distance = current_row_size;
+        }
+
+        // std::cout<<max_weight_saved_word<<std::endl;
+        // ldpc::sparse_matrix_util::print_vector(current_row_sparse);
+
+        if(current_row_size <= max_weight_saved_word){
+
+            int max1 = -10;
+            int max2 = -10;
+            int replace_word_index;
+            int count_index = 0;
+            for(auto word: distance_struct.min_weight_words){
+
+                int word_size = word.size();
+
+                if(word_size == 0){
+                    replace_word_index = count_index;
+                    break;
+                }
+                else if(word_size > max1){
+                    max1 = word_size;
+                    replace_word_index = count_index;
+                }
+                else if(word_size > max2){
+                    max2 = word_size;
+                }
+                count_index++;
+            }
+
+            distance_struct.min_weight_words[replace_word_index] = current_row_sparse;
+            if(current_row_size > max2){
+                max_weight_saved_word = current_row_size;
+            }
+            else{
+                max_weight_saved_word = max2;
+            }
+        }
+
+        auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() / 1000.0;
+        if (elapsed >= timeout_seconds) {
+        break;
+        }
+
+    }
+
+    std::cout<<"count: "<<count<<std::endl;
+    // std::cout<<std::pow(2,row_count)<<std::endl;
+
+    return distance_struct;
+}
+
+
 
 }//end namespace gf2dense
 }//end namespace ldpc

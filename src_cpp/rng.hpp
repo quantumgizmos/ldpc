@@ -48,6 +48,22 @@ namespace ldpc::rng {
             
             return random_num;
         }
+
+        /**
+         * @brief Generates a new random integer value between 0 and max_int
+         *
+         * @param max_int The maximum value that the random integer can take
+         * @return A random integer value between 0 and max_int
+         */
+        int random_int(int max_int) {
+            // Create a uniform distribution between 0 and max_int
+            std::uniform_int_distribution<int> dis(0, max_int);
+            
+            // Generate a random number between 0 and max_int
+            int random_num = dis(gen);
+            
+            return random_num;
+        }
         
     private:
         std::mt19937 gen; /**< The Mersenne Twister random number generator used by the class */

@@ -70,6 +70,8 @@ set(TEST_EXECUTABLES
     TestGF2RowReduce
     TestGf2Linalg
     TestGf2Dense
+    TestUtil
+    TestRng
 )
 
 # Loop through the list of test executables to:

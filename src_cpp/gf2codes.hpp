@@ -15,7 +15,7 @@ namespace ldpc::gf2codes{
  * @param n The length of the repetition code.
  * @return A shared pointer to a GF2Sparse<T> matrix representing the parity check matrix.
  */
-template <typename T = ldpc::bp::BpEntry>
+template <typename T = ldpc::gf2sparse::GF2Entry>
 ldpc::gf2sparse::GF2Sparse<T> rep_code(int n){
     // Create a shared pointer to a new GF2Sparse<T> matrix with n-1 rows and n columns.
     auto pcm = ldpc::gf2sparse::GF2Sparse<T>(n-1, n);
@@ -36,7 +36,7 @@ ldpc::gf2sparse::GF2Sparse<T> rep_code(int n){
  * @param n The length of the cyclic repetition code.
  * @return A shared pointer to a GF2Sparse<T> matrix representing the parity check matrix.
  */
-template <typename T = ldpc::bp::BpEntry>
+template <typename T = ldpc::gf2sparse::GF2Entry>
 ldpc::gf2sparse::GF2Sparse<T> ring_code(int n) {
     // Create a shared pointer to a new GF2Sparse<T> matrix with n-1 rows and n columns.
     auto pcm = ldpc::gf2sparse::GF2Sparse<T>(n, n);
@@ -56,7 +56,7 @@ ldpc::gf2sparse::GF2Sparse<T> ring_code(int n) {
  * @param r The rank of the Hamming code, where the block length is 2^r - 1.
  * @return A shared pointer to a GF2Sparse<T> matrix representing the parity check matrix.
  */
-template <typename T = ldpc::bp::BpEntry>
+template <typename T = ldpc::gf2sparse::GF2Entry>
 ldpc::gf2sparse::GF2Sparse<T> hamming_code(int r) {
     // Calculate the block length and the number of data bits.
     int n = (1 << r) - 1;
