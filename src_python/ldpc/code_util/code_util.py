@@ -53,28 +53,28 @@ def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) ->
     return ldpc.mod2.nullspace(pcm)
 
 
-# def systematic_form(H):
-#     '''
-#     Converts H into systematic form so that::
+def systematic_form(H):
+    '''
+    Converts H into systematic form so that::
         
-#         H=[I,A]
+        H=[I,A]
 
 
-#     Parameters
-#     ----------
-#     H: numpy.ndarray
-#         A parity check matrix
+    Parameters
+    ----------
+    H: numpy.ndarray
+        A parity check matrix
 
-#     Returns
-#     -------
-#     numpy.ndarray
-#         The parity check matrix in systematic form
-#     '''
+    Returns
+    -------
+    numpy.ndarray
+        The parity check matrix in systematic form
+    '''
 
-#     if(isinstance(H, scipy.sparse.spmatrix)):
-#         H = H.toarray()
+    if(isinstance(H, scipy.sparse.spmatrix)):
+        H = H.toarray()
 
-#     return reduced_row_echelon(H)[0]
+    return reduced_row_echelon(H)[0]
 
 
 # def codewords(H):
