@@ -79,6 +79,8 @@ ldpc::gf2sparse::GF2Sparse<T> hamming_code(int r) {
     return pcm;
 }
 
+
+
 } //end namespace gf2codes
 
 #endif /* Gf2Codes_hpp */

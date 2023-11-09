@@ -250,23 +250,26 @@ std::vector<std::vector<int>> random_csr_matrix(int m, int n, float sparsity = 0
 //     ASSERT_EQ(result, expected);
 // }
 
-TEST(Gf2Dense, compute_code_distance_hamming_code){
+TEST(Gf2Dense, estimate_code_distance){
 
-    auto pcm = hamming_code(3);
-    auto ker = ldpc::gf2sparse_linalg::kernel(pcm);
+    auto pcm = hamming_code(7);
     CsrMatrix pcm_csr;
-    for(int i = 0; i<ker.m; i++){
+    for(int i = 0; i<pcm.m; i++){
         pcm_csr.push_back(vector<int>{});
-        for(auto e: ker.iterate_row(i)){
+        for(auto e: pcm.iterate_row(i)){
             pcm_csr[i].push_back(e.col_index);
         }
     }
+    auto distance = ldpc::gf2dense::estimate_code_distance(pcm.m, pcm.n, pcm_csr, 0.025, 10);
 
-    auto distance = ldpc::gf2dense::compute_code_distance(ker.m, ker.n, pcm_csr, 0.025, 4);
+    cout<<"Distance: " << distance.min_distance <<endl;
+    cout<<"Samples searched: " << distance.samples_searched <<endl;
 
     for(auto vec: distance.min_weight_words){
         print_vector(vec);
     }
+
+    ASSERT_EQ(distance.min_distance, 3);
 
 
 

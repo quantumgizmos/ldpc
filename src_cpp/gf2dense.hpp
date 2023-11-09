@@ -283,27 +283,91 @@ CsrMatrix row_span(int row_count, int col_count, CsrMatrix& csr_mat){
 
 struct DistanceStruct{
     int min_distance = INT_MAX;
+    int samples_searched = 0;
     std::vector<std::vector<int>> min_weight_words;
 };
 
-DistanceStruct compute_code_distance(int row_count, int col_count, CsrMatrix& csr_mat, double timeout_seconds = 0, int number_of_words_to_save = 100){
+DistanceStruct estimate_minimum_linear_row_combination(int row_count, int col_count, CsrMatrix& csr_mat, double timeout_seconds = 0, int number_of_words_to_save = 100){
 
     DistanceStruct distance_struct;
     distance_struct.min_weight_words.resize(number_of_words_to_save, std::vector<int>{});
     
+    int max_weight_saved_word = INT_MAX;
+
+
     int cc = 0;
     for(auto word: csr_mat){
-        if(word.size() < distance_struct.min_distance){
-            distance_struct.min_distance = word.size();
+
+        int word_size = word.size();
+
+
+        if(word_size < max_weight_saved_word){
+   
+
+            int max1 = -10;
+            int max2 = -10;
+            int replace_word_index;
+            
+            int count_index = 0;
+            for(auto saved_word: distance_struct.min_weight_words){
+                
+                int saved_word_size = saved_word.size();
+
+                if(saved_word_size == 0){
+                    replace_word_index = count_index;
+                    break;
+                }
+                else if(saved_word_size > max1){
+                    max1 = saved_word_size;
+                    replace_word_index = count_index;
+                }
+                else if(saved_word_size > max2){
+                    max2 = saved_word_size;
+                }
+                count_index++;
+            }
+
+            distance_struct.min_weight_words[replace_word_index] = word;
+            if(word_size > max2){
+                max_weight_saved_word = word_size;
+            }
+            else{
+                max_weight_saved_word = max2;
+            }
+
         }
-        if(cc<number_of_words_to_save){
-            distance_struct.min_weight_words[cc] = word;
-        }
+
+        // if(word.size() < distance_struct.min_distance){
+        //     distance_struct.min_distance = word.size();
+        // }
+        // if(cc<number_of_words_to_save){
+        //     distance_struct.min_weight_words[cc] = word;
+        // }
     }
+
+            //     int count_index = 0;
+            // for(auto word: distance_struct.min_weight_words){
+
+            //     int word_size = word.size();
+
+            //     if(word_size == 0){
+            //         replace_word_index = count_index;
+            //         break;
+            //     }
+            //     else if(word_size > max1){
+            //         max1 = word_size;
+            //         replace_word_index = count_index;
+            //     }
+            //     else if(word_size > max2){
+            //         max2 = word_size;
+            //     }
+            //     count_index++;
+            // }
+
+
 
     double sample_prob = 2.0/double(row_count);
 
-    int max_weight_saved_word = INT_MAX;
 
     int row_permutations = std::pow(2,row_count);
     auto rand_gen = ldpc::rng::RandomNumberGenerator();
@@ -391,10 +455,35 @@ DistanceStruct compute_code_distance(int row_count, int col_count, CsrMatrix& cs
 
     }
 
-    std::cout<<"count: "<<count<<std::endl;
-    // std::cout<<std::pow(2,row_count)<<std::endl;
+    // std::cout<<"count: "<<count<<std::endl;
+    // // std::cout<<std::pow(2,row_count)<<std::endl;
+
+    distance_struct.samples_searched = count;
 
     return distance_struct;
+}
+
+DistanceStruct estimate_code_distance(int row_count, int col_count, CsrMatrix& csr_mat, double timeout_seconds = 0, int number_of_words_to_save = 100){
+
+    auto ker = ldpc::gf2dense::kernel(row_count,col_count,csr_mat);
+    // convert to csr_matrix
+    int max_row = -1;
+    for(int col_index = 0; col_index < ker.size(); col_index++){
+        for(int row_index: ker[col_index]){
+            if(row_index > max_row) max_row = row_index;
+        }
+    }
+
+    CsrMatrix ker_csr = CscMatrix(max_row+1,std::vector<int>{});
+
+    for(int col_index = 0; col_index < ker.size(); col_index++){
+        for(int row_index: ker[col_index]){
+            ker_csr[row_index].push_back(col_index);
+        }
+    }
+
+    return ldpc::gf2dense::estimate_minimum_linear_row_combination(max_row+1, col_count, ker_csr, timeout_seconds, number_of_words_to_save);
+
 }
 
 
