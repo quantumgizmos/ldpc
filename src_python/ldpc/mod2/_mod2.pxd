@@ -61,9 +61,16 @@ cdef extern from "gf2sparse_linalg.hpp" namespace "ldpc::gf2sparse_linalg":
 from libcpp.vector cimport vector
 
 cdef extern from "gf2dense.hpp" namespace "ldpc::gf2dense":
-    int gf2dense_rank(int row_count, int col_count, vector[vector[int]]& mat)
+    int rank_cpp "ldpc::gf2dense::rank" (int row_count, int col_count, vector[vector[int]]& mat)
     vector[vector[int]] gf2dense_kernel "ldpc::gf2dense::kernel" (int row_count, int col_count, vector[vector[int]]& mat)
     vector[int] pivot_rows_cpp "ldpc::gf2dense::pivot_rows" (int row_count, int col_count, vector[vector[int]]& mat)
+
+    cdef cppclass DistanceStruct "ldpc::gf2dense::DistanceStruct":
+        int min_distance
+        int samples_searched
+        vector[vector[int]] min_weight_words
+
+    DistanceStruct estimate_code_distance_cpp "ldpc::gf2dense::estimate_code_distance" (int row_count, int col_count, vector[vector[int]]& csr_mat, double timeout_seconds, int number_of_words_to_save)
 
 cdef class PluDecomposition():
     cdef bool _MEM_ALLOCATED

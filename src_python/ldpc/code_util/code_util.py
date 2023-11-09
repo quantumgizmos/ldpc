@@ -5,7 +5,6 @@ import scipy.sparse
 from scipy.special import comb as nCr
 from typing import Union, Tuple, List
 
-
 def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) -> scipy.sparse.spmatrix:
     '''
     Constructs a generator matrix G from a given parity check matrix H. 
@@ -52,30 +51,76 @@ def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) ->
     '''
     return ldpc.mod2.nullspace(pcm)
 
+def estimate_min_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
 
-def systematic_form(H):
-    '''
-    Converts H into systematic form so that::
-        
-        H=[I,A]
+    """
+    Estimates the code distance of a given parity check matrix (pcm).
 
+    This function first calculates the the kernel of the parity matrix to obtain a basis of the codewords. It then searches over
+    random linear combinations of the basis to find codewords with low weight. The `timeout_seconds` parameter controls the maximum
+    amount of time the function spends looking for low-weight codewords.
 
     Parameters
     ----------
-    H: numpy.ndarray
-        A parity check matrix
+    pcm : Union[scipy.sparse.spmatrix,np.ndarray]
+        The parity check matrix to estimate the code distance for.
+    timeout_seconds : float, optional
+        The maximum amount of time to spend estimating the code distance. Defaults to 0.025.
+    number_of_words_to_save : int, optional
+        The number of minimum weight words to save. Defaults to 10.
 
     Returns
     -------
-    numpy.ndarray
-        The parity check matrix in systematic form
-    '''
+    tuple
+        A tuple containing the estimated minimum distance (int), the number of samples searched (int), 
+        and a Scipy sparse matrix of the minimum weight words.
+    """
 
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
+    return ldpc.mod2.estimate_code_distance(pcm, timeout_seconds, number_of_words_to_save)
 
-    return reduced_row_echelon(H)[0]
+def compute_code_dimension(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> int:
+    """
+    Compute the code dimension of a given parity check matrix.
 
+    This function computes the code dimension of the parity check matrix (pcm) using the Rank-Nullity theorem.
+    According to the Rank-Nullity theorem, the dimension of the code (k) is given by k = n - rank(pcm), where n is the number of columns in the pcm.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity check matrix to compute the code dimension for.
+
+    Returns
+    -------
+    int
+        The code dimension of the parity check matrix.
+    """
+    return pcm.shape[1] - ldpc.mod2.rank(pcm, method="dense")
+
+def compute_code_parameters(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025) -> Tuple[int, int, int]:
+    """
+    Compute the parameters of a given parity check matrix.
+
+    This function computes the parameters of the parity check matrix (pcm), including the number of columns (n), 
+    the code dimension (k), and an estimate of the minimum distance.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity check matrix to compute the parameters for.
+    timeout_seconds : float, optional
+        The maximum amount of time to spend estimating the minimum distance. Defaults to 0.025.
+
+    Returns
+    -------
+    Tuple[int, int, int]
+        A tuple containing the number of columns (n), the code dimension (k), and the estimated minimum distance.
+    """
+    n = pcm.shape[1]
+    k = compute_code_dimension(pcm)
+    distance_estimate,_,_=estimate_min_distance(pcm, timeout_seconds)
+
+    return (n,k,distance_estimate)
 
 # def codewords(H):
 #     '''
@@ -127,92 +172,6 @@ def systematic_form(H):
 #     cw = np.vstack([zero_cw, cw])
 
 #     return cw
-
-
-# def compute_code_distance(H):
-#     '''
-#     Computes the distance of the code given by parity check matrix H. The code distance is given by the minimum weight of a nonzero codeword.
-
-#     Note
-#     ----
-#     The runtime of this function scales exponentially with the block size. In practice, computing the code distance of codes with block lengths greater than ~10 will be very slow.
-
-#     Parameters
-#     ----------
-#     H: numpy.ndarray
-#         The parity check matrix
-    
-#     Returns
-#     -------
-#     int
-#         The code distance
-#     '''
-
-#     if(isinstance(H, scipy.sparse.spmatrix)):
-#         H = H.toarray()
-
-#     ker=nullspace(H)
-
-#     if len(ker)==0: return np.inf #return np.inf if the kernel is empty (eg. infinite code distance)
-
-#     cw=row_span(ker) #nonzero codewords
-
-#     return np.min(np.sum(cw, axis=1))
-
-
-# def get_code_parameters(H):
-#     """
-#     Returns the code parameters in [n,k,d] notation where n is the block length, k is the number of encoed bits and d is the code distance.
-
-#     Parameters
-#     ----------
-#     H: numpy.ndarray
-#         The parity check matrix
-
-#     Returns
-#     -------
-#     n: int
-#         The block length
-#     k: int
-#         The number of encoded bits
-#     d: int
-#         The code distance
-#     r: int
-#         The rank of the parity check matrix
-#     m: int
-#         The number of checks (rows in the parity check matrix)
-#     """
-#     if(isinstance(H, scipy.sparse.spmatrix)):
-#         H = H.toarray()
-
-#     m, n = H.shape
-#     r = rank(H)
-#     k = n - r
-#     d = compute_code_distance(H)
-
-#     return n, k, d, r, m
-
-
-
-# def search_cycles(H, girth,terminate=False):
-
-#     m, n = np.shape(H)
-
-#     cycle_count = 0
-
-#     for i, combination in enumerate(combinations([k for k in range(m)], girth // 2)):
-#         row_sum = np.zeros(n).astype(int)
-#         for j, element in enumerate(combination):
-#             row_sum += H[element]
-
-#         two_count = np.count_nonzero(row_sum == 2)
-#         if two_count >= girth // 2:
-#             if terminate: return True
-#             cycle_count += nCr(two_count, girth // 2)
-
-#     if terminate: return False #terminates if the code is not cycle free
-#     return cycle_count
-
 
 def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 

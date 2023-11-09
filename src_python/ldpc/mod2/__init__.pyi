@@ -8,15 +8,24 @@ def csc_to_scipy_sparse(vector[vector[int]]& col_adjacency_list):
     """
 
 
-def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
+def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method: str = "dense") -> int:
     """
     Calculate the rank of a given parity check matrix.
-    
-    Parameters:
-        pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix to be ranked.
-        
-    Returns:
-        int: The rank of the parity check matrix.
+
+    This function calculates the rank of the parity check matrix (pcm) using either a dense or sparse method. 
+    The dense method is used by default.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity check matrix to be ranked.
+    method : str, optional
+        The method to use for calculating the rank. Options are "dense" or "sparse". Defaults to "dense".
+
+    Returns
+    -------
+    int
+        The rank of the parity check matrix.
     """
 
 
@@ -63,6 +72,7 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     """
 
 
+def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
 class PluDecomposition():
     """
     Initialise the PLU Decomposition with a given parity check matrix.

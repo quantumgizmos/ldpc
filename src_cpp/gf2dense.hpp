@@ -337,32 +337,9 @@ DistanceStruct estimate_minimum_linear_row_combination(int row_count, int col_co
 
         }
 
-        // if(word.size() < distance_struct.min_distance){
-        //     distance_struct.min_distance = word.size();
-        // }
-        // if(cc<number_of_words_to_save){
-        //     distance_struct.min_weight_words[cc] = word;
-        // }
     }
 
-            //     int count_index = 0;
-            // for(auto word: distance_struct.min_weight_words){
 
-            //     int word_size = word.size();
-
-            //     if(word_size == 0){
-            //         replace_word_index = count_index;
-            //         break;
-            //     }
-            //     else if(word_size > max1){
-            //         max1 = word_size;
-            //         replace_word_index = count_index;
-            //     }
-            //     else if(word_size > max2){
-            //         max2 = word_size;
-            //     }
-            //     count_index++;
-            // }
 
 
 

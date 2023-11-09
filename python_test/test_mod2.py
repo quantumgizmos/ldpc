@@ -46,6 +46,22 @@ def test_rank_rep_code():
 
     assert rank(rep_code(1000).T) == 999
 
+def test_rank_rep_code_sparse():
+    
+    for i in range(2,10):
+        H = rep_code(i)
+        assert rank(H,method="sparse") == i-1
+
+    for i in range(2,10):
+        H = ring_code(i)
+        assert rank(H,method="sparse") == i-1
+
+    for i in range(2,10):
+        H = rep_code(i).T
+        assert rank(H,method="sparse") == i-1
+
+    assert rank(rep_code(1000).T) == 999
+
 def test_kernel_rep_code():
 
     for i in range(2,10):

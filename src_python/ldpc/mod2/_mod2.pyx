@@ -78,10 +78,18 @@ cdef coords_to_scipy_sparse(vector[vector[int]]& entries, int m, int n, int entr
     smat = scipy.sparse.csr_matrix((data, (rows, cols)), shape=(m, n), dtype=np.uint8)
     return smat
 
-cdef csr_to_scipy_sparse(vector[vector[int]]& row_adjacency_list, int m, int n, int entry_count):
+cdef csr_to_scipy_sparse(vector[vector[int]]& row_adjacency_list, int m, int n, int entry_count = -9999):
     """
     Converts CSR matrix to sparse matrix
     """
+    cdef int i
+    cdef int j
+
+    if entry_count == -9999:
+        entry_count = 0
+        for i in range(m):
+                entry_count += row_adjacency_list[i].size()
+
     cdef np.ndarray[int, ndim=1] rows = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[int, ndim=1] cols = np.zeros(entry_count, dtype=np.int32)
     cdef np.ndarray[uint8_t, ndim=1] data = np.ones(entry_count, dtype=np.uint8)
@@ -197,23 +205,47 @@ cdef vector[vector[int]] Py2CsrList(pcm: Union[scipy.sparse.spmatrix, np.ndarray
 
     return csr_list
 
-def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
+def rank(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method: str = "dense") -> int:
     """
     Calculate the rank of a given parity check matrix.
-    
-    Parameters:
-        pcm (Union[scipy.sparse.spmatrix, np.ndarray]): The parity check matrix to be ranked.
-        
-    Returns:
-        int: The rank of the parity check matrix.
+
+    This function calculates the rank of the parity check matrix (pcm) using either a dense or sparse method. 
+    The dense method is used by default.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity check matrix to be ranked.
+    method : str, optional
+        The method to use for calculating the rank. Options are "dense" or "sparse". Defaults to "dense".
+
+    Returns
+    -------
+    int
+        The rank of the parity check matrix.
     """
-    cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
-    cdef RowReduce* rr = new RowReduce(cpcm[0])
-    rr.rref(False,False)
-    cdef int rank = rr.rank
-    del rr
-    del cpcm
-    return rank
+
+    cdef vector[vector[int]] pcm_csc
+    cdef GF2Sparse* cpcm
+    cdef RowReduce* rr
+    cdef int rank
+    
+    if method == "dense":
+        pcm_csc = Py2CscList(pcm)
+        return rank_cpp(pcm.shape[0], pcm.shape[1], pcm_csc)
+
+    elif method == "sparse":
+
+        cpcm = Py2GF2Sparse(pcm)
+        rr = new RowReduce(cpcm[0])
+        rr.rref(False,False)
+        rank = rr.rank
+        del rr
+        del cpcm
+        return rank
+    
+    else:
+        raise ValueError(f"Invalid method. Please use 'dense' or 'sparse', not {method}")
 
 def nullspace(pcm: Union[scipy.sparse.spmatrix, np.ndarray], method = "dense") -> scipy.sparse.spmatrix:
     """
@@ -299,6 +331,22 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     output = GF2Sparse2Py(cpcm)
     del cpcm
     return output
+
+def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
+  
+    cdef int row_count = pcm.shape[0]
+    cdef int col_count = pcm.shape[1]
+    cdef vector[vector[int]] csr_list = Py2CsrList(pcm)
+
+    cdef DistanceStruct dist_struct = estimate_code_distance_cpp(row_count, col_count, csr_list, timeout_seconds, 10)
+
+    cdef int min_distance = dist_struct.min_distance
+    cdef int samples_searched = dist_struct.samples_searched
+    cdef vector[vector[int]] min_weight_words = dist_struct.min_weight_words
+
+    min_weight_words_matrix = csr_to_scipy_sparse(min_weight_words, number_of_words_to_save, col_count)
+
+    return min_distance, samples_searched, min_weight_words_matrix
 
 cdef class PluDecomposition():
     """
