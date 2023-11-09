@@ -12,8 +12,14 @@ Welcome to LDPC's documentation!
    :caption: Quickstart:
 
    installation.md
-   pcm.ipynb
 
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+   :caption: Classical Coding:
+
+   pcm.ipynb
+   bp_decoding_example.ipynb
 
 .. toctree::
    :maxdepth: 1
