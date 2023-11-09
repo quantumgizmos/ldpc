@@ -53,9 +53,20 @@ def test_compute_code_dimension():
 def test_compute_code_parameters():
 
     for i in range(3,10):
-        
+
         H = hamming_code(i)
         n, k, d = code_util.compute_code_parameters(H)
         assert n == H.shape[1]
         assert k == H.shape[1] - H.shape[0]
         assert d >= 3
+
+def test_compute_avg_hamming_weights():
+    # Create a random binary sparse matrix
+    H = random_binary_code(20, 30, 4, variance=0)
+
+    # Compute average Hamming weights
+    avg_col_weight, avg_row_weight = code_util.compute_avg_hamming_weights(H)
+
+    # Check that the average weights are within the expected range
+    assert 0 <= avg_col_weight <= H.shape[1]
+    assert avg_row_weight == 4

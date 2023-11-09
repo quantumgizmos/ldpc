@@ -7,11 +7,22 @@ Welcome to LDPC's documentation!
 ================================
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
+   :titlesonly:
+   :caption: Quickstart:
+
+   installation.md
+   pcm.ipynb
+
+
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
    :caption: ldpc API:
 
    ldpc/codes
-   ldpc/gf2sparse
+   ldpc/mod2
+   ldpc/code_util
    ldpc/bp_decoder
    ldpc/belief_find_decoder
    ldpc/bposd_decoder

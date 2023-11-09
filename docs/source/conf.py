@@ -39,8 +39,10 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     'display_version': True,
     'style_nav_header_background': '#00147e',
-    'includehidden': True,
+    'includehidden': True
 }
+
+
 
 html_context = {
   'display_github': True,
@@ -49,8 +51,12 @@ html_context = {
   'github_url': 'https://github.com/quantumgizmos/ldpc/docs'
 }
 
-# Sidebars
-html_sidebars = { '**': ['globaltoc.html', 'sourcelink.html', 'searchbox.html'] }
+# # Sidebars
+# html_sidebars = { '**': ['globaltoc.html', 'sourcelink.html', 'searchbox.html'] }
 
-html_static_path = ['_static']
+# Sidebars
+html_sidebars = { '**': ['globaltoc.html', 'searchbox.html'] }
+
+# html_static_path = ['_static']
+# html_static_path = []
 

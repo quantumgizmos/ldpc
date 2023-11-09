@@ -122,57 +122,6 @@ def compute_code_parameters(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeou
 
     return (n,k,distance_estimate)
 
-# def codewords(H):
-#     '''
-#     Computes all of the the codewords of the code corresponding to the parity check matrix H. The codewords are given by the span of the nullspace.
-
-#     Parameters
-#     ----------
-
-#     H: numpy.ndarray
-#         A parity check matrix.
-
-#     Returns
-#     -------
-#     numpy.ndarray
-#         A matrix where each row corresponds to a codeword
-
-#     Note
-#     ----
-#     If you want to calculate a basis of the codewords use `ldpc.mod2.nullspace`.
-
-#     Examples
-#     --------
-#     >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
-#     >>> print(codewords(H))
-#     [[0 0 0 0 0 0 0]
-#      [0 0 0 1 1 1 1]
-#      [0 0 1 0 1 1 0]
-#      [0 0 1 1 0 0 1]
-#      [0 1 0 0 1 0 1]
-#      [0 1 0 1 0 1 0]
-#      [0 1 1 0 0 1 1]
-#      [0 1 1 1 1 0 0]
-#      [1 0 0 0 0 1 1]
-#      [1 0 0 1 1 0 0]
-#      [1 0 1 0 1 0 1]
-#      [1 0 1 1 0 1 0]
-#      [1 1 0 0 1 1 0]
-#      [1 1 0 1 0 0 1]
-#      [1 1 1 0 0 0 0]
-#      [1 1 1 1 1 1 1]]
-#     '''
-
-#     if(isinstance(H, scipy.sparse.spmatrix)):
-#         H = H.toarray()
-
-#     _, n = H.shape
-#     zero_cw = np.zeros(n).astype(int)  # zero codewords
-#     cw = row_span(nullspace(H))  # nonzero codewords
-#     cw = np.vstack([zero_cw, cw])
-
-#     return cw
-
 def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 
     """
@@ -235,53 +184,22 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 
 
 
-def compute_column_row_weights(H):
-
+def compute_avg_hamming_weights(H: Union[scipy.sparse.spmatrix,np.ndarray]) -> Tuple[float, float]:
     """
-    Returns the upper bounds on the row and column weights of parity check matrix
+    Compute the average row and column Hamming weights of a binary matrix.
 
     Parameters
     ----------
-
-    H: numpy.ndarray
-        The parity check matrix
-
-    Returns
-    -------
-    int
-        The maximum column-weight
-    int
-        The maximum row-weight
-    """
-
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
-
-    return np.sum(H,axis=0), np.sum(H,axis=1)
-
-def get_ldpc_params(H):
-
-    """
-    Returns the upper bounds on the row and column weights of parity check matrix
-
-    Parameters
-    ----------
-
-    H: numpy.ndarray
-        The parity check matrix
+    H : scipy.sparse.spmatrix
+        The binary matrix.
 
     Returns
     -------
-    int
-        The maximum column-weight
-    int
-        The maximum row-weight
+    Tuple[float, float]
+        A tuple containing the average column Hamming weight and the average row Hamming weight.
     """
+    avg_col_weight = np.mean(H.sum(axis=0))
+    avg_row_weight = np.mean(H.sum(axis=1))
 
-    if(isinstance(H, scipy.sparse.spmatrix)):
-        H = H.toarray()
-
-    cols, rows = compute_column_row_weights(H)
-
-    return np.max(cols), np.max(rows)
+    return avg_col_weight, avg_row_weight
 

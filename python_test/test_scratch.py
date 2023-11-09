@@ -1,34 +1,32 @@
 import numpy as np
 
-from ldpc.codes import hamming_code, rep_code
-
-from ldpc.mod2 import nullspace
-
-from ldpc.bp_decoder import bp_decoder, BpDecoder
+import ldpc.codes
+import ldpc.code_util
 
 
 if __name__ == "__main__":
 
-    H = hamming_code(3)
+    H = np.array([[0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+       [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1],
+       [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+       [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0],
+       [0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0],
+       [1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+       [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+       [0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0]])
+    
 
-    ker = nullspace(H, method='dense')
+    n,k,d = ldpc.code_util.compute_code_parameters(H,timeout_seconds=0.1)
+    print(f"n = {n}, k = {k}, d = {d}")
 
-    nulls = H@ker.T
-
-    print(nulls.data %2)
+    # exit(22)
 
 
-    H = rep_code(3)
+    for _ in range(10000):
+        H = ldpc.codes.random_binary_code(8,15,4, variance=1)
+        n,k,d = ldpc.code_util.compute_code_parameters(H,timeout_seconds=0.001)
 
-    # input_vector = np.array([1,0,1,0,1])
-
-    input_vector = np.array([0,0,1])
-
-    bpd = bp_decoder(H,error_rate=0.1, input_vector_type='auto', bp_method="ms", channel_probs=[0.1,0.1,0.1])
-
-    print(bpd.decode(input_vector))
-
-    bpd.update_channel_probs(np.array([0.2,0.1,0.1]))
-    print(bpd.error_channel)
-
-    print(bpd.channel_probs)
+        if d > 4:
+            print(f"n = {n}, k = {k}, d = {d}")
+            print(H.toarray().__repr__())
