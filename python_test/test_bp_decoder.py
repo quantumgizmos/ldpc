@@ -4,7 +4,7 @@ import scipy.sparse
 from ldpc.codes import rep_code, ring_code, hamming_code
 from ldpc.bp_decoder import io_test, BpDecoder
 from ldpc import bp_decoder as bp_decoder_v1
-from ldpc.monte_carlo_simulation import McSim
+from ldpc.monte_carlo_simulation import MonteCarloBscSimulation
 
 
 def test_BpSparse_rep_code():
@@ -236,8 +236,8 @@ def test_vs_ldpc_v1():
     H = rep_code(100)
     bpd=BpDecoder(H, error_rate=error_rate, bp_method='ms', schedule = "parallel", ms_scaling_factor=1.0, max_iter=10,omp_thread_count=4)
     bpd_v1=bp_decoder_v1(H, error_rate=error_rate, bp_method='ms', ms_scaling_factor=1.0, max_iter=10)
-    mc1 = McSim(H, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
-    mc2 = McSim(H, error_rate=error_rate, Decoder=bpd_v1, target_run_count=run_count,seed=42)
+    mc1 = MonteCarloBscSimulation(H, error_rate=error_rate, Decoder=bpd, target_run_count=run_count,seed=42)
+    mc2 = MonteCarloBscSimulation(H, error_rate=error_rate, Decoder=bpd_v1, target_run_count=run_count,seed=42)
     out1 = mc1.run()
     out2 = mc2.run()
 

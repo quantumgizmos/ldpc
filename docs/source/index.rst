@@ -9,13 +9,12 @@ Welcome to LDPC's documentation!
 .. toctree::
    :maxdepth: 1
    :titlesonly:
-   :caption: Quickstart:
+   :caption: Installation:
 
    installation.md
 
 .. toctree::
-   :maxdepth: 1
-   :titlesonly:
+   :maxdepth: 3
    :caption: Classical Coding:
 
    pcm.ipynb

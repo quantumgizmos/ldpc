@@ -7,7 +7,7 @@ from tqdm import tqdm
 from ldpc.noise_models import generate_bsc_error
 
 
-class McSim:
+class MonteCarloBscSimulation:
     """
     Class for running Monte Carlo simulations of a given error-correcting code using syndrome-based decoding.
 
@@ -47,7 +47,7 @@ class McSim:
         run = False,
     ) -> None:
         """
-        Initializes a McSim object with the given parameters.
+        Initializes a MonteCarloBscSimulation object with the given parameters.
 
         """
         if parity_check_matrix is None or not isinstance(parity_check_matrix, (np.ndarray, sp.csr_matrix)):
@@ -117,7 +117,10 @@ class McSim:
 
             # Calculate the corresponding syndrome and decoded codeword
             syndrome = self.parity_check_matrix @ error % 2  # calculate the syndrome
+
             decoding = self.Decoder.decode(syndrome)  # decode relative to the zero codeword
+
+
 
             # Check for decoding failure
             if not np.array_equal(decoding, error):
