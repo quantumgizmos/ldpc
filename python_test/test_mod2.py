@@ -153,6 +153,21 @@ def test_lu_solve():
             x_solution = plu.lu_solve(y)
             assert np.array_equal(H@x_solution % 2, y)
 
+def test_pivot_rows1():
+    # Create a dense numpy array
+    dense_mat = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    # Create a sparse scipy matrix
+    sparse_mat = csr_matrix(dense_mat)
+
+    # Test with dense numpy array
+    pivots_dense = pivot_rows(dense_mat)
+    assert np.array_equal(pivots_dense, np.array([0, 1, 2]))
+
+    # Test with sparse scipy matrix
+    pivots_sparse = pivot_rows(sparse_mat)
+    assert np.array_equal(pivots_sparse, np.array([0, 1, 2]))
+
+
 def test_pivot_rows():
 
     H = hamming_code(3)
@@ -161,6 +176,8 @@ def test_pivot_rows():
     pivots = pivot_rows(mat)
 
     assert np.array_equal(pivots, np.array([3,4,5]))
+
+
 
 
 if __name__ == "__main__":

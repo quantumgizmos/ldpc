@@ -315,6 +315,22 @@ def row_complement_basis(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> scipy
     return csr_to_scipy_sparse(csr.row_adjacency_list, csr.m, csr.n, csr.entry_count)
 
 def pivot_rows(mat: Union[np.ndarray,scipy.sparse.spmatrix]):
+    """
+    Find the pivot rows of a given matrix.
+
+    This function finds the pivot rows of the input matrix. The input matrix can be either a dense numpy array or a sparse scipy matrix.
+    The function first converts the input matrix to a CSR list, then calls the C++ function `pivot_rows_cpp` to find the pivot rows.
+
+    Parameters
+    ----------
+    mat : Union[np.ndarray, scipy.sparse.spmatrix]
+        The input matrix.
+
+    Returns
+    -------
+    numpy.ndarray
+        A numpy array containing the pivot rows of the input matrix.
+    """
     cdef int i
     cdef vector[vector[int]] mat_csr = Py2CsrList(mat)
     cdef vector[int] pivots = pivot_rows_cpp(mat.shape[0], mat.shape[1], mat_csr)

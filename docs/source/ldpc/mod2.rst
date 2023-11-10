@@ -2,5 +2,6 @@ Mod2 Linear Algebra
 ====================
 
 .. automodule:: ldpc.mod2
-   :members: rank, kernel, row_complement_basis, PluDecomposition
+   :members: rank, kernel, pivot_rows
    :noindex:
+   :member-order: bysource
