@@ -177,6 +177,17 @@ def test_pivot_rows():
 
     assert np.array_equal(pivots, np.array([3,4,5]))
 
+def test_rank_case2():
+    
+    mat = np.array([[0, 0, 1, 0],
+       [0, 0, 1, 1],
+       [1, 1, 0, 0],
+       [0, 1, 0, 0]])
+    
+    mat = scipy.sparse.csr_matrix(mat)
+    
+    assert rank(mat) == 4
+
 
 
 
