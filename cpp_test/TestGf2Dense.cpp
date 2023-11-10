@@ -262,15 +262,28 @@ TEST(Gf2Dense, estimate_code_distance){
     }
     auto distance = ldpc::gf2dense::estimate_code_distance(pcm.m, pcm.n, pcm_csr, 0.025, 10);
 
-    cout<<"Distance: " << distance.min_distance <<endl;
-    cout<<"Samples searched: " << distance.samples_searched <<endl;
+    // cout<<"Distance: " << distance.min_distance <<endl;
+    // cout<<"Samples searched: " << distance.samples_searched <<endl;
 
-    for(auto vec: distance.min_weight_words){
-        print_vector(vec);
-    }
+    // for(auto vec: distance.min_weight_words){
+    //     print_vector(vec);
+    // }
 
     ASSERT_EQ(distance.min_distance, 3);
 
+}
 
+TEST(Gf2Dense, test_case_1){
+
+    // [[0 0 1 0]
+    //  [0 0 1 1]
+    //  [1 1 0 0]
+    //  [0 1 0 0]]
+
+    CscMatrix mat = {{2},{2,3},{0,1},{1}};
+
+    int rank = ldpc::gf2dense::rank(4,4,mat);
+
+    ASSERT_EQ(rank, 4);
 
 }
