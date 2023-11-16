@@ -410,6 +410,27 @@ def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 
     return distance
 
+def row_basis(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+    """
+    Compute the row basis of a given parity check matrix.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        The input parity check matrix.
+
+    Returns
+    -------
+    scipy.sparse.spmatrix
+        The row basis of the input matrix.
+    """
+
+    pcm = ldpc.helpers.scipy_helpers.convert_to_binary_sparse(pcm)
+
+    pivots = pivot_rows(pcm)
+
+    return pcm[pivots,:]
+
 cdef class PluDecomposition():
     """
     Initialise the PLU Decomposition with a given parity check matrix.
