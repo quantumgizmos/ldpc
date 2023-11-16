@@ -374,6 +374,42 @@ def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout
 
     return min_distance, samples_searched, min_weight_words_matrix
 
+def row_span(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+    """
+    Compute the row span of a given parity check matrix.
+
+    This function computes the row span of the input parity check matrix (pcm). The input matrix can be either a dense numpy array or a sparse scipy matrix.
+    The function first converts the input matrix to a CSR list, then calls the C++ function `row_span_cpp` to compute the row span.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        The input parity check matrix.
+
+    Returns
+    -------
+    scipy.sparse.spmatrix
+        The row span of the input matrix.
+    """
+
+    cdef int row_count = pcm.shape[0]
+    cdef int col_count = pcm.shape[1]
+    cdef vector[vector[int]] csr_list = Py2CsrList(pcm)
+
+    cdef vector[vector[int]] rs = row_span_cpp(row_count, col_count, csr_list)
+
+    return csr_to_scipy_sparse(rs, int(2**row_count), col_count)
+
+def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
+ 
+    cdef int row_count = pcm.shape[0]
+    cdef int col_count = pcm.shape[1]
+    cdef vector[vector[int]] csr_list = Py2CsrList(pcm)
+
+    cdef int distance = compute_exact_code_distance_cpp(row_count, col_count, csr_list)
+
+    return distance
+
 cdef class PluDecomposition():
     """
     Initialise the PLU Decomposition with a given parity check matrix.

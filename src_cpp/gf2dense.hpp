@@ -38,6 +38,29 @@ typedef std::vector<std::vector<int>> CscMatrix;
 typedef std::vector<std::vector<int>> CsrMatrix;
 
 
+CsrMatrix csc_to_csr(CscMatrix csc_mat) {
+    
+    int row_count = -1;
+    for(auto& col: csc_mat){
+        for(int entry: col){
+            if(entry > row_count){
+                row_count = entry;
+            }
+        }
+    }
+
+    auto csr_mat = CsrMatrix(row_count+1, std::vector<int>{});
+
+    for(int col_index = 0; col_index<csc_mat.size(); col_index++){
+        for(int row_index: csc_mat[col_index]){
+            csr_mat[row_index].push_back(col_index);
+        }
+    }
+
+    return csr_mat;
+}
+
+
 void print_csc(int row_count, int col_count, std::vector<std::vector<int>> csc_mat){
 
     CsrMatrix csr_matrix;
@@ -460,6 +483,47 @@ DistanceStruct estimate_code_distance(int row_count, int col_count, CsrMatrix& c
     }
 
     return ldpc::gf2dense::estimate_minimum_linear_row_combination(max_row+1, col_count, ker_csr, timeout_seconds, number_of_words_to_save);
+
+}
+
+int compute_exact_code_distance(int row_count, int col_count, CsrMatrix& csr_mat){
+
+    CscMatrix ker = ldpc::gf2dense::kernel(row_count,col_count,csr_mat);
+
+
+    CsrMatrix ker_csr = csc_to_csr(ker);
+
+    int row_permutations = std::pow(2, ker_csr.size());
+
+    int distance = col_count;
+        
+    for(int i = 1; i<row_permutations; i++){
+        
+        std::vector<uint8_t> current_row(col_count,0);
+
+        auto row_add_indices = ldpc::util::decimal_to_binary_sparse(i,ker_csr.size());
+
+        int row_count = 0;
+        for (auto row_index: row_add_indices){
+            for(auto col_index: ker_csr[row_index]){
+                if(current_row[col_index] == 0){
+                    row_count++;
+                }
+                else{
+                    row_count--;
+                }
+            }
+        }
+
+        // std::cout<<row_count<<std::endl;
+
+        if(row_count<distance){
+            distance = row_count;
+        }
+
+    }
+
+    return distance;
 
 }
 

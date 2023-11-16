@@ -62,8 +62,9 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
         ## set up OSD with default values and channel probs from BP
         self.osdD = new OsdDecoderCpp(self.pcm[0], OSD_OFF, 0, self.bpd.channel_probabilities)
-        self.osd_order=osd_order
         self.osd_method=osd_method
+        self.osd_order=osd_order
+
         self.input_vector_type = "syndrome"
 
         self.osdD.osd_setup()
@@ -222,7 +223,10 @@ cdef class BpOsdDecoder(BpDecoderBase):
         if order < 0:
             raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
 
-        if self.osdD.osd_method == 0 and order > 15:
+        if self.osdD.osd_method == OSD_0 and order != 0:
+            raise ValueError(f"ERROR: OSD order '{order}' invalid. The 'osd_method' is set to 'OSD_0'. The osd order must therefore be set to 0.")
+
+        if self.osdD.osd_method == EXHAUSTIVE and order > 15:
             warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not "
                         "recommended. Use the 'osd_cs' method instead.")
 

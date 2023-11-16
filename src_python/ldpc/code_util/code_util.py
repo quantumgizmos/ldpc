@@ -4,6 +4,7 @@ import ldpc.mod2
 import scipy.sparse
 from scipy.special import comb as nCr
 from typing import Union, Tuple, List
+import warnings
 
 def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) -> scipy.sparse.spmatrix:
     '''
@@ -51,7 +52,7 @@ def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) ->
     '''
     return ldpc.mod2.nullspace(pcm)
 
-def estimate_min_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
+def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
 
     """
     Estimates the code distance of a given parity check matrix (pcm).
@@ -118,9 +119,39 @@ def compute_code_parameters(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeou
     """
     n = pcm.shape[1]
     k = compute_code_dimension(pcm)
-    distance_estimate,_,_=estimate_min_distance(pcm, timeout_seconds)
+    distance_estimate,_,_=estimate_code_distance(pcm, timeout_seconds)
 
     return (n,k,distance_estimate)
+
+def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> int:
+    """
+    Compute the exact code distance of a given parity check matrix.
+
+    This function computes the exact code distance of the input parity check matrix (pcm). The input matrix can be either a dense numpy array or a sparse scipy matrix.
+    The function first converts the input matrix to a CSR list, then calls the C++ function `compute_exact_code_distance_cpp` to compute the exact code distance.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        The input parity check matrix.
+
+    Returns
+    -------
+    int
+        The exact code distance of the input matrix.
+    
+    Warning
+    -------
+    This function can be very slow for large matrices or matrices with a large minimum distance. Use with caution.
+    """
+
+    col_count = pcm.shape[1]
+    if col_count > 15:
+        warnings.warning("This function has exponential complexity. Not recommend for large pcms. Use the\
+                            'ldpc.code_util.estimate_code_distance' function instead.")
+        
+    return ldpc.mod2.compute_exact_code_distance(pcm)
+    
 
 def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 

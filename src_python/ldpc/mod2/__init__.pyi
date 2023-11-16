@@ -92,6 +92,26 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 
 
 def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
+def row_span(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmatrix:
+    """
+    Compute the row span of a given parity check matrix.
+
+    This function computes the row span of the input parity check matrix (pcm). The input matrix can be either a dense numpy array or a sparse scipy matrix.
+    The function first converts the input matrix to a CSR list, then calls the C++ function `row_span_cpp` to compute the row span.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        The input parity check matrix.
+
+    Returns
+    -------
+    scipy.sparse.spmatrix
+        The row span of the input matrix.
+    """
+
+
+def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
 class PluDecomposition():
     """
     Initialise the PLU Decomposition with a given parity check matrix.

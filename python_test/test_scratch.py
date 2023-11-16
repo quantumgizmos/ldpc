@@ -6,20 +6,28 @@ import ldpc.code_util
 import numpy as np
 import ldpc.codes
 from ldpc import BpDecoder
+from ldpc import BpOsdDecoder
 from ldpc.monte_carlo_simulation import MonteCarloBscSimulation
-
+import ldpc.mod2
 
 if __name__ == "__main__":
 
-
-
     H = ldpc.codes.rep_code(5)
-
     error_rate = 0.001
+    dec = BpOsdDecoder(H, error_rate=error_rate, max_iter = 0, bp_method="product_sum", input_vector_type = "syndrome", osd_method="osd_e", osd_order = 1)
+    assert dec.osd_order == 1
 
-    dec = BpDecoder(H, error_rate=error_rate, max_iter = 0, bp_method="product_sum", input_vector_type = "syndrome")
-    mc_sim = MonteCarloBscSimulation(H, error_rate = error_rate, target_run_count=10, Decoder = dec)
-    mc_sim.run()
+    span = ldpc.mod2.row_span(ldpc.codes.rep_code(5))
+    print(span.toarray())
+
+    H = ldpc.codes.hamming_code(3)
+
+    d = ldpc.mod2.compute_exact_code_distance(H)
+
+    print(d)
+
+
+
 
 
     # syndrome 

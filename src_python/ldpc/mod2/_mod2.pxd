@@ -64,6 +64,8 @@ cdef extern from "gf2dense.hpp" namespace "ldpc::gf2dense":
     int rank_cpp "ldpc::gf2dense::rank" (int row_count, int col_count, vector[vector[int]]& mat)
     vector[vector[int]] gf2dense_kernel "ldpc::gf2dense::kernel" (int row_count, int col_count, vector[vector[int]]& mat)
     vector[int] pivot_rows_cpp "ldpc::gf2dense::pivot_rows" (int row_count, int col_count, vector[vector[int]]& mat)
+    vector[vector[int]] row_span_cpp "ldpc::gf2dense::row_span" (int row_count, int col_count, vector[vector[int]]& csr_mat)
+    int compute_exact_code_distance_cpp "ldpc::gf2dense::compute_exact_code_distance" (int row_count, int col_count, vector[vector[int]]& csr_mat)
 
     cdef cppclass DistanceStruct "ldpc::gf2dense::DistanceStruct":
         int min_distance

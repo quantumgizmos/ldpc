@@ -287,3 +287,73 @@ TEST(Gf2Dense, test_case_1){
     ASSERT_EQ(rank, 4);
 
 }
+
+TEST(Gf2Dense, row_span_rep_code){
+
+    // [[0 0 1 0]
+    //  [0 0 1 1]
+    //  [1 1 0 0]
+    //  [0 1 0 0]]
+
+    auto pcm = ldpc::gf2codes::rep_code(3);
+
+    std::vector<std::vector<int>> pcm_csr;
+    for(int i = 0; i<pcm.m; i++){
+        pcm_csr.push_back(vector<int>{});
+        for(auto e: pcm.iterate_row(i)){
+            pcm_csr[i].push_back(e.col_index);
+        }
+    }
+
+    auto span = ldpc::gf2dense::row_span(pcm.m, pcm.n, pcm_csr);
+
+    cout<<span.size()<<endl;
+
+    auto span_mat = ldpc::gf2sparse::GF2Sparse(span.size(), pcm.n);
+    for(int i =0 ; i<span.size(); i++){
+        for(int j: span[i]){
+            // cout<<i<<","<<j<<endl;
+            span_mat.insert_entry(i,j);
+        }
+    }
+
+    ldpc::sparse_matrix_util::print_sparse_matrix(span_mat);
+
+}
+
+TEST(ConvertMatrixTest, CscToCsr) {
+    // Create a CscMatrix
+    CscMatrix csc_mat = {{0, 1}, {2}, {1, 2}};
+
+    // Convert to CsrMatrix
+    CsrMatrix csr_mat = csc_to_csr(csc_mat);
+
+    // Create the expected CsrMatrix
+    CsrMatrix expected_csr_mat = {{0}, {0, 2}, {1, 2}};
+
+    // Check that the converted matrix is as expected
+    EXPECT_EQ(csr_mat, expected_csr_mat);
+}
+
+TEST(Gf2Dense, exact_code_distance){
+
+    // [[0 0 1 0]
+    //  [0 0 1 1]
+    //  [1 1 0 0]
+    //  [0 1 0 0]]
+
+    auto pcm = ldpc::gf2codes::hamming_code(3);
+
+    std::vector<std::vector<int>> pcm_csr;
+    for(int i = 0; i<pcm.m; i++){
+        pcm_csr.push_back(vector<int>{});
+        for(auto e: pcm.iterate_row(i)){
+            pcm_csr[i].push_back(e.col_index);
+        }
+    }
+
+    int d = ldpc::gf2dense::compute_exact_code_distance(pcm.m, pcm.n, pcm_csr);
+
+    ASSERT_EQ(d, 3);
+
+}

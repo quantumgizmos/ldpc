@@ -16,7 +16,7 @@ def test_code_distance():
 
     for _ in range(10):
         H = random_binary_code(20,30,4, variance=0)
-        d,s, cw = code_util.estimate_min_distance(H,0.025)
+        d,s, cw = code_util.estimate_code_distance(H,0.025)
         assert not np.any( (H@cw.T).data%2 )
 
 def test_code_distance_hamming():
@@ -24,7 +24,7 @@ def test_code_distance_hamming():
     for i in range(3,12):
 
         H = hamming_code(i)
-        d,s, cw = code_util.estimate_min_distance(H,0.025)
+        d,s, cw = code_util.estimate_code_distance(H,0.025)
         assert not np.any( (H@cw.T).data%2 )
         assert d >= 3
 
@@ -33,7 +33,7 @@ def test_code_distance_ring():
     for i in range(3,25):
 
         H = ring_code(i)
-        d,s, cw = code_util.estimate_min_distance(H,0.025)
+        d,s, cw = code_util.estimate_code_distance(H,0.025)
         assert not np.any( (H@cw.T).data%2 )
         assert d == i
 
@@ -70,3 +70,12 @@ def test_compute_avg_hamming_weights():
     # Check that the average weights are within the expected range
     assert 0 <= avg_col_weight <= H.shape[1]
     assert avg_row_weight == 4
+
+def test_exact_code_distance():
+
+    H = hamming_code(3)
+
+    d = code_util.compute_exact_code_distance(H)
+
+    assert d == 3
+
