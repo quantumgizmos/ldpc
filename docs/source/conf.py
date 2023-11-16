@@ -57,6 +57,6 @@ html_context = {
 # Sidebars
 html_sidebars = { '**': ['globaltoc.html', 'searchbox.html'] }
 
-# html_static_path = ['_static']
+html_static_path = ['_static']
 # html_static_path = []
 

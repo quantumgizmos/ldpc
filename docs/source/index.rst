@@ -14,7 +14,8 @@ Welcome to LDPC's documentation!
    installation.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
+   :titlesonly:
    :caption: Classical Coding:
 
    classical_coding.ipynb
