@@ -24,10 +24,11 @@ def test_with_invalid_data_type():
     with pytest.raises(TypeError):
         convert_to_binary_sparse("not a matrix")
 
-def test_with_invalid_dtype():
+def test_with_float_dtype():
     matrix = np.array([[1.0, 0.0], [0.0, 1.0]])  # float type
-    with pytest.raises(TypeError):
-        convert_to_binary_sparse(matrix)
+    result = convert_to_binary_sparse(matrix)
+    assert result.dtype == np.dtype(np.uint8)
+    assert result.nnz == 2
 
 def test_with_non_binary_matrix():
     matrix = np.array([[2, 0], [0, 3]], dtype=np.int8)  # Non-binary elements

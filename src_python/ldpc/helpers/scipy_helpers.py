@@ -38,10 +38,12 @@ def convert_to_binary_sparse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -
         )
     
     # Check dtype
-    if matrix.dtype not in [np.uint8, np.int8, int]:
+    if matrix.dtype not in [np.uint8, np.int8, int, float]:
         raise TypeError(
             f"Input matrix must have dtype uint8, int8, or int, not {matrix.dtype}"
         )
+    else:
+        pass
 
     # Convert numpy array to sparse matrix
     matrix = (
@@ -50,11 +52,18 @@ def convert_to_binary_sparse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -
         else matrix
     )
 
+    # Check if the matrix is binary
+    if not np.all(np.isin(matrix.data, [1, 0, 1.0, 0.0])):
+        raise ValueError("Input matrix must be a binary matrix.")
+
+    if matrix.dtype == float:
+        matrix = matrix.astype(np.uint8)
+
     # Eliminate any zero elements
     matrix.eliminate_zeros()
 
-    # Check if the matrix is binary
-    if not np.all(np.isin(matrix.data, [1, 0])):
-        raise ValueError("Input matrix must be a binary matrix.")
+
+    
+
 
     return matrix
