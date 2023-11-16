@@ -39,9 +39,9 @@ cdef class BeliefFindDecoder(BpDecoderBase):
         by default None.
     matrix_solve : bool, optional
         If set to True, implements the more general version of union find as described in
-        https://arxiv.org/abs/2103.08049 for LDPC codes, by default False.
+        https://arxiv.org/abs/2103.08049 for LDPC codes, by default True.
     bits_per_step : int, optional
-        Specifies the number of bits added to the cluster in each step of the UFD algorithm, by default 0.
+        Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
 
     Notes
     -----
@@ -53,13 +53,16 @@ cdef class BeliefFindDecoder(BpDecoderBase):
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, matrix_solve: bool = False, bits_per_step:int = 0, input_vector_type: str = "syndrome"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, matrix_solve: bool = True, bits_per_step:int = 0, input_vector_type: str = "syndrome"):
         self.MEMORY_ALLOCATED=False
         self.ufd = new uf_decoder_cpp(self.pcm[0])
         self.bf_decoding.resize(self.n) #C vector for the bf decoding
         self.residual_syndrome.resize(self.m) #C vector for the bf decoding
         self.matrix_solve = matrix_solve
-        self.bits_per_step = bits_per_step
+        if bits_per_step == 0:
+            self.bits_per_step = pcm.shape[1]
+        else:
+            self.bits_per_step = bits_per_step
         self.input_vector_type = "syndrome"
 
         self.MEMORY_ALLOCATED=True

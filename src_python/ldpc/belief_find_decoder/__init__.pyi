@@ -35,9 +35,9 @@ class BeliefFindDecoder(BpDecoderBase):
         by default None.
     matrix_solve : bool, optional
         If set to True, implements the more general version of union find as described in
-        https://arxiv.org/abs/2103.08049 for LDPC codes, by default False.
+        https://arxiv.org/abs/2103.08049 for LDPC codes, by default True.
     bits_per_step : int, optional
-        Specifies the number of bits added to the cluster in each step of the UFD algorithm, by default 0.
+        Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
 
     Notes
     -----

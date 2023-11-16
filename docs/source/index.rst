@@ -15,11 +15,16 @@ Welcome to LDPC's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :titlesonly:
    :caption: Classical Coding:
 
    classical_coding.ipynb
    bp_decoding_example.ipynb
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Quantum Coding:
+
+   quantum_decoder.ipynb
 
 .. toctree::
    :maxdepth: 1
