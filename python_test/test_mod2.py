@@ -188,8 +188,22 @@ def test_rank_case2():
     
     assert rank(mat) == 4
 
+def test_rank_case3():
+    mat = np.array([[1, 0, 1, 0, 1],
+       [0, 1, 0, 1, 1]], dtype=np.uint8)
+    
+    mat = scipy.sparse.csr_matrix(mat)  
+    
+    assert rank(mat) == 2
+
+    ker = kernel(mat)
+    print(ker.toarray())
+
+    print(ker@mat.T)
+    
+
 
 
 
 if __name__ == "__main__":
-    pytest.main([__file__])
+    test_rank_case3()

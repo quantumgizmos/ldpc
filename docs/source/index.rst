@@ -17,7 +17,7 @@ Welcome to LDPC's documentation!
    :maxdepth: 3
    :caption: Classical Coding:
 
-   pcm.ipynb
+   classical_coding.ipynb
    bp_decoding_example.ipynb
 
 .. toctree::
