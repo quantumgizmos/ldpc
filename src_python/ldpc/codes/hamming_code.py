@@ -57,4 +57,4 @@ def hamming_code(rank: int) -> sp.csr_matrix:
                 data.append(np.uint8(value))
 
     # Create a sparse matrix in CSR format from the data, row indices, and column indices
-    return sp.csr_matrix((data, (row_indices, col_indices)), shape=(rank, num_cols))
+    return sp.csr_matrix((data, (row_indices, col_indices)), shape=(rank, num_cols), dtype=np.uint8)

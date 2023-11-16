@@ -2,6 +2,7 @@
 # distutils: language = c++
 import numpy as np
 import scipy.sparse
+import ldpc.helpers.scipy_helpers
 from typing import Tuple, Union
 from libc.stdint cimport uintptr_t
 
@@ -36,6 +37,9 @@ cdef GF2Sparse* Py2GF2Sparse(pcm):
         pass
     else:
         raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(pcm)}")
+
+    # Convert to binary sparse matrix and validate input
+    pcm = ldpc.helpers.scipy_helpers.convert_to_binary_sparse(pcm)
 
     # get the parity check dimensions
     m, n = pcm.shape[0], pcm.shape[1]
@@ -149,6 +153,9 @@ cdef GF2Sparse2Py(GF2Sparse* cpcm):
     return smat
 
 cdef vector[vector[int]] Py2CscList(pcm: Union[scipy.sparse.spmatrix, np.ndarray]):
+
+    # Convert to binary sparse matrix and validate input
+    pcm = ldpc.helpers.scipy_helpers.convert_to_binary_sparse(pcm)
     
     cdef int rows
     cdef int cols
@@ -179,6 +186,9 @@ cdef vector[vector[int]] Py2CscList(pcm: Union[scipy.sparse.spmatrix, np.ndarray
     return csc_list
 
 cdef vector[vector[int]] Py2CsrList(pcm: Union[scipy.sparse.spmatrix, np.ndarray]):
+
+    # Convert to binary sparse matrix and validate input
+    pcm = ldpc.helpers.scipy_helpers.convert_to_binary_sparse(pcm)
 
     cdef int rows
     cdef int cols

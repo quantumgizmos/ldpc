@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse
+import ldpc.helpers.scipy_helpers
 from typing import Tuple, Union
 from libc.stdint cimport uintptr_t
 def csc_to_scipy_sparse(vector[vector[int]]& col_adjacency_list):

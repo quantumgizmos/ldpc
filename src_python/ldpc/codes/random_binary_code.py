@@ -48,6 +48,6 @@ def random_binary_code(rows: int, cols: int, row_weight: int, seed: Optional[int
     data = np.ones(len(row_indices), dtype=int)
     
     # Create a sparse matrix in COO format and convert to CSR.
-    binary_code_matrix = sparse.coo_matrix((data, (row_indices, col_indices)), shape=(rows, cols)).tocsr()
+    binary_code_matrix = sparse.coo_matrix((data, (row_indices, col_indices)), shape=(rows, cols),dtype=np.uint8).tocsr()
     
     return binary_code_matrix

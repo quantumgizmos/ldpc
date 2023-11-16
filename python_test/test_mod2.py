@@ -171,7 +171,7 @@ def test_pivot_rows1():
 def test_pivot_rows():
 
     H = hamming_code(3)
-    mat = scipy.sparse.vstack([np.zeros(shape=(3,7)),H])
+    mat = scipy.sparse.vstack([np.zeros(shape=(3,7),dtype=np.uint8),H])
 
     pivots = pivot_rows(mat)
 
