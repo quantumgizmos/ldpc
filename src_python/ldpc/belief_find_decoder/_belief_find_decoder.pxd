@@ -21,7 +21,7 @@ cdef class BeliefFindDecoder(BpDecoderBase):
     cdef uf_decoder_cpp* ufd
     cdef vector[uint8_t] bf_decoding
     cdef vector[uint8_t] residual_syndrome
-    cdef bool matrix_solve
+    cdef str uf_method
     cdef int bits_per_step
 
 

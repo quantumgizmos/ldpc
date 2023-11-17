@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 bp_method = 'product_sum',
                 max_iter = 1,
                 schedule = 'serial',
-                matrix_solve = True, # If matrix_solve is set to False, union-find clusters are solved using a peeling decoder
+                uf_method = True, # If uf_method is set to False, union-find clusters are solved using a peeling decoder
                 bits_per_step = 1 ## this is the number of bits by which clusters are expanded in each growth step 
             )
     

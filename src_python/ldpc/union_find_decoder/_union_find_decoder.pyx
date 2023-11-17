@@ -48,19 +48,19 @@ cdef class UnionFindDecoder:
     A decoder class that implements the Union Find Decoder (UFD) algorithm to decode binary linear codes. 
     The decoder operates on a provided parity-check matrix (PCM) and can function with or without soft information 
     from a channel. The UFD algorithm can be run in two modes: matrix solve and peeling, controlled by the 
-    `matrix_solve` flag. 
+    `uf_method` flag. 
 
     Parameters
     ----------
     pcm : Union[np.ndarray, spmatrix]
         The parity-check matrix (PCM) of the code. This should be either a dense matrix (numpy ndarray) 
         or a sparse matrix (scipy sparse matrix).
-    matrix_solve : bool, optional
+    uf_method : bool, optional
         If True, the decoder operates in matrix solve mode. If False, it operates in peeling mode. 
         Default is False.
     """ 
  
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], matrix_solve: bool = False):
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False):
         
         self.MEMORY_ALLOCATED=False
 
@@ -78,7 +78,7 @@ cdef class UnionFindDecoder:
         self.ufd = new uf_decoder_cpp(self.pcm[0])
         self._syndrome.resize(self.m) #C vector for the syndrome
         self.uf_llrs.resize(self.n) #C vector for the log-likehood ratios
-        self.matrix_solve = matrix_solve
+        self.uf_method = uf_method
         self.MEMORY_ALLOCATED=True
 
     def __del__(self):
@@ -142,7 +142,7 @@ cdef class UnionFindDecoder:
         else:
             self.bits_per_step = bits_per_step
 
-        if self.matrix_solve:
+        if self.uf_method:
             if llrs is not None:
                 self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, self.uf_llrs,self.bits_per_step)
             else:

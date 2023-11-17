@@ -7,7 +7,7 @@ class BeliefFindDecoder(BpDecoderBase):
     The BeliefFindDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
     it falls back to the Union Find Decoder algorithm. The UFD algorithm is based on the principles outlined in
     https://arxiv.org/abs/1709.06218, with an option to utilise a more general version as described in
-    https://arxiv.org/abs/2103.08049 for LDPC codes by setting `matrix_solve=True`.
+    https://arxiv.org/abs/2103.08049 for LDPC codes by setting `uf_method=True`.
 
     Parameters
     ----------
@@ -33,9 +33,10 @@ class BeliefFindDecoder(BpDecoderBase):
     serial_schedule_order : Optional[List[int]], optional
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
-    matrix_solve : bool, optional
-        If set to True, implements the more general version of union find as described in
-        https://arxiv.org/abs/2103.08049 for LDPC codes, by default True.
+    uf_method : str, optional
+        The method used to solve the local decoding problem in each cluster. Choose from: 1) 'inversion' or 2) 'peeling'.
+        By default set to 'inversion'. The 'peeling' method is only suitable for LDPC codes with point like syndromes.
+        The inversion method can be applied to any parity check matrix.
     bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
 
@@ -43,7 +44,7 @@ class BeliefFindDecoder(BpDecoderBase):
     -----
     The `BeliefFindDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
     in the UFD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
-    The `matrix_solve` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
+    The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
     """
 
 
@@ -70,3 +71,8 @@ class BeliefFindDecoder(BpDecoderBase):
             If the length of the input syndrome is not equal to the length of the code.
         """
 
+
+    @property
+    def uf_method(self):
+    @uf_method.setter
+    def uf_method(self, uf_method: str):

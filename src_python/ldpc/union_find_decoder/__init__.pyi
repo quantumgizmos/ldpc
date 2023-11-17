@@ -5,14 +5,14 @@ class UnionFindDecoder:
     A decoder class that implements the Union Find Decoder (UFD) algorithm to decode binary linear codes. 
     The decoder operates on a provided parity-check matrix (PCM) and can function with or without soft information 
     from a channel. The UFD algorithm can be run in two modes: matrix solve and peeling, controlled by the 
-    `matrix_solve` flag. 
+    `uf_method` flag. 
 
     Parameters
     ----------
     pcm : Union[np.ndarray, spmatrix]
         The parity-check matrix (PCM) of the code. This should be either a dense matrix (numpy ndarray) 
         or a sparse matrix (scipy sparse matrix).
-    matrix_solve : bool, optional
+    uf_method : bool, optional
         If True, the decoder operates in matrix solve mode. If False, it operates in peeling mode. 
         Default is False.
     """ 

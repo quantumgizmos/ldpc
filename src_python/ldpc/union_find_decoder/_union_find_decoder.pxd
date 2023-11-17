@@ -25,5 +25,5 @@ cdef class UnionFindDecoder():
     cdef BpSparse* pcm
     cdef vector[uint8_t] _syndrome
     cdef vector[double] uf_llrs
-    cdef bool matrix_solve
+    cdef bool uf_method
     cdef int bits_per_step
