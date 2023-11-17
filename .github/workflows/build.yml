@@ -6,6 +6,7 @@ on:
   push:
     branches:
      - release_v2
+     - ldpc_v2
 
 jobs:
   build_sdist:

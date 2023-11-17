@@ -22,7 +22,7 @@ dependencies = [
     "tqdm",
     "pytest"
 ]
-version = "2.0.7"
+version = "2.0.8"
 
 [tool.setuptools.packages.find]
 where = ["src_python"]  
