@@ -92,9 +92,14 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
 ## BUILD
 
 
+# if sys.platform == "darwin":
+#     os.environ["CC"] = "gcc-11"
+#     os.environ["CXX"] = "g++-11"
+
 if sys.platform == "darwin":
-    os.environ["CC"] = "gcc-11"
-    os.environ["CXX"] = "g++-11"
+    os.environ["CC"] = "clang"
+    os.environ["CXX"] = "clang++"
+
 
 if sys.platform == "win32":
     compile_flags = ["/Ox", "/std:c++20"]
