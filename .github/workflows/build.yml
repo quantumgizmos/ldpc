@@ -34,9 +34,9 @@ jobs:
     runs-on: ${{ matrix.os_dist.os }}
     env:
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
-      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      MACOSX_DEPLOYMENT_TARGET: "13.1"
       CIBW_ARCHS_MACOS: "arm64 x86_64"
-      # CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
+      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
     strategy:
       fail-fast: false
       matrix:
