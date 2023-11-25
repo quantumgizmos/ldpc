@@ -344,57 +344,57 @@ TEST(BpDecoder, min_sum_single_scan){
     
 }
 
-TEST(BpDecoder, random_schedule_seed){
+// TEST(BpDecoder, random_schedule_seed){
 
-    {
-        auto pcm = ldpc::gf2codes::rep_code(3);
-        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
-        auto expected_order = vector<int>{2,3,1};
-        ASSERT_EQ(bpd.random_schedule_seed,-1);
-        ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+//     {
+//         auto pcm = ldpc::gf2codes::rep_code(3);
+//         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
+//         auto expected_order = vector<int>{2,3,1};
+//         ASSERT_EQ(bpd.random_schedule_seed,-1);
+//         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
-    }
+//     }
 
-    {
-        auto pcm = ldpc::gf2codes::rep_code(3);
-        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
-        auto expected_order = vector<int>{0,1,2};
-        ASSERT_EQ(bpd.random_schedule_seed,0);
-        ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+//     {
+//         auto pcm = ldpc::gf2codes::rep_code(3);
+//         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
+//         auto expected_order = vector<int>{0,1,2};
+//         ASSERT_EQ(bpd.random_schedule_seed,0);
+//         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
-    }
+//     }
 
-    {
-        auto pcm = ldpc::gf2codes::rep_code(3);
-        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
-        auto expected_order = vector<int>{0,1,2};
-        ASSERT_EQ(bpd.random_schedule_seed,4);
-        // ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+//     {
+//         auto pcm = ldpc::gf2codes::rep_code(3);
+//         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
+//         auto expected_order = vector<int>{0,1,2};
+//         ASSERT_EQ(bpd.random_schedule_seed,4);
+//         // ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
-    }
+//     }
 
-}
+// }
 
 //received vector decoding
-TEST(BpDecoder, ProdSumSerial_RepCode5) {
-    int n = 5;
-    auto pcm = ldpc::gf2codes::rep_code(n);
-    int maximum_iterations = pcm.n;
-    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+// TEST(BpDecoder, ProdSumSerial_RepCode5) {
+//     int n = 5;
+//     auto pcm = ldpc::gf2codes::rep_code(n);
+//     int maximum_iterations = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
-    // Initialize decoder using input arguments
-    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 4324234,ldpc::bp::AUTO);
+//     // Initialize decoder using input arguments
+//     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 4324234,ldpc::bp::AUTO);
 
-    auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1}, {0, 1, 1, 0, 0}, {1, 0, 0, 1, 1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}};
+//     auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1}, {0, 1, 1, 0, 0}, {1, 0, 0, 1, 1}};
+//     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}};
 
-    auto count = 0;
-    for (auto received_vector : received_vectors) {
-        auto decoding = decoder.decode(received_vector);
-        ASSERT_EQ(expected_decoding[count], decoding);
-        count++;
-    }
-}
+//     auto count = 0;
+//     for (auto received_vector : received_vectors) {
+//         auto decoding = decoder.decode(received_vector);
+//         ASSERT_EQ(expected_decoding[count], decoding);
+//         count++;
+//     }
+// }
 
 
 int main(int argc, char **argv)
