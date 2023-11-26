@@ -12,6 +12,9 @@ project(main
 # Set the C++ standard to C++20 for this project
 set(CMAKE_CXX_STANDARD 20)
 
+# Enable OpenMP support for parallel programming
+SET(CMAKE_CXX_FLAGS  "-fopenmp")
+
 # Ensure that the necessary C++11 features are available, as required by the RapidCSV library
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
