@@ -103,10 +103,8 @@ if sys.platform == "darwin":
 
 if sys.platform == "win32":
     compile_flags = ["/Ox", "/std:c++20",'-fopenmp']
-    extra_link_args =['-lgomp','-fopenmp'],
 else:
     compile_flags = ["-std=c++2a", "-O3",'-fopenmp']
-    extra_link_args =['-lgomp','-fopenmp'],
 
 this_directory = Path(__file__).parent
 
@@ -125,7 +123,7 @@ for module in cpp_modules:
             library_dirs=[],
             include_dirs=[np.get_include(),'src_cpp', 'include/robin_map','include/ldpc/src_cpp'],
             extra_compile_args=compile_flags,
-            extra_link_args=extra_link_args,
+            extra_link_args=[],
             language="c++",
         )
     )
