@@ -6,7 +6,6 @@
 #include <iterator>
 #include <cmath>
 #include <limits>
-// #include <omp.h>
 #include <random>
 #include <chrono>
 #include <stdexcept> // required for std::runtime_error
@@ -269,7 +268,6 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
                 //compute bit to check update
-#pragma omp for
                 for (int i = 0; i < bit_count; i++) {
                     double temp = 0;
                     for (auto &e: this->pcm.reverse_iterate_column(i)) {
@@ -514,7 +512,6 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 }
 
                 check_indices_updated.clear();
-#pragma omp for
                 for (auto bit_index: serial_schedule_order) {
                     double temp;
                     log_prob_ratios[bit_index] = std::log(

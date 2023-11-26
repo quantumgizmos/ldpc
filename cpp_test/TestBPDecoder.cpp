@@ -347,7 +347,7 @@ TEST(BpDecoder, min_sum_single_scan){
 TEST(BpDecoder, random_schedule_seed){
 
     {
-        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, vector<int>{2,3,1}, 1234);
         auto expected_order = vector<int>{2,3,1};
         ASSERT_EQ(bpd.random_schedule_seed,-1);
@@ -356,7 +356,7 @@ TEST(BpDecoder, random_schedule_seed){
     }
 
     {
-        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
         auto expected_order = vector<int>{0,1,2};
         ASSERT_EQ(bpd.random_schedule_seed,0);
@@ -365,7 +365,7 @@ TEST(BpDecoder, random_schedule_seed){
     }
 
     {
-        auto pcm = ldpc::gf2codes::rep_code(3);
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1,0.2,0.3,0.4}, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
         auto expected_order = vector<int>{0,1,2};
         ASSERT_EQ(bpd.random_schedule_seed,4);
@@ -378,7 +378,7 @@ TEST(BpDecoder, random_schedule_seed){
 //received vector decoding
 TEST(BpDecoder, ProdSumSerial_RepCode5) {
     int n = 5;
-    auto pcm = ldpc::gf2codes::rep_code(n);
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
     int maximum_iterations = pcm.n;
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 

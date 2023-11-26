@@ -8,7 +8,6 @@
 
 #include <vector>
 #include <iterator>
-#include <omp.h>
 #include "sparse_matrix_base.hpp"
 
 namespace ldpc{
@@ -78,13 +77,13 @@ class GF2Sparse: public ldpc::sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
          */
         std::vector<uint8_t> mulvec(std::vector<uint8_t>& input_vector);
 
-        /**
-         * @brief Multiplies the matrix by a vector with parallel execution using OpenMP and stores the result in another vector
-         * @param input_vector The vector to multiply the matrix with
-         * @param output_vector The vector to store the result in
-         * @return A reference to the output vector
-         */
-        std::vector<uint8_t>& mulvec_parallel(std::vector<uint8_t>& input_vector, std::vector<uint8_t>& output_vector);
+        // /**
+        //  * @brief Multiplies the matrix by a vector with parallel execution using OpenMP and stores the result in another vector
+        //  * @param input_vector The vector to multiply the matrix with
+        //  * @param output_vector The vector to store the result in
+        //  * @return A reference to the output vector
+        //  */
+        // std::vector<uint8_t>& mulvec_parallel(std::vector<uint8_t>& input_vector, std::vector<uint8_t>& output_vector);
 
         /**
          * @brief Multiplies the matrix by another matrix and returns the result as a new matrix
@@ -192,25 +191,25 @@ std::vector<uint8_t> GF2Sparse<ENTRY_OBJ>::mulvec(std::vector<uint8_t>& input_ve
 }
 
 
-template<class ENTRY_OBJ>
-std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(std::vector<uint8_t>& input_vector, std::vector<uint8_t>& output_vector){
-    // Initialize the output vector to all zeros
-    #pragma omp for
-    for(int i = 0; i<this->m; i++) output_vector[i] = 0;
+// template<class ENTRY_OBJ>
+// std::vector<uint8_t>& GF2Sparse<ENTRY_OBJ>::mulvec_parallel(std::vector<uint8_t>& input_vector, std::vector<uint8_t>& output_vector){
+//     // Initialize the output vector to all zeros
+//     #pragma omp for
+//     for(int i = 0; i<this->m; i++) output_vector[i] = 0;
 
-    // Iterate through each row of the matrix
-    #pragma omp for
-    for(int i = 0; i < this->m; i++){
-        // Iterate through each non-zero entry in the row
-        for(auto& e: this->iterate_row(i)){
-            // Compute the XOR of the current output value with the value in the input vector at the entry's column index
-            output_vector[i] ^= input_vector[e.col_index];
-        }
-    }
+//     // Iterate through each row of the matrix
+//     #pragma omp for
+//     for(int i = 0; i < this->m; i++){
+//         // Iterate through each non-zero entry in the row
+//         for(auto& e: this->iterate_row(i)){
+//             // Compute the XOR of the current output value with the value in the input vector at the entry's column index
+//             output_vector[i] ^= input_vector[e.col_index];
+//         }
+//     }
 
-    // Return the output vector
-    return output_vector;
-}
+//     // Return the output vector
+//     return output_vector;
+// }
 
 
 template<typename ENTRY_OBJ>
