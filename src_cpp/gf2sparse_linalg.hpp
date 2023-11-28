@@ -15,7 +15,6 @@ namespace ldpc {
         class RowReduce {
 
         public:
-
             ldpc::gf2sparse::GF2Sparse<ENTRY_OBJ> &A;
             ldpc::gf2sparse::GF2Sparse<> L;
             ldpc::gf2sparse::GF2Sparse<> U;

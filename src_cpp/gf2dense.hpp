@@ -90,9 +90,9 @@ namespace ldpc {
             CscMatrix L;
             CscMatrix U;
             CscMatrix P;
-            std::uint8_t matrix_rank;
-            std::uint8_t row_count;
-            std::uint8_t col_count;
+            std::uint8_t matrix_rank{};
+            std::uint8_t row_count{};
+            std::uint8_t col_count{};
             std::vector<int> rows;
             std::vector<int> swap_rows;
             std::vector<int> pivot_cols;
@@ -101,7 +101,10 @@ namespace ldpc {
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
                     : row_count(row_count), col_count(col_count), csc_mat(csc_mat), matrix_rank(0) {}
 
-            ~PluDecomposition() = default;
+            PluDecomposition(PluDecomposition &plu) = default;
+
+            ~PluDecomposition() =
+            default;
 
             /**
              * Reset all internal information.
@@ -191,6 +194,82 @@ namespace ldpc {
                         for (int i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[col].push_back(i);
+                            }
+                        }
+                    }
+                    if (this->matrix_rank == max_rank) {
+                        break;
+                    }
+                }
+            }
+
+            /**
+             * Compute the reduced row-echelon form
+             *
+             * @param construct_U
+             */
+            void partial_rref(std::size_t start_col_idx = 0,
+                              std::size_t start_row_idx = 0,
+                              const bool construct_U = true) {
+                this->reset();
+                auto col_idx = start_col_idx;
+                auto row_idx = start_row_idx;
+
+                for (int i = 0; i < this->row_count; i++) {
+                    this->rows.push_back(i);
+                }
+                std::vector<std::uint8_t> rr_col;
+                // track rows
+                rr_col.resize(this->row_count, 0);
+                auto max_rank = std::min(this->row_count, this->col_count);
+
+                for (; col_idx < this->col_count; col_idx++) {
+                    std::fill(rr_col.begin(), rr_col.end(), 0);
+                    for (std::uint8_t row_index: this->csc_mat[col_idx]) {
+                        rr_col[row_index] = 1;
+                    }
+                    for (std::uint8_t i = 0; i < this->matrix_rank; i++) {
+                        std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
+                        if (rr_col[i] == 1) {
+                            // do elimination
+                            for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
+                                auto add_row = *it;
+                                rr_col[add_row] ^= 1;
+                            }
+                        }
+                    }
+                    bool PIVOT_FOUND = false;
+                    for (std::uint8_t i = this->matrix_rank; i < this->row_count; i++) {
+                        if (rr_col[i] == 1) {
+                            PIVOT_FOUND = true;
+                            this->swap_rows.push_back(i);
+                            this->pivot_cols.push_back(col_idx);
+                            break;
+                        }
+                    }
+                    // if no pivot was found, we go to next column
+                    if (!PIVOT_FOUND) {
+                        this->not_pivot_cols.push_back(col_idx);
+                        continue;
+                    }
+
+                    std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
+                    std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
+                    this->L.push_back(std::vector<int>{this->matrix_rank});
+
+                    for (std::uint8_t i = this->matrix_rank + 1; i < this->row_count; i++) {
+                        if (rr_col[i] == 1) {
+                            // rr_col[i] ^= 1; //we don't actually need to eliminate here.
+                            this->L[this->matrix_rank].push_back(i);
+                        }
+                    }
+                    this->matrix_rank++;
+
+                    if (construct_U) {
+                        this->U.push_back(std::vector<int>{});
+                        for (int i = 0; i < matrix_rank; i++) {
+                            if (rr_col[i] == 1) {
+                                this->U[col_idx].push_back(i);
                             }
                         }
                     }
@@ -291,7 +370,7 @@ namespace ldpc {
             int max_weight_saved_word = INT_MAX;
             int cc = 0;
 
-            for (const auto& word: csr_mat) {
+            for (const auto &word: csr_mat) {
                 int word_size = word.size();
                 if (word_size < max_weight_saved_word) {
                     int max1 = -10;
@@ -299,7 +378,7 @@ namespace ldpc {
                     int replace_word_index;
                     int count_index = 0;
 
-                    for (const auto& saved_word: distance_struct.min_weight_words) {
+                    for (const auto &saved_word: distance_struct.min_weight_words) {
                         int saved_word_size = saved_word.size();
                         if (saved_word_size == 0) {
                             replace_word_index = count_index;
@@ -441,7 +520,8 @@ namespace ldpc {
             }
 
             return ldpc::gf2dense::estimate_minimum_linear_row_combination(max_row + 1, col_count, ker_csr,
-                                                                           timeout_seconds, number_of_words_to_save);
+                                                                           timeout_seconds,
+                                                                           number_of_words_to_save);
 
         }
 
