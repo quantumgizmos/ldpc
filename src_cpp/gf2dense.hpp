@@ -85,7 +85,7 @@ namespace ldpc {
          */
         class PluDecomposition {
         private:
-            CscMatrix &csc_mat;
+            CscMatrix &csc_mat; // csc_mat[column][row]
         public:
             CscMatrix L;
             CscMatrix U;
@@ -139,20 +139,20 @@ namespace ldpc {
              */
             void rref(bool construct_U = true) {
                 this->reset();
-                for (int i = 0; i < this->row_count; i++) {
+                for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
                 std::vector<std::uint8_t> rr_col;
-                // track rows
+                // rr_col[i] gives row value in i-th column
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                for (std::uint8_t col = 0; col < this->col_count; col++) {
+                for (auto col = 0; col < this->col_count; col++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (std::uint8_t row_index: this->csc_mat[col]) {
+                    for (auto row_index: this->csc_mat[col]) {
                         rr_col[row_index] = 1;
                     }
-                    for (std::uint8_t i = 0; i < this->matrix_rank; i++) {
+                    for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
                             // do elimination
@@ -163,7 +163,7 @@ namespace ldpc {
                         }
                     }
                     bool PIVOT_FOUND = false;
-                    for (std::uint8_t i = this->matrix_rank; i < this->row_count; i++) {
+                    for (auto i = this->matrix_rank; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
                             PIVOT_FOUND = true;
                             this->swap_rows.push_back(i);
@@ -181,7 +181,7 @@ namespace ldpc {
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
                     this->L.push_back(std::vector<int>{this->matrix_rank});
 
-                    for (std::uint8_t i = this->matrix_rank + 1; i < this->row_count; i++) {
+                    for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
                             // rr_col[i] ^= 1; //we don't actually need to eliminate here.
                             this->L[this->matrix_rank].push_back(i);
@@ -204,15 +204,22 @@ namespace ldpc {
             }
 
             /**
-             * Compute the reduced row-echelon form
+             * Applies stored swap and elimination operations to all columns starting (including) start_col_index
+             * @param start_col_index
+             */
+            void apply_stored_operations(int start_col_index) {
+
+            }
+
+            /**
+             * Compute the reduced row-echelon for submatrix with given offset indices
              *
              * @param construct_U
              */
-            void partial_rref(std::size_t start_col_idx = 0,
-                              std::size_t start_row_idx = 0,
+            void partial_rref(std::size_t start_row_idx = 0,
                               const bool construct_U = true) {
+                // todo adapt this function s.t. we can do elimination of the rows starting at start_row_idx
                 this->reset();
-                auto col_idx = start_col_idx;
                 auto row_idx = start_row_idx;
 
                 for (int i = 0; i < this->row_count; i++) {
@@ -223,7 +230,7 @@ namespace ldpc {
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                for (; col_idx < this->col_count; col_idx++) {
+                for (int col_idx = 0; col_idx < this->col_count; col_idx++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
                     for (std::uint8_t row_index: this->csc_mat[col_idx]) {
                         rr_col[row_index] = 1;

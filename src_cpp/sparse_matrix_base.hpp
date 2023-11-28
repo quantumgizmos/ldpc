@@ -554,29 +554,14 @@ namespace ldpc {
             }
 
             /**
-             * Return a single row as dense vector.
-             * @param row_index
-             * @return
-             */
-            std::vector<int> get_dense_row(const std::size_t row_index) {
-                std::vector<int> row(this->n);
-                std::fill(row.begin(), row.end(), 0);
-                for (auto &e: this->iterate_row(row_index)) {
-                    row[e.col_index] = 1;
-                }
-                return row;
-            }
-
-            /**
-             * Return a single column as dense vector.
+             * Return a single column as 1D csc_matrix
              * @param col_index
              * @return
              */
-            std::vector<int> get_dense_column(const std::size_t col_index){
-                std::vector<int> col(this->m);
-                std::fill(col.begin(), col.end(), 0);
-                for (auto &e: this->iterate_column(col_index)) {
-                    col[e.row_index] = 1;
+            std::vector<int> get_column_csc(const std::size_t col_index){
+                std::vector<int> col;
+                for (auto entry: this->iterate_column(col_index)) {
+                    col.push_back(entry.row_index);
                 }
                 return col;
             }
