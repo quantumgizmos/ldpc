@@ -99,6 +99,14 @@ namespace ldpc::uf {
             return static_cast<int>(this->enclosed_syndromes.size() % 2);
         }
 
+        /**
+         * Grows the cluster by adding bit  nodes that are adjacent to boundary check nodes.
+         * If bit_weights is provided, the bits are sorted by weight and only a single bit is added per growth step.
+         * Otherwise, all bits adjacent to boundary check nodes are added.
+         * @param bit_weights
+         * @param bits_per_step
+         * @return
+         */
         int grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                          const int bits_per_step = 0) {
             if (!this->active) {
@@ -108,17 +116,17 @@ namespace ldpc::uf {
             this->compute_growth_candidate_bit_nodes();
             this->merge_list.clear();
             if (bit_weights == NULL_DOUBLE_VECTOR) {
-                for (int bit_index: this->candidate_bit_nodes) {
+                for (auto bit_index: this->candidate_bit_nodes) {
                     this->add_bit_node_to_cluster(bit_index);
                 }
             } else {
                 std::vector<double> cluster_bit_weights;
-                for (int bit: this->candidate_bit_nodes) {
+                for (auto bit: this->candidate_bit_nodes) {
                     cluster_bit_weights.push_back(bit_weights[bit]);
                 }
                 auto sorted_indices = sort_indices(cluster_bit_weights);
                 int count = 0;
-                for (int i: sorted_indices) {
+                for (auto i: sorted_indices) {
                     if (count == bits_per_step) {
                         break;
                     }
@@ -131,6 +139,12 @@ namespace ldpc::uf {
             return 1;
         }
 
+        /**
+         * Merge this cluster with all clusters that intersect with it.
+         * Keeps the larger cluster and merges the smaller cluster into it.
+         * That is, the (reduced) parity check matrix of the larger cluster is kept.
+         * After merging, the on-the-fly elimination is applied to the larger cluster.
+         */
         void merge_with_intersecting_clusters() {
             Cluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
@@ -208,7 +222,7 @@ namespace ldpc::uf {
         }
 
         /**
-         * Merge this cluster with another cluster and apply on the fly elimination
+         * Merge this cluster with another cluster.
          * Keeps the larger cluster and merges the smaller cluster into it.
          * That is, the (reduced) parity check matrix of the larger cluster is kept.
          * @param cl2
@@ -242,7 +256,7 @@ namespace ldpc::uf {
 
 
         /**
-         * Adds single check to cluster and updates all lists accordingly.
+         * Adds single check to cluster and updates all lists accordingly
          * @param check_index
          * @param insert_boundary
          */
@@ -256,11 +270,10 @@ namespace ldpc::uf {
             this->check_nodes.insert(check_index);
             this->global_check_membership[check_index] = this;
             // todo I don't think we'll need to update the cluster_pcm here, since new rows are added with add_bit
-            // we just need to make sure that the rows are 'complete' when applying the elimination procedure
         }
 
         /**
-         * Adds single bit to cluster and updates all lists accordingly.
+         * Adds single bit to cluster and updates all lists accordingly
          * @param bit_index
          */
         void add_bit(const int bit_index) {
@@ -453,9 +466,9 @@ namespace ldpc::uf {
         }
 
         void apply_on_the_fly_elimination() {
-            // todo apply row operations here on new bits
-            // todo apply on syndrome as well. For that we can add syndrome as column to cluster matrix I suppose
-            // todo eliminate newly added rows using partial_rref function
+            // todo apply stored operations on new bits
+            // apply on syndrome as well.
+            // then eliminate new bits where the new rows are also taken into account
 
             // check if syndrome is in image, if so mark the cluster as valid and store the decoding estimate
             if (this->pluDecomposition == nullptr) {
