@@ -94,7 +94,7 @@ cdef class bposd_decoder(bp_decoder):
 
     cdef void osd_e_setup(self):
 
-        self.encoding_input_count=2**self.osd_order
+        self.encoding_input_count=int(2**self.osd_order)
         self.osdw_encoding_inputs=<char**>calloc(self.encoding_input_count,sizeof(char*))
         for i in range(self.encoding_input_count):
             self.osdw_encoding_inputs[i] = decimal_to_binary_reverse(i, self.n - self.rank)
