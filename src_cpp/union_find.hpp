@@ -456,6 +456,7 @@ namespace ldpc::uf {
             // todo apply row operations here on new bits
             // todo apply on syndrome as well. For that we can add syndrome as column to cluster matrix I suppose
             // todo eliminate newly added rows using partial_rref function
+
             // check if syndrome is in image, if so mark the cluster as valid and store the decoding estimate
             if (this->pluDecomposition == nullptr) {
                 // no existing decomposition yet so we create one

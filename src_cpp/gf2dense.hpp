@@ -85,14 +85,14 @@ namespace ldpc {
          */
         class PluDecomposition {
         private:
-            CscMatrix &csc_mat; // csc_mat[column][row]
+            const CscMatrix &csc_mat; // csc_mat[column][row]
         public:
             CscMatrix L;
             CscMatrix U;
             CscMatrix P;
-            std::uint8_t matrix_rank{};
-            std::uint8_t row_count{};
-            std::uint8_t col_count{};
+            int matrix_rank{};
+            int row_count{};
+            int col_count{};
             std::vector<int> rows;
             std::vector<int> swap_rows;
             std::vector<int> pivot_cols;
@@ -134,7 +134,11 @@ namespace ldpc {
 
             /**
              * Compute the reduced row-echelon form
-             *
+             * The algorithm operates column, wise. The original matrix, csc_mat is not modified.
+             * Instead, rr_col is used to represent the column currently eliminated and row operations, e.g., swaps
+             * and addition is done column per column.
+             * First, all previous row operations are applied to the current column.
+             * Then pivoting is done for the current column and corresponding swaps are applied.
              * @param construct_U
              */
             void rref(bool construct_U = true) {
@@ -142,8 +146,7 @@ namespace ldpc {
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
-                std::vector<std::uint8_t> rr_col;
-                // rr_col[i] gives row value in i-th column
+                std::vector<std::size_t> rr_col;
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
 
@@ -155,7 +158,6 @@ namespace ldpc {
                     for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
-                            // do elimination
                             for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
                                 auto add_row = *it;
                                 rr_col[add_row] ^= 1;
@@ -191,7 +193,7 @@ namespace ldpc {
 
                     if (construct_U) {
                         this->U.push_back(std::vector<int>{});
-                        for (int i = 0; i < matrix_rank; i++) {
+                        for (auto i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[col].push_back(i);
                             }
@@ -216,26 +218,25 @@ namespace ldpc {
              *
              * @param construct_U
              */
-            void partial_rref(std::size_t start_row_idx = 0,
+            void partial_rref(int start_row_idx = 0,
                               const bool construct_U = true) {
                 // todo adapt this function s.t. we can do elimination of the rows starting at start_row_idx
                 this->reset();
-                auto row_idx = start_row_idx;
 
-                for (int i = 0; i < this->row_count; i++) {
+                for (auto i = start_row_idx; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
-                std::vector<std::uint8_t> rr_col;
+                std::vector<std::size_t> rr_col;
                 // track rows
-                rr_col.resize(this->row_count, 0);
+                rr_col.resize(this->row_count - start_row_idx, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                for (int col_idx = 0; col_idx < this->col_count; col_idx++) {
+                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (std::uint8_t row_index: this->csc_mat[col_idx]) {
+                    for (std::size_t row_index: this->csc_mat[col_idx]) {
                         rr_col[row_index] = 1;
                     }
-                    for (std::uint8_t i = 0; i < this->matrix_rank; i++) {
+                    for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
                             // do elimination
@@ -246,7 +247,7 @@ namespace ldpc {
                         }
                     }
                     bool PIVOT_FOUND = false;
-                    for (std::uint8_t i = this->matrix_rank; i < this->row_count; i++) {
+                    for (auto i = this->matrix_rank; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
                             PIVOT_FOUND = true;
                             this->swap_rows.push_back(i);
@@ -264,7 +265,7 @@ namespace ldpc {
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
                     this->L.push_back(std::vector<int>{this->matrix_rank});
 
-                    for (std::uint8_t i = this->matrix_rank + 1; i < this->row_count; i++) {
+                    for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
                             // rr_col[i] ^= 1; //we don't actually need to eliminate here.
                             this->L[this->matrix_rank].push_back(i);
@@ -274,7 +275,7 @@ namespace ldpc {
 
                     if (construct_U) {
                         this->U.push_back(std::vector<int>{});
-                        for (int i = 0; i < matrix_rank; i++) {
+                        for (auto i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[col_idx].push_back(i);
                             }
@@ -301,7 +302,7 @@ namespace ldpc {
             auto plu = PluDecomposition(col_count, row_count, csr_mat);
             plu.rref(false);
 
-            std::vector<uint8_t> rr_col(col_count, 0);
+            std::vector<size_t> rr_col(col_count, 0);
             std::vector<std::vector<int>> ker;
 
             for (int j = 0; j < col_count; j++) {
@@ -344,7 +345,7 @@ namespace ldpc {
 
             for (int i = 0; i < row_permutations; i++) {
 
-                std::vector<uint8_t> current_row(col_count, 0);
+                std::vector<size_t> current_row(col_count, 0);
                 auto row_add_indices = ldpc::util::decimal_to_binary_sparse(i, row_count);
                 for (auto row_index: row_add_indices) {
                     for (auto col_index: csr_mat[row_index]) {
@@ -433,7 +434,7 @@ namespace ldpc {
                     }
                 }
 
-                std::vector<uint8_t> current_row(col_count, 0);
+                std::vector<size_t> current_row(col_count, 0);
                 for (auto row_index: row_add_indices) {
                     for (auto col_index: csr_mat[row_index]) {
                         current_row[col_index] ^= 1;
@@ -545,7 +546,7 @@ namespace ldpc {
 
             for (int i = 1; i < row_permutations; i++) {
 
-                std::vector<uint8_t> current_row(col_count, 0);
+                std::vector<size_t> current_row(col_count, 0);
 
                 auto row_add_indices = ldpc::util::decimal_to_binary_sparse(i, ker_csr.size());
 
