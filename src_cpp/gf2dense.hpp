@@ -85,7 +85,7 @@ namespace ldpc {
          */
         class PluDecomposition {
         private:
-            const CscMatrix &csc_mat; // csc_mat[column][row]
+            CscMatrix &csc_mat; // csc_mat[column][row]
         public:
             CscMatrix L;
             CscMatrix U;
@@ -93,7 +93,7 @@ namespace ldpc {
             int matrix_rank{};
             int row_count{};
             int col_count{};
-            std::vector<int> rows;
+            std::vector<int> rows; // todo is this needed?
             std::vector<int> swap_rows;
             std::vector<int> pivot_cols;
             std::vector<int> not_pivot_cols;
@@ -141,7 +141,7 @@ namespace ldpc {
              * Then pivoting is done for the current column and corresponding swaps are applied.
              * @param construct_U
              */
-            void rref(bool construct_U = true) {
+            void rref(const bool construct_U = true) {
                 this->reset();
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
@@ -155,9 +155,13 @@ namespace ldpc {
                     for (auto row_index: this->csc_mat[col]) {
                         rr_col[row_index] = 1;
                     }
+                    // apply previous operations to current column
                     for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
+                            // if row elem is one, do elimination for current column below the pivot
+                            // elimination operations to apply are stored in columns of L,
+                            // start with +1 offset since we do not need to eliminate the diagonal entry
                             for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
                                 auto add_row = *it;
                                 rr_col[add_row] ^= 1;
@@ -185,7 +189,7 @@ namespace ldpc {
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here.
+                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
                             this->L[this->matrix_rank].push_back(i);
                         }
                     }
@@ -206,40 +210,56 @@ namespace ldpc {
             }
 
             /**
-             * Applies stored swap and elimination operations to all columns starting (including) start_col_index
-             * @param start_col_index
+             * Apply the stored operations to a vector.
+             * The vector is not changed.
+             * @param vec
              */
-            void apply_stored_operations(int start_col_index) {
+            std::vector<int> apply_stored_operations_to_csc_column(const std::vector<int> &col) {
+                auto result = col;
+                for (auto i = 0; i < this->matrix_rank; i++) {
+                    std::swap(result[i], result[this->swap_rows[i]]);
+                    if (result[i] == 1) {
+                        for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
+                            auto add_row = *it;
+                            result[add_row] ^= 1;
+                        }
+                    }
+                }
+                return result;
+            }
 
+            bool vector_is_in_image(const std::vector<int> &vec) {
+                auto result = true;
+                for (auto &e: vec) {
+                    if (e >= this->matrix_rank) {
+                        result = false;
+                        break;
+                    }
+                }
+                return result;
             }
 
             /**
-             * Compute the reduced row-echelon for submatrix with given offset indices
-             *
+             * Compute the reduced row-echelon form starting from a specific column.
+             * Assumes that columns with indices starting from start_col_idx are present in this->csc_mat.
+             * Assumes stores operations have been applied already.
+             * @param col_idx
              * @param construct_U
              */
-            void partial_rref(int start_row_idx = 0,
+            void partial_rref(const std::size_t start_col_idx,
                               const bool construct_U = true) {
-                // todo adapt this function s.t. we can do elimination of the rows starting at start_row_idx
-                this->reset();
-
-                for (auto i = start_row_idx; i < this->row_count; i++) {
-                    this->rows.push_back(i);
-                }
                 std::vector<std::size_t> rr_col;
-                // track rows
-                rr_col.resize(this->row_count - start_row_idx, 0);
+                rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
+                for (auto col = start_col_idx; col < this->col_count; col++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (std::size_t row_index: this->csc_mat[col_idx]) {
+                    for (auto row_index: this->csc_mat[col]) {
                         rr_col[row_index] = 1;
                     }
                     for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
-                            // do elimination
                             for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
                                 auto add_row = *it;
                                 rr_col[add_row] ^= 1;
@@ -251,13 +271,12 @@ namespace ldpc {
                         if (rr_col[i] == 1) {
                             PIVOT_FOUND = true;
                             this->swap_rows.push_back(i);
-                            this->pivot_cols.push_back(col_idx);
+                            this->pivot_cols.push_back(col);
                             break;
                         }
                     }
-                    // if no pivot was found, we go to next column
                     if (!PIVOT_FOUND) {
-                        this->not_pivot_cols.push_back(col_idx);
+                        this->not_pivot_cols.push_back(col);
                         continue;
                     }
 
@@ -267,17 +286,17 @@ namespace ldpc {
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here.
+                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
                             this->L[this->matrix_rank].push_back(i);
                         }
                     }
                     this->matrix_rank++;
 
                     if (construct_U) {
-                        this->U.push_back(std::vector<int>{});
+                        this->U.emplace_back();
                         for (auto i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
-                                this->U[col_idx].push_back(i);
+                                this->U[col].push_back(i);
                             }
                         }
                     }
@@ -286,7 +305,27 @@ namespace ldpc {
                     }
                 }
             }
+
+            /**
+             * Adds new, not eliminated columns and rows to the matrix.
+             * Updates row_count and col_count
+             * @param new_matrix
+             */
+            void update_matrix(const CscMatrix &new_matrix) {
+                if (this->row_count == new_matrix.size() or this->col_count == new_matrix[0].size()) {
+                    return;
+                }
+                for (auto i = this->col_count; i < new_matrix.size(); i++) {
+                    this->csc_mat.push_back(new_matrix[i]);
+                    auto max_elem = std::max_element(new_matrix[i].begin(), new_matrix[i].end());
+                    if (*max_elem > this->row_count) {
+                        this->row_count = *max_elem;
+                    }
+                }
+                this->col_count = new_matrix.size();
+            }
         };
+
 
         int rank(int row_count, int col_count, CscMatrix &csc_mat) {
             auto plu = PluDecomposition(row_count, col_count, csc_mat);

@@ -51,13 +51,15 @@ namespace ldpc::uf {
         tsl::robin_map<int, int> cluster_to_matrix_bit_map;
         std::vector<int> matrix_to_cluster_check_map;
         tsl::robin_map<int, int> cluster_to_matrix_check_map;
-        gf2dense::CscMatrix cluster_pcm; // parity check matrix corresponding to the cluster
+        // parity check matrix corresponding to the cluster. Indices are local to the cluster.
+        gf2dense::CscMatrix cluster_pcm;
         std::vector<std::size_t> cluster_syndr_idx_to_pcm_idx;
         std::vector<std::size_t> cluster_check_to_pcm_check;
-        std::vector<std::size_t> cluster_bit_to_pcm_bit;
+        tsl::robin_map<std::size_t, std::size_t> pcm_check_to_cluster_check;
+        std::set<std::size_t> cluster_bit_to_pcm_bit;
         gf2dense::PluDecomposition *pluDecomposition;
-        int eliminated_col_index = 0;
-        int eliminated_row_index = 0;
+        // keep track of index of column that was eliminated last has to be reset to 0 after elimination
+        std::size_t eliminated_col_index = 0;
 
         Cluster() = default;
 
@@ -77,8 +79,7 @@ namespace ldpc::uf {
             this->global_check_membership[syndrome_index] = this;
             // track cluster <> global syndrome indices mapping
             // cluster_syndr_idx_to_pcm_idx[i] = j means cluster row index i == global pcm index j
-            this->cluster_syndr_idx_to_pcm_idx.resize(pcm.m);
-            this->cluster_syndr_idx_to_pcm_idx[0] = syndrome_index;
+            this->cluster_syndr_idx_to_pcm_idx.push_back(syndrome_index);
         }
 
         ~Cluster() {
@@ -91,8 +92,10 @@ namespace ldpc::uf {
             this->cluster_pcm.clear();
             this->pluDecomposition = nullptr;
             this->cluster_syndr_idx_to_pcm_idx.clear();
+            this->cluster_check_to_pcm_check.clear();
+            this->pcm_check_to_cluster_check.clear();
+            this->cluster_bit_to_pcm_bit.clear();
             this->eliminated_col_index = 0;
-            this->eliminated_row_index = 0;
         }
 
         [[nodiscard]] int parity() const {
@@ -264,28 +267,49 @@ namespace ldpc::uf {
             if (insert_boundary) {
                 this->boundary_check_nodes.insert(check_index);
             }
-            if(this->eliminated_row_index == 0){
-                this->eliminated_row_index = this->check_nodes.size();
-            }
             this->check_nodes.insert(check_index);
             this->global_check_membership[check_index] = this;
+            this->cluster_check_to_pcm_check.push_back(check_index);
+            this->pcm_check_to_cluster_check[check_index] = this->cluster_check_to_pcm_check.size() - 1;
             // todo I don't think we'll need to update the cluster_pcm here, since new rows are added with add_bit
         }
 
         /**
-         * Adds single bit to cluster and updates all lists accordingly
+         * Adds single bit to cluster and updates all lists accordingly.
          * @param bit_index
          */
         void add_bit(const int bit_index) {
             // store column index offset for on the fly elimniation
-            if (this->eliminated_col_index == 0){
+            if (this->eliminated_col_index == 0) {
                 this->eliminated_col_index = this->bit_nodes.size();
             }
             this->bit_nodes.insert(bit_index);
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
-            this->cluster_pcm.push_back(pcm.get_column_csc(bit_index));
-            this->cluster_bit_to_pcm_bit.push_back(bit_index);
+            this->cluster_bit_to_pcm_bit.insert(bit_index);
+            this->add_column_to_cluster_pcm(bit_index);
+        }
+
+        /**
+         * Adds a column to the cluster parity check matrix.
+         * The indices of the overall pcm are transferred to the local cluster pcm indices.
+         * @param bit_index
+         */
+        void add_column_to_cluster_pcm(const std::size_t bit_index) {
+            std::vector<int> col;
+            // add column to cluster_pcm with transferred indices
+            for (auto e: this->pcm.get_column_csc(bit_index)) {
+                if (!this->pcm_check_to_cluster_check.contains(e)) {
+                    // if check not yet in cluster pcm, create new local index and add it
+                    this->cluster_check_to_pcm_check.push_back(e);
+                    auto local_index = this->cluster_check_to_pcm_check.size() - 1;
+                    this->pcm_check_to_cluster_check[e] = local_index;
+                    col.push_back(local_index);
+                } else {
+                    col.push_back(this->pcm_check_to_cluster_check[e]);
+                }
+            }
+            this->cluster_pcm.push_back(col);
         }
 
         int find_spanning_tree_parent(const int check_index) {
@@ -293,6 +317,33 @@ namespace ldpc::uf {
             if (parent != check_index) {
                 return find_spanning_tree_parent(parent);
             } else return parent;
+        }
+
+        /**
+         * Apply on the fly elimination to the cluster.
+         * The previously conducted row operations are applied to the new column.
+         * Then the new column is eliminated.
+         * Finally, the row operations are applied to the syndrome.
+         *
+         * @return True if the syndrome is in the image of the cluster parity check matrix.
+         */
+        bool apply_on_the_fly_elimination() {
+            if (this->pluDecomposition == nullptr) {
+                // no existing decomposition yet so we create one
+                this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->cluster_pcm.size(),
+                                                                              this->cluster_pcm.at(0).size(),
+                                                                              this->cluster_pcm);
+            } else {
+                this->pluDecomposition->update_matrix(this->cluster_pcm);
+            }
+            this->pluDecomposition->partial_rref(this->eliminated_col_index, true);
+            this->eliminated_col_index = 0;
+            std::vector<int> cluster_syndrome;
+            for (auto s: this->enclosed_syndromes) {
+                cluster_syndrome.push_back(this->pcm_check_to_cluster_check.at(s));
+            }
+            this->pluDecomposition->apply_stored_operations_to_csc_column(cluster_syndrome);
+            return this->pluDecomposition->vector_is_in_image(cluster_syndrome);
         }
 
         void find_spanning_tree() {
@@ -465,33 +516,6 @@ namespace ldpc::uf {
             return this->cluster_decoding;
         }
 
-        void apply_on_the_fly_elimination() {
-            // todo apply stored operations on new bits
-            // apply on syndrome as well.
-            // then eliminate new bits where the new rows are also taken into account
-
-            // check if syndrome is in image, if so mark the cluster as valid and store the decoding estimate
-            if (this->pluDecomposition == nullptr) {
-                // no existing decomposition yet so we create one
-                this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->cluster_pcm.size(),
-                                                                              this->cluster_pcm.at(0).size(),
-                                                                              this->cluster_pcm);
-            }
-            auto elimination_start_column = this->eliminated_col_index;
-            auto elimination_start_row = this->eliminated_row_index;
-            // apply stored operation to newly added columns, i.e., those starting at eliminated_col_index
-            this->pluDecomposition->apply_stored_operations(elimination_start_column);
-            // apply elimination for all newly added rows, i.e., those starting at elimination_start_row
-            this->pluDecomposition->partial_rref(elimination_start_row);
-
-            // todo here, we check if the syndrome is in the image.
-            // if so, we are done, the cluster is valid and the syndrome can be stored as cluster syndrome
-            // otherwise, we continue
-
-            // reset offsets for next growth step
-            this->eliminated_col_index = 0;
-            this->eliminated_row_index = 0;
-        }
 
         std::vector<int> invert_decode2(const std::vector<uint8_t> &syndrome, std::vector<double> &bit_weights) {
             auto cluster_pcm = this->convert_to_matrix(bit_weights);
