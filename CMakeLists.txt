@@ -73,6 +73,7 @@ set(TEST_EXECUTABLES
     TestGF2RowReduce
     TestGf2Linalg
     TestGf2Dense
+    TestGf2DenseApplications
     TestUtil
     TestRng
 )

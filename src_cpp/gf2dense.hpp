@@ -97,6 +97,7 @@ namespace ldpc {
             std::vector<int> swap_rows;
             std::vector<int> pivot_cols;
             std::vector<int> not_pivot_cols;
+            bool LU_constructed = false;
 
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
                     : row_count(row_count), col_count(col_count), csc_mat(csc_mat), matrix_rank(0) {}
@@ -193,20 +194,76 @@ namespace ldpc {
                             this->L[this->matrix_rank].push_back(i);
                         }
                     }
-                    this->matrix_rank++;
 
                     if (construct_U) {
                         this->U.push_back(std::vector<int>{});
-                        for (auto i = 0; i < matrix_rank; i++) {
+                        for (auto i = 0; i <= this->matrix_rank; i++) {
                             if (rr_col[i] == 1) {
-                                this->U[col].push_back(i);
+                                this->U[this->matrix_rank].push_back(i);
                             }
                         }
                     }
+
+                    this->matrix_rank++;
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
                 }
+                if(construct_U){
+                    this->LU_constructed = true;
+                }
+            }
+
+
+            std::vector<uint8_t> lu_solve(std::vector<uint8_t> &y) {
+            
+                /*
+                Equation: Ax = y
+
+                We use LU decomposition to arrange the above into the form:
+                LU(Qx) = PAQ^T(Qx)=Py
+
+                We can then solve for x using forward-backward substitution:
+                1. Forward substitution: Solve Lb = Py for b
+                2. Backward subsitution: Solve UQx = b for x
+                */
+
+
+                if (y.size() != this->row_count){
+                    throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
+                }
+
+                if(!this->LU_constructed){
+                    this->rref(true);
+                }
+
+                //first we need to convert to csr format
+                auto L_csr = ldpc::gf2dense::csc_to_csr(this->L);
+                auto U_csr = ldpc::gf2dense::csc_to_csr(this->U);
+
+                auto x = std::vector<uint8_t>(this->col_count,0);
+                auto b = std::vector<uint8_t>(this->row_count,0);
+
+                //First we solve Lb = y, where b = Ux
+                //Solve Lb=y with forwared substitution
+                for(auto row_index = 0; row_index < this->matrix_rank; row_index++){
+                    int row_sum = 0;
+                    for(auto col_index: L_csr[row_index]){
+                        row_sum ^= b[col_index];
+                    }
+                    b[row_index] = row_sum ^ y[this->rows[row_index]];
+                }
+
+                //Solve Ux = b with backwards substitution
+                for(auto row_index = this->matrix_rank-1; row_index >= 0; row_index--){
+                    int row_sum = 0;
+                    for(auto col_index: U_csr[row_index]){
+                        row_sum ^= x[col_index];
+                    }
+                    x[this->pivot_cols[row_index]] = row_sum ^ b[row_index];
+                }
+
+                return x;
             }
 
             /**

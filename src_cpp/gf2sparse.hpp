@@ -63,6 +63,12 @@ class GF2Sparse: public ldpc::sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
         void csr_insert(std::vector<std::vector<int>>& csr_matrix);
 
         /**
+         * @brief Inserts a matrix in CSR format
+         * @param csr_matrix The matrix to insert
+         */
+        void csc_insert(std::vector<std::vector<int>>& csc_matrix);
+
+        /**
          * @brief Multiplies the matrix by a vector and stores the result in another vector
          * @param input_vector The vector to multiply the matrix with
          * @param output_vector The vector to store the result in
@@ -149,6 +155,19 @@ void GF2Sparse<ENTRY_OBJ>::csr_insert(std::vector<std::vector<int>>& csr_matrix)
     for(auto row: csr_matrix){
         // Insert the row of entries in compressed sparse row (CSR) format
         this->csr_row_insert(i, row);
+        i++;
+    }
+}
+
+template<class ENTRY_OBJ>
+void GF2Sparse<ENTRY_OBJ>::csc_insert(std::vector<std::vector<int>>& csc_matrix){
+    int i = 0;
+    // Iterate through each column of the matrix
+    for(auto col: csc_matrix){
+        // Insert the column of entries in compressed sparse column (CSC) format
+        for(auto row_index: col){
+            this->insert_entry(row_index,i);
+        }
         i++;
     }
 }
@@ -523,6 +542,51 @@ GF2MATRIX operator+(GF2MATRIX& mat1, GF2MATRIX& mat2){
     }
 
     return sum_mat;
+}
+
+
+template <class ENTRY_OBJ = GF2Entry>
+GF2Sparse<ENTRY_OBJ> csr_to_gf2sparse(std::vector<std::vector<int>>& csr_matrix){
+    int row_count = csr_matrix.size();
+    int col_count = 0;
+    for(auto row: csr_matrix){
+        for(auto col: row){
+            if(col>col_count) col_count = col;
+        }
+    }
+
+    auto gf2sparse_mat = GF2Sparse<ENTRY_OBJ>(row_count,col_count+1);
+
+    for(auto row_index = 0; row_index<row_count; row_index++){
+        for(auto col_index: csr_matrix[row_index]){
+            gf2sparse_mat.insert_entry(row_index,col_index);
+        }
+    }
+
+    return gf2sparse_mat;
+
+}
+
+template <class ENTRY_OBJ = GF2Entry>
+GF2Sparse<ENTRY_OBJ> csc_to_gf2sparse(std::vector<std::vector<int>>& csc_matrix){
+    int col_count = csc_matrix.size();
+    int row_count = 0;
+    for(auto col: csc_matrix){
+        for(auto row: col){
+            if(row>row_count) row_count = row;
+        }
+    }
+
+    auto gf2sparse_mat = GF2Sparse<ENTRY_OBJ>(row_count+1,col_count);
+
+    for(auto col_index = 0; col_index<col_count; col_index++){
+        for(auto row_index: csc_matrix[col_index]){
+            gf2sparse_mat.insert_entry(row_index,col_index);
+        }
+    }
+
+    return gf2sparse_mat;
+
 }
 
 
