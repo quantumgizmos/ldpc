@@ -88,7 +88,7 @@ namespace ldpc {
             CscMatrix &csc_mat; // csc_mat[column][row]
         public:
             CsrMatrix L;
-            CscMatrix U;
+            CsrMatrix U;
             CscMatrix P;
             int matrix_rank{};
             int row_count{};
@@ -208,7 +208,7 @@ namespace ldpc {
                         this->U.push_back(std::vector<int>{});
                         for (auto i = 0; i <= this->matrix_rank; i++) {
                             if (rr_col[i] == 1) {
-                                this->U[this->matrix_rank].push_back(i);
+                                this->U[i].push_back(col);
                             }
                         }
                     }
@@ -246,22 +246,6 @@ namespace ldpc {
                     this->rref(true);
                 }
 
-                //first we need to convert to csr format
-                // auto L_csr = ldpc::gf2dense::csc_to_csr(this->L);
-                // auto U_csr = ldpc::gf2dense::csc_to_csr(this->U);
-
-                auto &L_csr = this->L;
-                auto U_csr = std::vector<std::vector<int>>(this->matrix_rank,std::vector<int>{});
-                for(auto i = 0; i < this->matrix_rank; i++){       
-                    // for(auto row_index: this->L[i]){
-                    //     L_csr[row_index].push_back(i);
-                    // }
-                    for(auto row_index: this->U[i]){
-                        U_csr[row_index].push_back(this->pivot_cols[i]);
-                    }
-                }
-
-
                 auto x = std::vector<uint8_t>(this->col_count,0);
                 auto b = std::vector<uint8_t>(this->matrix_rank,0);
 
@@ -269,7 +253,7 @@ namespace ldpc {
                 //Solve Lb=y with forwared substitution
                 for(auto row_index = 0; row_index < this->matrix_rank; row_index++){
                     int row_sum = 0;
-                    for(auto col_index: L_csr[row_index]){
+                    for(auto col_index: this->L[row_index]){
                         row_sum ^= b[col_index];
                     }
                     b[row_index] = row_sum ^ y[this->rows[row_index]];
@@ -278,7 +262,7 @@ namespace ldpc {
                 //Solve Ux = b with backwards substitution
                 for(auto row_index = this->matrix_rank-1; row_index >= 0; row_index--){
                     int row_sum = 0;
-                    for(auto col_index: U_csr[row_index]){
+                    for(auto col_index: this->U[row_index]){
                         row_sum ^= x[col_index];
                     }
                     x[this->pivot_cols[row_index]] = row_sum ^ b[row_index];
@@ -360,7 +344,7 @@ namespace ldpc {
 
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->L.push_back(std::vector<int>{this->matrix_rank});
+                    this->L.emplace_back();
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
@@ -374,7 +358,7 @@ namespace ldpc {
                         this->U.emplace_back();
                         for (auto i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
-                                this->U[col].push_back(i);
+                                this->U[i].push_back(col);
                             }
                         }
                     }
