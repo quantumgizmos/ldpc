@@ -238,8 +238,22 @@ namespace ldpc {
                 }
 
                 //first we need to convert to csr format
-                auto L_csr = ldpc::gf2dense::csc_to_csr(this->L);
-                auto U_csr = ldpc::gf2dense::csc_to_csr(this->U);
+                // auto L_csr = ldpc::gf2dense::csc_to_csr(this->L);
+                // auto U_csr = ldpc::gf2dense::csc_to_csr(this->U);
+
+                auto L_csr = std::vector<std::vector<int>>(this->row_count,std::vector<int>{});
+                auto U_csr = std::vector<std::vector<int>>(this->matrix_rank,std::vector<int>{});
+                for(auto i = 0; i < this->matrix_rank; i++){
+                
+                    for(auto row_index: this->L[i]){
+                        L_csr[row_index].push_back(i);
+                    }
+
+                    for(auto row_index: this->U[i]){
+                        U_csr[row_index].push_back(this->pivot_cols[i]);
+                    }
+                }
+
 
                 auto x = std::vector<uint8_t>(this->col_count,0);
                 auto b = std::vector<uint8_t>(this->row_count,0);
