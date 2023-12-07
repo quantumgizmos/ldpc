@@ -144,7 +144,7 @@ namespace ldpc::uf {
                     count++;
                 }
             }
-            this->merge_with_intersecting_clusters() ? VALID : GROWN;
+            return this->merge_with_intersecting_clusters() ? VALID : GROWN;
         }
 
         /**

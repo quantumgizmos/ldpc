@@ -58,209 +58,210 @@ CscMatrix hamming_code_csc(const int d) {
     }
     return pcm_csc;
 }
-// TEST(gf2dense, hamming_code){
 
-//     auto hamming_pcm = hamming_code(3);
+TEST(gf2dense, hamming_code){
 
-//     int m = hamming_pcm.m;
-//     int n = hamming_pcm.n;
+    auto hamming_pcm = hamming_code(3);
 
-//     vector<vector<int>> rnd_csr;
-//     auto rnd_mat = GF2Sparse<>(m,n);
+    int m = hamming_pcm.m;
+    int n = hamming_pcm.n;
 
+    vector<vector<int>> rnd_csr;
+    auto rnd_mat = GF2Sparse<>(m,n);
 
-//     for(int i = 0; i<hamming_pcm.m; i++){
-//         rnd_csr.push_back(vector<int>{});
-//         for(auto e: hamming_pcm.iterate_row(i)){
-//             rnd_csr[i].push_back(e.col_index);
-//             rnd_mat.insert_entry(i,e.col_index);
-//         }
-//     }
 
+    for(int i = 0; i<hamming_pcm.m; i++){
+        rnd_csr.push_back(vector<int>{});
+        for(auto e: hamming_pcm.iterate_row(i)){
+            rnd_csr[i].push_back(e.col_index);
+            rnd_mat.insert_entry(i,e.col_index);
+        }
+    }
 
 
-//     // rnd_mat.csr_insert(rnd_csr);
 
-//     // print_sparse_matrix(rnd_mat);
+    // rnd_mat.csr_insert(rnd_csr);
 
-//     auto ker = ldpc::gf2dense::kernel(m,n,rnd_csr);
+    // print_sparse_matrix(rnd_mat);
 
-//     int count_m = -1;
-//     for(int i=0; i<n; i++){
-//         for(int row : ker[i]){
-//             if(row >= count_m){
-//                 count_m = row+1;
-//             }
-//         }
-//     }
+    auto ker = ldpc::gf2dense::kernel(m,n,rnd_csr);
 
-//     auto ker_mat = GF2Sparse<>(count_m,n);
+    int count_m = -1;
+    for(int i=0; i<n; i++){
+        for(int row : ker[i]){
+            if(row >= count_m){
+                count_m = row+1;
+            }
+        }
+    }
 
-//     for(int i=0; i<n; i++){
-//         for(int row : ker[i]){
-//             ker_mat.insert_entry(row,i);
-//         }
-//     }
+    auto ker_mat = GF2Sparse<>(count_m,n);
 
-//     print_sparse_matrix(ker_mat);
+    for(int i=0; i<n; i++){
+        for(int row : ker[i]){
+            ker_mat.insert_entry(row,i);
+        }
+    }
 
-//     auto kerT = ker_mat.transpose();
+    print_sparse_matrix(ker_mat);
 
-//     auto ker0 = rnd_mat.matmul(kerT);
+    auto kerT = ker_mat.transpose();
 
-//     print_sparse_matrix(ker0);
+    auto ker0 = rnd_mat.matmul(kerT);
 
-//     auto expected = GF2Sparse<>(m, count_m);
+    print_sparse_matrix(ker0);
 
-//     ASSERT_TRUE(ker0==expected);
+    auto expected = GF2Sparse<>(m, count_m);
 
-// }
+    ASSERT_TRUE(ker0==expected);
 
+}
 
-// double sparsity = 0.4;
-// int check_count = 10;
-// int bit_count = 10;
 
-// TEST(gf2dense, kernel_rnd_binary_matrix){
-//     int m, n;
-//     m=check_count;
-//     n=bit_count;
+double sparsity = 0.4;
+int check_count = 10;
+int bit_count = 10;
 
-//     auto rnd_csr = random_csr_matrix(m,n,sparsity, 145455);
+TEST(gf2dense, kernel_rnd_binary_matrix){
+    int m, n;
+    m=check_count;
+    n=bit_count;
 
-//     auto rnd_mat = GF2Sparse<>(m,n);
+    auto rnd_csr = random_csr_matrix(m,n,sparsity, 145455);
 
-//     rnd_mat.csr_insert(rnd_csr);
+    auto rnd_mat = GF2Sparse<>(m,n);
 
-//     // print_sparse_matrix(rnd_mat);
+    rnd_mat.csr_insert(rnd_csr);
 
-//     auto ker = ldpc::gf2dense::kernel(m,n,rnd_csr);
+    // print_sparse_matrix(rnd_mat);
 
-//     int count_m = -1;
-//     for(int i=0; i<n; i++){
-//         for(int row : ker[i]){
-//             if(row >= count_m){
-//                 count_m = row+1;
-//             }
-//         }
-//     }
+    auto ker = ldpc::gf2dense::kernel(m,n,rnd_csr);
 
-//     auto ker_mat = GF2Sparse<>(count_m,n);
+    int count_m = -1;
+    for(int i=0; i<n; i++){
+        for(int row : ker[i]){
+            if(row >= count_m){
+                count_m = row+1;
+            }
+        }
+    }
 
-//     for(int i=0; i<n; i++){
-//         for(int row : ker[i]){
-//             ker_mat.insert_entry(row,i);
-//         }
-//     }
+    auto ker_mat = GF2Sparse<>(count_m,n);
 
-//     // print_sparse_matrix(ker_mat);
+    for(int i=0; i<n; i++){
+        for(int row : ker[i]){
+            ker_mat.insert_entry(row,i);
+        }
+    }
 
-//     auto kerT = ker_mat.transpose();
+    // print_sparse_matrix(ker_mat);
 
-//     auto ker0 = rnd_mat.matmul(kerT);
+    auto kerT = ker_mat.transpose();
 
-//     // print_sparse_matrix(ker0);
+    auto ker0 = rnd_mat.matmul(kerT);
 
-//     auto expected = GF2Sparse<>(n, count_m);
+    // print_sparse_matrix(ker0);
 
-//     ASSERT_TRUE(ker0==expected);
+    auto expected = GF2Sparse<>(n, count_m);
 
-// }
+    ASSERT_TRUE(ker0==expected);
 
+}
 
-// TEST(gf2dense, rank) {
 
-//     for(int i=3; i<10;i++){
-//         auto pcm1 = hamming_code(i);
-//         auto pcm2 = hamming_code(i);
-//         auto pcm0 = ldpc::bp::BpSparse(pcm1.m,pcm1.n);
-//         auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
-//         auto pcm = ldpc::gf2sparse::vstack(mats);
+TEST(gf2dense, rank) {
 
-//         std::vector<std::vector<int>> mat_csc;
-//         for(int col = 0; col<pcm.n; col++){
-//             mat_csc.push_back(std::vector<int>{});
-//             for(auto e: pcm.iterate_column(col)){
-//                 mat_csc[col].push_back(e.row_index);
-//             }
-//         }
+    for(int i=3; i<10;i++){
+        auto pcm1 = hamming_code(i);
+        auto pcm2 = hamming_code(i);
+        auto pcm0 = ldpc::gf2sparse::GF2Sparse(pcm1.m,pcm1.n);
+        auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
+        auto pcm = ldpc::gf2sparse::vstack(mats);
 
-//         int r = ldpc::gf2dense::rank(pcm.m, pcm.n, mat_csc);
+        std::vector<std::vector<int>> mat_csc;
+        for(int col = 0; col<pcm.n; col++){
+            mat_csc.push_back(std::vector<int>{});
+            for(auto e: pcm.iterate_column(col)){
+                mat_csc[col].push_back(e.row_index);
+            }
+        }
 
-//         ASSERT_EQ(r,i);
+        int r = ldpc::gf2dense::rank(pcm.m, pcm.n, mat_csc);
 
+        ASSERT_EQ(r,i);
 
-//     }
-// }
 
-// TEST(gf2dense, rep_code_test){
+    }
+}
 
-//     auto pcm1 = ring_code(3);
+TEST(gf2dense, rep_code_test){
 
+    auto pcm1 = ring_code(3);
 
-//     auto pcm0 = ldpc::bp::BpSparse(3,3);
-//     auto mats = vector<decltype(pcm0)>{pcm0,pcm1};
-//     auto pcm = ldpc::gf2sparse::vstack(mats);
 
+    auto pcm0 = ldpc::gf2sparse::GF2Sparse(3,3);
+    auto mats = vector<decltype(pcm0)>{pcm0,pcm1};
+    auto pcm = ldpc::gf2sparse::vstack(mats);
 
-//     std::vector<std::vector<int>> mat_csc;
-//     for(int col = 0; col<pcm.n; col++){
-//         mat_csc.push_back(std::vector<int>{});
-//         for(auto e: pcm.iterate_column(col)){
-//             mat_csc[col].push_back(e.row_index);
-//         }
-//     }
 
-//     int rank = ldpc::gf2dense::rank(6,3,mat_csc);
+    std::vector<std::vector<int>> mat_csc;
+    for(int col = 0; col<pcm.n; col++){
+        mat_csc.push_back(std::vector<int>{});
+        for(auto e: pcm.iterate_column(col)){
+            mat_csc[col].push_back(e.row_index);
+        }
+    }
 
+    int rank = ldpc::gf2dense::rank(6,3,mat_csc);
 
 
-//     ASSERT_EQ(rank, 2);
 
+    ASSERT_EQ(rank, 2);
 
-// }
 
-// TEST(pivot_rows, hamming_code_test) {
+}
 
-//     for(int i=3; i<10;i++){
-//         auto pcm1 = hamming_code(i);
-//         auto pcm2 = hamming_code(i);
-//         auto pcm0 = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(pcm1.m,pcm1.n);
-//         auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
-//         auto pcm = ldpc::gf2sparse::vstack(mats);
+TEST(pivot_rows, hamming_code_test) {
 
-//         ldpc::gf2dense::CsrMatrix pcm_csr;
+    for(int i=3; i<10;i++){
+        auto pcm1 = hamming_code(i);
+        auto pcm2 = hamming_code(i);
+        auto pcm0 = ldpc::gf2sparse::GF2Sparse(pcm1.m,pcm1.n);
+        auto mats = vector<decltype(pcm1)>{pcm0,pcm1,pcm1};
+        auto pcm = ldpc::gf2sparse::vstack(mats);
 
-//         for(int i = 0; i<pcm.m; i++){
-//             pcm_csr.push_back(vector<int>{});
-//             for(auto e: pcm.iterate_row(i)){
-//                 pcm_csr[i].push_back(e.col_index);
-//             }
-//         }
+        ldpc::gf2dense::CsrMatrix pcm_csr;
 
-//         auto pivot_rows = ldpc::gf2dense::pivot_rows(pcm.m, pcm.n, pcm_csr);
-//         // print_vector(pivot_rows);
-//         ASSERT_EQ(pivot_rows.size(),i);
-//     }
-// }
+        for(int i = 0; i<pcm.m; i++){
+            pcm_csr.push_back(vector<int>{});
+            for(auto e: pcm.iterate_row(i)){
+                pcm_csr[i].push_back(e.col_index);
+            }
+        }
 
-// TEST(Gf2DenseTest, RowSpan_SingleRow) {
-//     int row_count = 1;
-//     int col_count = 3;
-//     ldpc::gf2dense::CsrMatrix csr_mat = {{0, 1, 2}};
-//     auto result = ldpc::gf2dense::row_span(row_count, col_count, csr_mat);
-//     ldpc::gf2dense::CsrMatrix expected = {{}, {0, 1, 2}};
-//     ASSERT_EQ(result, expected);
-// }
+        auto pivot_rows = ldpc::gf2dense::pivot_rows(pcm.m, pcm.n, pcm_csr);
+        // print_vector(pivot_rows);
+        ASSERT_EQ(pivot_rows.size(),i);
+    }
+}
 
-// TEST(Gf2DenseTest, RowSpan_MultipleRows) {
-//     int row_count = 2;
-//     int col_count = 3;
-//     ldpc::gf2dense::CsrMatrix csr_mat = {{0, 1}, {1, 2}};
-//     auto result = ldpc::gf2dense::row_span(row_count, col_count, csr_mat);
-//     ldpc::gf2dense::CsrMatrix expected = {{}, {0, 1}, {1, 2}, {0, 2}};
-//     ASSERT_EQ(result, expected);
-// }
+TEST(Gf2DenseTest, RowSpan_SingleRow) {
+    int row_count = 1;
+    int col_count = 3;
+    ldpc::gf2dense::CsrMatrix csr_mat = {{0, 1, 2}};
+    auto result = ldpc::gf2dense::row_span(row_count, col_count, csr_mat);
+    ldpc::gf2dense::CsrMatrix expected = {{}, {0, 1, 2}};
+    ASSERT_EQ(result, expected);
+}
+
+TEST(Gf2DenseTest, RowSpan_MultipleRows) {
+    int row_count = 2;
+    int col_count = 3;
+    ldpc::gf2dense::CsrMatrix csr_mat = {{0, 1}, {1, 2}};
+    auto result = ldpc::gf2dense::row_span(row_count, col_count, csr_mat);
+    ldpc::gf2dense::CsrMatrix expected = {{}, {0, 1}, {1, 2}, {0, 2}};
+    ASSERT_EQ(result, expected);
+}
 
 TEST(Gf2Dense, estimate_code_distance) {
 
@@ -377,9 +378,9 @@ TEST(Gf2Dense, exact_code_distance) {
 
 }
 
-TEST(Gf2Dense, partial_rref) {
-    auto ham_code = hamming_code_csc(3);
+// TEST(Gf2Dense, partial_rref) {
+//     auto ham_code = hamming_code_csc(3);
 
-    auto plu_decomp = PluDecomposition(3,7, ham_code);
-    plu_decomp.rref(true);
-}
+//     auto plu_decomp = PluDecomposition(3,7, ham_code);
+//     plu_decomp.rref(true);
+// }
