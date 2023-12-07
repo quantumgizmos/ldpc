@@ -218,6 +218,15 @@ TEST(GF2Sparse, lu_solve_batch){
         pcm.csr_insert(input_csr_vector);
 
         ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
+        std::cout<<std::endl;
+
+        auto rr = ldpc::gf2sparse_linalg::RowReduce(pcm);
+        rr.rref(false,true);
+        ldpc::sparse_matrix_util::print_sparse_matrix(rr.L);
+        std::cout<<std::endl;
+        ldpc::sparse_matrix_util::print_sparse_matrix(rr.U);
+        std::cout<<std::endl;
+
 
         auto pcm_csc = pcm.col_adjacency_list();
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);

@@ -256,7 +256,7 @@ namespace ldpc {
 
 
                 auto x = std::vector<uint8_t>(this->col_count,0);
-                auto b = std::vector<uint8_t>(this->row_count,0);
+                auto b = std::vector<uint8_t>(this->matrix_rank,0);
 
                 //First we solve Lb = y, where b = Ux
                 //Solve Lb=y with forwared substitution
@@ -267,6 +267,10 @@ namespace ldpc {
                     }
                     b[row_index] = row_sum ^ y[this->rows[row_index]];
                 }
+
+                std::cout<<"B: "<<std::endl;
+                ldpc::sparse_matrix_util::print_vector(b);
+                std::cout<<std::endl;
 
                 //Solve Ux = b with backwards substitution
                 for(auto row_index = this->matrix_rank-1; row_index >= 0; row_index--){
