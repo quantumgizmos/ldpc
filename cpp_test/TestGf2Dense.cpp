@@ -217,17 +217,6 @@ TEST(GF2Sparse, lu_solve_batch){
         auto pcm = GF2Sparse<>(m,n);
         pcm.csr_insert(input_csr_vector);
 
-        // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
-        // std::cout<<std::endl;
-
-        // auto rr = ldpc::gf2sparse_linalg::RowReduce(pcm);
-        // rr.rref(false,true);
-        // ldpc::sparse_matrix_util::print_sparse_matrix(rr.L);
-        // std::cout<<std::endl;
-        // ldpc::sparse_matrix_util::print_sparse_matrix(rr.U);
-        // std::cout<<std::endl;
-
-
         auto pcm_csc = pcm.col_adjacency_list();
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
         plu.rref(true);
@@ -235,19 +224,9 @@ TEST(GF2Sparse, lu_solve_batch){
         auto Ugf2sparse = ldpc::gf2sparse::csc_to_gf2sparse(plu.U);
         auto Lgf2sparse = ldpc::gf2sparse::csr_to_gf2sparse(plu.L);
 
-        // std::cout<<std::endl;
-
-        // ldpc::sparse_matrix_util::print_sparse_matrix(Ugf2sparse);
-        // std::cout<<std::endl;
-
-        // ldpc::sparse_matrix_util::print_sparse_matrix(Lgf2sparse);
-
         auto x = plu.lu_solve(synd);
 
         auto x_synd = pcm.mulvec(x);
-        // ldpc::sparse_matrix_util::print_vector(x);
-        // ldpc::sparse_matrix_util::print_vector(synd);
-        // ldpc::sparse_matrix_util::print_vector(x_synd);
         ASSERT_EQ(x_synd, synd);
 
     }
