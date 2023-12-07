@@ -87,7 +87,7 @@ namespace ldpc {
         private:
             CscMatrix &csc_mat; // csc_mat[column][row]
         public:
-            CscMatrix L;
+            CsrMatrix L;
             CscMatrix U;
             CscMatrix P;
             int matrix_rank{};
@@ -95,6 +95,7 @@ namespace ldpc {
             int col_count{};
             std::vector<int> rows; // todo is this needed?
             std::vector<int> swap_rows;
+            std::vector<std::vector<int>> elimination_rows;
             std::vector<int> pivot_cols;
             std::vector<int> not_pivot_cols;
             bool LU_constructed = false;
@@ -122,6 +123,11 @@ namespace ldpc {
                 }
                 this->L.clear();
 
+                for(auto &col: this->elimination_rows){
+                    col.clear();
+                }
+                this->elimination_rows.clear();
+
                 for (auto &col: this->U) {
                     col.clear();
                 }
@@ -147,9 +153,11 @@ namespace ldpc {
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
-                std::vector<std::size_t> rr_col;
+                std::vector<std::uint8_t> rr_col;
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
+
+                this->L.resize(this->row_count, std::vector<int>{});
 
                 for (auto col = 0; col < this->col_count; col++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
@@ -161,11 +169,9 @@ namespace ldpc {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
                             // if row elem is one, do elimination for current column below the pivot
-                            // elimination operations to apply are stored in columns of L,
-                            // start with +1 offset since we do not need to eliminate the diagonal entry
-                            for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
-                                auto add_row = *it;
-                                rr_col[add_row] ^= 1;
+                            // elimination operations to apply are stored in the `elimination_rows` attribute,
+                            for (auto row_idx: this->elimination_rows[i]) {
+                                rr_col[row_idx] ^= 1;
                             }
                         }
                     }
@@ -185,13 +191,16 @@ namespace ldpc {
                     }
 
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
+                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->L.push_back(std::vector<int>{this->matrix_rank});
+                    // this->L.push_back(std::vector<int>{this->matrix_rank});
+                    this->elimination_rows.push_back(std::vector<int>{});
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
                             // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
-                            this->L[this->matrix_rank].push_back(i);
+                            this->elimination_rows[this->matrix_rank].push_back(i);
+                            this->L[i].push_back(this->matrix_rank);
                         }
                     }
 
@@ -241,14 +250,12 @@ namespace ldpc {
                 // auto L_csr = ldpc::gf2dense::csc_to_csr(this->L);
                 // auto U_csr = ldpc::gf2dense::csc_to_csr(this->U);
 
-                auto L_csr = std::vector<std::vector<int>>(this->row_count,std::vector<int>{});
+                auto &L_csr = this->L;
                 auto U_csr = std::vector<std::vector<int>>(this->matrix_rank,std::vector<int>{});
-                for(auto i = 0; i < this->matrix_rank; i++){
-                
-                    for(auto row_index: this->L[i]){
-                        L_csr[row_index].push_back(i);
-                    }
-
+                for(auto i = 0; i < this->matrix_rank; i++){       
+                    // for(auto row_index: this->L[i]){
+                    //     L_csr[row_index].push_back(i);
+                    // }
                     for(auto row_index: this->U[i]){
                         U_csr[row_index].push_back(this->pivot_cols[i]);
                     }
@@ -267,10 +274,6 @@ namespace ldpc {
                     }
                     b[row_index] = row_sum ^ y[this->rows[row_index]];
                 }
-
-                std::cout<<"B: "<<std::endl;
-                ldpc::sparse_matrix_util::print_vector(b);
-                std::cout<<std::endl;
 
                 //Solve Ux = b with backwards substitution
                 for(auto row_index = this->matrix_rank-1; row_index >= 0; row_index--){
