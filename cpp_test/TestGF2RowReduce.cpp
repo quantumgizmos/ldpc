@@ -32,7 +32,7 @@ TEST(RowReduce, initiliase_LU){
 
 
     auto rr = RowReduce(matrix);
-    rr.initiliase_LU();
+    rr.initialise_LU();
 
 
     auto p1 = print_sparse_matrix(rr.U,true).str();
@@ -51,7 +51,7 @@ TEST(RowReduce, set_column_row_orderings){
     matrix.insert_entry(1,0);
 
     auto rr = RowReduce(matrix);
-    rr.initiliase_LU();
+    rr.initialise_LU();
     auto p1 = print_sparse_matrix(rr.U,true).str();
     auto p2 = print_sparse_matrix(matrix, true).str();
     ASSERT_EQ(p1,p2);
@@ -76,7 +76,7 @@ TEST(RowReduce, set_column_row_orderings2){
     matrix.insert_entry(1,0);
 
     auto rr = RowReduce(matrix);
-    rr.initiliase_LU();
+    rr.initialise_LU();
     auto& U = rr.U;
     auto p1 = print_sparse_matrix(U,true).str();
     auto p2 = print_sparse_matrix(matrix, true).str();

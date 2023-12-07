@@ -31,10 +31,10 @@ class GF2Sparse: public ldpc::sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>{
 
         /**
          * @brief Constructor for creating a new GF2Sparse object with the given dimensions
-         * @param m The number of rows in the matrix
-         * @param n The number of columns in the matrix
+         * @param rows The number of rows in the matrix
+         * @param cols The number of columns in the matrix
          */
-        GF2Sparse(int m, int n, int entry_count = 0): ldpc::sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>(m,n,entry_count){}
+        GF2Sparse(int rows, int cols, int entry_count = 0): ldpc::sparse_matrix_base::SparseMatrixBase<ENTRY_OBJ>(rows, cols, entry_count){}
         
         
         /**
