@@ -20,7 +20,11 @@
 #include "gf2dense.hpp"
 
 namespace ldpc::uf {
-
+    enum Cluster_Status {
+        INACTIVE,
+        GROWN,
+        VALID
+    };
     const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
     std::vector<int> sort_indices(std::vector<double> &B) {
@@ -31,6 +35,8 @@ namespace ldpc::uf {
     }
 
     struct Cluster {
+
+
         ldpc::bp::BpSparse &pcm;
         int cluster_id;
         bool active; // if merge one becomes deactivated
@@ -110,10 +116,10 @@ namespace ldpc::uf {
          * @param bits_per_step
          * @return
          */
-        int grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                         const int bits_per_step = 0) {
+        Cluster_Status grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
+                                    const int bits_per_step = 0) {
             if (!this->active) {
-                return 0;
+                return INACTIVE;
             }
             // compute a list of bit nodes to grow the cluster to
             this->compute_growth_candidate_bit_nodes();
@@ -138,8 +144,7 @@ namespace ldpc::uf {
                     count++;
                 }
             }
-            this->merge_with_intersecting_clusters();
-            return 1;
+            this->merge_with_intersecting_clusters() ? VALID : GROWN;
         }
 
         /**
@@ -147,15 +152,17 @@ namespace ldpc::uf {
          * Keeps the larger cluster and merges the smaller cluster into it.
          * That is, the (reduced) parity check matrix of the larger cluster is kept.
          * After merging, the on-the-fly elimination is applied to the larger cluster.
+         *
+         * Returns true if the cluster is valid (syndrome is in image), false otherwise.
          */
-        void merge_with_intersecting_clusters() {
+        bool merge_with_intersecting_clusters() {
             Cluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl);
             }
             // finally, we apply the on-the-fly elimination to the remaining cluster
-            larger->apply_on_the_fly_elimination();
+            return larger->apply_on_the_fly_elimination();
         }
 
         /**
