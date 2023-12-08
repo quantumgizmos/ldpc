@@ -193,7 +193,6 @@ namespace ldpc {
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    // this->L.push_back(std::vector<int>{this->matrix_rank});
                     this->elimination_rows.push_back(std::vector<int>{});
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
@@ -310,9 +309,10 @@ namespace ldpc {
              */
             void partial_rref(const std::size_t start_col_idx,
                               const bool construct_U = true) {
-                std::vector<std::size_t> rr_col;
+                std::vector<std::uint8_t> rr_col;
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
+                this->L.resize(this->row_count, std::vector<int>{});
 
                 for (auto col = start_col_idx; col < this->col_count; col++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
@@ -322,9 +322,8 @@ namespace ldpc {
                     for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
-                            for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
-                                auto add_row = *it;
-                                rr_col[add_row] ^= 1;
+                            for (auto row_idx: this->elimination_rows[i]) {
+                                rr_col[row_idx] ^= 1;
                             }
                         }
                     }
@@ -343,28 +342,31 @@ namespace ldpc {
                     }
 
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
+                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->L.emplace_back();
+                    this->elimination_rows.push_back(std::vector<int>{});
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
-                            this->L[this->matrix_rank].push_back(i);
-                        }
+                            this->elimination_rows[this->matrix_rank].push_back(i);
+                            this->L[i].push_back(this->matrix_rank);                        }
                     }
-                    this->matrix_rank++;
 
                     if (construct_U) {
-                        this->U.emplace_back();
-                        for (auto i = 0; i < matrix_rank; i++) {
+                        this->U.push_back(std::vector<int>{});
+                        for (auto i = 0; i <= matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[i].push_back(col);
                             }
                         }
                     }
+                    this->matrix_rank++;
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
+                }
+                if(construct_U){
+                    this->LU_constructed = true;
                 }
             }
 
