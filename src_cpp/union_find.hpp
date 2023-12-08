@@ -64,6 +64,7 @@ namespace ldpc::uf {
         tsl::robin_map<std::size_t, std::size_t> pcm_check_idx_to_cluster_check_idx;
         std::set<std::size_t> cluster_bit_to_pcm_bit;
         gf2dense::PluDecomposition *pluDecomposition;
+        std::size_t eliminated_col_index = 0;
 
         Cluster() = default;
 
@@ -99,6 +100,7 @@ namespace ldpc::uf {
             this->cluster_check_to_pcm_check.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_to_pcm_bit.clear();
+            this->eliminated_col_index = 0;
         }
 
         [[nodiscard]] int parity() const {
@@ -283,6 +285,10 @@ namespace ldpc::uf {
          * @param bit_index
          */
         void add_bit(const int bit_index) {
+            // store column index offset for on the fly elimniation
+            if (this->eliminated_col_index == 0) {
+                this->eliminated_col_index = this->bit_nodes.size();
+            }
             this->bit_nodes.insert(bit_index);
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
@@ -334,7 +340,10 @@ namespace ldpc::uf {
                                                                               this->cluster_pcm.size(),
                                                                               this->cluster_pcm);
             } else {
-                this->pluDecomposition->add_column_to_matrix(*this->cluster_pcm.end());
+                // add columns to existing decomposition matrix
+                for (auto idx = this->eliminated_col_index; idx < this->bit_nodes.size(); idx++) {
+                    this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
+                }
             }
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             std::vector<uint8_t> cluster_syndrome;
@@ -342,7 +351,7 @@ namespace ldpc::uf {
             for (auto s: this->enclosed_syndromes) {
                 cluster_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->cluster_pcm.size()-1);
+            this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
         }
 
         void find_spanning_tree() {
