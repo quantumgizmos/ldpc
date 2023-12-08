@@ -91,6 +91,7 @@ namespace ldpc {
             CsrMatrix U;
             CscMatrix P;
             int matrix_rank{};
+            int max_rank{};
             int row_count{};
             int col_count{};
             std::vector<int> rows; // todo is this needed?
@@ -137,6 +138,9 @@ namespace ldpc {
                     col.clear();
                 }
                 this->P.clear();
+
+                this->LU_constructed = false;
+
             }
 
             /**
@@ -148,78 +152,88 @@ namespace ldpc {
              * Then pivoting is done for the current column and corresponding swaps are applied.
              * @param construct_U
              */
-            void rref(const bool construct_U = true) {
+            void rref(const bool construct_L = true, const bool construct_U = true) {
+
                 this->reset();
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
-                std::vector<std::uint8_t> rr_col;
-                rr_col.resize(this->row_count, 0);
+
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                this->L.resize(this->row_count, std::vector<int>{});
+                if(construct_L){
+                    this->L.resize(this->row_count, std::vector<int>{});
+                }
 
-                for (auto col = 0; col < this->col_count; col++) {
-                    std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (auto row_index: this->csc_mat[col]) {
-                        rr_col[row_index] = 1;
-                    }
-                    // apply previous operations to current column
-                    for (auto i = 0; i < this->matrix_rank; i++) {
-                        std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
-                        if (rr_col[i] == 1) {
-                            // if row elem is one, do elimination for current column below the pivot
-                            // elimination operations to apply are stored in the `elimination_rows` attribute,
-                            for (auto row_idx: this->elimination_rows[i]) {
-                                rr_col[row_idx] ^= 1;
-                            }
-                        }
-                    }
-                    bool PIVOT_FOUND = false;
-                    for (auto i = this->matrix_rank; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            PIVOT_FOUND = true;
-                            this->swap_rows.push_back(i);
-                            this->pivot_cols.push_back(col);
-                            break;
-                        }
-                    }
-                    // if no pivot was found, we go to next column
-                    if (!PIVOT_FOUND) {
-                        this->not_pivot_cols.push_back(col);
-                        continue;
-                    }
-
-                    std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->elimination_rows.push_back(std::vector<int>{});
-
-                    for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
-                            this->elimination_rows[this->matrix_rank].push_back(i);
-                            this->L[i].push_back(this->matrix_rank);
-                        }
-                    }
-
-                    if (construct_U) {
-                        this->U.push_back(std::vector<int>{});
-                        for (auto i = 0; i <= this->matrix_rank; i++) {
-                            if (rr_col[i] == 1) {
-                                this->U[i].push_back(col);
-                            }
-                        }
-                    }
-
-                    this->matrix_rank++;
+                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
+                    this->eliminate_column(col_idx, construct_L,construct_U);
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
                 }
-                if(construct_U){
+
+                if (construct_L && construct_U){
                     this->LU_constructed = true;
                 }
+
+            }
+
+            bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true){
+                auto rr_col = std::vector<uint8_t>(this->row_count, 0);
+                for (auto row_index: this->csc_mat[col_idx]) {
+                    rr_col[row_index] = 1;
+                }
+                // apply previous operations to current column
+                for (auto i = 0; i < this->matrix_rank; i++) {
+                    std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
+                    if (rr_col[i] == 1) {
+                        // if row elem is one, do elimination for current column below the pivot
+                        // elimination operations to apply are stored in the `elimination_rows` attribute,
+                        for (auto row_idx: this->elimination_rows[i]) {
+                            rr_col[row_idx] ^= 1;
+                        }
+                    }
+                }
+                bool PIVOT_FOUND = false;
+                for (auto i = this->matrix_rank; i < this->row_count; i++) {
+                    if (rr_col[i] == 1) {
+                        PIVOT_FOUND = true;
+                        this->swap_rows.push_back(i);
+                        this->pivot_cols.push_back(col_idx);
+                        break;
+                    }
+                }
+                // if no pivot was found, we go to next column
+                if (!PIVOT_FOUND) {
+                    this->not_pivot_cols.push_back(col_idx);
+                    return false;
+                }
+
+                std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
+                std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
+                std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
+                this->elimination_rows.push_back(std::vector<int>{});
+
+                for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
+                    if (rr_col[i] == 1) {
+                        this->elimination_rows[this->matrix_rank].push_back(i);
+                        if(construct_L){
+                            this->L[i].push_back(this->matrix_rank);
+                        }
+                    }
+                }
+
+                if (construct_U) {
+                    this->U.emplace_back();
+                    for (auto i = 0; i <= this->matrix_rank; i++) {
+                        if (rr_col[i] == 1) {
+                            this->U[i].push_back(col_idx);
+                        }
+                    }
+                }
+
+                this->matrix_rank++;
+                return true;
             }
 
 
@@ -242,7 +256,7 @@ namespace ldpc {
                 }
 
                 if(!this->LU_constructed){
-                    this->rref(true);
+                    throw std::invalid_argument("LU decomposition has not been constructed. Please call rref() first.");
                 }
 
                 auto x = std::vector<uint8_t>(this->col_count,0);
@@ -269,6 +283,95 @@ namespace ldpc {
 
                 return x;
             }
+
+
+            bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
+
+                this->reset();
+                int y_sum = 0;
+                for (auto i = 0; i < this->row_count; i++) {
+                    this->rows.push_back(i);
+                    y_sum+=y[i];
+                }
+
+                /*Trivial syndrome is always in image? What is the convention here?*/
+                if(y_sum == 0){
+                    return true;
+                }
+
+                /*The vector we use to check whether y is in the image of the LU
+                decomposition up to the current point of elimination.*/
+                auto y_image_check_vector = y;
+
+                auto max_rank = std::min(this->row_count, this->col_count);
+
+                /*Check whether the L matrix has the correct number of rows*/
+                if (this->L.size() != this->row_count){
+                    this->L.resize(this->row_count, std::vector<int>{});
+                }
+
+                bool in_image = false;
+
+                //iterate over the columnsm starting from column `start_col_idx`
+                for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
+
+                    //eliminate the column
+                    bool pivot = this->eliminate_column(col_idx, true, true);
+
+                    //exit if the maximum rank has been reached
+                    if (this->matrix_rank == max_rank) {
+                        in_image = true;
+                        break;
+                    }
+
+                    //check if y is in the image of the matrix
+                    if(pivot){
+                        std::swap(y_image_check_vector[this->matrix_rank-1], y_image_check_vector[this->swap_rows[this->matrix_rank-1]]);
+                        for(auto row_index: this->elimination_rows[this->matrix_rank-1]){
+                            y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank-1];
+                        }
+
+                        in_image = true;
+                        for(int i = matrix_rank; i < this->row_count; i++){
+                            if(y_image_check_vector[i] == 1){
+                                in_image = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    //if y is in the image, we can stop eliminating
+                    if(in_image){
+                        break;
+                    }
+
+                }
+
+                if(in_image){
+                    return true;
+                }
+                else{
+                    return false;
+                }
+
+            }
+
+
+            std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y) {
+
+                bool y_in_image = this->rref_with_y_image_check(y);
+                this->LU_constructed = true;
+                if(y_in_image){
+                    return this->lu_solve(y);
+                }
+                else{
+                    throw std::invalid_argument("y is not in the image of the matrix.");
+                }
+
+                // return this->lu_solve(y);
+
+            }
+
 
             /**
              * Apply the stored operations to a vector.
@@ -309,10 +412,9 @@ namespace ldpc {
              */
             void partial_rref(const std::size_t start_col_idx,
                               const bool construct_U = true) {
-                std::vector<std::uint8_t> rr_col;
+                std::vector<std::size_t> rr_col;
                 rr_col.resize(this->row_count, 0);
                 auto max_rank = std::min(this->row_count, this->col_count);
-                this->L.resize(this->row_count, std::vector<int>{});
 
                 for (auto col = start_col_idx; col < this->col_count; col++) {
                     std::fill(rr_col.begin(), rr_col.end(), 0);
@@ -322,8 +424,9 @@ namespace ldpc {
                     for (auto i = 0; i < this->matrix_rank; i++) {
                         std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
                         if (rr_col[i] == 1) {
-                            for (auto row_idx: this->elimination_rows[i]) {
-                                rr_col[row_idx] ^= 1;
+                            for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
+                                auto add_row = *it;
+                                rr_col[add_row] ^= 1;
                             }
                         }
                     }
@@ -342,31 +445,28 @@ namespace ldpc {
                     }
 
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->elimination_rows.push_back(std::vector<int>{});
+                    this->L.emplace_back();
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
-                            this->elimination_rows[this->matrix_rank].push_back(i);
-                            this->L[i].push_back(this->matrix_rank);                        }
+                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
+                            this->L[this->matrix_rank].push_back(i);
+                        }
                     }
+                    this->matrix_rank++;
 
                     if (construct_U) {
-                        this->U.push_back(std::vector<int>{});
-                        for (auto i = 0; i <= matrix_rank; i++) {
+                        this->U.emplace_back();
+                        for (auto i = 0; i < matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[i].push_back(col);
                             }
                         }
                     }
-                    this->matrix_rank++;
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
-                }
-                if(construct_U){
-                    this->LU_constructed = true;
                 }
             }
 
