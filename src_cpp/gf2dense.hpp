@@ -371,22 +371,20 @@ namespace ldpc {
             }
 
             /**
-             * Adds new, not eliminated columns and rows to the matrix.
+             * Adds new, not eliminated column and corresponding rows to the matrix.
              * Updates row_count and col_count
              * @param new_matrix
              */
-            void update_matrix(const CscMatrix &new_matrix) {
-                if (this->row_count == new_matrix.size() or this->col_count == new_matrix[0].size()) {
+            void add_column_to_matrix(const std::vector<int> & new_col) {
+                if (this->row_count == new_col.size() or new_col.empty()) {
                     return;
                 }
-                for (auto i = this->col_count; i < new_matrix.size(); i++) {
-                    this->csc_mat.push_back(new_matrix[i]);
-                    auto max_elem = std::max_element(new_matrix[i].begin(), new_matrix[i].end());
-                    if (*max_elem > this->row_count) {
-                        this->row_count = *max_elem;
-                    }
+                this->csc_mat.push_back(new_col);
+                auto max_elem = std::max_element(new_col.begin(), new_col.end());
+                if (*max_elem > this->row_count) {
+                    this->row_count = *max_elem;
                 }
-                this->col_count = new_matrix.size();
+                this->col_count++;
             }
         };
 

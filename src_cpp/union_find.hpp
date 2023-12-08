@@ -341,7 +341,7 @@ namespace ldpc::uf {
                                                                               this->cluster_pcm.size(),
                                                                               this->cluster_pcm);
             } else {
-                this->pluDecomposition->update_matrix(this->cluster_pcm);
+                this->pluDecomposition->add_column_to_matrix(*this->cluster_pcm.end());
             }
             this->pluDecomposition->partial_rref(this->eliminated_col_index, true);
             this->eliminated_col_index = 0;
