@@ -351,7 +351,9 @@ namespace ldpc::uf {
             for (auto s: this->enclosed_syndromes) {
                 cluster_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
+            auto res = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
+            this->eliminated_col_index = 0;
+            return res;
         }
 
         void find_spanning_tree() {
