@@ -193,19 +193,17 @@ namespace ldpc {
                     std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    // this->L.push_back(std::vector<int>{this->matrix_rank});
-                    this->elimination_rows.push_back(std::vector<int>{});
+                    this->elimination_rows.emplace_back();
 
                     for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                         if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
                             this->elimination_rows[this->matrix_rank].push_back(i);
                             this->L[i].push_back(this->matrix_rank);
                         }
                     }
 
                     if (construct_U) {
-                        this->U.push_back(std::vector<int>{});
+                        this->U.emplace_back();
                         for (auto i = 0; i <= this->matrix_rank; i++) {
                             if (rr_col[i] == 1) {
                                 this->U[i].push_back(col);
