@@ -91,9 +91,10 @@ namespace ldpc {
             CsrMatrix U;
             CscMatrix P;
             int matrix_rank{};
+            int max_rank{};
             int row_count{};
             int col_count{};
-            std::vector<int> rows; // todo is this needed?
+            std::vector<int> rows;
             std::vector<int> swap_rows;
             std::vector<std::vector<int>> elimination_rows;
             std::vector<int> pivot_cols;
@@ -153,65 +154,13 @@ namespace ldpc {
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
                 }
-                std::vector<std::uint8_t> rr_col;
-                rr_col.resize(this->row_count, 0);
+
                 auto max_rank = std::min(this->row_count, this->col_count);
 
                 this->L.resize(this->row_count, std::vector<int>{});
 
-                for (auto col = 0; col < this->col_count; col++) {
-                    std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (auto row_index: this->csc_mat[col]) {
-                        rr_col[row_index] = 1;
-                    }
-                    // apply previous operations to current column
-                    for (auto i = 0; i < this->matrix_rank; i++) {
-                        std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
-                        if (rr_col[i] == 1) {
-                            // if row elem is one, do elimination for current column below the pivot
-                            // elimination operations to apply are stored in the `elimination_rows` attribute,
-                            for (auto row_idx: this->elimination_rows[i]) {
-                                rr_col[row_idx] ^= 1;
-                            }
-                        }
-                    }
-                    bool PIVOT_FOUND = false;
-                    for (auto i = this->matrix_rank; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            PIVOT_FOUND = true;
-                            this->swap_rows.push_back(i);
-                            this->pivot_cols.push_back(col);
-                            break;
-                        }
-                    }
-                    // if no pivot was found, we go to next column
-                    if (!PIVOT_FOUND) {
-                        this->not_pivot_cols.push_back(col);
-                        continue;
-                    }
-
-                    std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->elimination_rows.emplace_back();
-
-                    for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            this->elimination_rows[this->matrix_rank].push_back(i);
-                            this->L[i].push_back(this->matrix_rank);
-                        }
-                    }
-
-                    if (construct_U) {
-                        this->U.emplace_back();
-                        for (auto i = 0; i <= this->matrix_rank; i++) {
-                            if (rr_col[i] == 1) {
-                                this->U[i].push_back(col);
-                            }
-                        }
-                    }
-
-                    this->matrix_rank++;
+                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
+                    this->eliminate_column(col_idx, construct_U);
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
@@ -219,6 +168,62 @@ namespace ldpc {
                 if(construct_U){
                     this->LU_constructed = true;
                 }
+            }
+
+            bool eliminate_column(int col_idx, const bool construct_U = false){
+                auto rr_col = std::vector<uint8_t>(this->row_count, 0);
+                for (auto row_index: this->csc_mat[col_idx]) {
+                    rr_col[row_index] = 1;
+                }
+                // apply previous operations to current column
+                for (auto i = 0; i < this->matrix_rank; i++) {
+                    std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
+                    if (rr_col[i] == 1) {
+                        // if row elem is one, do elimination for current column below the pivot
+                        // elimination operations to apply are stored in the `elimination_rows` attribute,
+                        for (auto row_idx: this->elimination_rows[i]) {
+                            rr_col[row_idx] ^= 1;
+                        }
+                    }
+                }
+                bool PIVOT_FOUND = false;
+                for (auto i = this->matrix_rank; i < this->row_count; i++) {
+                    if (rr_col[i] == 1) {
+                        PIVOT_FOUND = true;
+                        this->swap_rows.push_back(i);
+                        this->pivot_cols.push_back(col_idx);
+                        break;
+                    }
+                }
+                // if no pivot was found, we go to next column
+                if (!PIVOT_FOUND) {
+                    this->not_pivot_cols.push_back(col_idx);
+                    return false;
+                }
+
+                std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
+                std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
+                std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
+                this->elimination_rows.emplace_back();
+
+                for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
+                    if (rr_col[i] == 1) {
+                        this->elimination_rows[this->matrix_rank].push_back(i);
+                        this->L[i].push_back(this->matrix_rank);
+                    }
+                }
+
+                if (construct_U) {
+                    this->U.emplace_back();
+                    for (auto i = 0; i <= this->matrix_rank; i++) {
+                        if (rr_col[i] == 1) {
+                            this->U[i].push_back(col_idx);
+                        }
+                    }
+                }
+
+                this->matrix_rank++;
+                return true;
             }
 
 
