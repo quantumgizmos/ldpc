@@ -239,6 +239,8 @@ TEST(GF2Sparse, fast_lu_solve_batch){
 
     for(int i = 0; i<row_count; i++){
 
+        // std::cout<<i<<std::endl;
+
         std::vector<string> row = doc.GetRow<string>(i);
         int m = stoi(row[0]);
         int n = stoi(row[1]);
@@ -249,9 +251,13 @@ TEST(GF2Sparse, fast_lu_solve_batch){
         auto pcm = GF2Sparse<>(m,n);
         pcm.csr_insert(input_csr_vector);
         auto pcm_csc = pcm.col_adjacency_list();
-        
+        // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
+        // ldpc::sparse_matrix_util::print_vector(synd);
+
+
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
         auto x = plu.fast_lu_solve(synd);
+
         
         auto x_synd = pcm.mulvec(x);
         ASSERT_EQ(x_synd, synd);

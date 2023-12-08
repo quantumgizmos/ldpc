@@ -172,6 +172,10 @@ namespace ldpc {
                     }
                 }
 
+                if (construct_L && construct_U){
+                    this->LU_constructed = true;
+                }
+
             }
 
             bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true){
@@ -228,10 +232,6 @@ namespace ldpc {
                     }
                 }
 
-                if (construct_L && construct_U){
-                    this->LU_constructed = true;
-                }
-
                 this->matrix_rank++;
                 return true;
             }
@@ -255,9 +255,9 @@ namespace ldpc {
                     throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
                 }
 
-                // if(!this->LU_constructed){
-                //     throw std::invalid_argument("LU decomposition has not been constructed. Please call rref() first.");
-                // }
+                if(!this->LU_constructed){
+                    throw std::invalid_argument("LU decomposition has not been constructed. Please call rref() first.");
+                }
 
                 auto x = std::vector<uint8_t>(this->col_count,0);
                 auto b = std::vector<uint8_t>(this->matrix_rank,0);
@@ -285,25 +285,46 @@ namespace ldpc {
             }
 
 
-            std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y){
+            bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
                 
                 this->reset();
+                int y_sum = 0;
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
+                    y_sum+=y[i];
                 }
 
-                auto y_image_check_vector = y;
+                /*Trivial syndrome is always in image? What is the convention here?*/
+                if(y_sum == 0){
+                    return true;
+                }
+
+                /*The vector we use to check whether y is in the image of the LU
+                decomposition up to the current point of elimination.*/
+                auto y_image_check_vector = y; 
 
                 auto max_rank = std::min(this->row_count, this->col_count);
-                this->L.resize(this->row_count, std::vector<int>{});
+
+                /*Check whether the L matrix has the correct number of rows*/
+                if (this->L.size() != this->row_count){
+                    this->L.resize(this->row_count, std::vector<int>{});
+                }
          
-                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
+                bool in_image = false;
+
+                //iterate over the columnsm starting from column `start_col_idx`
+                for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
+                    
+                    //eliminate the column
                     bool pivot = this->eliminate_column(col_idx, true, true);
+                    
+                    //exit if the maximum rank has been reached
                     if (this->matrix_rank == max_rank) {
+                        in_image = true;
                         break;
                     }
 
-                    bool in_image = false;
+                    //check if y is in the image of the matrix
                     if(pivot){
                         std::swap(y_image_check_vector[this->matrix_rank-1], y_image_check_vector[this->swap_rows[this->matrix_rank-1]]);
                         for(auto row_index: this->elimination_rows[this->matrix_rank-1]){
@@ -318,16 +339,37 @@ namespace ldpc {
                             }
                         }
                     }
+
+                    //if y is in the image, we can stop eliminating
                     if(in_image){
                         break;
                     }
 
                 }
 
-                // ldpc::sparse_matrix_util::print_vector(y_image_check_vector);
-                // ldpc::sparse_matrix_util::print_vector(y);
+                if(in_image){
+                    return true;
+                }
+                else{
+                    return false;
+                }
             
-                return lu_solve(y);
+            }
+
+
+            std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y) {
+            
+                bool y_in_image = this->rref_with_y_image_check(y);
+                this->LU_constructed = true;
+                if(y_in_image){
+                    return this->lu_solve(y);
+                }
+                else{
+                    throw std::invalid_argument("y is not in the image of the matrix.");
+                }
+
+                // return this->lu_solve(y);
+            
             }
 
 
