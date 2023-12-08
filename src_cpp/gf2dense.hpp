@@ -124,7 +124,7 @@ namespace ldpc {
                 }
                 this->L.clear();
 
-                for(auto &col: this->elimination_rows){
+                for (auto &col: this->elimination_rows) {
                     col.clear();
                 }
                 this->elimination_rows.clear();
@@ -161,24 +161,24 @@ namespace ldpc {
 
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                if(construct_L){
+                if (construct_L) {
                     this->L.resize(this->row_count, std::vector<int>{});
                 }
 
                 for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
-                    this->eliminate_column(col_idx, construct_L,construct_U);
+                    this->eliminate_column(col_idx, construct_L, construct_U);
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
                 }
 
-                if (construct_L && construct_U){
+                if (construct_L && construct_U) {
                     this->LU_constructed = true;
                 }
 
             }
 
-            bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true){
+            bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true) {
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
                 for (auto row_index: this->csc_mat[col_idx]) {
                     rr_col[row_index] = 1;
@@ -217,7 +217,7 @@ namespace ldpc {
                 for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                     if (rr_col[i] == 1) {
                         this->elimination_rows[this->matrix_rank].push_back(i);
-                        if(construct_L){
+                        if (construct_L) {
                             this->L[i].push_back(this->matrix_rank);
                         }
                     }
@@ -238,7 +238,6 @@ namespace ldpc {
 
 
             std::vector<uint8_t> lu_solve(std::vector<uint8_t> &y) {
-            
                 /*
                 Equation: Ax = y
 
@@ -249,224 +248,105 @@ namespace ldpc {
                 1. Forward substitution: Solve Lb = Py for b
                 2. Backward subsitution: Solve UQx = b for x
                 */
-
-
-                if (y.size() != this->row_count){
+                if (y.size() != this->row_count) {
                     throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
                 }
-
-                if(!this->LU_constructed){
+                if (!this->LU_constructed) {
                     throw std::invalid_argument("LU decomposition has not been constructed. Please call rref() first.");
                 }
-
-                auto x = std::vector<uint8_t>(this->col_count,0);
-                auto b = std::vector<uint8_t>(this->matrix_rank,0);
-
+                auto x = std::vector<uint8_t>(this->col_count, 0);
+                auto b = std::vector<uint8_t>(this->matrix_rank, 0);
                 //First we solve Lb = y, where b = Ux
                 //Solve Lb=y with forwared substitution
-                for(auto row_index = 0; row_index < this->matrix_rank; row_index++){
+                for (auto row_index = 0; row_index < this->matrix_rank; row_index++) {
                     int row_sum = 0;
-                    for(auto col_index: this->L[row_index]){
+                    for (auto col_index: this->L[row_index]) {
                         row_sum ^= b[col_index];
                     }
                     b[row_index] = row_sum ^ y[this->rows[row_index]];
                 }
-
                 //Solve Ux = b with backwards substitution
-                for(auto row_index = this->matrix_rank-1; row_index >= 0; row_index--){
+                for (auto row_index = this->matrix_rank - 1; row_index >= 0; row_index--) {
                     int row_sum = 0;
-                    for(auto col_index: this->U[row_index]){
+                    for (auto col_index: this->U[row_index]) {
                         row_sum ^= x[col_index];
                     }
                     x[this->pivot_cols[row_index]] = row_sum ^ b[row_index];
                 }
-
                 return x;
             }
 
-
+            /**
+             * Computes PLU factorization that breaks off as soon as y is in the image of the matrix.
+             * Elimination is column wise and starts from column `start_col_idx`.
+             * @param y
+             * @param start_col_idx
+             * @return
+             */
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
-
-                this->reset();
+                if (start_col_idx == 0) {
+                    this->reset();
+                }
                 int y_sum = 0;
                 for (auto i = 0; i < this->row_count; i++) {
-                    this->rows.push_back(i);
-                    y_sum+=y[i];
+                    y_sum += y[i];
                 }
-
                 /*Trivial syndrome is always in image? What is the convention here?*/
-                if(y_sum == 0){
+                if (y_sum == 0) {
                     return true;
                 }
-
                 /*The vector we use to check whether y is in the image of the LU
                 decomposition up to the current point of elimination.*/
                 auto y_image_check_vector = y;
-
                 auto max_rank = std::min(this->row_count, this->col_count);
-
                 /*Check whether the L matrix has the correct number of rows*/
-                if (this->L.size() != this->row_count){
+                if (this->L.size() != this->row_count) {
                     this->L.resize(this->row_count, std::vector<int>{});
                 }
-
                 bool in_image = false;
-
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
-
                     //eliminate the column
                     bool pivot = this->eliminate_column(col_idx, true, true);
-
                     //exit if the maximum rank has been reached
                     if (this->matrix_rank == max_rank) {
                         in_image = true;
                         break;
                     }
-
                     //check if y is in the image of the matrix
-                    if(pivot){
-                        std::swap(y_image_check_vector[this->matrix_rank-1], y_image_check_vector[this->swap_rows[this->matrix_rank-1]]);
-                        for(auto row_index: this->elimination_rows[this->matrix_rank-1]){
-                            y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank-1];
+                    if (pivot) {
+                        std::swap(y_image_check_vector[this->matrix_rank - 1],
+                                  y_image_check_vector[this->swap_rows[this->matrix_rank - 1]]);
+                        for (auto row_index: this->elimination_rows[this->matrix_rank - 1]) {
+                            y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank - 1];
                         }
-
                         in_image = true;
-                        for(int i = matrix_rank; i < this->row_count; i++){
-                            if(y_image_check_vector[i] == 1){
+                        for (int i = matrix_rank; i < this->row_count; i++) {
+                            if (y_image_check_vector[i] == 1) {
                                 in_image = false;
                                 break;
                             }
                         }
                     }
-
                     //if y is in the image, we can stop eliminating
-                    if(in_image){
+                    if (in_image) {
                         break;
                     }
-
                 }
-
-                if(in_image){
+                if (in_image) {
                     return true;
-                }
-                else{
+                } else {
                     return false;
                 }
-
             }
-
 
             std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y) {
-
                 bool y_in_image = this->rref_with_y_image_check(y);
                 this->LU_constructed = true;
-                if(y_in_image){
+                if (y_in_image) {
                     return this->lu_solve(y);
-                }
-                else{
+                } else {
                     throw std::invalid_argument("y is not in the image of the matrix.");
-                }
-
-                // return this->lu_solve(y);
-
-            }
-
-
-            /**
-             * Apply the stored operations to a vector.
-             * The vector is not changed.
-             * @param vec
-             */
-            std::vector<int> apply_stored_operations_to_csc_column(const std::vector<int> &col) {
-                auto result = col;
-                for (auto i = 0; i < this->matrix_rank; i++) {
-                    std::swap(result[i], result[this->swap_rows[i]]);
-                    if (result[i] == 1) {
-                        for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
-                            auto add_row = *it;
-                            result[add_row] ^= 1;
-                        }
-                    }
-                }
-                return result;
-            }
-
-            bool vector_is_in_image(const std::vector<int> &vec) {
-                auto result = true;
-                for (auto &e: vec) {
-                    if (e >= this->matrix_rank) {
-                        result = false;
-                        break;
-                    }
-                }
-                return result;
-            }
-
-            /**
-             * Compute the reduced row-echelon form starting from a specific column.
-             * Assumes that columns with indices starting from start_col_idx are present in this->csc_mat.
-             * Assumes stores operations have been applied already.
-             * @param col_idx
-             * @param construct_U
-             */
-            void partial_rref(const std::size_t start_col_idx,
-                              const bool construct_U = true) {
-                std::vector<std::size_t> rr_col;
-                rr_col.resize(this->row_count, 0);
-                auto max_rank = std::min(this->row_count, this->col_count);
-
-                for (auto col = start_col_idx; col < this->col_count; col++) {
-                    std::fill(rr_col.begin(), rr_col.end(), 0);
-                    for (auto row_index: this->csc_mat[col]) {
-                        rr_col[row_index] = 1;
-                    }
-                    for (auto i = 0; i < this->matrix_rank; i++) {
-                        std::swap(rr_col[i], rr_col[this->swap_rows[i]]);
-                        if (rr_col[i] == 1) {
-                            for (auto it = this->L[i].begin() + 1; it != this->L[i].end(); it++) {
-                                auto add_row = *it;
-                                rr_col[add_row] ^= 1;
-                            }
-                        }
-                    }
-                    bool PIVOT_FOUND = false;
-                    for (auto i = this->matrix_rank; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            PIVOT_FOUND = true;
-                            this->swap_rows.push_back(i);
-                            this->pivot_cols.push_back(col);
-                            break;
-                        }
-                    }
-                    if (!PIVOT_FOUND) {
-                        this->not_pivot_cols.push_back(col);
-                        continue;
-                    }
-
-                    std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
-                    std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
-                    this->L.emplace_back();
-
-                    for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
-                        if (rr_col[i] == 1) {
-                            // rr_col[i] ^= 1; //we don't actually need to eliminate here since we throw away rr_col
-                            this->L[this->matrix_rank].push_back(i);
-                        }
-                    }
-                    this->matrix_rank++;
-
-                    if (construct_U) {
-                        this->U.emplace_back();
-                        for (auto i = 0; i < matrix_rank; i++) {
-                            if (rr_col[i] == 1) {
-                                this->U[i].push_back(col);
-                            }
-                        }
-                    }
-                    if (this->matrix_rank == max_rank) {
-                        break;
-                    }
                 }
             }
 
@@ -475,13 +355,16 @@ namespace ldpc {
              * Updates row_count and col_count
              * @param new_matrix
              */
-            void add_column_to_matrix(const std::vector<int> & new_col) {
+            void add_column_to_matrix(const std::vector<int> &new_col) {
                 if (this->row_count == new_col.size() or new_col.empty()) {
                     return;
                 }
                 this->csc_mat.push_back(new_col);
                 auto max_elem = std::max_element(new_col.begin(), new_col.end());
                 if (*max_elem > this->row_count) {
+                    for (auto i = this->row_count; i < *max_elem; i++) {
+                        this->rows.push_back(i);
+                    }
                     this->row_count = *max_elem;
                 }
                 this->col_count++;
