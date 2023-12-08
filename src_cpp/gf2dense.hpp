@@ -281,7 +281,7 @@ namespace ldpc {
              * Elimination is column wise and starts from column `start_col_idx`.
              * @param y
              * @param start_col_idx
-             * @return
+             * @return true if y is in the image of the matrix, false otherwise.
              */
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
                 if (start_col_idx == 0) {

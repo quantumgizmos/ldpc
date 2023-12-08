@@ -20,11 +20,6 @@
 #include "gf2dense.hpp"
 
 namespace ldpc::uf {
-    enum Cluster_Status {
-        INACTIVE,
-        GROWN,
-        VALID
-    };
     const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
     std::vector<int> sort_indices(std::vector<double> &B) {
@@ -65,14 +60,16 @@ namespace ldpc::uf {
         std::set<std::size_t> cluster_bit_to_pcm_bit;
         gf2dense::PluDecomposition *pluDecomposition;
         std::size_t eliminated_col_index = 0;
+        const bool on_the_fly;
 
         Cluster() = default;
 
         Cluster(ldpc::bp::BpSparse &parity_check_matrix,
                 int syndrome_index,
                 Cluster **ccm,
-                Cluster **bcm) :
-                pcm(parity_check_matrix) {
+                Cluster **bcm,
+                bool on_the_fly = false) :
+                pcm(parity_check_matrix), on_the_fly(on_the_fly) {
             this->active = true;
             this->valid = false;
             this->cluster_id = syndrome_index;
@@ -115,10 +112,10 @@ namespace ldpc::uf {
          * @param bits_per_step
          * @return
          */
-        Cluster_Status grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                                    const int bits_per_step = 0) {
+        void grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
+                          const int bits_per_step = 0) {
             if (!this->active) {
-                return INACTIVE;
+                return;
             }
             // compute a list of bit nodes to grow the cluster to
             this->compute_growth_candidate_bit_nodes();
@@ -143,7 +140,7 @@ namespace ldpc::uf {
                     count++;
                 }
             }
-            return this->merge_with_intersecting_clusters() ? VALID : GROWN;
+            this->merge_with_intersecting_clusters();
         }
 
         /**
@@ -152,16 +149,19 @@ namespace ldpc::uf {
          * That is, the (reduced) parity check matrix of the larger cluster is kept.
          * After merging, the on-the-fly elimination is applied to the larger cluster.
          *
-         * Returns true if the cluster is valid (syndrome is in image), false otherwise.
+         * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
-        bool merge_with_intersecting_clusters() {
+        void merge_with_intersecting_clusters() {
             Cluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl);
             }
-            // finally, we apply the on-the-fly elimination to the remaining cluster
-            return larger->apply_on_the_fly_elimination();
+            if (this->on_the_fly) {
+                // finally, we apply the on-the-fly elimination to the remaining cluster
+                // if on the fly returns true, syndrome is in image and the cluster is valid
+                larger->valid = larger->apply_on_the_fly_elimination();
+            }
         }
 
         /**
