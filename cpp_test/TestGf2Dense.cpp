@@ -219,13 +219,40 @@ TEST(GF2Sparse, lu_solve_batch){
 
         auto pcm_csc = pcm.col_adjacency_list();
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
-        plu.rref(true);
-
-        auto Ugf2sparse = ldpc::gf2sparse::csc_to_gf2sparse(plu.U);
-        auto Lgf2sparse = ldpc::gf2sparse::csr_to_gf2sparse(plu.L);
-
+        plu.rref(true,true);
         auto x = plu.lu_solve(synd);
 
+        auto x_synd = pcm.mulvec(x);
+        ASSERT_EQ(x_synd, synd);
+
+    }
+
+}
+
+
+TEST(GF2Sparse, fast_lu_solve_batch){
+
+    auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+
+    int row_count = doc.GetColumn<string>(0).size();
+
+    for(int i = 0; i<row_count; i++){
+
+        std::vector<string> row = doc.GetRow<string>(i);
+        int m = stoi(row[0]);
+        int n = stoi(row[1]);
+        auto input_csr_vector = ldpc::io::string_to_csr_vector(row[2]);
+        auto synd = ldpc::io::binaryStringToVector(row[3]);
+        ASSERT_EQ(synd.size(),m);
+        
+        auto pcm = GF2Sparse<>(m,n);
+        pcm.csr_insert(input_csr_vector);
+        auto pcm_csc = pcm.col_adjacency_list();
+        
+        auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
+        auto x = plu.fast_lu_solve(synd);
+        
         auto x_synd = pcm.mulvec(x);
         ASSERT_EQ(x_synd, synd);
 

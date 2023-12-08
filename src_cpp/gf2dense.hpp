@@ -138,6 +138,9 @@ namespace ldpc {
                     col.clear();
                 }
                 this->P.clear();
+
+                this->LU_constructed = false;
+
             }
 
             /**
@@ -149,7 +152,8 @@ namespace ldpc {
              * Then pivoting is done for the current column and corresponding swaps are applied.
              * @param construct_U
              */
-            void rref(const bool construct_U = true) {
+            void rref(const bool construct_L = true, const bool construct_U = true) {
+                
                 this->reset();
                 for (auto i = 0; i < this->row_count; i++) {
                     this->rows.push_back(i);
@@ -157,20 +161,20 @@ namespace ldpc {
 
                 auto max_rank = std::min(this->row_count, this->col_count);
 
-                this->L.resize(this->row_count, std::vector<int>{});
+                if(construct_L){
+                    this->L.resize(this->row_count, std::vector<int>{});
+                }
 
                 for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
-                    this->eliminate_column(col_idx, construct_U);
+                    this->eliminate_column(col_idx, construct_L,construct_U);
                     if (this->matrix_rank == max_rank) {
                         break;
                     }
                 }
-                if(construct_U){
-                    this->LU_constructed = true;
-                }
+
             }
 
-            bool eliminate_column(int col_idx, const bool construct_U = false){
+            bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true){
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
                 for (auto row_index: this->csc_mat[col_idx]) {
                     rr_col[row_index] = 1;
@@ -209,7 +213,9 @@ namespace ldpc {
                 for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                     if (rr_col[i] == 1) {
                         this->elimination_rows[this->matrix_rank].push_back(i);
-                        this->L[i].push_back(this->matrix_rank);
+                        if(construct_L){
+                            this->L[i].push_back(this->matrix_rank);
+                        }
                     }
                 }
 
@@ -220,6 +226,10 @@ namespace ldpc {
                             this->U[i].push_back(col_idx);
                         }
                     }
+                }
+
+                if (construct_L && construct_U){
+                    this->LU_constructed = true;
                 }
 
                 this->matrix_rank++;
@@ -245,9 +255,9 @@ namespace ldpc {
                     throw std::invalid_argument("Input parameter `y` is of the incorrect length for lu_solve.");
                 }
 
-                if(!this->LU_constructed){
-                    this->rref(true);
-                }
+                // if(!this->LU_constructed){
+                //     throw std::invalid_argument("LU decomposition has not been constructed. Please call rref() first.");
+                // }
 
                 auto x = std::vector<uint8_t>(this->col_count,0);
                 auto b = std::vector<uint8_t>(this->matrix_rank,0);
@@ -273,6 +283,53 @@ namespace ldpc {
 
                 return x;
             }
+
+
+            std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y){
+                
+                this->reset();
+                for (auto i = 0; i < this->row_count; i++) {
+                    this->rows.push_back(i);
+                }
+
+                auto y_image_check_vector = y;
+
+                auto max_rank = std::min(this->row_count, this->col_count);
+                this->L.resize(this->row_count, std::vector<int>{});
+         
+                for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
+                    bool pivot = this->eliminate_column(col_idx, true, true);
+                    if (this->matrix_rank == max_rank) {
+                        break;
+                    }
+
+                    bool in_image = false;
+                    if(pivot){
+                        std::swap(y_image_check_vector[this->matrix_rank-1], y_image_check_vector[this->swap_rows[this->matrix_rank-1]]);
+                        for(auto row_index: this->elimination_rows[this->matrix_rank-1]){
+                            y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank-1];
+                        }
+
+                        in_image = true;
+                        for(int i = matrix_rank; i < this->row_count; i++){
+                            if(y_image_check_vector[i] == 1){
+                                in_image = false;
+                                break;
+                            }
+                        }
+                    }
+                    if(in_image){
+                        break;
+                    }
+
+                }
+
+                // ldpc::sparse_matrix_util::print_vector(y_image_check_vector);
+                // ldpc::sparse_matrix_util::print_vector(y);
+            
+                return lu_solve(y);
+            }
+
 
             /**
              * Apply the stored operations to a vector.
