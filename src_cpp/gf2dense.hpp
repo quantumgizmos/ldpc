@@ -360,7 +360,7 @@ namespace ldpc {
              * @param new_matrix
              */
             void add_column_to_matrix(const std::vector<int> &new_col) {
-                if (this->row_count == new_col.size() or new_col.empty()) {
+                if (new_col.empty()) {
                     return;
                 }
                 this->csc_mat.push_back(new_col);
