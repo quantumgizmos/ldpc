@@ -29,9 +29,8 @@ namespace ldpc::uf {
         return indices;
     }
 
+    // TODO this should probably become a class
     struct Cluster {
-
-
         ldpc::bp::BpSparse &pcm;
         int cluster_id;
         bool active; // if merge one becomes deactivated
@@ -354,6 +353,16 @@ namespace ldpc::uf {
             }
             auto res = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = 0;
+            if (res) {
+                std::vector<int> decoding;
+                auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
+                for (auto i = 0; i < solution.size(); i++) {
+                    if (solution[i] == 1) {
+                        decoding.push_back(i);
+                    }
+                }
+                this->cluster_decoding = decoding;
+            }
             return res;
         }
 
@@ -564,6 +573,8 @@ namespace ldpc::uf {
         }
 
         void print();
+
+
     };
 
 
@@ -698,7 +709,6 @@ namespace ldpc::uf {
                 for (auto cl: invalid_clusters) {
                     if (cl->active) {
                         cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
-                        auto cluster_decoding = cl->invert_decode(syndrome, bit_weights);
                     }
                 }
                 invalid_clusters.clear();

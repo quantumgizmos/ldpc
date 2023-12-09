@@ -336,6 +336,7 @@ namespace ldpc {
                         break;
                     }
                 }
+                this->LU_constructed = true;
                 if (in_image) {
                     return true;
                 } else {
@@ -345,7 +346,7 @@ namespace ldpc {
 
             std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y) {
                 bool y_in_image = this->rref_with_y_image_check(y);
-                this->LU_constructed = true;
+                //this->LU_constructed = true;
                 if (y_in_image) {
                     return this->lu_solve(y);
                 } else {
