@@ -336,8 +336,8 @@ namespace ldpc::uf {
         bool apply_on_the_fly_elimination() {
             if (this->pluDecomposition == nullptr) {
                 // no existing decomposition yet so we create one
-                this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->cluster_pcm.at(0).size(),
-                                                                              this->cluster_pcm.size(),
+                this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
+                                                                              this->bit_nodes.size(),
                                                                               this->cluster_pcm);
             } else {
                 // add columns to existing decomposition matrix

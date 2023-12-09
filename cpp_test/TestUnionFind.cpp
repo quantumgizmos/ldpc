@@ -116,20 +116,38 @@ TEST(UfDecoder, ring_code3) {
 
 }
 
-TEST(UfDecoder, on_the_fly_hamming) {
+TEST(UfDecoder, on_the_fly_small_hamming) {
     int m = 3;
+
+    // todo this is a mess and should be replaced with parameterized tests
+    for (int i = 0; i < std::pow(2, m); i++) {
+        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 1;
+        auto ufd = UfDecoder(pcm);
+        auto syndrome = ldpc::util::decimal_to_binary(i, m);
+        bp.decode(syndrome);
+        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+        auto decoding_syndrome = pcm.mulvec(decoding);
+        ASSERT_EQ(decoding_syndrome, syndrome);
+    }
+}
+
+
+TEST(UfDecoder, on_the_fly_hamming) {
+    int m = 5;
 
     auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
     bp.maximum_iterations = 1;
     auto ufd = UfDecoder(pcm);
-
-    auto syndrome = std::vector<uint8_t>{1, 0, 0};
+    auto syndrome = std::vector<uint8_t>{1,0,0,1,0};
     bp.decode(syndrome);
     auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
     auto decoding_syndrome = pcm.mulvec(decoding);
     ASSERT_EQ(decoding_syndrome, syndrome);
 }
+
 
 
 int main(int argc, char **argv) {
