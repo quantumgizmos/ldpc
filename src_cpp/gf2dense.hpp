@@ -286,6 +286,9 @@ namespace ldpc {
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
                 if (start_col_idx == 0) {
                     this->reset();
+                    for (auto i = 0; i < this->row_count; i++) {
+                        this->rows.push_back(i);
+                    }
                 }
                 int y_sum = 0;
                 for (auto i = 0; i < this->row_count; i++) {
