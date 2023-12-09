@@ -91,7 +91,6 @@ namespace ldpc {
             CsrMatrix U;
             CscMatrix P;
             int matrix_rank{};
-            int max_rank{};
             int row_count{};
             int col_count{};
             std::vector<int> rows; // todo is this needed?
@@ -290,7 +289,7 @@ namespace ldpc {
                         this->rows.push_back(i);
                     }
                 }
-                int y_sum = 0;
+                auto y_sum = 0;
                 for (auto i = 0; i < this->row_count; i++) {
                     y_sum += y[i];
                 }

@@ -64,8 +64,8 @@ namespace ldpc::uf {
 
         Cluster(ldpc::bp::BpSparse &parity_check_matrix,
                 int syndrome_index,
-                Cluster **ccm,
-                Cluster **bcm,
+                Cluster **ccm, // global check cluster membership
+                Cluster **bcm, // global bit cluster membership
                 bool on_the_fly = false) :
                 pcm(parity_check_matrix) {
             this->active = true;
@@ -358,7 +358,7 @@ namespace ldpc::uf {
                 auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
                 for (auto i = 0; i < solution.size(); i++) {
                     if (solution[i] == 1) {
-                        decoding.push_back(i);
+                        decoding.push_back(*std::next(this->cluster_bit_to_pcm_bit.begin(), i));
                     }
                 }
                 this->cluster_decoding = decoding;
@@ -602,7 +602,7 @@ namespace ldpc::uf {
 
     }
 
-
+    // todo move this to separate file
     class UfDecoder {
 
     private:
