@@ -47,7 +47,7 @@ using namespace ldpc::uf;
 //     auto decoding = ufd.peel_decode(syndrome, bit_weights);
 //     auto expected_decoding = vector<uint8_t>{1,0,1,1,1,1,1};
 //     ASSERT_EQ(decoding,expected_decoding);
-  
+
 
 // }
 
@@ -104,27 +104,35 @@ using namespace ldpc::uf;
 
 // }
 
-TEST(UfDecoder, ring_code3){
+TEST(UfDecoder, ring_code3) {
 
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(5);
     auto bpd = UfDecoder(pcm);
 
     auto syndrome = vector<uint8_t>{1, 0, 1};
 
-    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,3);
-
+    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR, 3);
 
 
 }
 
+TEST(UfDecoder, on_the_fly_hamming) {
+    int m = 3;
+
+    auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
+    auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+    bp.maximum_iterations = 1;
+    auto ufd = UfDecoder(pcm);
+
+    auto syndrome = std::vector<uint8_t>{1, 0, 0};
+    bp.decode(syndrome);
+    auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+    auto decoding_syndrome = pcm.mulvec(decoding);
+    ASSERT_EQ(decoding_syndrome, syndrome);
+}
 
 
-
-
-
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

@@ -60,7 +60,6 @@ namespace ldpc::uf {
         std::set<std::size_t> cluster_bit_to_pcm_bit;
         gf2dense::PluDecomposition *pluDecomposition;
         std::size_t eliminated_col_index = 0;
-        const bool on_the_fly;
 
         Cluster() = default;
 
@@ -69,7 +68,7 @@ namespace ldpc::uf {
                 Cluster **ccm,
                 Cluster **bcm,
                 bool on_the_fly = false) :
-                pcm(parity_check_matrix), on_the_fly(on_the_fly) {
+                pcm(parity_check_matrix) {
             this->active = true;
             this->valid = false;
             this->cluster_id = syndrome_index;
@@ -113,7 +112,8 @@ namespace ldpc::uf {
          * @return
          */
         void grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                          const int bits_per_step = 0) {
+                          const int bits_per_step = 0,
+                          const bool is_on_the_fly = false) {
             if (!this->active) {
                 return;
             }
@@ -126,6 +126,7 @@ namespace ldpc::uf {
                 }
             } else {
                 std::vector<double> cluster_bit_weights;
+                cluster_bit_weights.reserve(this->candidate_bit_nodes.size());
                 for (auto bit: this->candidate_bit_nodes) {
                     cluster_bit_weights.push_back(bit_weights[bit]);
                 }
@@ -140,7 +141,7 @@ namespace ldpc::uf {
                     count++;
                 }
             }
-            this->merge_with_intersecting_clusters();
+            this->merge_with_intersecting_clusters(is_on_the_fly);
         }
 
         /**
@@ -151,13 +152,13 @@ namespace ldpc::uf {
          *
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
-        void merge_with_intersecting_clusters() {
+        void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
             Cluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl);
             }
-            if (this->on_the_fly) {
+            if (is_on_the_fly) {
                 // finally, we apply the on-the-fly elimination to the remaining cluster
                 // if on the fly returns true, syndrome is in image and the cluster is valid
                 larger->valid = larger->apply_on_the_fly_elimination();
@@ -667,10 +668,16 @@ namespace ldpc::uf {
         }
 
 
+        std::vector<uint8_t> &on_the_fly_decode(const std::vector<uint8_t> &syndrome,
+                                                const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
+            return this->matrix_decode(syndrome, bit_weights, 1, true);
+        }
+
         std::vector<uint8_t> &
         matrix_decode(const std::vector<uint8_t> &syndrome,
                       const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                      const int bits_per_step = 1) {
+                      const int bits_per_step = 1,
+                      const bool is_on_the_fly = false) {
 
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
@@ -690,7 +697,7 @@ namespace ldpc::uf {
             while (!invalid_clusters.empty()) {
                 for (auto cl: invalid_clusters) {
                     if (cl->active) {
-                        cl->grow_cluster(bit_weights, bits_per_step);
+                        cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
                         auto cluster_decoding = cl->invert_decode(syndrome, bit_weights);
                     }
                 }

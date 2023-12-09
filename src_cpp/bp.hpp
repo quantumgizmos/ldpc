@@ -47,6 +47,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
     class BpDecoder {
+        // TODO properties should be private and only accessible via getters and setters
     public:
         BpSparse &pcm;
         std::vector<double> channel_probabilities;
