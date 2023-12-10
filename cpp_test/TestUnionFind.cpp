@@ -151,6 +151,17 @@ TEST(UfDecoder, on_the_fly_hamming_higher_weight_syndrome) {
     }
 }
 
+TEST(UfDecoder, on_the_fly_ring_code) {
+    auto size = 5;
+    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(size);
+    auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+    bp.maximum_iterations = 1;
+    auto ufd = UfDecoder(pcm);
+    auto syndrome = std::vector<uint8_t >{1,0,0,0,1};
+    bp.decode(syndrome);
+    auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+    auto decoding_syndrome = pcm.mulvec(decoding);
+    ASSERT_EQ(decoding_syndrome, syndrome);
 
 }
 
