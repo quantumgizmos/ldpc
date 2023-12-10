@@ -57,7 +57,7 @@ namespace ldpc::uf {
         std::vector<std::size_t> cluster_check_to_pcm_check;
         tsl::robin_map<std::size_t, std::size_t> pcm_check_idx_to_cluster_check_idx;
         std::set<std::size_t> cluster_bit_to_pcm_bit;
-        gf2dense::PluDecomposition *pluDecomposition;
+        gf2dense::PluDecomposition *pluDecomposition = nullptr;
         std::size_t eliminated_col_index = 0;
 
         Cluster() = default;

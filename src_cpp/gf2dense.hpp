@@ -85,7 +85,7 @@ namespace ldpc {
          */
         class PluDecomposition {
         private:
-            CscMatrix &csc_mat; // csc_mat[column][row]
+            CscMatrix csc_mat; // csc_mat[column][row]
         public:
             CsrMatrix L;
             CsrMatrix U;
