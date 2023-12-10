@@ -58,7 +58,7 @@ namespace ldpc::uf {
         tsl::robin_map<std::size_t, std::size_t> pcm_check_idx_to_cluster_check_idx;
         std::set<std::size_t> cluster_bit_to_pcm_bit;
         gf2dense::PluDecomposition *pluDecomposition = nullptr;
-        std::size_t eliminated_col_index = 0;
+        int eliminated_col_index = -1;
 
         Cluster() = default;
 
@@ -95,7 +95,7 @@ namespace ldpc::uf {
             this->cluster_check_to_pcm_check.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_to_pcm_bit.clear();
-            this->eliminated_col_index = 0;
+            this->eliminated_col_index = -1;
         }
 
         [[nodiscard]] int parity() const {
@@ -270,14 +270,16 @@ namespace ldpc::uf {
          * @param insert_boundary
          */
         void add_check(const int check_index, const bool insert_boundary = false) {
+            auto inserted = this->check_nodes.insert(check_index);
+            if (!inserted.second) {
+                return;
+            }
             if (insert_boundary) {
                 this->boundary_check_nodes.insert(check_index);
             }
-            this->check_nodes.insert(check_index);
             this->global_check_membership[check_index] = this;
             this->cluster_check_to_pcm_check.push_back(check_index);
             this->pcm_check_idx_to_cluster_check_idx[check_index] = this->cluster_check_to_pcm_check.size() - 1;
-            // todo I don't think we'll need to update the cluster_pcm here, since new rows are added with add_bit
         }
 
         /**
@@ -285,11 +287,14 @@ namespace ldpc::uf {
          * @param bit_index
          */
         void add_bit(const int bit_index) {
-            // store column index offset for on the fly elimniation
-            if (this->eliminated_col_index == 0) {
-                this->eliminated_col_index = this->bit_nodes.size();
+            auto inserted = this->bit_nodes.insert(bit_index);
+            if (!inserted.second) {
+                return;
             }
-            this->bit_nodes.insert(bit_index);
+            // store column index offset for on the fly elimniation
+            if (this->eliminated_col_index == -1) {
+                this->eliminated_col_index = this->bit_nodes.size() - 1;
+            }
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
             this->cluster_bit_to_pcm_bit.insert(bit_index);
@@ -352,7 +357,7 @@ namespace ldpc::uf {
                 cluster_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
             auto res = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
-            this->eliminated_col_index = 0;
+            this->eliminated_col_index = -1;
             if (res) {
                 std::vector<int> decoding;
                 auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);

@@ -101,7 +101,9 @@ namespace ldpc {
             bool LU_constructed = false;
 
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
-                    : row_count(row_count), col_count(col_count), csc_mat(csc_mat), matrix_rank(0) {}
+                    : row_count(row_count), col_count(col_count), csc_mat(csc_mat), matrix_rank(0) {
+
+            }
 
             PluDecomposition(PluDecomposition &plu) = default;
 

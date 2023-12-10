@@ -123,7 +123,7 @@ TEST(UfDecoder, on_the_fly_small_hamming) {
     for (int i = 0; i < std::pow(2, m); i++) {
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 1;
+        bp.maximum_iterations = 2;
         auto ufd = UfDecoder(pcm);
         auto syndrome = ldpc::util::decimal_to_binary(i, m);
         bp.decode(syndrome);
@@ -141,7 +141,7 @@ TEST(UfDecoder, on_the_fly_hamming_higher_weight_syndrome) {
     for (int i = 0; i < std::pow(2, m); i++) {
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 1;
+        bp.maximum_iterations = 2;
         auto ufd = UfDecoder(pcm);
         auto syndrome = ldpc::util::decimal_to_binary(i+1, m);
         bp.decode(syndrome);
@@ -155,14 +155,28 @@ TEST(UfDecoder, on_the_fly_ring_code) {
     auto size = 5;
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(size);
     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-    bp.maximum_iterations = 1;
+    bp.maximum_iterations = 2;
     auto ufd = UfDecoder(pcm);
-    auto syndrome = std::vector<uint8_t >{1,0,0,0,1};
-    bp.decode(syndrome);
-    auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-    auto decoding_syndrome = pcm.mulvec(decoding);
-    ASSERT_EQ(decoding_syndrome, syndrome);
 
+    auto received_vectors = vector<vector<uint8_t>>{
+//        {0, 0, 0, 0, 1},
+                                                    //{0, 1, 1, 0, 0},
+                                                    {1, 0, 0, 1, 1}
+    };
+    auto expected_decoding = vector<vector<uint8_t>>{
+//        {0, 0, 0, 0, 0},
+                                                     //{0, 0, 0, 0, 0},
+                                                     {1, 1, 1, 1, 1}
+    };
+
+    auto count = 0;
+    for (auto received_vector : received_vectors) {
+        bp.decode(received_vector);
+        auto decoding = ufd.on_the_fly_decode(received_vector, bp.log_prob_ratios);
+        auto decoding_syndrome = pcm.mulvec(decoding);
+        ASSERT_EQ(expected_decoding[count], decoding);
+        count++;
+    }
 }
 
 int main(int argc, char **argv) {
