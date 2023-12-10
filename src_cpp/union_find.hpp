@@ -53,7 +53,6 @@ namespace ldpc::uf {
         tsl::robin_map<int, int> cluster_to_matrix_check_map;
         // parity check matrix corresponding to the cluster. Indices are local to the cluster.
         gf2dense::CscMatrix cluster_pcm;
-        std::vector<std::size_t> cluster_syndr_idx_to_pcm_idx;
         std::vector<std::size_t> cluster_check_to_pcm_check;
         tsl::robin_map<std::size_t, std::size_t> pcm_check_idx_to_cluster_check_idx;
         std::set<std::size_t> cluster_bit_to_pcm_bit;
@@ -77,9 +76,6 @@ namespace ldpc::uf {
             this->global_check_membership = ccm;
             this->global_bit_membership = bcm;
             this->global_check_membership[syndrome_index] = this;
-            // track cluster <> global syndrome indices mapping
-            // cluster_syndr_idx_to_pcm_idx[i] = j means cluster row index i == global pcm index j
-            this->cluster_syndr_idx_to_pcm_idx.push_back(syndrome_index);
         }
 
         ~Cluster() {
@@ -91,7 +87,6 @@ namespace ldpc::uf {
             this->merge_list.clear();
             this->cluster_pcm.clear();
             this->pluDecomposition = nullptr;
-            this->cluster_syndr_idx_to_pcm_idx.clear();
             this->cluster_check_to_pcm_check.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_to_pcm_bit.clear();
@@ -270,16 +265,19 @@ namespace ldpc::uf {
          * @param insert_boundary
          */
         void add_check(const int check_index, const bool insert_boundary = false) {
+            if (insert_boundary) {
+                this->boundary_check_nodes.insert(check_index);
+            }
             auto inserted = this->check_nodes.insert(check_index);
             if (!inserted.second) {
                 return;
             }
-            if (insert_boundary) {
-                this->boundary_check_nodes.insert(check_index);
-            }
+
             this->global_check_membership[check_index] = this;
             this->cluster_check_to_pcm_check.push_back(check_index);
-            this->pcm_check_idx_to_cluster_check_idx[check_index] = this->cluster_check_to_pcm_check.size() - 1;
+            int local_idx = this->cluster_check_to_pcm_check.size() - 1;
+            this->pcm_check_idx_to_cluster_check_idx.insert(
+                    std::pair<std::size_t, std::size_t>{check_index, local_idx});
         }
 
         /**
@@ -351,6 +349,7 @@ namespace ldpc::uf {
                 }
             }
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
+            // todo does this need to be the all 1 vector with an entry for each check in the cluster?
             std::vector<uint8_t> cluster_syndrome;
             cluster_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
@@ -510,7 +509,6 @@ namespace ldpc::uf {
             }
             return cluster_pcm;
         }
-
 
         std::vector<int> invert_decode(const std::vector<uint8_t> &syndrome,
                                        const std::vector<double> &bit_weights) {
