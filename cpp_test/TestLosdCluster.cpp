@@ -178,10 +178,73 @@ TEST(Cluster, add_bit_node_to_cluster){
     ASSERT_EQ(cl.global_check_membership[0], &cl);
     ASSERT_EQ(cl.global_check_membership[2], &cl);
 
+    //check the cluster pcm
+    expected_column = std::vector<int>{0,1};
+    ASSERT_TRUE(cl.cluster_pcm.size() == 2);
+    ASSERT_EQ(expected_column, cl.cluster_pcm[0]);
+
+    expected_column = std::vector<int>{2,0};
+    ASSERT_EQ(expected_column, cl.cluster_pcm[1]);
+
     delete gbm;
     delete gcm;
 
 }
+
+
+TEST(Cluster, grow_cluster){
+
+
+    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
+    auto gbm = new ldpc::uf::Cluster *[pcm.n](); //global bit dictionary
+    auto gcm = new ldpc::uf::Cluster *[pcm.m](); //global check dictionary
+
+    auto syndrome_index = 5;
+    auto cl = ldpc::uf::Cluster(pcm, syndrome_index, gcm, gbm);
+    
+    cl.compute_growth_candidate_bit_nodes();
+    auto expected_candidate_bit_nodes = std::vector<int>{5,6};
+    ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
+    auto bit_membership = cl.global_bit_membership[5];
+    ASSERT_EQ(bit_membership, nullptr);
+
+    cl.grow_cluster();
+
+    auto expected_bit_nodes = tsl::robin_set<int>{5,6};
+    auto expected_check_nodes = tsl::robin_set<int>{5,4,6};
+    auto expected_cluster_check_idx_to_pcm_check_idx = std::vector<int>{5,4,6};
+    auto expected_pcm_check_idx_to_cluster_check_idx = tsl::robin_map<int, int>{{5, 0},{4,1},{6,2}};
+    
+    ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
+    ASSERT_EQ(cl.global_bit_membership[5], &cl);
+    ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 5);    
+    ASSERT_EQ(expected_check_nodes, cl.check_nodes);
+    ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
+    ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
+    ASSERT_EQ(cl.global_check_membership[4], &cl);
+    ASSERT_EQ(cl.global_check_membership[5], &cl);
+    ASSERT_EQ(cl.global_check_membership[6], &cl);
+
+    cl.compute_growth_candidate_bit_nodes();
+    auto expected_boundary_check_nodes = tsl::robin_set<int>{4,6};
+    expected_candidate_bit_nodes = std::vector<int>{4,7};
+
+    ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
+    ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
+
+    //check the cluster pcm
+    auto expected_column = std::vector<int>{1,0};
+    ASSERT_TRUE(cl.cluster_pcm.size() == 2);
+    ASSERT_EQ(expected_column, cl.cluster_pcm[0]);
+
+    expected_column = std::vector<int>{0,2};
+    ASSERT_EQ(expected_column, cl.cluster_pcm[1]);
+
+    delete gbm;
+    delete gcm;
+
+}
+
 
 
 
