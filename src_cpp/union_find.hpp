@@ -53,8 +53,8 @@ namespace ldpc::uf {
         tsl::robin_map<int, int> cluster_to_matrix_check_map;
         // parity check matrix corresponding to the cluster. Indices are local to the cluster.
         gf2dense::CscMatrix cluster_pcm;
-        std::vector<std::size_t> cluster_check_idx_to_pcm_check_idx;
-        tsl::robin_map<std::size_t, std::size_t> pcm_check_idx_to_cluster_check_idx;
+        std::vector<int> cluster_check_idx_to_pcm_check_idx;
+        tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition *pluDecomposition = nullptr;
         int eliminated_col_index = -1;
@@ -77,7 +77,7 @@ namespace ldpc::uf {
             this->check_nodes.insert(syndrome_index);
             this->global_check_membership[syndrome_index] = this;
             this->pcm_check_idx_to_cluster_check_idx.insert(
-                    std::pair<std::size_t, std::size_t>{syndrome_index, 0});
+                    std::pair<int, int>{syndrome_index, 0});
             this->cluster_check_idx_to_pcm_check_idx.push_back(syndrome_index);
         }
 
@@ -272,7 +272,7 @@ namespace ldpc::uf {
             this->cluster_check_idx_to_pcm_check_idx.push_back(check_index);
             int local_idx = this->cluster_check_idx_to_pcm_check_idx.size() - 1;
             this->pcm_check_idx_to_cluster_check_idx.insert(
-                    std::pair<std::size_t, std::size_t>{check_index, local_idx});
+                    std::pair<int, int>{check_index, local_idx});
             return local_idx;
         }
 
