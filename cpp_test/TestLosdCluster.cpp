@@ -4,178 +4,111 @@
 #include "union_find.hpp"
 #include "util.hpp"
 #include "bp.hpp"
+#include <robin_map.h>
+#include <robin_set.h>
 
 using namespace std;
-using namespace ldpc::uf;
-
-// TEST(UfDecoder, single_bit_error) {
-
-//     auto pcm1 = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
-//     // ldpc::sparse_matrix_util::print_sparse_matrix(pcm1);
-
-//     auto ufd = UfDecoder(pcm1);
-
-//     for(int i=0; i<pcm1.n; i++){
-
-//         auto syndrome = vector<uint8_t>(pcm1.n,0);
-//         syndrome[i % pcm1.n] = 1;
-//         syndrome[(i+1) % pcm1.n] = 1;
-
-//         auto decoding = ufd.peel_decode(syndrome);
-
-//         auto expected_decoding = vector<uint8_t>(pcm1.n,0);
-//         expected_decoding[(i+1) % pcm1.n] = 1;
-
-//         ASSERT_EQ(decoding,expected_decoding);
-
-//     }
-
-// }
+// using namespace ldpc::uf;
+using namespace ldpc::sparse_matrix_util;
 
 
-// TEST(UfDecoder, weighted_cluster_growth) {
+TEST(Cluster, init1){
 
-//     auto pcm1 = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(7);
+    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
+    auto gbm = new ldpc::uf::Cluster *[pcm.n]; //global bit dictionary
+    auto gcm = new ldpc::uf::Cluster *[pcm.m]; //global check dictionary
 
-//     auto ufd = UfDecoder(pcm1);
+    auto syndrome_index = 0;
+    auto cl = ldpc::uf::Cluster(pcm, syndrome_index, gcm, gbm);
+    
+    ASSERT_TRUE(cl.active);
+    ASSERT_FALSE(cl.valid);
 
-//     auto syndrome = vector<uint8_t>(pcm1.n,0);
-//     syndrome[0] = 1;
-//     syndrome[1] = 1;
+    auto expected_bit_nodes = tsl::robin_set<int>{};
+    auto expected_check_nodes = tsl::robin_set<int>{syndrome_index};
+    auto expected_boundary_check_nodes = tsl::robin_set<int>{syndrome_index};
+    auto expected_enclosed_syndromes = tsl::robin_set<int>{syndrome_index};
+    auto expected_cluster_check_idx_to_pcm_check_idx = std::vector<std::size_t>{syndrome_index};
+    auto expected_pcm_check_idx_to_cluster_check_idx = tsl::robin_map<std::size_t, std::size_t>{{syndrome_index, 0}};
 
-//     auto bit_weights = vector<double>{-1,100,-1,-1,-1,-1,-1};
-//     auto decoding = ufd.peel_decode(syndrome, bit_weights);
-//     auto expected_decoding = vector<uint8_t>{1,0,1,1,1,1,1};
-//     ASSERT_EQ(decoding,expected_decoding);
+    ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
+    ASSERT_EQ(expected_check_nodes, cl.check_nodes);
+    ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
+    ASSERT_EQ(expected_enclosed_syndromes, cl.enclosed_syndromes);
+    ASSERT_EQ(gcm[syndrome_index], &cl);
+    ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
+    ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
 
-
-// }
-
-// // TEST(UfDecoder, HammingCode){
-
-// //     int m = 3;
-
-// //     auto pcm = ldpc::gf2codes::hamming_code(m);
-
-// //     auto ufd = UfDecoder(pcm);
-// //     auto error_channel = std::vector<double>(pcm.n,0.1);
-// //     auto bpd = ldpc::bp::BpDecoder(pcm,error_channel,pcm.n,ldpc::bp::MINIMUM_SUM,ldpc::bp::PARALLEL,0.9);
-
-// //     // auto syndrome = vector<uint8_t>(pcm.n,0);
-
-// //     for(int i = 0; i < std::pow(2,m); i++){
-
-// //         ldpc::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
-
-// //         auto syndrome = ldpc::util::decimal_to_binary(i,m);
-// //         bpd.decode(syndrome);
-// //         auto decoding = ufd.bit_cluster_decode(syndrome,bpd.log_prob_ratios,1,3);
-
-// //         auto decoding_syndrome = pcm.mulvec(decoding);
-// //         ASSERT_EQ(decoding_syndrome,syndrome);
-// //         std::cout<<"HEllo55"<<std::endl;
-
-
-// //     }
-
-// // }
-
-
-// TEST(UfDecoder, HammingCode2){
-
-//     int m = 5;
-
-//     auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
-
-//     auto ufd = UfDecoder(pcm);
-
-//     // auto syndrome = vector<uint8_t>(pcm.n,0);
-
-//     for(int i = 0; i < std::pow(2,m); i++){
-
-//         // ldpc::sparse_matrix_util::print_vector(ldpc::util::decimal_to_binary(i,m));
-
-//         auto syndrome = ldpc::util::decimal_to_binary(i,m);
-//         auto decoding = ufd.matrix_decode(syndrome);
-//         auto decoding_syndrome = pcm.mulvec(decoding);
-//         ASSERT_EQ(decoding_syndrome,syndrome);
-
-//     }
-
-// }
-
-TEST(UfDecoder, ring_code3) {
-
-    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(5);
-    auto bpd = UfDecoder(pcm);
-
-    auto syndrome = vector<uint8_t>{1, 0, 1};
-
-    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR, 3);
-
+    delete gbm;
+    delete gcm;
 
 }
 
-TEST(UfDecoder, on_the_fly_small_hamming) {
-    int m = 5;
 
-    // todo this is a mess and should be replaced with parameterized tests
-    for (int i = 0; i < std::pow(2, m); i++) {
-        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
-        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 2;
-        auto ufd = UfDecoder(pcm);
-        auto syndrome = ldpc::util::decimal_to_binary(i, m);
-        bp.decode(syndrome);
-        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-        auto decoding_syndrome = pcm.mulvec(decoding);
-        ASSERT_EQ(decoding_syndrome, syndrome);
-    }
+TEST(Cluster, add_bitANDadd_check_add){
+
+    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
+    auto gbm = new ldpc::uf::Cluster *[pcm.n]; //global bit dictionary
+    auto gcm = new ldpc::uf::Cluster *[pcm.m]; //global check dictionary
+
+    auto syndrome_index = 1;
+    auto cl = ldpc::uf::Cluster(pcm, syndrome_index, gcm, gbm);
+    
+    cl.compute_growth_candidate_bit_nodes();
+    auto expected_candidate_bit_nodes = std::vector<int>{1,2};
+    ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
+
+
+    cl.add_bit(expected_candidate_bit_nodes[1]);
+    cl.add_check(2,true);
+    
+    
+    auto expected_bit_nodes = tsl::robin_set<int>{2};
+    auto expected_check_nodes = tsl::robin_set<int>{syndrome_index,2};
+    auto expected_cluster_check_idx_to_pcm_check_idx = std::vector<std::size_t>{1,2};
+    auto expected_pcm_check_idx_to_cluster_check_idx = tsl::robin_map<std::size_t, std::size_t>{{1, 0},{2,1}};
+    
+    ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
+    ASSERT_EQ(cl.global_bit_membership[2], &cl);
+    ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);    
+    ASSERT_EQ(expected_check_nodes, cl.check_nodes);
+    ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
+    ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
+    ASSERT_EQ(cl.global_check_membership[1], &cl);
+    ASSERT_EQ(cl.global_check_membership[2], &cl);
+
+
+    // Test adding existing checks and bits
+    cl.add_bit(expected_candidate_bit_nodes[1]);
+    cl.add_check(2,true);
+
+    ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
+    ASSERT_EQ(cl.global_bit_membership[2], &cl);
+    ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);    
+    ASSERT_EQ(expected_check_nodes, cl.check_nodes);
+    ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
+    ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
+    ASSERT_EQ(cl.global_check_membership[1], &cl);
+    ASSERT_EQ(cl.global_check_membership[2], &cl);
+
+    //check that bit is remove from boundary check node is removed from boundary check nodes
+    cl.compute_growth_candidate_bit_nodes();
+    expected_candidate_bit_nodes = std::vector<int>{1,3};
+    ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
+
+    //add bit 3, verify that boundary check 2 is removed from the boundary check list
+    cl.add_bit(3);
+    cl.compute_growth_candidate_bit_nodes();
+    auto expected_boundary_check_nodes = tsl::robin_set<int>{1};
+    ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
+
+    delete gbm;
+    delete gcm;
+
 }
 
 
-TEST(UfDecoder, on_the_fly_hamming_higher_weight_syndrome) {
-    int m = 5;
 
-    // todo this is a mess and should be replaced with parameterized tests
-    for (int i = 0; i < std::pow(2, m); i++) {
-        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
-        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 2;
-        auto ufd = UfDecoder(pcm);
-        auto syndrome = ldpc::util::decimal_to_binary(i + 1, m);
-        bp.decode(syndrome);
-        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-        auto decoding_syndrome = pcm.mulvec(decoding);
-        ASSERT_EQ(decoding_syndrome, syndrome);
-    }
-}
-
-TEST(UfDecoder, on_the_fly_ring_code) {
-    auto size = 5;
-    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(size);
-    auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-    bp.maximum_iterations = 2;
-    auto ufd = UfDecoder(pcm);
-
-    auto received_vectors = vector<vector<uint8_t>>{
-            {0, 0, 0, 0, 1},
-//                                                    {0, 1, 1, 0, 0},
-//                                                    {1, 0, 0, 1, 1}
-    };
-    auto expected_decoding = vector<vector<uint8_t>>{
-            {0, 0, 0, 0, 0},
-//                                                     {0, 0, 0, 0, 0},
-//                                                     {1, 1, 1, 1, 1}
-    };
-
-    auto count = 0;
-    for (auto received_vector: received_vectors) {
-        bp.decode(received_vector);
-        auto decoding = ufd.on_the_fly_decode(received_vector, bp.log_prob_ratios);
-        ASSERT_EQ(expected_decoding[count++], decoding);
-    }
-}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
