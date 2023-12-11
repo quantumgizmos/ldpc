@@ -4,6 +4,7 @@
 #include "union_find.hpp"
 #include "util.hpp"
 #include "bp.hpp"
+#include <limits>
 #include <robin_map.h>
 #include <robin_set.h>
 
@@ -239,6 +240,45 @@ TEST(Cluster, grow_cluster){
 
     expected_column = std::vector<int>{0,2};
     ASSERT_EQ(expected_column, cl.cluster_pcm[1]);
+
+    delete gbm;
+    delete gcm;
+
+}
+
+
+TEST(Cluster, merge_clusters_test){
+
+
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
+    auto gbm = new ldpc::uf::Cluster *[pcm.n](); //global bit dictionary
+    auto gcm = new ldpc::uf::Cluster *[pcm.m](); //global check dictionary
+
+    // auto syndrome_index = 0;
+    auto cl1 = ldpc::uf::Cluster(pcm, 0, gcm, gbm);
+    auto cl2 = ldpc::uf::Cluster(pcm, 3, gcm, gbm);
+
+    cl2.grow_cluster(ldpc::uf::NULL_DOUBLE_VECTOR, std::numeric_limits<int>::max(), true);
+    cl1.grow_cluster(ldpc::uf::NULL_DOUBLE_VECTOR, std::numeric_limits<int>::max(), true);
+
+    ASSERT_TRUE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    cl2.grow_cluster(ldpc::uf::NULL_DOUBLE_VECTOR, std::numeric_limits<int>::max(), true);
+
+    ASSERT_FALSE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    auto expected_bit_nodes = tsl::robin_set<int>{0,1,2,3,4};
+    auto expected_check_nodes = tsl::robin_set<int>{0,1,2,3};  
+    ASSERT_EQ(expected_bit_nodes, cl2.bit_nodes);  
+    ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
+
+    ASSERT_TRUE(cl2.valid);
+    
+
+
+
 
     delete gbm;
     delete gcm;

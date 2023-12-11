@@ -109,7 +109,7 @@ namespace ldpc::uf {
          * @return
          */
         void grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                          const int bits_per_step = 0,
+                          const int bits_per_step = std::numeric_limits<int>::max(),
                           const bool is_on_the_fly = false) {
             if (!this->active) {
                 return;
