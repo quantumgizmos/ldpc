@@ -71,11 +71,14 @@ namespace ldpc::uf {
             this->valid = false;
             this->cluster_id = syndrome_index;
             this->boundary_check_nodes.insert(syndrome_index);
-            this->check_nodes.insert(syndrome_index);
             this->enclosed_syndromes.insert(syndrome_index);
             this->global_check_membership = ccm;
             this->global_bit_membership = bcm;
+            this->check_nodes.insert(syndrome_index);
             this->global_check_membership[syndrome_index] = this;
+            this->pcm_check_idx_to_cluster_check_idx.insert(
+                    std::pair<std::size_t, std::size_t>{syndrome_index, 0});
+            this->cluster_check_to_pcm_check.push_back(syndrome_index);
         }
 
         ~Cluster() {
@@ -192,36 +195,30 @@ namespace ldpc::uf {
          * @param bit_index
          * @return true if the bit was added to the cluster, false otherwise.
          */
-        bool add_bit_node_to_cluster(const int bit_index) {
+        bool add_bit_node_to_cluster(const int bit_index, const bool in_merge = false) {
             auto bit_membership = this->global_bit_membership[bit_index];
             //if the bit is already in the cluster return.
             if (bit_membership == this) {
+                // bit already in current cluster
                 return false;
-            } else if (bit_membership == nullptr) {
+            }
+            if (bit_membership == nullptr) {
                 //if the bit has not yet been assigned to a cluster we add it.
+                // if we are in merge mode we add it
                 this->add_bit(bit_index);
             } else {
                 //if the bit already exists in a cluster, we mark down that this cluster should be
                 //merged with the exisiting cluster.
-                this->merge_list.insert(bit_membership);
-                this->global_bit_membership[bit_index] = this;
-            }
-            // now we add the incident check nodes to the cluster.
-            for (auto &e: this->pcm.iterate_column(bit_index)) {
-                int check_index = e.row_index;
-                auto check_membership = this->global_check_membership[check_index];
-                if (check_membership == this) {
-                    // if check is already in the cluster, go to next
-                    continue;
-                } else if (check_membership == nullptr) {
-                    // check is in no cluster
-                    this->add_check(check_index, true);
+                if (in_merge) {
+                    // if we are in merge mode we add it anyways
+                    this->add_bit(bit_index);
                 } else {
-                    // check is in another cluster
-                    this->add_check(check_index, true);
-                    this->merge_list.insert(check_membership);
+                    // otherwise, we add it to merge list and do not add directly.
+                    this->merge_list.insert(bit_membership);
                 }
             }
+            // add incident checks
+            this->add_column_to_cluster_pcm(bit_index);
             return true;
         }
 
@@ -241,13 +238,11 @@ namespace ldpc::uf {
                 smaller = cl2;
                 larger = cl1;
             }
-            // otherwise we merge cl2 into this cluster
+            // we merge the smaller into the larger cluster
             for (auto bit_index: smaller->bit_nodes) {
-                larger->add_bit(bit_index);
+                larger->add_bit_node_to_cluster(bit_index, true);
             }
-            for (auto check_index: smaller->check_nodes) {
-                larger->add_check(check_index);
-            }
+            // check nodes are added with the bits
             for (auto check_index: smaller->boundary_check_nodes) {
                 larger->boundary_check_nodes.insert(check_index);
             }
@@ -264,13 +259,13 @@ namespace ldpc::uf {
          * @param check_index
          * @param insert_boundary
          */
-        void add_check(const int check_index, const bool insert_boundary = false) {
+        int add_check(const int check_index, const bool insert_boundary = false) {
             if (insert_boundary) {
                 this->boundary_check_nodes.insert(check_index);
             }
             auto inserted = this->check_nodes.insert(check_index);
             if (!inserted.second) {
-                return;
+                return -1;
             }
 
             this->global_check_membership[check_index] = this;
@@ -278,6 +273,7 @@ namespace ldpc::uf {
             int local_idx = this->cluster_check_to_pcm_check.size() - 1;
             this->pcm_check_idx_to_cluster_check_idx.insert(
                     std::pair<std::size_t, std::size_t>{check_index, local_idx});
+            return local_idx;
         }
 
         /**
@@ -296,7 +292,6 @@ namespace ldpc::uf {
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
             this->cluster_bit_to_pcm_bit.insert(bit_index);
-            this->add_column_to_cluster_pcm(bit_index);
         }
 
         /**
@@ -304,29 +299,32 @@ namespace ldpc::uf {
          * The indices of the overall pcm are transferred to the local cluster pcm indices.
          * @param bit_index
          */
-        void add_column_to_cluster_pcm(const std::size_t bit_index) {
+        void add_column_to_cluster_pcm(const int bit_index) {
             std::vector<int> col;
-            // add column to cluster_pcm with transferred indices
-            for (auto e: this->pcm.get_column_csc(bit_index)) {
-                if (!this->pcm_check_idx_to_cluster_check_idx.contains(e)) {
-                    // if check not yet in cluster pcm, create new local index and add it
-                    this->cluster_check_to_pcm_check.push_back(e);
-                    auto local_index = this->cluster_check_to_pcm_check.size() - 1;
-                    this->pcm_check_idx_to_cluster_check_idx[e] = local_index;
-                    col.push_back(local_index);
-                } else {
-                    col.push_back(this->pcm_check_idx_to_cluster_check_idx[e]);
+            for (auto &e: this->pcm.iterate_column(bit_index)) {
+                int check_index = e.row_index;
+                auto check_membership = this->global_check_membership[check_index];
+
+                if (check_membership == this) {
+                    // if already in cluster, add to cluster_pcm column of the bit and go to next
+                    // an index error on the map here indicates an error in the program logic.
+                    col.push_back(this->pcm_check_idx_to_cluster_check_idx[check_index]);
+                    continue;
+                } else if (check_membership != nullptr) {
+                    // check is in another cluster
+                    this->merge_list.insert(check_membership);
                 }
+                // if check is in another cluster or none, we add it and update cluster_pcm
+                auto local_idx = this->add_check(check_index, true);
+                if (local_idx == -1) {
+                    // this indicates an error in the program flow logic that should be fixed by programmer
+                    throw new std::runtime_error("Check with local index already in cluster");
+                }
+                col.push_back(local_idx);
             }
             this->cluster_pcm.push_back(col);
         }
 
-        int find_spanning_tree_parent(const int check_index) {
-            int parent = this->spanning_tree_check_roots[check_index];
-            if (parent != check_index) {
-                return find_spanning_tree_parent(parent);
-            } else return parent;
-        }
 
         /**
          * Apply on the fly elimination to the cluster.
@@ -358,16 +356,22 @@ namespace ldpc::uf {
             auto res = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
             if (res) {
-                std::vector<int> decoding;
                 auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
                 for (auto i = 0; i < solution.size(); i++) {
                     if (solution[i] == 1) {
-                        decoding.push_back(*std::next(this->cluster_bit_to_pcm_bit.begin(), i));
+                        // convert to csc vector with global indices
+                        cluster_decoding.push_back(*std::next(this->cluster_bit_to_pcm_bit.begin(), i));
                     }
                 }
-                this->cluster_decoding = decoding;
             }
             return res;
+        }
+
+        int find_spanning_tree_parent(const int check_index) {
+            int parent = this->spanning_tree_check_roots[check_index];
+            if (parent != check_index) {
+                return find_spanning_tree_parent(parent);
+            } else return parent;
         }
 
         void find_spanning_tree() {

@@ -143,7 +143,7 @@ TEST(UfDecoder, on_the_fly_hamming_higher_weight_syndrome) {
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
         auto ufd = UfDecoder(pcm);
-        auto syndrome = ldpc::util::decimal_to_binary(i+1, m);
+        auto syndrome = ldpc::util::decimal_to_binary(i + 1, m);
         bp.decode(syndrome);
         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
         auto decoding_syndrome = pcm.mulvec(decoding);
@@ -159,23 +159,21 @@ TEST(UfDecoder, on_the_fly_ring_code) {
     auto ufd = UfDecoder(pcm);
 
     auto received_vectors = vector<vector<uint8_t>>{
-//        {0, 0, 0, 0, 1},
-                                                    //{0, 1, 1, 0, 0},
-                                                    {1, 0, 0, 1, 1}
+            {0, 0, 0, 0, 1},
+//                                                    {0, 1, 1, 0, 0},
+//                                                    {1, 0, 0, 1, 1}
     };
     auto expected_decoding = vector<vector<uint8_t>>{
-//        {0, 0, 0, 0, 0},
-                                                     //{0, 0, 0, 0, 0},
-                                                     {1, 1, 1, 1, 1}
+            {0, 0, 0, 0, 0},
+//                                                     {0, 0, 0, 0, 0},
+//                                                     {1, 1, 1, 1, 1}
     };
 
     auto count = 0;
-    for (auto received_vector : received_vectors) {
+    for (auto received_vector: received_vectors) {
         bp.decode(received_vector);
         auto decoding = ufd.on_the_fly_decode(received_vector, bp.log_prob_ratios);
-        auto decoding_syndrome = pcm.mulvec(decoding);
-        ASSERT_EQ(expected_decoding[count], decoding);
-        count++;
+        ASSERT_EQ(expected_decoding[count++], decoding);
     }
 }
 
