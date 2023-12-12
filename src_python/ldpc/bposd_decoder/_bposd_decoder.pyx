@@ -125,7 +125,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
         self.bpd.decode(self._syndrome)
         out = np.zeros(self.n, dtype=syndrome.dtype)
 
-        if self.bpd.converge:
+        if self.bpd.converge or self.osdD.osd_method == OSD_OFF:
             for i in range(self.n):
                 out[i] = self.bpd.decoding[i]
         else:
