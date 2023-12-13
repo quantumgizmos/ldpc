@@ -285,6 +285,34 @@ TEST(Cluster, merge_clusters_test){
 
 }
 
+TEST(Cluster, merge_clusters_otf_test){
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
+    auto gbm = new ldpc::uf::Cluster *[pcm.n](); //global bit dictionary
+    auto gcm = new ldpc::uf::Cluster *[pcm.m](); //global check dictionary
+    auto cl1 = ldpc::uf::Cluster(pcm, 0, gcm, gbm);
+    auto cl2 = ldpc::uf::Cluster(pcm, 2, gcm, gbm);
+
+    cl2.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.1,0.1}, 1, true);
+    cl1.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.1,0.1}, 1, true);
+
+    ASSERT_TRUE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    cl2.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.1,0.1}, 1, true);
+
+    ASSERT_FALSE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    auto expected_bit_nodes = tsl::robin_set<int>{0,1,2};
+    auto expected_check_nodes = tsl::robin_set<int>{0,1,2};
+    ASSERT_EQ(expected_bit_nodes, cl2.bit_nodes);
+    ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
+
+    ASSERT_TRUE(cl2.valid);
+    delete gbm;
+    delete gcm;
+
+}
 
 
 

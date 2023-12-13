@@ -213,7 +213,7 @@ namespace ldpc::uf {
                     // if we are in merge mode we add it anyways
                     this->add_bit(bit_index);
                 } else {
-                    // otherwise, we add it to merge list and do not add directly.
+                    // otherwise, we add its cluster to merge list and do not add directly.
                     this->merge_list.insert(bit_membership);
                 }
             }

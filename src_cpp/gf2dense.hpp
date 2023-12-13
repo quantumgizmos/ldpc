@@ -366,11 +366,12 @@ namespace ldpc {
                 }
                 this->csc_mat.push_back(new_col);
                 auto max_elem = std::max_element(new_col.begin(), new_col.end());
-                if (*max_elem > this->row_count) {
-                    for (auto i = this->row_count; i < *max_elem; i++) {
+                // max_elem is highest row index in new_col so we need to add rows up to max_elem
+                if (*max_elem >= this->row_count) {
+                    for (auto i = this->row_count; i <= *max_elem; i++) {
                         this->rows.push_back(i);
                     }
-                    this->row_count = *max_elem;
+                    this->row_count = (*max_elem+1);
                 }
                 this->col_count++;
             }
