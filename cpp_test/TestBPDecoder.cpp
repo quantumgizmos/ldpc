@@ -386,7 +386,7 @@ TEST(BpDecoder, ProdSumSerial_RepCode5) {
     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 4324234,ldpc::bp::AUTO);
 
     auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1}, {0, 1, 1, 0, 0}, {1, 0, 0, 1, 1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}}; // todo I'm not sure I understand these cases
 
     auto count = 0;
     for (auto received_vector : received_vectors) {

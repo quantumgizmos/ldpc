@@ -158,15 +158,16 @@ TEST(UfDecoder, on_the_fly_ring_code) {
     bp.maximum_iterations = 2;
     auto ufd = UfDecoder(pcm);
 
+    // todo check these cases/construct correct ones
     auto received_vectors = vector<vector<uint8_t>>{
-            {0, 0, 0, 0, 1},
-//                                                    {0, 1, 1, 0, 0},
-//                                                    {1, 0, 0, 1, 1}
+            {0, 1, 1, 0, 0},
+            {1, 1, 1, 0, 0},
+            {1, 0, 0, 1, 0}
     };
     auto expected_decoding = vector<vector<uint8_t>>{
-            {0, 0, 0, 0, 0},
-//                                                     {0, 0, 0, 0, 0},
-//                                                     {1, 1, 1, 1, 1}
+            {0, 0, 1, 0, 0},
+            {0, 1, 0, 1, 0},
+            {1, 0, 0, 1, 0}
     };
 
     auto count = 0;
@@ -176,6 +177,7 @@ TEST(UfDecoder, on_the_fly_ring_code) {
         ASSERT_EQ(expected_decoding[count++], decoding);
     }
 }
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
