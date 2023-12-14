@@ -353,18 +353,21 @@ namespace ldpc::uf {
             for (auto s: this->enclosed_syndromes) {
                 cluster_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            auto res = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
+            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
-            if (res) {
+
+            //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.
+            if (syndrome_in_image) {
                 auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
+                this->cluster_decoding.clear(); //this is necessary to account for situations in which this sub-routine is called more than once.
                 for (auto i = 0; i < solution.size(); i++) {
                     if (solution[i] == 1) {
                         // convert to csc vector with global indices
-                        cluster_decoding.push_back(*std::next(this->cluster_bit_idx_to_pcm_bit_idx.begin(), i));
+                        cluster_decoding.push_back(this->cluster_bit_idx_to_pcm_bit_idx[i]);
                     }
                 }
             }
-            return res;
+            return syndrome_in_image;
         }
 
         int find_spanning_tree_parent(const int check_index) {

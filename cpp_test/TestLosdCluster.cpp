@@ -307,8 +307,19 @@ TEST(Cluster, merge_clusters_otf_test){
     auto expected_check_nodes = tsl::robin_set<int>{0,1,2};
     ASSERT_EQ(expected_bit_nodes, cl2.bit_nodes);
     ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
-
     ASSERT_TRUE(cl2.valid);
+
+    auto decoding = vector<uint8_t>(pcm.n,0);
+    for(auto bit_idx: cl2.cluster_decoding){
+        decoding[bit_idx] = 1;
+    }
+
+    auto decoding_syndrome = pcm.mulvec(decoding);
+
+    auto expected_syndrome = vector<uint8_t>{1,0,1,0};
+
+    ASSERT_EQ(decoding_syndrome,expected_syndrome);
+
     delete gbm;
     delete gcm;
 
