@@ -276,10 +276,6 @@ TEST(Cluster, merge_clusters_test){
 
     ASSERT_TRUE(cl2.valid);
     
-
-
-
-
     delete gbm;
     delete gcm;
 

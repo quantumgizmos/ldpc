@@ -53,6 +53,7 @@ namespace ldpc::uf {
         tsl::robin_map<int, int> cluster_to_matrix_check_map;
         // parity check matrix corresponding to the cluster. Indices are local to the cluster.
         gf2dense::CscMatrix cluster_pcm;
+        std::vector<uint8_t> cluster_pcm_syndrome;
         std::vector<int> cluster_check_idx_to_pcm_check_idx;
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
@@ -76,6 +77,7 @@ namespace ldpc::uf {
             this->global_bit_membership = bcm;
             this->check_nodes.insert(syndrome_index);
             this->global_check_membership[syndrome_index] = this;
+            this->cluster_pcm_syndrome.clear();
             this->pcm_check_idx_to_cluster_check_idx.insert(
                     std::pair<int, int>{syndrome_index, 0});
             this->cluster_check_idx_to_pcm_check_idx.push_back(syndrome_index);
@@ -348,25 +350,25 @@ namespace ldpc::uf {
             }
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // todo does this need to be the all 1 vector with an entry for each check in the cluster?
-            std::vector<uint8_t> cluster_syndrome;
-            cluster_syndrome.resize(this->check_nodes.size(), 0);
+            // std::vector<uint8_t> cluster_syndrome;
+            this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
-                cluster_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
+                this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(cluster_syndrome, this->eliminated_col_index);
+            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
 
-            //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.
-            if (syndrome_in_image) {
-                auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
-                this->cluster_decoding.clear(); //this is necessary to account for situations in which this sub-routine is called more than once.
-                for (auto i = 0; i < solution.size(); i++) {
-                    if (solution[i] == 1) {
-                        // convert to csc vector with global indices
-                        cluster_decoding.push_back(this->cluster_bit_idx_to_pcm_bit_idx[i]);
-                    }
-                }
-            }
+            // //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.
+            // if (syndrome_in_image) {
+            //     auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
+            //     this->cluster_decoding.clear(); //this is necessary to account for situations in which this sub-routine is called more than once.
+            //     for (auto i = 0; i < solution.size(); i++) {
+            //         if (solution[i] == 1) {
+            //             // convert to csc vector with global indices
+            //             cluster_decoding.push_back(this->cluster_bit_idx_to_pcm_bit_idx[i]);
+            //         }
+            //     }
+            // }
             return syndrome_in_image;
         }
 
@@ -735,11 +737,21 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-                    for (auto bit: cl->cluster_decoding) {
-                        this->decoding[bit] = 1;
+
+                    // auto cluster_syndrome = std::vector<uint8_t>(cl->check_nodes.size(), 0);
+                    // for (auto s: cl->enclosed_syndromes) {
+                    //     cluster_syndrome[cl->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
+                    // }
+
+                    auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
+                    for (auto i = 0; i < solution.size(); i++) {
+                        if (solution[i] == 1) {
+                            int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                            this->decoding[bit_idx] = 1;
+                        }
                     }
                 }
-                delete cl;
+                delete cl; //delete the cluster now that we have the solution.
             }
             delete[] global_bit_membership;
             delete[] global_check_membership;

@@ -7,6 +7,7 @@
 
 using namespace std;
 using namespace ldpc::uf;
+using namespace ldpc::sparse_matrix_util;
 
 // TEST(UfDecoder, single_bit_error) {
 
@@ -175,6 +176,28 @@ TEST(UfDecoder, on_the_fly_ring_code) {
         bp.decode(received_vector);
         auto decoding = ufd.on_the_fly_decode(received_vector, bp.log_prob_ratios);
         ASSERT_EQ(expected_decoding[count++], decoding);
+    }
+}
+
+TEST(UfDecoder, otf_hamming_code_rank9) {
+
+    auto hamming_code_rank = 9;
+
+    auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+    auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+    bp.maximum_iterations = 2;
+    auto ufd = UfDecoder(pcm);
+
+    for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+        auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+        bp.decode(syndrome);
+        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+
+        auto decoding_syndrome = pcm.mulvec(decoding);
+
+        cout<<i<<endl;
+        print_vector(syndrome);
+        ASSERT_TRUE(syndrome == decoding_syndrome);
     }
 }
 
