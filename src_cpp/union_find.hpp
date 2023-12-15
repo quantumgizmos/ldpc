@@ -327,7 +327,10 @@ namespace ldpc::uf {
                 auto local_idx = this->add_check(check_index, true);
                 if (local_idx == -1) {
                     // this indicates an error in the program flow logic that should be fixed by programmer
+                    std::cout<<"Check already within local cluster."<<std::endl;
+                    // we probably need something like the in_merge switch here, similar to the case for add_bit.
                     throw new std::runtime_error("Check with local index already in cluster");
+                    // continue;
                 }
                 col.push_back(local_idx);
             }
