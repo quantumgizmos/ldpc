@@ -356,8 +356,8 @@ namespace ldpc::uf {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
             auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
-            this->eliminated_col_index = -1;
-
+            
+            // this->eliminated_col_index = -1;
             // //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.
             // if (syndrome_in_image) {
             //     auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
