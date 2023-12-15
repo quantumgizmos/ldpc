@@ -315,12 +315,18 @@ namespace ldpc::uf {
                 } else if (check_membership != nullptr) {
                     // check is in another cluster
                     this->merge_list.insert(check_membership);
+                    // break;
                 }
+
+                // std::cout<<"HelloHello"<<std::endl;
+                // this->print();
+                // std::cout<<"Check index: "<<check_index<<std::endl;
+                // std::cout<<"Check cluster pointer: "<<this->global_check_membership[check_index]<<std::endl;
+                // std::cout<<this<<std::endl;
                 // if check is in another cluster or none, we add it and update cluster_pcm
                 auto local_idx = this->add_check(check_index, true);
                 if (local_idx == -1) {
                     // this indicates an error in the program flow logic that should be fixed by programmer
-                    std::cout<<"HelloHello"<<std::endl;
                     throw new std::runtime_error("Check with local index already in cluster");
                 }
                 col.push_back(local_idx);
