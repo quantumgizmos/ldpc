@@ -320,6 +320,7 @@ namespace ldpc::uf {
                 auto local_idx = this->add_check(check_index, true);
                 if (local_idx == -1) {
                     // this indicates an error in the program flow logic that should be fixed by programmer
+                    std::cout<<"HelloHello"<<std::endl;
                     throw new std::runtime_error("Check with local index already in cluster");
                 }
                 col.push_back(local_idx);
@@ -356,8 +357,8 @@ namespace ldpc::uf {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
 
-            std::cout<<"Cluster pcm syndrome: ";
-            ldpc::sparse_matrix_util::print_vector(this->cluster_pcm_syndrome);
+            // std::cout<<"Cluster pcm syndrome: ";
+            // ldpc::sparse_matrix_util::print_vector(this->cluster_pcm_syndrome);
 
             auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
@@ -749,9 +750,9 @@ namespace ldpc::uf {
 
                     auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
                     // cl->print();
-                    std::cout << "Solution size: "<<solution.size()<<std::endl;
-                    std::cout<<"Solution: ";
-                    ldpc::sparse_matrix_util::print_vector(solution);
+                    // std::cout << "Solution size: "<<solution.size()<<std::endl;
+                    // std::cout<<"Solution: ";
+                    // ldpc::sparse_matrix_util::print_vector(solution);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];

@@ -86,6 +86,7 @@ namespace ldpc {
         class PluDecomposition {
         private:
             CscMatrix csc_mat; // csc_mat[column][row]
+            std::vector<uint8_t> y_image_check_vector;
         public:
             CsrMatrix L;
             CsrMatrix U;
@@ -119,6 +120,7 @@ namespace ldpc {
                 this->swap_rows.clear();
                 this->pivot_cols.clear();
                 this->not_pivot_cols.clear();
+                this->y_image_check_vector.clear();
 
                 for (auto &col: this->L) {
                     col.clear();
@@ -287,10 +289,20 @@ namespace ldpc {
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
                 if (start_col_idx == 0) {
                     this->reset();
+                    this->y_image_check_vector = y;
                     for (auto i = 0; i < this->row_count; i++) {
                         this->rows.push_back(i);
                     }
                 }
+
+                auto previous_syndrome_size = this->y_image_check_vector.size();
+                if (previous_syndrome_size < this->row_count) {
+                    this->y_image_check_vector.resize(this->row_count, 0);
+                    for(auto i = previous_syndrome_size; i < this->row_count; i++) {
+                        this->y_image_check_vector[i] = y[i];
+                    }
+                }
+
                 auto y_sum = 0;
                 for (auto i = 0; i < this->row_count; i++) {
                     y_sum += y[i];
@@ -301,7 +313,6 @@ namespace ldpc {
                 }
                 /*The vector we use to check whether y is in the image of the LU
                 decomposition up to the current point of elimination.*/
-                auto y_image_check_vector = y;
                 auto max_rank = std::min(this->row_count, this->col_count);
                 /*Check whether the L matrix has the correct number of rows*/
                 if (this->L.size() != this->row_count) {
@@ -311,24 +322,27 @@ namespace ldpc {
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
                     //eliminate the column
-                    bool pivot = this->eliminate_column(col_idx, true, true);
+                  
                     //exit if the maximum rank has been reached
-                    // if (this->matrix_rank == max_rank) {
-                    //     in_image = true;
-                    //     break;
-                    // }
+                    if (this->matrix_rank == max_rank) {
+                        in_image = true;
+                        break;
+                    }
+                  
+                    bool pivot = this->eliminate_column(col_idx, true, true);
+                  
                     //check if y is in the image of the matrix
                     if (pivot) {
-                        std::swap(y_image_check_vector[this->matrix_rank - 1],
-                                  y_image_check_vector[this->swap_rows[this->matrix_rank - 1]]);
+                        std::swap(this->y_image_check_vector[this->matrix_rank - 1],
+                                  this->y_image_check_vector[this->swap_rows[this->matrix_rank - 1]]);
                         for (auto row_index: this->elimination_rows[this->matrix_rank - 1]) {
-                            y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank - 1];
+                            this->y_image_check_vector[row_index] ^= this->y_image_check_vector[this->matrix_rank - 1];
                         }
-                        std::cout<<"Y image check vector: ";
-                        ldpc::sparse_matrix_util::print_vector(y_image_check_vector);
+                        // std::cout<<"Y image check vector: ";
+                        // ldpc::sparse_matrix_util::print_vector(this->y_image_check_vector);
                         in_image = true;
                         for (int i = matrix_rank; i < this->row_count; i++) {
-                            if (y_image_check_vector[i] == 1) {
+                            if (this->y_image_check_vector[i] == 1) {
                                 in_image = false;
                                 break;
                             }
