@@ -738,9 +738,9 @@ namespace ldpc::uf {
             for (auto cl: clusters) {
                 if (cl->active) {
 
-                    cl->print();
+                    // cl->print();
 
-                    std::cout<<"Cluster valid: "<<cl->valid<<std::endl;
+                    // std::cout<<"Cluster valid: "<<cl->valid<<std::endl;
 
                     // auto cluster_syndrome = std::vector<uint8_t>(cl->check_nodes.size(), 0);
                     // for (auto s: cl->enclosed_syndromes) {

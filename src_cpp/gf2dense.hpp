@@ -309,14 +309,31 @@ namespace ldpc {
                 }
                 bool in_image = false;
                 //iterate over the columnsm starting from column `start_col_idx`
+                std::cout<<"Col count: "<<this->col_count<<std::endl;
+                std::cout<<"start_col_idx: "<<start_col_idx<<std::endl;
+                std::cout<<"Matrix rank: "<<this->matrix_rank<<std::endl;
+                std::cout<<"Max rank: "<<max_rank<<std::endl;
+
+
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
+
+                    std::cout<<"Inside loop"<<std::endl;
+                    //exit if the maximum rank has been reached
+                    // if (this->matrix_rank == max_rank) {
+                    //     in_image = true;
+                    //     break;
+                    // }
+                  
                     //eliminate the column
                     bool pivot = this->eliminate_column(col_idx, true, true);
-                    //exit if the maximum rank has been reached
-                    if (this->matrix_rank == max_rank) {
-                        in_image = true;
-                        break;
-                    }
+                  
+
+                    std::cout<<"Pivot: "<<pivot<<std::endl;
+                    std::cout<<"Matrix rank: "<<this->matrix_rank<<std::endl;
+
+
+        
+
                     //check if y is in the image of the matrix
                     if (pivot) {
                         std::swap(y_image_check_vector[this->matrix_rank - 1],
@@ -324,6 +341,11 @@ namespace ldpc {
                         for (auto row_index: this->elimination_rows[this->matrix_rank - 1]) {
                             y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank - 1];
                         }
+                        std::cout<<"Y_image_test_vector: ";
+                        ldpc::sparse_matrix_util::print_vector(y_image_check_vector);
+                        
+                        // exit(22);
+                        
                         in_image = true;
                         for (int i = matrix_rank; i < this->row_count; i++) {
                             if (y_image_check_vector[i] == 1) {
