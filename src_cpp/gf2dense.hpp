@@ -313,10 +313,10 @@ namespace ldpc {
                     //eliminate the column
                     bool pivot = this->eliminate_column(col_idx, true, true);
                     //exit if the maximum rank has been reached
-                    if (this->matrix_rank == max_rank) {
-                        in_image = true;
-                        break;
-                    }
+                    // if (this->matrix_rank == max_rank) {
+                    //     in_image = true;
+                    //     break;
+                    // }
                     //check if y is in the image of the matrix
                     if (pivot) {
                         std::swap(y_image_check_vector[this->matrix_rank - 1],

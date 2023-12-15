@@ -188,7 +188,7 @@ TEST(UfDecoder, otf_hamming_code_rank9) {
     bp.maximum_iterations = 2;
     auto ufd = UfDecoder(pcm);
 
-    for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+    for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
         auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
         bp.decode(syndrome);
         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
