@@ -738,6 +738,10 @@ namespace ldpc::uf {
             for (auto cl: clusters) {
                 if (cl->active) {
 
+                    cl->print();
+
+                    std::cout<<"Cluster valid: "<<cl->valid<<std::endl;
+
                     // auto cluster_syndrome = std::vector<uint8_t>(cl->check_nodes.size(), 0);
                     // for (auto s: cl->enclosed_syndromes) {
                     //     cluster_syndrome[cl->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
@@ -887,6 +891,7 @@ namespace ldpc::uf {
     };
 
     void Cluster::print() {
+        int count;
         std::cout << "........." << std::endl;
         std::cout << "Cluster ID: " << this->cluster_id << std::endl;
         std::cout << "Active: " << this->active << std::endl;
@@ -905,12 +910,32 @@ namespace ldpc::uf {
         std::cout << "Boundary Checks: ";
         for (auto i: this->boundary_check_nodes) std::cout << i << " ";
         std::cout << std::endl;
-        std::cout << "Spanning tree: ";
-        for (auto i: this->spanning_tree_bits) std::cout << i << " ";
-        std::cout << std::endl;
-        std::cout << "........." << std::endl;
-    }
 
+        std::cout<<"Cluster bit idx to pcm bit idx: ";
+        count = 0;
+        for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx){
+            std::cout<<"{"<<count<<","<<bit_idx<<"}";
+            count++;
+        }
+        std::cout<<std::endl;
+
+        std::cout<<"Cluster check idx to pcm check idx: ";
+        count = 0;
+        for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx){
+            std::cout<<"{"<<count<<","<<check_idx<<"}";
+            count++;
+        }
+        std::cout<<std::endl;
+
+        std::cout<<"Cluster syndrome: ";
+        count = 0;
+        for (auto check_idx: this->cluster_pcm_syndrome){
+            std::cout<<unsigned(check_idx);
+        }
+        std::cout<<std::endl;
+
+
+    }
 
 }//end namespace uf
 
