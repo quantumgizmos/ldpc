@@ -324,6 +324,8 @@ namespace ldpc {
                         for (auto row_index: this->elimination_rows[this->matrix_rank - 1]) {
                             y_image_check_vector[row_index] ^= y_image_check_vector[this->matrix_rank - 1];
                         }
+                        std::cout<<"Y image check vector: ";
+                        ldpc::sparse_matrix_util::print_vector(y_image_check_vector);
                         in_image = true;
                         for (int i = matrix_rank; i < this->row_count; i++) {
                             if (y_image_check_vector[i] == 1) {
