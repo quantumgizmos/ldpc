@@ -748,9 +748,19 @@ namespace ldpc::uf {
                     // }
 
                     auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
+                    std::cout<<"Cluster bit nodes size: "<<cl->bit_nodes.size()<<std::endl;
+                    cl->print();
+                    std::cout<<"Solution size: "<<solution.size()<<std::endl;
+                    std::cout<<"Cluster pcm col count"<<cl->cluster_pcm.size()<<std::endl;
+                    // ldpc::sparse_matrix_util::print_vector(solution);
+                    std::cout<<"Cluster PLU_u size: "<<cl->pluDecomposition->L.size()<<std::endl;
+                    for(int j = 0; j<9; j++){
+                        ldpc::sparse_matrix_util::print_vector(cl->pluDecomposition->U[j]);
+                    }
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                            std::cout<<"bit_idx: "<<bit_idx<<std::endl;
                             this->decoding[bit_idx] = 1;
                         }
                     }
