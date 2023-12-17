@@ -192,12 +192,15 @@ TEST(UfDecoder, otf_ring_code) {
         auto error = ldpc::util::decimal_to_binary(i, length);
         auto syndrome = pcm.mulvec(error);
         bp.decode(syndrome);
+
+        cout<<i<<endl;
+        print_vector(syndrome);
+
         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
 
         auto decoding_syndrome = pcm.mulvec(decoding);
 
-        cout<<i<<endl;
-        print_vector(syndrome);
+  
         print_vector(decoding_syndrome);
 
         ASSERT_TRUE(syndrome == decoding_syndrome);
