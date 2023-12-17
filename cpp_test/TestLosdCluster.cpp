@@ -288,8 +288,8 @@ TEST(Cluster, merge_clusters_otf_test){
     auto cl1 = ldpc::uf::Cluster(pcm, 0, gcm, gbm);
     auto cl2 = ldpc::uf::Cluster(pcm, 2, gcm, gbm);
 
-    cl2.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.1,0.1}, 1, true);
-    cl1.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.1,0.1}, 1, true);
+    cl2.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.5,0.5}, 1, true);
+    cl1.grow_cluster(std::vector<double>{0.1,0.1,0.1,0.5,0.5}, 1, true);
 
     ASSERT_TRUE(cl1.active);
     ASSERT_TRUE(cl2.active);
@@ -305,9 +305,14 @@ TEST(Cluster, merge_clusters_otf_test){
     ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
     ASSERT_TRUE(cl2.valid);
 
+    cl2.print();
+
+    auto solution = cl2.pluDecomposition->lu_solve(cl2.cluster_pcm_syndrome);
+
+
     auto decoding = vector<uint8_t>(pcm.n,0);
-    for(auto bit_idx: cl2.cluster_decoding){
-        decoding[bit_idx] = 1;
+    for(auto cluster_bit_idx: solution){
+        decoding[cl2.cluster_bit_idx_to_pcm_bit_idx[cluster_bit_idx]] = 1;
     }
 
     auto decoding_syndrome = pcm.mulvec(decoding);
