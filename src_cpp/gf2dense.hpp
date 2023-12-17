@@ -183,6 +183,12 @@ namespace ldpc {
 
             bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true) {
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
+
+                // std::cout<<"Col idx: "<<col_idx<<std::endl;
+                // std::cout<<"Row count: "<<this->row_count<<std::endl;
+                // std::cout<<"Csc mat: ";
+                // ldpc::sparse_matrix_util::print_vector(this->csc_mat[col_idx]);
+
                 for (auto row_index: this->csc_mat[col_idx]) {
                     rr_col[row_index] = 1;
                 }
@@ -287,6 +293,9 @@ namespace ldpc {
              * @return true if y is in the image of the matrix, false otherwise.
              */
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
+                if(start_col_idx < 0){
+                    throw std::invalid_argument("start_col_idx must be non-negative.");
+                }
                 if (start_col_idx == 0) {
                     this->reset();
                     this->y_image_check_vector = y;

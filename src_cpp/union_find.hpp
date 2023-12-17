@@ -267,7 +267,8 @@ namespace ldpc::uf {
             }
             auto inserted = this->check_nodes.insert(check_index);
             if (!inserted.second) {
-                return -1;
+                this->global_check_membership[check_index] = this;
+                return this->pcm_check_idx_to_cluster_check_idx[check_index];
             }
 
             this->global_check_membership[check_index] = this;
@@ -325,15 +326,21 @@ namespace ldpc::uf {
                 // std::cout<<this<<std::endl;
                 // if check is in another cluster or none, we add it and update cluster_pcm
                 auto local_idx = this->add_check(check_index, true);
-                if (local_idx == -1) {
-                    // this indicates an error in the program flow logic that should be fixed by programmer
-                    std::cout<<"Check already within local cluster."<<std::endl;
-                    // we probably need something like the in_merge switch here, similar to the case for add_bit.
-                    throw new std::runtime_error("Check with local index already in cluster");
-                    // continue;
-                }
+                // if (local_idx == -1) {
+                //     // this indicates an error in the program flow logic that should be fixed by programmer
+                //     std::cout<<"Check already within local cluster."<<std::endl;
+                //     this->print();
+
+                //     std::cout<<"Check we are adding: "<<check_index<<std::endl;
+                //     std::cout<<"Check cluster pointer: "<<this->global_check_membership[check_index]<<std::endl;
+
+                //     // we probably need something like the in_merge switch here, similar to the case for add_bit.
+                //     throw new std::runtime_error("Check with local index already in cluster");
+                //     // continue;
+                // }
                 col.push_back(local_idx);
             }
+            // ldpc::sparse_matrix_util::print_vector(col);
             this->cluster_pcm.push_back(col);
         }
 
@@ -369,6 +376,9 @@ namespace ldpc::uf {
             // std::cout<<"Cluster pcm syndrome: ";
             // ldpc::sparse_matrix_util::print_vector(this->cluster_pcm_syndrome);
 
+            // this->print();
+
+            std::cout<<"Eliminated col index: "<<this->eliminated_col_index<<std::endl;
             auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
 
