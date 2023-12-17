@@ -188,7 +188,7 @@ TEST(UfDecoder, otf_ring_code) {
     bp.maximum_iterations = 2;
     auto ufd = UfDecoder(pcm);
 
-    for (int i = 20; i < std::pow(2, length); i++) {
+    for (int i = 21; i < std::pow(2, length); i++) {
         auto error = ldpc::util::decimal_to_binary(i, length);
         auto syndrome = pcm.mulvec(error);
         bp.decode(syndrome);

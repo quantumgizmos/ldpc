@@ -305,8 +305,6 @@ TEST(Cluster, merge_clusters_otf_test){
     ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
     ASSERT_TRUE(cl2.valid);
 
-    cl2.print();
-
     auto solution = cl2.pluDecomposition->lu_solve(cl2.cluster_pcm_syndrome);
 
 
