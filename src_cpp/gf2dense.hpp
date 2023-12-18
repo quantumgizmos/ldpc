@@ -296,8 +296,17 @@ namespace ldpc {
              * @return true if y is in the image of the matrix, false otherwise.
              */
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
-                if(start_col_idx < 0){
+                if (start_col_idx < 0) {
                     throw std::invalid_argument("start_col_idx must be non-negative.");
+                } else if (start_col_idx == this->col_count) {
+                    auto in_image = true;
+                    for (int i = matrix_rank; i < this->row_count; i++) {
+                        if (this->y_image_check_vector[i] == 1) {
+                            in_image = false;
+                            break;
+                        }
+                    }
+                    return in_image;
                 }
                 if (start_col_idx == 0) {
                     this->reset();
@@ -310,7 +319,7 @@ namespace ldpc {
                 auto previous_syndrome_size = this->y_image_check_vector.size();
                 if (previous_syndrome_size < this->row_count) {
                     this->y_image_check_vector.resize(this->row_count, 0);
-                    for(auto i = previous_syndrome_size; i < this->row_count; i++) {
+                    for (auto i = previous_syndrome_size; i < this->row_count; i++) {
                         this->y_image_check_vector[i] = y[i];
                     }
                 }
@@ -334,7 +343,7 @@ namespace ldpc {
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
                     //eliminate the column
-                  
+
                     //exit if the maximum rank has been reached
                     if (this->matrix_rank == max_rank) {
                         in_image = true;
@@ -342,7 +351,7 @@ namespace ldpc {
                     }
 
                     bool pivot = this->eliminate_column(col_idx, true, true);
-                  
+
                     //check if y is in the image of the matrix
                     if (pivot) {
                         std::swap(this->y_image_check_vector[this->matrix_rank - 1],
@@ -399,7 +408,7 @@ namespace ldpc {
                     for (auto i = this->row_count; i <= *max_elem; i++) {
                         this->rows.push_back(i);
                     }
-                    this->row_count = (*max_elem+1);
+                    this->row_count = (*max_elem + 1);
                 }
                 this->col_count++;
             }

@@ -284,6 +284,7 @@ namespace ldpc::uf {
          * @param bit_index
          */
         void add_bit(const int bit_index) {
+            std::cout<< "adding bit " << bit_index << " to cluster " << this << std::endl;
             auto inserted = this->bit_nodes.insert(bit_index);
             if (!inserted.second) {
                 return;
@@ -364,7 +365,8 @@ namespace ldpc::uf {
                 eliminated_cols = this->pluDecomposition->cols_eliminated;
                 if (eliminated_cols == this->bit_nodes.size()) {
                     // all columns have been eliminated, so the cluster is valid
-                    throw new std::runtime_error("All columns have been eliminated");
+//                    throw std::runtime_error("All columns have been eliminated");
+                    std::cout<< "all cols eliminated" << std::endl;
                 }
 
                 // add columns to existing decomposition matrix
