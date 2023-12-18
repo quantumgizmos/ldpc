@@ -378,7 +378,8 @@ namespace ldpc::uf {
 
             // this->print();
 
-            std::cout<<"Eliminated col index: "<<this->eliminated_col_index<<std::endl;
+            std::cout<<"Cluster ID: "<<this->cluster_id<<"; Eliminated col index: "<<this->eliminated_col_index<<std::endl;
+            this->print();
             auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
             this->eliminated_col_index = -1;
 
