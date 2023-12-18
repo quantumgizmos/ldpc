@@ -91,11 +91,11 @@ namespace ldpc {
             CsrMatrix L;
             CsrMatrix U;
             CscMatrix P;
-            int matrix_rank{};
-            int cols_eliminated{};
-            int row_count{};
-            int col_count{};
-            std::vector<int> rows; // todo is this needed?
+            int matrix_rank;
+            int cols_eliminated;
+            int row_count;
+            int col_count;
+            std::vector<int> rows;
             std::vector<int> swap_rows;
             std::vector<std::vector<int>> elimination_rows;
             std::vector<int> pivot_cols;
@@ -103,7 +103,11 @@ namespace ldpc {
             bool LU_constructed = false;
 
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
-                    : row_count(row_count), col_count(col_count), csc_mat(csc_mat), matrix_rank(0) {
+                    : row_count(row_count),
+                    col_count(col_count),
+                    csc_mat(csc_mat),
+                    matrix_rank(0),
+                    cols_eliminated(0) {
 
             }
 

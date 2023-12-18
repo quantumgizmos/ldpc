@@ -284,15 +284,10 @@ namespace ldpc::uf {
          * @param bit_index
          */
         void add_bit(const int bit_index) {
-            std::cout<< "adding bit " << bit_index << " to cluster " << this << std::endl;
             auto inserted = this->bit_nodes.insert(bit_index);
             if (!inserted.second) {
                 return;
             }
-            // store column index offset for on the fly elimniation
-            // if (this->eliminated_col_index == -1) {
-            //     this->eliminated_col_index = this->bit_nodes.size() - 1;
-            // }
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
             this->cluster_bit_idx_to_pcm_bit_idx.push_back(bit_index);
@@ -308,7 +303,6 @@ namespace ldpc::uf {
             for (auto &e: this->pcm.iterate_column(bit_index)) {
                 int check_index = e.row_index;
                 auto check_membership = this->global_check_membership[check_index];
-
                 if (check_membership == this) {
                     // if already in cluster, add to cluster_pcm column of the bit and go to next
                     // an index error on the map here indicates an error in the program logic.
@@ -317,28 +311,9 @@ namespace ldpc::uf {
                 } else if (check_membership != nullptr) {
                     // check is in another cluster
                     this->merge_list.insert(check_membership);
-                    // break;
                 }
-
-                // std::cout<<"HelloHello"<<std::endl;
-                // this->print();
-                // std::cout<<"Check index: "<<check_index<<std::endl;
-                // std::cout<<"Check cluster pointer: "<<this->global_check_membership[check_index]<<std::endl;
-                // std::cout<<this<<std::endl;
                 // if check is in another cluster or none, we add it and update cluster_pcm
                 auto local_idx = this->add_check(check_index, true);
-                // if (local_idx == -1) {
-                //     // this indicates an error in the program flow logic that should be fixed by programmer
-                //     std::cout<<"Check already within local cluster."<<std::endl;
-                //     this->print();
-
-                //     std::cout<<"Check we are adding: "<<check_index<<std::endl;
-                //     std::cout<<"Check cluster pointer: "<<this->global_check_membership[check_index]<<std::endl;
-
-                //     // we probably need something like the in_merge switch here, similar to the case for add_bit.
-                //     throw new std::runtime_error("Check with local index already in cluster");
-                //     // continue;
-                // }
                 col.push_back(local_idx);
             }
             // ldpc::sparse_matrix_util::print_vector(col);
@@ -363,52 +338,21 @@ namespace ldpc::uf {
                                                                               this->cluster_pcm);
             }else{
                 eliminated_cols = this->pluDecomposition->cols_eliminated;
-                if (eliminated_cols == this->bit_nodes.size()) {
-                    // all columns have been eliminated, so the cluster is valid
-//                    throw std::runtime_error("All columns have been eliminated");
-                    std::cout<< "all cols eliminated" << std::endl;
-                }
-
                 // add columns to existing decomposition matrix
                 for (auto idx = eliminated_cols; idx < this->bit_nodes.size(); idx++) {
                     this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
                 }
-
             }
-
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // std::vector<uint8_t> cluster_syndrome;
             this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-
-            // std::cout<<"Cluster pcm syndrome: ";
-            // ldpc::sparse_matrix_util::print_vector(this->cluster_pcm_syndrome);
-
-            // this->print();
-
-            std::cout<<"Cluster ID: "<<this->cluster_id<<"; Eliminated col index: "<<eliminated_cols<<std::endl;
-            // this->print();
             auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, eliminated_cols);
-            // this->eliminated_col_index = -1;
-
-            // //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.
-            // if (syndrome_in_image) {
-            //     auto solution = this->pluDecomposition->lu_solve(cluster_syndrome);
-            //     this->cluster_decoding.clear(); //this is necessary to account for situations in which this sub-routine is called more than once.
-            //     for (auto i = 0; i < solution.size(); i++) {
-            //         if (solution[i] == 1) {
-            //             // convert to csc vector with global indices
-            //             cluster_decoding.push_back(this->cluster_bit_idx_to_pcm_bit_idx[i]);
-            //         }
-            //     }
-            // }
             return syndrome_in_image;
         }
-
         void print();
-
 
     };
 
@@ -479,17 +423,7 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-
-                    // auto cluster_syndrome = std::vector<uint8_t>(cl->check_nodes.size(), 0);
-                    // for (auto s: cl->enclosed_syndromes) {
-                    //     cluster_syndrome[cl->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
-                    // }
-
                     auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
-                    // cl->print();
-                    // std::cout << "Solution size: "<<solution.size()<<std::endl;
-                    // std::cout<<"Solution: ";
-                    // ldpc::sparse_matrix_util::print_vector(solution);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];

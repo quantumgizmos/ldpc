@@ -117,104 +117,55 @@ using namespace ldpc::sparse_matrix_util;
 
 // }
 
-TEST(UfDecoder, on_the_fly_small_hamming) {
-    int m = 5;
-
-    // todo this is a mess and should be replaced with parameterized tests
-    for (int i = 0; i < std::pow(2, m); i++) {
-        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
-        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 2;
-        auto ufd = UfDecoder(pcm);
-        auto syndrome = ldpc::util::decimal_to_binary(i, m);
-        bp.decode(syndrome);
-        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-        auto decoding_syndrome = pcm.mulvec(decoding);
-        ASSERT_EQ(decoding_syndrome, syndrome);
-    }
-}
-
-
-TEST(UfDecoder, on_the_fly_hamming_higher_weight_syndrome) {
-    int m = 5;
-
-    // todo this is a mess and should be replaced with parameterized tests
-    for (int i = 0; i < std::pow(2, m); i++) {
-        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(m);
-        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 2;
-        auto ufd = UfDecoder(pcm);
-        auto syndrome = ldpc::util::decimal_to_binary(i + 1, m);
-        bp.decode(syndrome);
-        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-        auto decoding_syndrome = pcm.mulvec(decoding);
-        ASSERT_EQ(decoding_syndrome, syndrome);
-    }
-}
-
 
 
 TEST(UfDecoder, otf_ring_code) {
 
-    auto length = 6;
+    for(auto length = 3; length < 12; length++) {
 
-    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
-    auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-    bp.maximum_iterations = 2;
-    auto ufd = UfDecoder(pcm);
+        auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 2;
+        auto ufd = UfDecoder(pcm);
 
-    for (int i = 1; i < std::pow(2, length); i++) {
-        auto error = ldpc::util::decimal_to_binary(i, length);
-        auto syndrome = pcm.mulvec(error);
-        bp.decode(syndrome);
-
-        cout<<i<<endl;
-        print_vector(syndrome);
-
-        auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-
-        auto decoding_syndrome = pcm.mulvec(decoding);
-
-  
-        print_vector(decoding_syndrome);
-
-        ASSERT_TRUE(syndrome == decoding_syndrome);
-
-        std::cout<<std::endl;
+        for (int i = 1; i < std::pow(2, length); i++) {
+            auto error = ldpc::util::decimal_to_binary(i, length);
+            auto syndrome = pcm.mulvec(error);
+            bp.decode(syndrome);
+            cout << i << endl;
+            print_vector(syndrome);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+            auto decoding_syndrome = pcm.mulvec(decoding);
+            print_vector(decoding_syndrome);
+            ASSERT_TRUE(syndrome == decoding_syndrome);
+            std::cout << std::endl;
+        }
     }
 }
 
 
- TEST(UfDecoder, otf_hamming_code_rank9) {
+TEST(UfDecoder, otf_hamming_code) {
+    for (auto hamming_code_rank = 3; hamming_code_rank <= 10; hamming_code_rank++) {
 
-     auto hamming_code_rank = 9;
-
-     auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
-     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-     bp.maximum_iterations = 2;
-     auto ufd = UfDecoder(pcm);
-
-     for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
-         auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
-         bp.decode(syndrome);
-
-         cout<<i<<endl;
-         std::cout<<"syndrome: ";
-         print_vector(syndrome);
-
-         // exit(0);
-        
-
-         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-
-         auto decoding_syndrome = pcm.mulvec(decoding);
-
-         std::cout<<"decoded syndrome: ";
-         print_vector(decoding_syndrome);
-         ASSERT_TRUE(syndrome == decoding_syndrome);
-         std::cout<<std::endl;
-     }
- }
+        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 2;
+        auto ufd = UfDecoder(pcm);
+        for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
+            auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+            bp.decode(syndrome);
+            cout << i << endl;
+            std::cout << "syndrome: ";
+            print_vector(syndrome);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+            auto decoding_syndrome = pcm.mulvec(decoding);
+            std::cout << "decoded syndrome: ";
+            print_vector(decoding_syndrome);
+            ASSERT_TRUE(syndrome == decoding_syndrome);
+            std::cout << std::endl;
+        }
+    }
+}
 
 
 int main(int argc, char **argv) {
