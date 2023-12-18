@@ -287,3 +287,47 @@ TEST(PluDecomposition, fast_solve_ring_code) {
     }
 
 }
+
+TEST(PluDecomposition, ring_code_test7){
+
+    std::vector<std::vector<int>> matrix = {
+            {1, 0, 1, 0, 0, 0, 0},
+            {1, 1, 0, 0, 0, 0, 0},
+            {0, 1, 0, 0, 1, 0, 0},
+            {0, 0, 1, 1, 0, 0, 0},
+            {0, 0, 0, 1, 0, 0, 1},
+            {0, 0, 0, 0, 1, 1, 0},
+            {0, 0, 0, 0, 0, 1, 1}
+        };
+
+    auto pcm_csr = std::vector<std::vector<int>>{7,std::vector<int>{}};
+    for(auto i =0; i<7; i++){
+        for(auto j=0; j<7; j++){
+            if(matrix[i][j] == 1){
+                pcm_csr[i].push_back(j);
+            }
+        }
+    }
+
+    // ldpc::gf2dense::print_csr(pcm_csr);
+    auto pcm_csc = ldpc::gf2dense::csc_to_csr(pcm_csr);
+    // ldpc::gf2dense::print_csc(pcm_csc);
+
+    auto plu = ldpc::gf2dense::PluDecomposition(7, 7, pcm_csc);
+
+    auto synd = std::vector<uint8_t>{0,1,1,1,1,1,1};
+    auto x = plu.fast_lu_solve(synd);
+
+    auto pcm = ldpc::gf2sparse::csc_to_gf2sparse(pcm_csc);
+
+    auto x_synd = pcm.mulvec(x);
+
+    ldpc::gf2dense::print_csr(plu.L);
+    std::cout<<std::endl;
+    ldpc::gf2dense::print_csr(plu.U);
+
+    ASSERT_EQ(x_synd, synd);
+
+
+
+}
