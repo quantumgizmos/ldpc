@@ -334,6 +334,7 @@ namespace ldpc {
                 }
                 /*Trivial syndrome is always in image? What is the convention here?*/
                 if (y_sum == 0) {
+                    this->LU_constructed = true;
                     return true;
                 }
                 /*The vector we use to check whether y is in the image of the LU
@@ -388,7 +389,7 @@ namespace ldpc {
 
             std::vector<uint8_t> fast_lu_solve(std::vector<uint8_t> &y) {
                 bool y_in_image = this->rref_with_y_image_check(y);
-                //this->LU_constructed = true;
+                // this->LU_constructed = true;
                 if (y_in_image) {
                     return this->lu_solve(y);
                 } else {
