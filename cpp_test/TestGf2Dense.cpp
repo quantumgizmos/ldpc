@@ -315,7 +315,7 @@ TEST(PluDecomposition, ring_code_test7){
 
     auto plu = ldpc::gf2dense::PluDecomposition(7, 7, pcm_csc);
 
-    auto synd = std::vector<uint8_t>{0,1,1,1,1,1,1};
+    auto synd = std::vector<uint8_t>{1,1,0,1,1,1,1};
     auto x = plu.fast_lu_solve(synd);
 
     auto pcm = ldpc::gf2sparse::csc_to_gf2sparse(pcm_csc);

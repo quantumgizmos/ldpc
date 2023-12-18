@@ -439,6 +439,8 @@ namespace ldpc::uf {
                     auto temp_pcm = ldpc::gf2sparse::csc_to_gf2sparse(cl->cluster_pcm);
 
                     auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
+                    // auto solution = cl->pluDecomposition->fast_lu_solve(cl->cluster_pcm_syndrome);
+
 
                     ldpc::sparse_matrix_util::print_vector(temp_pcm.mulvec(solution));
 
