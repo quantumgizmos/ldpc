@@ -268,23 +268,20 @@ TEST(GF2Sparse, fast_lu_solve_batch){
 
 TEST(PluDecomposition, fast_solve_ring_code) {
 
-    auto pcm0 = ring_code(7);
-    auto zero_mat = GF2Sparse<>(5,pcm0.n);
+    for(int j = 3; j<10; j++){
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0,pcm0};
-    auto pcm = ldpc::gf2sparse::vstack(pstack_list);
+        auto pcm = ring_code(j);
+        auto pcm_csc = pcm.col_adjacency_list();
+        auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
 
-    auto pcm_csc = pcm.col_adjacency_list();
-    auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
+        for(auto i = 0; i<std::pow(2,pcm.n); i++){
+            auto error  = ldpc::util::decimal_to_binary(i,pcm.n);
+            auto synd = pcm.mulvec(error);
+            auto x = plu.fast_lu_solve(synd);
+            auto x_synd = pcm.mulvec(x);
+            ASSERT_EQ(x_synd, synd);
+        }
 
-    // plu.rref();
-
-    for(auto i = 0; i<std::pow(2,pcm.n); i++){
-        auto error  = ldpc::util::decimal_to_binary(i,pcm.n);
-        auto synd = pcm.mulvec(error);
-        auto x = plu.fast_lu_solve(synd);
-        auto x_synd = pcm.mulvec(x);
-        ASSERT_EQ(x_synd, synd);
     }
 
 }
