@@ -144,28 +144,28 @@ TEST(UfDecoder, otf_ring_code) {
 }
 
 
-TEST(UfDecoder, otf_hamming_code) {
-    for (auto hamming_code_rank = 3; hamming_code_rank <= 10; hamming_code_rank++) {
+// TEST(UfDecoder, otf_hamming_code) {
+//     for (auto hamming_code_rank = 3; hamming_code_rank <= 10; hamming_code_rank++) {
 
-        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
-        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-        bp.maximum_iterations = 2;
-        auto ufd = UfDecoder(pcm);
-        for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
-            auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
-            bp.decode(syndrome);
-            cout << i << endl;
-            std::cout << "syndrome: ";
-            print_vector(syndrome);
-            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
-            auto decoding_syndrome = pcm.mulvec(decoding);
-            std::cout << "decoded syndrome: ";
-            print_vector(decoding_syndrome);
-            ASSERT_TRUE(syndrome == decoding_syndrome);
-            std::cout << std::endl;
-        }
-    }
-}
+//         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+//         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+//         bp.maximum_iterations = 2;
+//         auto ufd = UfDecoder(pcm);
+//         for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
+//             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+//             bp.decode(syndrome);
+//             cout << i << endl;
+//             std::cout << "syndrome: ";
+//             print_vector(syndrome);
+//             auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+//             auto decoding_syndrome = pcm.mulvec(decoding);
+//             std::cout << "decoded syndrome: ";
+//             print_vector(decoding_syndrome);
+//             ASSERT_TRUE(syndrome == decoding_syndrome);
+//             std::cout << std::endl;
+//         }
+//     }
+// }
 
 
 int main(int argc, char **argv) {

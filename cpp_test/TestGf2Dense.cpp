@@ -279,6 +279,8 @@ TEST(PluDecomposition, fast_solve_ring_code) {
             auto synd = pcm.mulvec(error);
             auto x = plu.fast_lu_solve(synd);
             auto x_synd = pcm.mulvec(x);
+
+
             ASSERT_EQ(x_synd, synd);
         }
 

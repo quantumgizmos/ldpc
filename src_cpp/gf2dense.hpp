@@ -56,27 +56,48 @@ namespace ldpc {
         }
 
 
-        void print_csc(int row_count, int col_count, std::vector<std::vector<int>> csc_mat) {
-            CsrMatrix csr_matrix;
-            for (int i = 0; i < row_count; i++) {
-                csr_matrix.push_back(std::vector<int>{});
+        void print_csr(std::vector<std::vector<int>> csr_mat) {
+        
+            int col_count = -1;
+            for(auto row: csr_mat){
+                for(int entry: row){
+                    if(entry>col_count){
+                        col_count = entry;
+                    }
+                }
             }
 
+            col_count++;
+
+            for (auto row: csr_mat) {
+                auto row_dense = std::vector<int>(col_count, 0);
+                for (auto entry: row) {
+                    row_dense[entry] = 1;
+                }
+                for(auto entry: row_dense){
+                    std::cout<<unsigned(entry)<<" ";
+                }
+                std::cout<<std::endl;
+            }
+        
+        }
+        
+
+        void print_csc(std::vector<std::vector<int>> csc_mat) {
+            CsrMatrix csr_matrix;
             int col_index = 0;
             for (auto col: csc_mat) {
                 for (auto entry: col) {
+                    if(entry>=csr_matrix.size()){
+                        csr_matrix.resize(entry+1,std::vector<int>{});
+                    }
                     csr_matrix[entry].push_back(col_index);
                 }
                 col_index++;
             }
 
-            for (auto row: csr_matrix) {
-                auto row_dense = std::vector<int>(col_count, 0);
-                for (auto entry: row) {
-                    row_dense[entry] = 1;
-                }
-                ldpc::sparse_matrix_util::print_vector(row_dense);
-            }
+            print_csr(csr_matrix);
+
         }
 
         /**
@@ -174,6 +195,10 @@ namespace ldpc {
                     this->L.resize(this->row_count, std::vector<int>{});
                 }
 
+                // if (construct_U){
+                //     this->U.resize(this->row_count, std::vector<int>{});
+                // }
+
                 for (auto col_idx = 0; col_idx < this->col_count; col_idx++) {
                     this->eliminate_column(col_idx, construct_L, construct_U);
                     if (this->matrix_rank == max_rank) {
@@ -189,7 +214,7 @@ namespace ldpc {
 
             bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true) {
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
-                this->cols_eliminated++;
+                this->cols_eliminated = col_idx + 1;
 
                 // std::cout<<"Col idx: "<<col_idx<<std::endl;
                 // std::cout<<"Row count: "<<this->row_count<<std::endl;
@@ -226,11 +251,15 @@ namespace ldpc {
                 }
 
                 std::swap(rr_col[this->matrix_rank], rr_col[this->swap_rows[this->matrix_rank]]);
-                std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                 std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
                 this->elimination_rows.push_back(std::vector<int>{});
 
-                for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
+                if(construct_L){
+                    std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
+                    this->L[this->matrix_rank].push_back(this->matrix_rank);
+                }
+
+                for (auto i = this->matrix_rank+1; i < this->row_count; i++) {
                     if (rr_col[i] == 1) {
                         this->elimination_rows[this->matrix_rank].push_back(i);
                         if (construct_L) {
@@ -344,6 +373,7 @@ namespace ldpc {
                 if (this->L.size() != this->row_count) {
                     this->L.resize(this->row_count, std::vector<int>{});
                 }
+                
                 bool in_image = false;
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {

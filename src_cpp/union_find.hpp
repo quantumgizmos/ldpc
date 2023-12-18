@@ -423,7 +423,25 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
+                    cl->print();
+                    gf2dense::print_csc(cl->cluster_pcm);
+
+                    std::cout<<std::endl;
+
+                    gf2dense::print_csr(cl->pluDecomposition->L);
+
+                    std::cout<<std::endl;
+
+                    gf2dense::print_csr(cl->pluDecomposition->U);
+                    std::cout<<"Pivots: ";
+                    ldpc::sparse_matrix_util::print_vector(cl->pluDecomposition->pivot_cols);
+
+                    auto temp_pcm = ldpc::gf2sparse::csc_to_gf2sparse(cl->cluster_pcm);
+
                     auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
+
+                    ldpc::sparse_matrix_util::print_vector(temp_pcm.mulvec(solution));
+
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
