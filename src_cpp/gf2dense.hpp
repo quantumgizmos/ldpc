@@ -92,6 +92,7 @@ namespace ldpc {
             CsrMatrix U;
             CscMatrix P;
             int matrix_rank{};
+            int cols_eliminated{};
             int row_count{};
             int col_count{};
             std::vector<int> rows; // todo is this needed?
@@ -116,6 +117,7 @@ namespace ldpc {
              */
             void reset() {
                 this->matrix_rank = 0;
+                this->cols_eliminated = 0;
                 this->rows.clear();
                 this->swap_rows.clear();
                 this->pivot_cols.clear();
@@ -330,6 +332,7 @@ namespace ldpc {
                 bool in_image = false;
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
+                    this->cols_eliminated++;
                     //eliminate the column
                   
                     //exit if the maximum rank has been reached
