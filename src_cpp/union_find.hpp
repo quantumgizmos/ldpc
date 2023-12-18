@@ -58,7 +58,6 @@ namespace ldpc::uf {
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition *pluDecomposition = nullptr;
-        int eliminated_col_index = -1;
 
         Cluster() = default;
 
@@ -95,7 +94,6 @@ namespace ldpc::uf {
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
-            this->eliminated_col_index = -1;;
         }
 
         [[nodiscard]] int parity() const {
@@ -356,26 +354,27 @@ namespace ldpc::uf {
          * @return True if the syndrome is in the image of the cluster parity check matrix.
          */
         bool apply_on_the_fly_elimination() {
+            int eliminated_cols = 0;
             if (this->pluDecomposition == nullptr) {
                 // no existing decomposition yet so we create one
                 this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
                                                                               this->bit_nodes.size(),
                                                                               this->cluster_pcm);
+            }else{
+                eliminated_cols = this->pluDecomposition->cols_eliminated;
+                if (eliminated_cols == this->bit_nodes.size()) {
+                    // all columns have been eliminated, so the cluster is valid
+                    throw new std::runtime_error("All columns have been eliminated");
+                }
+
+                // add columns to existing decomposition matrix
+                for (auto idx = eliminated_cols; idx < this->bit_nodes.size(); idx++) {
+                    this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
+                }
+
             }
 
-            this->eliminated_col_index = this->pluDecomposition->cols_eliminated;
-            if (eliminated_col_index == this->bit_nodes.size()) {
-                // all columns have been eliminated, so the cluster is valid
-                throw new std::runtime_error("All columns have been eliminated");
-            }
-
-            // add columns to existing decomposition matrix
-            for (auto idx = this->eliminated_col_index; idx < this->bit_nodes.size(); idx++) {
-                this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
-            }
-        
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
-            // todo does this need to be the all 1 vector with an entry for each check in the cluster?
             // std::vector<uint8_t> cluster_syndrome;
             this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
@@ -387,9 +386,9 @@ namespace ldpc::uf {
 
             // this->print();
 
-            std::cout<<"Cluster ID: "<<this->cluster_id<<"; Eliminated col index: "<<this->eliminated_col_index<<std::endl;
+            std::cout<<"Cluster ID: "<<this->cluster_id<<"; Eliminated col index: "<<eliminated_cols<<std::endl;
             // this->print();
-            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, this->eliminated_col_index);
+            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, eliminated_cols);
             // this->eliminated_col_index = -1;
 
             // //Note we could delay the actual solve set until all the clusters are valid. Similar to peeling union-find.

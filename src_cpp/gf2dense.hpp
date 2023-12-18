@@ -185,6 +185,7 @@ namespace ldpc {
 
             bool eliminate_column(int col_idx, const bool construct_L = true, const bool construct_U = true) {
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
+                this->cols_eliminated++;
 
                 // std::cout<<"Col idx: "<<col_idx<<std::endl;
                 // std::cout<<"Row count: "<<this->row_count<<std::endl;
@@ -332,7 +333,6 @@ namespace ldpc {
                 bool in_image = false;
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
-                    this->cols_eliminated++;
                     //eliminate the column
                   
                     //exit if the maximum rank has been reached
@@ -340,7 +340,7 @@ namespace ldpc {
                         in_image = true;
                         break;
                     }
-                  
+
                     bool pivot = this->eliminate_column(col_idx, true, true);
                   
                     //check if y is in the image of the matrix

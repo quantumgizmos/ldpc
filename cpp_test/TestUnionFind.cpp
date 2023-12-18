@@ -163,7 +163,7 @@ TEST(UfDecoder, otf_ring_code) {
     bp.maximum_iterations = 2;
     auto ufd = UfDecoder(pcm);
 
-    for (int i = 0; i < std::pow(2, length); i++) {
+    for (int i = 1; i < std::pow(2, length); i++) {
         auto error = ldpc::util::decimal_to_binary(i, length);
         auto syndrome = pcm.mulvec(error);
         bp.decode(syndrome);
@@ -185,36 +185,36 @@ TEST(UfDecoder, otf_ring_code) {
 }
 
 
-// TEST(UfDecoder, otf_hamming_code_rank9) {
+ TEST(UfDecoder, otf_hamming_code_rank9) {
 
-//     auto hamming_code_rank = 9;
+     auto hamming_code_rank = 9;
 
-//     auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
-//     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
-//     bp.maximum_iterations = 2;
-//     auto ufd = UfDecoder(pcm);
+     auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+     bp.maximum_iterations = 2;
+     auto ufd = UfDecoder(pcm);
 
-//     for (int i = 50; i < std::pow(2, hamming_code_rank); i++) {
-//         auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
-//         bp.decode(syndrome);
+     for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
+         auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+         bp.decode(syndrome);
 
-//         cout<<i<<endl;
-//         std::cout<<"syndrome: ";
-//         print_vector(syndrome);
+         cout<<i<<endl;
+         std::cout<<"syndrome: ";
+         print_vector(syndrome);
 
-//         // exit(0);
+         // exit(0);
         
 
-//         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
+         auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
 
-//         auto decoding_syndrome = pcm.mulvec(decoding);
+         auto decoding_syndrome = pcm.mulvec(decoding);
 
-//         std::cout<<"decoded syndrome: ";
-//         print_vector(decoding_syndrome);
-//         ASSERT_TRUE(syndrome == decoding_syndrome);
-//         std::cout<<std::endl;
-//     }
-// }
+         std::cout<<"decoded syndrome: ";
+         print_vector(decoding_syndrome);
+         ASSERT_TRUE(syndrome == decoding_syndrome);
+         std::cout<<std::endl;
+     }
+ }
 
 
 int main(int argc, char **argv) {
