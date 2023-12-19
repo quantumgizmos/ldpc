@@ -330,16 +330,15 @@ namespace ldpc::uf {
          * @return True if the syndrome is in the image of the cluster parity check matrix.
          */
         bool apply_on_the_fly_elimination() {
-            int eliminated_cols = 0;
             if (this->pluDecomposition == nullptr) {
                 // no existing decomposition yet so we create one
                 this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
                                                                               this->bit_nodes.size(),
                                                                               this->cluster_pcm);
-            }else{
-                eliminated_cols = this->pluDecomposition->cols_eliminated;
+            } else {
                 // add columns to existing decomposition matrix
-                for (auto idx = eliminated_cols; idx < this->bit_nodes.size(); idx++) {
+                // new bits are appended to cluster_pcm
+                for (auto idx = pluDecomposition->col_count; idx < this->bit_nodes.size(); idx++) {
                     this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
                 }
             }
@@ -349,9 +348,11 @@ namespace ldpc::uf {
             for (auto s: this->enclosed_syndromes) {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome, eliminated_cols);
+            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome,
+                                                                                     pluDecomposition->cols_eliminated);
             return syndrome_in_image;
         }
+
         void print();
 
     };
@@ -376,7 +377,7 @@ namespace ldpc::uf {
             this->weighted = false;
         }
 
-        
+
         std::vector<uint8_t> &on_the_fly_decode(const std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
             return this->matrix_decode(syndrome, bit_weights, 1, true);
@@ -426,14 +427,14 @@ namespace ldpc::uf {
                     cl->print();
                     gf2dense::print_csc(cl->cluster_pcm);
 
-                    std::cout<<std::endl;
+                    std::cout << std::endl;
 
                     gf2dense::print_csr(cl->pluDecomposition->L);
 
-                    std::cout<<std::endl;
+                    std::cout << std::endl;
 
                     gf2dense::print_csr(cl->pluDecomposition->U);
-                    std::cout<<"Pivots: ";
+                    std::cout << "Pivots: ";
                     ldpc::sparse_matrix_util::print_vector(cl->pluDecomposition->pivot_cols);
 
                     auto temp_pcm = ldpc::gf2sparse::csc_to_gf2sparse(cl->cluster_pcm);
@@ -481,28 +482,28 @@ namespace ldpc::uf {
         for (auto i: this->boundary_check_nodes) std::cout << i << " ";
         std::cout << std::endl;
 
-        std::cout<<"Cluster bit idx to pcm bit idx: ";
+        std::cout << "Cluster bit idx to pcm bit idx: ";
         count = 0;
-        for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx){
-            std::cout<<"{"<<count<<","<<bit_idx<<"}";
+        for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx) {
+            std::cout << "{" << count << "," << bit_idx << "}";
             count++;
         }
-        std::cout<<std::endl;
+        std::cout << std::endl;
 
-        std::cout<<"Cluster check idx to pcm check idx: ";
+        std::cout << "Cluster check idx to pcm check idx: ";
         count = 0;
-        for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx){
-            std::cout<<"{"<<count<<","<<check_idx<<"}";
+        for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx) {
+            std::cout << "{" << count << "," << check_idx << "}";
             count++;
         }
-        std::cout<<std::endl;
+        std::cout << std::endl;
 
-        std::cout<<"Cluster syndrome: ";
+        std::cout << "Cluster syndrome: ";
         count = 0;
-        for (auto check_idx: this->cluster_pcm_syndrome){
-            std::cout<<unsigned(check_idx);
+        for (auto check_idx: this->cluster_pcm_syndrome) {
+            std::cout << unsigned(check_idx);
         }
-        std::cout<<std::endl;
+        std::cout << std::endl;
 
     }
 
