@@ -115,6 +115,8 @@ else:
 this_directory = Path(__file__).parent
 
 cpp_modules = ["bp_decoder", "bposd_decoder", "bp_flip", "belief_find_decoder", "mod2", "union_find_decoder", "bplsd_decoder"]
+cpp_modules = ["bp_decoder", "bposd_decoder", "bplsd_decoder"]
+
 
 c_extensions = []
 for module in cpp_modules:

@@ -52,9 +52,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.lsd = new lsd_decoder_cpp(self.pcm[0])
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
         # self.residual_syndrome.resize(self.m) #C vector for the bf decoding
-        if bits_per_step != 1:
-            # self.bits_per_step = pcm.shape[1]
-            raise NotImplementedError("Bits per step is currently fixed at bits_per_step=1. Feature not yet implemented.")
+        if bits_per_step == 0:
+            self.bits_per_step = pcm.shape[1]
         else:
             self.bits_per_step = bits_per_step
         self.input_vector_type = "syndrome"
@@ -108,7 +107,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
             for i in range(self.n): out[i] = self.bpd.decoding[i]
 
         if not self.bpd.converge:
-            self.lsd.on_the_fly_decode(self._syndrome, self.bpd.log_prob_ratios)
+            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
             for i in range(self.n):
                 out[i] = self.lsd.decoding[i]
         
