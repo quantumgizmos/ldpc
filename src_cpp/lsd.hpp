@@ -9,17 +9,15 @@
 #include <set>
 #include <map>
 #include "sparse_matrix_util.hpp"
-#include "bp.hpp"
-#include "osd.hpp"
 #include <robin_map.h>
 #include <robin_set.h>
 #include <numeric>
 
-#include "gf2sparse_linalg.hpp"
 #include "bp.hpp"
 #include "gf2dense.hpp"
 
-namespace ldpc::uf {
+namespace ldpc::lsd {
+
     const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
     std::vector<int> sort_indices(std::vector<double> &B) {
@@ -30,7 +28,7 @@ namespace ldpc::uf {
     }
 
     // TODO this should probably become a class
-    struct Cluster {
+    struct LsdCluster {
         ldpc::bp::BpSparse &pcm;
         int cluster_id;
         bool active; // if merge one becomes deactivated
@@ -40,18 +38,9 @@ namespace ldpc::uf {
         tsl::robin_set<int> boundary_check_nodes;
         std::vector<int> candidate_bit_nodes;
         tsl::robin_set<int> enclosed_syndromes;
-        tsl::robin_map<int, int> spanning_tree_check_roots;
-        tsl::robin_set<int> spanning_tree_bits;
-        tsl::robin_set<int> spanning_tree_leaf_nodes;
-        Cluster **global_check_membership; // store which cluster a check belongs to
-        Cluster **global_bit_membership; // store which cluster a bit belongs to
-        tsl::robin_set<Cluster *> merge_list;
-        std::vector<int> cluster_decoding;
-        std::vector<int> matrix_to_cluster_bit_map;
-        tsl::robin_map<int, int> cluster_to_matrix_bit_map;
-        std::vector<int> matrix_to_cluster_check_map;
-        tsl::robin_map<int, int> cluster_to_matrix_check_map;
-        // parity check matrix corresponding to the cluster. Indices are local to the cluster.
+        LsdCluster **global_check_membership; // store which cluster a check belongs to
+        LsdCluster **global_bit_membership; // store which cluster a bit belongs to
+        tsl::robin_set<LsdCluster *> merge_list;
         gf2dense::CscMatrix cluster_pcm;
         std::vector<uint8_t> cluster_pcm_syndrome;
         std::vector<int> cluster_check_idx_to_pcm_check_idx;
@@ -59,12 +48,12 @@ namespace ldpc::uf {
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
 
-        Cluster() = default;
+        LsdCluster() = default;
 
-        Cluster(ldpc::bp::BpSparse &parity_check_matrix,
+        LsdCluster(ldpc::bp::BpSparse &parity_check_matrix,
                 int syndrome_index,
-                Cluster **ccm, // global check cluster membership
-                Cluster **bcm, // global bit cluster membership
+                LsdCluster **ccm, // global check cluster membership
+                LsdCluster **bcm, // global bit cluster membership
                 bool on_the_fly = false) :
                 pcm(parity_check_matrix) {
             this->active = true;
@@ -87,7 +76,7 @@ namespace ldpc::uf {
 
         }
 
-        ~Cluster() {
+        ~LsdCluster() {
             this->bit_nodes.clear();
             this->check_nodes.clear();
             this->boundary_check_nodes.clear();
@@ -99,10 +88,6 @@ namespace ldpc::uf {
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
-        }
-
-        [[nodiscard]] int parity() const {
-            return static_cast<int>(this->enclosed_syndromes.size() % 2);
         }
 
         /**
@@ -156,7 +141,7 @@ namespace ldpc::uf {
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
         void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
-            Cluster *larger = this;
+            LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl);
@@ -234,9 +219,9 @@ namespace ldpc::uf {
          * That is, the (reduced) parity check matrix of the larger cluster is kept.
          * @param cl2
          */
-        static Cluster *merge_clusters(Cluster *cl1, Cluster *cl2) {
-            Cluster *smaller;
-            Cluster *larger;
+        static LsdCluster *merge_clusters(LsdCluster *cl1, LsdCluster *cl2) {
+            LsdCluster *smaller;
+            LsdCluster *larger;
             if (cl1->bit_nodes.size() < cl2->bit_nodes.size()) {
                 smaller = cl1;
                 larger = cl2;
@@ -356,7 +341,7 @@ namespace ldpc::uf {
 
 
     // todo move this to separate file
-    class UfDecoder {
+    class LsdDecoder {
 
     private:
         bool weighted;
@@ -367,7 +352,7 @@ namespace ldpc::uf {
         int bit_count;
         int check_count;
 
-        UfDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
+        LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
@@ -388,14 +373,14 @@ namespace ldpc::uf {
 
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
-            std::vector<Cluster *> clusters;
-            std::vector<Cluster *> invalid_clusters;
-            auto **global_bit_membership = new Cluster *[pcm.n]();
-            auto **global_check_membership = new Cluster *[pcm.m]();
+            std::vector<LsdCluster *> clusters;
+            std::vector<LsdCluster *> invalid_clusters;
+            auto **global_bit_membership = new LsdCluster *[pcm.n]();
+            auto **global_check_membership = new LsdCluster *[pcm.m]();
 
             for (auto i = 0; i < this->pcm.m; i++) {
                 if (syndrome[i] == 1) {
-                    auto *cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership);
+                    auto *cl = new LsdCluster(this->pcm, i, global_check_membership, global_bit_membership);
                     clusters.push_back(cl);
                     invalid_clusters.push_back(cl);
                 }
@@ -414,7 +399,7 @@ namespace ldpc::uf {
                     }
                 }
                 std::sort(invalid_clusters.begin(), invalid_clusters.end(),
-                          [](const Cluster *lhs, const Cluster *rhs) {
+                          [](const LsdCluster *lhs, const LsdCluster *rhs) {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
             }
@@ -438,7 +423,7 @@ namespace ldpc::uf {
 
     };
 
-    std::string Cluster::to_string() {
+    std::string LsdCluster::to_string() {
         int count;
         std::stringstream ss{};
         ss << "........." << std::endl;
@@ -485,6 +470,6 @@ namespace ldpc::uf {
     }
 
 
-}//end namespace uf
+}//end namespace lsd
 
 #endif

@@ -66,7 +66,7 @@ set(TEST_EXECUTABLES
     TestSoftInfo
     TestFlipDecoder
     TestGf2Codes
-    TestUnionFind
+    TestLsd
     TestSparseMatrix
     TestSparseMatrixUtil
     TestGF2Sparse
@@ -76,7 +76,6 @@ set(TEST_EXECUTABLES
     TestGf2DenseApplications
     TestUtil
     TestRng
-    TestLosdCluster
 )
 
 # Loop through the list of test executables to:
