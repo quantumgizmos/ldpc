@@ -57,7 +57,7 @@ namespace ldpc::uf {
         std::vector<int> cluster_check_idx_to_pcm_check_idx;
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
-        gf2dense::PluDecomposition *pluDecomposition = nullptr;
+        gf2dense::PluDecomposition pluDecomposition;
 
         Cluster() = default;
 
@@ -80,6 +80,11 @@ namespace ldpc::uf {
             this->pcm_check_idx_to_cluster_check_idx.insert(
                     std::pair<int, int>{syndrome_index, 0});
             this->cluster_check_idx_to_pcm_check_idx.push_back(syndrome_index);
+
+            this->pluDecomposition = ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
+                                                                              this->bit_nodes.size(),
+                                                                              this->cluster_pcm);
+
         }
 
         ~Cluster() {
@@ -90,7 +95,7 @@ namespace ldpc::uf {
             this->enclosed_syndromes.clear();
             this->merge_list.clear();
             this->cluster_pcm.clear();
-            this->pluDecomposition = nullptr;
+            // this->pluDecomposition = nullptr;
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
@@ -329,26 +334,20 @@ namespace ldpc::uf {
          * @return True if the syndrome is in the image of the cluster parity check matrix.
          */
         bool apply_on_the_fly_elimination() {
-            if (this->pluDecomposition == nullptr) {
-                // no existing decomposition yet so we create one
-                this->pluDecomposition = new ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
-                                                                              this->bit_nodes.size(),
-                                                                              this->cluster_pcm);
-            } else {
-                // add columns to existing decomposition matrix
-                // new bits are appended to cluster_pcm
-                for (auto idx = pluDecomposition->col_count; idx < this->bit_nodes.size(); idx++) {
-                    this->pluDecomposition->add_column_to_matrix(this->cluster_pcm[idx]);
-                }
+            // add columns to existing decomposition matrix
+            // new bits are appended to cluster_pcm
+            for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
+                this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
             }
+            
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // std::vector<uint8_t> cluster_syndrome;
             this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
-            auto syndrome_in_image = this->pluDecomposition->rref_with_y_image_check(this->cluster_pcm_syndrome,
-                                                                                     pluDecomposition->cols_eliminated);
+            auto syndrome_in_image = this->pluDecomposition.rref_with_y_image_check(this->cluster_pcm_syndrome,
+                                                                                     pluDecomposition.cols_eliminated);
             return syndrome_in_image;
         }
 
@@ -422,7 +421,7 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-                    auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
+                    auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];

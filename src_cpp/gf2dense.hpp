@@ -132,7 +132,7 @@ namespace ldpc {
 
             }
 
-            PluDecomposition(PluDecomposition &plu) = default;
+            PluDecomposition() = default;
 
             ~PluDecomposition() =
             default;
