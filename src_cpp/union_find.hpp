@@ -422,7 +422,7 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-                    auto solution = cl->pluDecomposition->fast_lu_solve(cl->cluster_pcm_syndrome);
+                    auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
