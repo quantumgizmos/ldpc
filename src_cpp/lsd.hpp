@@ -360,13 +360,13 @@ namespace ldpc::lsd {
         }
 
 
-        std::vector<uint8_t> &on_the_fly_decode(const std::vector<uint8_t> &syndrome,
+        std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
             return this->matrix_decode(syndrome, bit_weights, 1, true);
         }
 
         std::vector<uint8_t> &
-        matrix_decode(const std::vector<uint8_t> &syndrome,
+        matrix_decode(std::vector<uint8_t> &syndrome,
                       const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                       const int bits_per_step = 1,
                       const bool is_on_the_fly = false) {
