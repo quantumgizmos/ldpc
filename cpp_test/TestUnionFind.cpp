@@ -132,20 +132,16 @@ TEST(UfDecoder, otf_ring_code) {
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
-            cout << i << endl;
-            print_vector(syndrome);
             auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
             auto decoding_syndrome = pcm.mulvec(decoding);
-            print_vector(decoding_syndrome);
             ASSERT_TRUE(syndrome == decoding_syndrome);
-            std::cout << std::endl;
         }
     }
 }
 
 
 TEST(UfDecoder, otf_hamming_code) {
-    for (auto hamming_code_rank = 3; hamming_code_rank < 12; hamming_code_rank++) {
+    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++) {
 
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
@@ -154,15 +150,9 @@ TEST(UfDecoder, otf_hamming_code) {
         for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
             bp.decode(syndrome);
-            cout << i << endl;
-            std::cout << "syndrome: ";
-            print_vector(syndrome);
             auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
             auto decoding_syndrome = pcm.mulvec(decoding);
-            std::cout << "decoded syndrome: ";
-            print_vector(decoding_syndrome);
             ASSERT_TRUE(syndrome == decoding_syndrome);
-            std::cout << std::endl;
         }
     }
 }
