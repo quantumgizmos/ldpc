@@ -57,11 +57,11 @@ namespace ldpc {
 
 
         void print_csr(std::vector<std::vector<int>> csr_mat) {
-        
+
             int col_count = -1;
-            for(auto row: csr_mat){
-                for(int entry: row){
-                    if(entry>col_count){
+            for (auto row: csr_mat) {
+                for (int entry: row) {
+                    if (entry > col_count) {
                         col_count = entry;
                     }
                 }
@@ -74,22 +74,22 @@ namespace ldpc {
                 for (auto entry: row) {
                     row_dense[entry] = 1;
                 }
-                for(auto entry: row_dense){
-                    std::cout<<unsigned(entry)<<" ";
+                for (auto entry: row_dense) {
+                    std::cout << unsigned(entry) << " ";
                 }
-                std::cout<<std::endl;
+                std::cout << std::endl;
             }
-        
+
         }
-        
+
 
         void print_csc(std::vector<std::vector<int>> csc_mat) {
             CsrMatrix csr_matrix;
             int col_index = 0;
             for (auto col: csc_mat) {
                 for (auto entry: col) {
-                    if(entry>=csr_matrix.size()){
-                        csr_matrix.resize(entry+1,std::vector<int>{});
+                    if (entry >= csr_matrix.size()) {
+                        csr_matrix.resize(entry + 1, std::vector<int>{});
                     }
                     csr_matrix[entry].push_back(col_index);
                 }
@@ -125,10 +125,10 @@ namespace ldpc {
 
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
                     : row_count(row_count),
-                    col_count(col_count),
-                    csc_mat(csc_mat),
-                    matrix_rank(0),
-                    cols_eliminated(0) {
+                      col_count(col_count),
+                      csc_mat(csc_mat),
+                      matrix_rank(0),
+                      cols_eliminated(0) {
 
             }
 
@@ -216,11 +216,6 @@ namespace ldpc {
                 auto rr_col = std::vector<uint8_t>(this->row_count, 0);
                 this->cols_eliminated = col_idx + 1;
 
-                // std::cout<<"Col idx: "<<col_idx<<std::endl;
-                // std::cout<<"Row count: "<<this->row_count<<std::endl;
-                // std::cout<<"Csc mat: ";
-                // ldpc::sparse_matrix_util::print_vector(this->csc_mat[col_idx]);
-
                 for (auto row_index: this->csc_mat[col_idx]) {
                     rr_col[row_index] = 1;
                 }
@@ -254,12 +249,12 @@ namespace ldpc {
                 std::swap(this->rows[this->matrix_rank], this->rows[this->swap_rows[this->matrix_rank]]);
                 this->elimination_rows.push_back(std::vector<int>{});
 
-                if(construct_L){
+                if (construct_L) {
                     std::swap(this->L[this->matrix_rank], this->L[this->swap_rows[this->matrix_rank]]);
                     this->L[this->matrix_rank].push_back(this->matrix_rank);
                 }
 
-                for (auto i = this->matrix_rank+1; i < this->row_count; i++) {
+                for (auto i = this->matrix_rank + 1; i < this->row_count; i++) {
                     if (rr_col[i] == 1) {
                         this->elimination_rows[this->matrix_rank].push_back(i);
                         if (construct_L) {
@@ -373,7 +368,7 @@ namespace ldpc {
                 if (this->L.size() != this->row_count) {
                     this->L.resize(this->row_count, std::vector<int>{});
                 }
-                
+
                 bool in_image = false;
                 //iterate over the columnsm starting from column `start_col_idx`
                 for (auto col_idx = start_col_idx; col_idx < this->col_count; col_idx++) {
@@ -394,8 +389,6 @@ namespace ldpc {
                         for (auto row_index: this->elimination_rows[this->matrix_rank - 1]) {
                             this->y_image_check_vector[row_index] ^= this->y_image_check_vector[this->matrix_rank - 1];
                         }
-                        // std::cout<<"Y image check vector: ";
-                        // ldpc::sparse_matrix_util::print_vector(this->y_image_check_vector);
                         in_image = true;
                         for (int i = matrix_rank; i < this->row_count; i++) {
                             if (this->y_image_check_vector[i] == 1) {
@@ -619,9 +612,6 @@ namespace ldpc {
                     distance_struct.min_distance = current_row_size;
                 }
 
-                // std::cout<<max_weight_saved_word<<std::endl;
-                // ldpc::sparse_matrix_util::print_vector(current_row_sparse);
-
                 if (current_row_size <= max_weight_saved_word) {
 
                     int max1 = -10;
@@ -659,9 +649,6 @@ namespace ldpc {
                 }
 
             }
-
-            // std::cout<<"count: "<<count<<std::endl;
-            // // std::cout<<std::pow(2,row_count)<<std::endl;
 
             distance_struct.samples_searched = count;
 
@@ -722,8 +709,6 @@ namespace ldpc {
                         }
                     }
                 }
-
-                // std::cout<<row_count<<std::endl;
 
                 if (row_count < distance) {
                     distance = row_count;

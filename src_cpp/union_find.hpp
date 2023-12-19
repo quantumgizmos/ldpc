@@ -316,7 +316,6 @@ namespace ldpc::uf {
                 auto local_idx = this->add_check(check_index, true);
                 col.push_back(local_idx);
             }
-            // ldpc::sparse_matrix_util::print_vector(col);
             this->cluster_pcm.push_back(col);
         }
 
@@ -353,8 +352,7 @@ namespace ldpc::uf {
             return syndrome_in_image;
         }
 
-        void print();
-
+        std::string to_string();
     };
 
 
@@ -424,27 +422,7 @@ namespace ldpc::uf {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-                    cl->print();
-                    gf2dense::print_csc(cl->cluster_pcm);
-
-                    std::cout << std::endl;
-
-                    gf2dense::print_csr(cl->pluDecomposition->L);
-
-                    std::cout << std::endl;
-
-                    gf2dense::print_csr(cl->pluDecomposition->U);
-                    std::cout << "Pivots: ";
-                    ldpc::sparse_matrix_util::print_vector(cl->pluDecomposition->pivot_cols);
-
-                    auto temp_pcm = ldpc::gf2sparse::csc_to_gf2sparse(cl->cluster_pcm);
-
-                    auto solution = cl->pluDecomposition->lu_solve(cl->cluster_pcm_syndrome);
-                    // auto solution = cl->pluDecomposition->fast_lu_solve(cl->cluster_pcm_syndrome);
-
-
-                    ldpc::sparse_matrix_util::print_vector(temp_pcm.mulvec(solution));
-
+                    auto solution = cl->pluDecomposition->fast_lu_solve(cl->cluster_pcm_syndrome);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
@@ -461,50 +439,50 @@ namespace ldpc::uf {
 
     };
 
-    void Cluster::print() {
+    std::string Cluster::to_string() {
         int count;
-        std::cout << "........." << std::endl;
-        std::cout << "Cluster ID: " << this->cluster_id << std::endl;
-        std::cout << "Active: " << this->active << std::endl;
-        std::cout << "Enclosed syndromes: ";
-        for (auto i: this->enclosed_syndromes) std::cout << i << " ";
-        std::cout << std::endl;
-        std::cout << "Cluster bits: ";
-        for (auto i: this->bit_nodes) std::cout << i << " ";
-        std::cout << std::endl;
-        std::cout << "Cluster checks: ";
-        for (auto i: this->check_nodes) std::cout << i << " ";
-        std::cout << std::endl;
-        std::cout << "Candidate bits: ";
-        for (auto i: this->candidate_bit_nodes) std::cout << i << " ";
-        std::cout << std::endl;
-        std::cout << "Boundary Checks: ";
-        for (auto i: this->boundary_check_nodes) std::cout << i << " ";
-        std::cout << std::endl;
+        std::stringstream ss{};
+        ss << "........." << std::endl;
+        ss << "Cluster ID: " << this->cluster_id << std::endl;
+        ss << "Active: " << this->active << std::endl;
+        ss << "Enclosed syndromes: ";
+        for (auto i: this->enclosed_syndromes) ss << i << " ";
+        ss << std::endl;
+        ss << "Cluster bits: ";
+        for (auto i: this->bit_nodes) ss << i << " ";
+        ss << std::endl;
+        ss << "Cluster checks: ";
+        for (auto i: this->check_nodes) ss << i << " ";
+        ss << std::endl;
+        ss << "Candidate bits: ";
+        for (auto i: this->candidate_bit_nodes) ss << i << " ";
+        ss << std::endl;
+        ss << "Boundary Checks: ";
+        for (auto i: this->boundary_check_nodes) ss << i << " ";
+        ss << std::endl;
 
-        std::cout << "Cluster bit idx to pcm bit idx: ";
+        ss << "Cluster bit idx to pcm bit idx: ";
         count = 0;
         for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx) {
-            std::cout << "{" << count << "," << bit_idx << "}";
+            ss << "{" << count << "," << bit_idx << "}";
             count++;
         }
-        std::cout << std::endl;
+        ss << std::endl;
 
-        std::cout << "Cluster check idx to pcm check idx: ";
+        ss << "Cluster check idx to pcm check idx: ";
         count = 0;
         for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx) {
-            std::cout << "{" << count << "," << check_idx << "}";
+            ss << "{" << count << "," << check_idx << "}";
             count++;
         }
-        std::cout << std::endl;
+        ss << std::endl;
 
-        std::cout << "Cluster syndrome: ";
-        count = 0;
+        ss << "Cluster syndrome: ";
         for (auto check_idx: this->cluster_pcm_syndrome) {
-            std::cout << unsigned(check_idx);
+            ss << unsigned(check_idx);
         }
-        std::cout << std::endl;
-
+        ss << std::endl;
+        return ss.str();
     }
 
 
