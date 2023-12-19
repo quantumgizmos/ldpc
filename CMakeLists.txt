@@ -76,6 +76,7 @@ set(TEST_EXECUTABLES
     TestGf2DenseApplications
     TestUtil
     TestRng
+    TestUnionFind
 )
 
 # Loop through the list of test executables to:
