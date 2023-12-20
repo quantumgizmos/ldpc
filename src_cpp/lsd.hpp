@@ -349,6 +349,7 @@ namespace ldpc::lsd {
 
     public:
         std::vector<uint8_t> decoding;
+        std::vector<int> cluster_size_stats;
         int bit_count;
         int check_count;
 
@@ -371,6 +372,7 @@ namespace ldpc::lsd {
                       const int bits_per_step = 1,
                       const bool is_on_the_fly = true) {
 
+            this->cluster_size_stats.clear();
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
             std::vector<LsdCluster *> clusters;
@@ -406,6 +408,7 @@ namespace ldpc::lsd {
 
             for (auto cl: clusters) {
                 if (cl->active) {
+                    this->cluster_size_stats.push_back(cl->bit_nodes.size());
                     auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
                     for (auto i = 0; i < solution.size(); i++) {
                         if (solution[i] == 1) {

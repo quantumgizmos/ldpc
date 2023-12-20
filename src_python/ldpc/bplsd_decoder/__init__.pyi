@@ -64,3 +64,15 @@ class BpLsdDecoder(BpDecoderBase):
             If the length of the input syndrome is not equal to the length of the code.
         """
 
+
+    @property
+    def cluster_size_stats(self):
+        """
+        Returns the cluster size statistics for the LSD algorithm.
+
+        Returns
+        -------
+        np.ndarray
+            The cluster size statistics.
+        """
+

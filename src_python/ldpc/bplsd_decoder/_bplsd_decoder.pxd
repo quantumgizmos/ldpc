@@ -16,6 +16,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         # vector[uint8_t]& on_the_fly_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights = NULL_DOUBLE_VECTOR)
         vector[uint8_t]& lsd_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
         vector[uint8_t] decoding
+        vector[int] cluster_size_stats
 
     
 

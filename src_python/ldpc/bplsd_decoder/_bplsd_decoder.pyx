@@ -112,3 +112,23 @@ cdef class BpLsdDecoder(BpDecoderBase):
                 out[i] = self.lsd.decoding[i]
         
         return out
+
+    @property
+    def cluster_size_stats(self):
+        """
+        Returns the cluster size statistics for the LSD algorithm.
+
+        Returns
+        -------
+        np.ndarray
+            The cluster size statistics.
+        """
+
+        cdef vector[int] clss = self.lsd.cluster_size_stats
+        cdef int i
+        out = np.zeros(clss.size(),dtype=int)
+        for i in range(clss.size()):
+            out[i] = clss[i]
+        return out
+
+        return self.lsd.cluster_size_stats
