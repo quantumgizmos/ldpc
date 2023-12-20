@@ -415,12 +415,21 @@ namespace ldpc::lsd {
                           });
             }
             // first version of higher-order osd method
+            // this grows clusters until osd order is achieved or until they cannot grow anymore
+            // todo in osd-w the w most reliable columns are chosen, perhaps we can use the weights passed above to decode which clusters to grow?
             if (osd_order > 0) {
-                for (auto cl: clusters) {
-                    if (cl->active) {
-                        for (auto i = 0; i < osd_order; i++) {
+                auto extend_cnt = 0;
+                while (extend_cnt < osd_order) {
+                    auto end_extend = true;
+                    for (auto cl: clusters) {
+                        if (cl->active) {
                             cl->grow_cluster(bit_weights, 1, true);
+                            extend_cnt++;
+                            end_extend = false;
                         }
+                    }
+                    if (end_extend) {
+                        break;
                     }
                 }
             }

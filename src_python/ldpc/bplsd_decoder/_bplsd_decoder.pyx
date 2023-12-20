@@ -55,6 +55,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
                  osd_order:int = 0):
         self.MEMORY_ALLOCATED=False
         self.lsd = new lsd_decoder_cpp(self.pcm[0])
+        self.osd_order = osd_order
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
         # self.residual_syndrome.resize(self.m) #C vector for the bf decoding
         if bits_per_step == 0:
