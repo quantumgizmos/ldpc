@@ -12,6 +12,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - Belief-find with inversion solving (first implementation I am aware of).
 - An implementation of the Kuo and Lai memory belief propagation decoder (https://arxiv.org/abs/2104.13659)
 - Flip and P-flip decoders (https://aps.arxiv.org/abs/2212.06985)
+- STIM integration for circuit level noise.
 
 ## ToDos
 
@@ -22,7 +23,6 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - Functions need to be properly documented (in progress)
 - Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
 - The Peeling version of union-find only works for the Toric code. A routine for matching to the boundary needs to be implemented.
-- STIM integration for circuit level noise.
 
 ## Python - Installation from source
 

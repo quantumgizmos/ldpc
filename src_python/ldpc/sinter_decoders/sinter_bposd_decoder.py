@@ -1,12 +1,11 @@
 import stim
 import numpy as np
 import pathlib
-from BeliefMatching import detector_error_model_to_check_matrices
-from ldpc.sinter_decoders import SinterDecoder
+from beliefmatching import detector_error_model_to_check_matrices
 from ldpc.bposd_decoder import BpOsdDecoder
+from sinter import Decoder
 
-
-class SinterBpOsdDecoder(SinterDecoder):
+class SinterBpOsdDecoder(Decoder):
     def __init__(self, 
                  bp_method="ms", 
                  ms_scaling_factor=0.625, 
@@ -30,7 +29,7 @@ class SinterBpOsdDecoder(SinterDecoder):
     ) -> None:
         self.dem = stim.DetectorErrorModel.from_file(dem_path)
         self.matrices = detector_error_model_to_check_matrices(self.dem)
-        self.bposd = BpOsdDecoder(self.matrices.check_matrix, error_channel=self.matrices.priors, max_iter=5, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
+        self.bposd = BpOsdDecoder(self.matrices.check_matrix, error_channel=list(self.matrices.priors), max_iter=5, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
 
         shots = stim.read_shot_data_file(
             path=dets_b8_in_path, format="b8", num_detectors=self.dem.num_detectors
@@ -48,6 +47,5 @@ class SinterBpOsdDecoder(SinterDecoder):
 
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
-        corr = self.matrices.decode(syndrome)
-        if self._bpd.converge:
-            return (self.matrices.observables_matrix @ corr) % 2
+        corr = self.bposd.decode(syndrome)
+        return (self.matrices.observables_matrix @ corr) % 2

@@ -21,6 +21,8 @@ dependencies = [
     "scipy>=1.9.3",
     "tqdm",
     "pytest"
+    "stim"
+    "sinter"
 ]
 version = "2.0.12"
 
