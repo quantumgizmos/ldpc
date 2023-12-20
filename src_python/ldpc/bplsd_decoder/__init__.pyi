@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.sparse import spmatrix
+
+
 class BpLsdDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
@@ -33,6 +34,8 @@ class BpLsdDecoder(BpDecoderBase):
         by default None.
     bits_per_step : int, optional, NotImplemented
         Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
+    osd_order: int, optional, NotImplemented
+        Specifies the order of the OSD algorithm. If no value is provided, this is set to 0.
 
     Notes
     -----

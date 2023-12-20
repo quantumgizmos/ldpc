@@ -361,6 +361,42 @@ TEST(LsdDecoder, otf_hamming_code) {
     }
 }
 
+TEST(LsdDecoder, otf_hamming_code_osd5) {
+    for (auto hamming_code_rank = 9; hamming_code_rank < 10; hamming_code_rank++) {
+
+        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 2;
+        auto ufd = LsdDecoder(pcm);
+        for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+            auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+            bp.decode(syndrome);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 5);
+            auto decoding_syndrome = pcm.mulvec(decoding);
+            ASSERT_TRUE(syndrome == decoding_syndrome);
+        }
+    }
+}
+
+TEST(LsdDecoder, otf_ring_code_osd5) {
+
+    for (auto length = 2; length < 12; length++) {
+
+        auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 3;
+        auto ufd = LsdDecoder(pcm);
+
+        for (int i = 0; i < std::pow(2, length); i++) {
+            auto error = ldpc::util::decimal_to_binary(i, length);
+            auto syndrome = pcm.mulvec(error);
+            bp.decode(syndrome);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 5);
+            auto decoding_syndrome = pcm.mulvec(decoding);
+            ASSERT_TRUE(syndrome == decoding_syndrome);
+        }
+    }
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

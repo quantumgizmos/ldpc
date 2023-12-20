@@ -14,7 +14,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
     cdef cppclass lsd_decoder_cpp "ldpc::lsd::LsdDecoder":
         lsd_decoder_cpp(BpSparse& pcm) except +
         # vector[uint8_t]& on_the_fly_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights = NULL_DOUBLE_VECTOR)
-        vector[uint8_t]& lsd_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
+        vector[uint8_t]& lsd_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step, int osd_order)
         vector[uint8_t] decoding
         vector[int] cluster_size_stats
 
@@ -24,3 +24,4 @@ cdef class BpLsdDecoder(BpDecoderBase):
     cdef lsd_decoder_cpp* lsd
     cdef int bits_per_step
     cdef vector[uint8_t] bplsd_decoding
+    cdef int osd_order

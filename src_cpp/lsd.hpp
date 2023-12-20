@@ -51,10 +51,10 @@ namespace ldpc::lsd {
         LsdCluster() = default;
 
         LsdCluster(ldpc::bp::BpSparse &parity_check_matrix,
-                int syndrome_index,
-                LsdCluster **ccm, // global check cluster membership
-                LsdCluster **bcm, // global bit cluster membership
-                bool on_the_fly = false) :
+                   int syndrome_index,
+                   LsdCluster **ccm, // global check cluster membership
+                   LsdCluster **bcm, // global bit cluster membership
+                   bool on_the_fly = false) :
                 pcm(parity_check_matrix) {
             this->active = true;
             this->valid = false;
@@ -71,8 +71,8 @@ namespace ldpc::lsd {
             this->cluster_check_idx_to_pcm_check_idx.push_back(syndrome_index);
 
             this->pluDecomposition = ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
-                                                                              this->bit_nodes.size(),
-                                                                              this->cluster_pcm);
+                                                                      this->bit_nodes.size(),
+                                                                      this->cluster_pcm);
 
         }
 
@@ -324,7 +324,7 @@ namespace ldpc::lsd {
             for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
                 this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
             }
-            
+
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // std::vector<uint8_t> cluster_syndrome;
             this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
@@ -332,7 +332,7 @@ namespace ldpc::lsd {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
             auto syndrome_in_image = this->pluDecomposition.rref_with_y_image_check(this->cluster_pcm_syndrome,
-                                                                                     pluDecomposition.cols_eliminated);
+                                                                                    pluDecomposition.cols_eliminated);
             return syndrome_in_image;
         }
 
@@ -362,15 +362,17 @@ namespace ldpc::lsd {
 
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
-                                                const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
-            return this->lsd_decode(syndrome, bit_weights, 1, true);
+                                                const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
+                                                const int osd_order = 0) {
+            return this->lsd_decode(syndrome, bit_weights, 1, true, osd_order);
         }
 
         std::vector<uint8_t> &
         lsd_decode(std::vector<uint8_t> &syndrome,
-                      const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                      const int bits_per_step = 1,
-                      const bool is_on_the_fly = true) {
+                   const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
+                   const int bits_per_step = 1,
+                   const bool is_on_the_fly = true,
+                   const int osd_order = 0) {
 
             this->cluster_size_stats.clear();
             fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -405,7 +407,16 @@ namespace ldpc::lsd {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
             }
-
+            // first version of higher-order osd method
+            if (osd_order > 0) {
+                for (auto cl: clusters) {
+                    if (cl->active) {
+                        for (auto i = 0; i < osd_order; i++) {
+                            cl->grow_cluster(bit_weights, 1, true);
+                        }
+                    }
+                }
+            }
             for (auto cl: clusters) {
                 if (cl->active) {
                     this->cluster_size_stats.push_back(cl->bit_nodes.size());
