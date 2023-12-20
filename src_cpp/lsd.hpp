@@ -120,13 +120,16 @@ namespace ldpc::lsd {
                 }
                 auto sorted_indices = sort_indices(cluster_bit_weights);
                 int count = 0;
+                bool inserted = false;
                 for (auto i: sorted_indices) {
                     if (count == bits_per_step) {
                         break;
                     }
                     int bit_index = this->candidate_bit_nodes[i];
-                    this->add_bit_node_to_cluster(bit_index);
-                    count++;
+                    inserted = this->add_bit_node_to_cluster(bit_index);
+                    if (inserted) {
+                        count++;
+                    }
                 }
             }
             this->merge_with_intersecting_clusters(is_on_the_fly);
@@ -193,24 +196,27 @@ namespace ldpc::lsd {
                 // bit already in current cluster
                 return false;
             }
+            bool result = false;
             if (bit_membership == nullptr) {
                 //if the bit has not yet been assigned to a cluster we add it.
                 // if we are in merge mode we add it
-                this->add_bit(bit_index);
+                result = this->add_bit(bit_index);
             } else {
                 //if the bit already exists in a cluster, we mark down that this cluster should be
                 //merged with the exisiting cluster.
                 if (in_merge) {
                     // if we are in merge mode we add it anyways
-                    this->add_bit(bit_index);
+                    result = this->add_bit(bit_index);
                 } else {
                     // otherwise, we add its cluster to merge list and do not add directly.
                     this->merge_list.insert(bit_membership);
                 }
             }
             // add incident checks
-            this->add_column_to_cluster_pcm(bit_index);
-            return true;
+            if (result) {
+                this->add_column_to_cluster_pcm(bit_index);
+            }
+            return result;
         }
 
         /**
@@ -273,14 +279,15 @@ namespace ldpc::lsd {
          * Adds single bit to cluster and updates all lists accordingly.
          * @param bit_index
          */
-        void add_bit(const int bit_index) {
+        bool add_bit(const int bit_index) {
             auto inserted = this->bit_nodes.insert(bit_index);
             if (!inserted.second) {
-                return;
+                return false;
             }
             this->global_bit_membership[bit_index] = this;
             // also add to cluster pcm
             this->cluster_bit_idx_to_pcm_bit_idx.push_back(bit_index);
+            return true;
         }
 
         /**
