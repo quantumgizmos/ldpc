@@ -20,9 +20,10 @@ dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.9.3",
     "tqdm",
-    "pytest"
-    "stim"
-    "sinter"
+    "pytest",
+    "stim",
+    "sinter",
+    "BeliefMatching"
 ]
 version = "2.0.12"
 
