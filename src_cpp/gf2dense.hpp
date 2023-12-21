@@ -445,7 +445,7 @@ namespace ldpc {
 
         int rank(int row_count, int col_count, CscMatrix &csc_mat) {
             auto plu = PluDecomposition(row_count, col_count, csc_mat);
-            plu.rref(false);
+            plu.rref(false,false);
             return plu.matrix_rank;
         }
 
@@ -455,7 +455,7 @@ namespace ldpc {
             // The CSR representation of mat is the CSC representation of mat.transpose().
 
             auto plu = PluDecomposition(col_count, row_count, csr_mat);
-            plu.rref(false);
+            plu.rref(false,false);
 
             std::vector<size_t> rr_col(col_count, 0);
             std::vector<std::vector<int>> ker;
@@ -472,8 +472,7 @@ namespace ldpc {
 
                     std::swap(rr_col[i], rr_col[plu.swap_rows[i]]);
                     if (rr_col[i] == 1) {
-                        for (auto it = plu.L[i].begin() + 1; it != plu.L[i].end(); ++it) {
-                            int add_row = *it;
+                        for (int add_row: plu.elimination_rows[i]) {
                             rr_col[add_row] ^= 1;
                         }
                     }
@@ -490,7 +489,7 @@ namespace ldpc {
 
         std::vector<int> pivot_rows(int row_count, int col_count, CsrMatrix &csr_mat) {
             auto plu = PluDecomposition(col_count, row_count, csr_mat);
-            plu.rref(false);
+            plu.rref(false,false);
             return plu.pivot_cols;
         }
 
