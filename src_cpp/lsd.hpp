@@ -150,15 +150,23 @@ namespace ldpc::lsd {
             LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
-                auto id1 = larger->cluster_id;
-                auto id2 = cl->cluster_id;
+                auto cl1 = larger;
+                auto cl2 = cl;
                 larger = merge_clusters(larger, cl);
                 if (osd_mode) {
-                    std::cout << "MERGE" << std::endl;
-                    if (larger->cluster_id == id1) {
-                        larger->absorbed_clusters.push_back(id2);
+                    // tracking absorbed clusters needs to be done 'transitively'
+                    if (larger->cluster_id == cl1->cluster_id) {
+                        larger->absorbed_clusters.push_back(cl2->cluster_id);
+                        larger->absorbed_clusters.insert(
+                                larger->absorbed_clusters.begin(),
+                                cl2->absorbed_clusters.begin(),
+                                cl2->absorbed_clusters.end());
                     } else {
-                        larger->absorbed_clusters.push_back(id1);
+                        larger->absorbed_clusters.push_back(cl1->cluster_id);
+                        larger->absorbed_clusters.insert(
+                                larger->absorbed_clusters.begin(),
+                                cl1->absorbed_clusters.begin(),
+                                cl1->absorbed_clusters.end());
                     }
                 }
             }
