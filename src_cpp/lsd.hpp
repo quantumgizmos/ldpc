@@ -47,7 +47,7 @@ namespace ldpc::lsd {
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
-        std::vector<int> absorbed_clusters; // tracks which cluster this cluster has been merged into during osd
+        std::vector<int> absorbed_clusters; // tracks which clusters have been merged into the current one
 
         LsdCluster() = default;
 
