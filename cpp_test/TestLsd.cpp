@@ -387,12 +387,12 @@ TEST(LsdDecoder, otf_ring_code_osd5) {
         bp.maximum_iterations = 3;
         auto ufd = LsdDecoder(pcm);
 
-        for (int i = 5; i < std::pow(2, length); i++) {
+        for (int i = 0; i < std::pow(2, length); i++) {
             std::cout << i << std::endl;
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
-            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 2);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 5);
             auto decoding_syndrome = pcm.mulvec(decoding);
 
             ASSERT_TRUE(syndrome == decoding_syndrome);

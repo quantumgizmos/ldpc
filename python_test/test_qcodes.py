@@ -8,11 +8,12 @@ from ldpc.bplsd_decoder import BpLsdDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.noise_models import generate_bsc_error
 
+
 def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label):
     np.random.seed(seed)
     fail = 0
     min_logical = hx.shape[1]
-    
+
     start_time = time.time()  # record start time
 
     additional_stats = []
@@ -41,7 +42,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label):
     end_time = time.time()  # record end time
 
     runtime = end_time - start_time  # compute runtime
-    
+
     ler, min_logical, speed = (f"ler: {fail/run_count}", f"min logical: {min_logical}", f"{run_count/runtime:.2f}it/s")
 
     print(run_label)
@@ -54,15 +55,14 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label):
 
 
 def test_400_16_6_hgp():
-
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_400_16_6.npz")
 
     error_rate = 0.03
     run_count = 1000
     seed = 42
     max_iter = 10
-    osd_order = 5
+    osd_order = 8
     print(f"Code: [[400, 16, 6]] HGP, error rate: {error_rate}, bp iterations:, {max_iter}, run count: {run_count}, seed: {seed}")
     print("...................................................")
     print()
@@ -80,15 +80,16 @@ def test_400_16_6_hgp():
 
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-0 serial schedule")
-  
+
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ps", schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Prod-sum osd-0 parallel schedule")
 
     decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="inversion", bits_per_step=1)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
-
-    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", bits_per_step=1)
-    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
+    # TODO omitting osd_order, or setting = 0 does not work
+    # decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", bits_per_step=1,
+    #                        osd_order=0)
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
                            schedule="parallel", bits_per_step=1, osd_order=osd_order)
@@ -97,9 +98,8 @@ def test_400_16_6_hgp():
 
 
 def test_toric_20():
-
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
+    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_toric_20.npz")
+    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_toric_20.npz")
 
     error_rate = 0.05
     run_count = 500
@@ -120,7 +120,7 @@ def test_toric_20():
 
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-0 serial schedule")
-  
+
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ps", schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Prod-sum osd-0 parallel schedule")
 
@@ -136,13 +136,11 @@ def test_toric_20():
                                                 f"Min-sum LSD parallel schedule osd={osd_order}")
 
 def test_cl_size():
+    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_400_16_6.npz")
 
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
-
-
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
+    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_toric_20.npz")
+    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_toric_20.npz")
 
     error_rate = 0.02
     run_count = 1000

@@ -479,7 +479,7 @@ namespace ldpc::lsd {
                 if (cl->active) {
                     this->cluster_size_stats.push_back(cl->bit_nodes.size());
                     auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
-                    // copy current clusters as fallback point
+                    // copy current clusters as fallback point before additional osd-w growth
                     solved_clusters.insert({cl->cluster_id, *cl});
                     cluster_solutions.insert({cl->cluster_id, solution});
                 }
@@ -499,18 +499,19 @@ namespace ldpc::lsd {
                     continue;
                 }
                 if (cl->valid) {
-                    // if cluster is valid after additional growth, we check if the solution as lower weight
-                    // todo this only compares the cluster before growth with the cluster after growth:
-                    // since during growth a merge might occur, it might be better to compare with weight of ALL
-                    // merged clusters as well?
-                    auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+                    // if cluster is valid after additional growth, we check if the osd_solution as lower weight
+                    auto osd_solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+                    int old_wt_sum = std::accumulate(cluster_solutions[cl->cluster_id].begin(),
+                                                     cluster_solutions[cl->cluster_id].end(), 0);
+                    for (auto cl_idx: cl->absorbed_clusters) {
+                        old_wt_sum += std::accumulate(cluster_solutions[cl_idx].begin(),
+                                                      cluster_solutions[cl_idx].end(), 0);
+                    }
                     // if the weight of the new soltion is lower, we use the new one
-                    if (std::accumulate(solution.begin(), solution.end(), 0) <
-                        std::accumulate(cluster_solutions[cl->cluster_id].begin(),
-                                        cluster_solutions[cl->cluster_id].end(), 0)) {
-                        cluster_solutions.at(cl->cluster_id) = solution;
+                    if (std::accumulate(osd_solution.begin(), osd_solution.end(), 0) < old_wt_sum) {
+                        cluster_solutions.at(cl->cluster_id) = osd_solution;
                     } else {
-                        // reset to old solution if estimate weight is not smaller
+                        // reset to old osd_solution if estimate weight is not smaller
                         reset_list.insert(cl->cluster_id);
                         // potentially, the cluster has been merged with other clusters, if we reset this one we need to reset the others as well
                         for (auto absbd: cl->absorbed_clusters) {
@@ -519,6 +520,7 @@ namespace ldpc::lsd {
                     }
                 } else {
                     // if not valid anymore after additional growth, we reset to old solution
+                    // todo is this necessary?
                     reset_list.insert(cl->cluster_id);
                     for (auto absbd: cl->absorbed_clusters) {
                         reset_list.insert(absbd);
