@@ -27,6 +27,148 @@ namespace ldpc::lsd {
         return indices;
     }
 
+    class DenseOsdDecoder {
+    public:
+        osd::OsdMethod osd_method;
+        int osd_order;
+        int k, bit_count, check_count;
+        gf2dense::CscMatrix &pcm;
+        std::vector<double> &channel_probabilities;
+        std::vector<uint8_t> lsd0_solution;
+        std::vector<uint8_t> osdw_decoding;
+        std::vector<std::vector<uint8_t>> osd_candidate_strings;
+        std::vector<int> column_ordering;
+        gf2dense::PluDecomposition plu_decomposition;
+
+        DenseOsdDecoder(
+                gf2dense::CscMatrix &parity_check_matrix,
+                osd::OsdMethod osd_method,
+                int osd_order,
+                int n,
+                int m,
+                std::vector<double> &channel_probs) :
+                pcm(parity_check_matrix),
+                channel_probabilities(channel_probs) {
+
+            this->bit_count = n;
+            this->check_count = m;
+            this->osd_order = osd_order;
+            this->osd_method = osd_method;
+            this->osd_setup();
+        }
+
+
+        ~DenseOsdDecoder() {
+            this->channel_probabilities.clear();
+            this->lsd0_solution.clear();
+            this->osdw_decoding.clear();
+            this->osd_candidate_strings.clear();
+            this->column_ordering.clear();
+        }
+
+
+        int osd_setup() {
+            int osd_candidate_string_count;
+
+            this->osd_candidate_strings.clear();
+            this->plu_decomposition = ldpc::gf2dense::PluDecomposition(this->check_count, this->bit_count, this->pcm);
+
+            this->column_ordering.resize(this->bit_count);
+            this->plu_decomposition.rref(true, true);
+            this->k = this->bit_count - this->plu_decomposition.matrix_rank;
+            if (this->osd_method == osd::OSD_OFF) {
+                return 0;
+            }
+
+            this->column_ordering.resize(this->bit_count);
+            this->k = this->bit_count - this->plu_decomposition.matrix_rank;
+
+            if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
+                return 1;
+            }
+
+            if (this->osd_method == osd::EXHAUSTIVE) {
+                osd_candidate_string_count = pow(2, this->osd_order);
+                for (int i = 1; i < osd_candidate_string_count; i++) {
+                    this->osd_candidate_strings.push_back(ldpc::util::decimal_to_binary_reverse(i, k));
+                }
+            }
+
+            if (this->osd_method == osd::COMBINATION_SWEEP) {
+                for (int i = 0; i < k; i++) {
+                    std::vector<uint8_t> osd_candidate;
+                    osd_candidate.resize(k, 0);
+                    osd_candidate[i] = 1;
+                    this->osd_candidate_strings.push_back(osd_candidate);
+                }
+
+                for (int i = 0; i < this->osd_order; i++) {
+                    for (int j = 0; j < this->osd_order; j++) {
+                        if (j <= i) continue;
+                        if (k > 0) {
+                            std::vector<uint8_t> osd_candidate;
+                            osd_candidate.resize(k, 0);
+                            osd_candidate[i] = 1;
+                            osd_candidate[j] = 1;
+                            this->osd_candidate_strings.push_back(osd_candidate);
+                        }
+                    }
+                }
+
+            }
+            return 1;
+        }
+
+
+        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome,
+                                         std::vector<double> &log_prob_ratios) {
+            ldpc::sort::soft_decision_col_sort(log_prob_ratios, this->column_ordering, bit_count);
+            this->plu_decomposition.rref(true, true);
+            this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
+
+            double candidate_weight, osd_min_weight;
+
+            osd_min_weight = 0;
+            for (int i = 0; i < this->bit_count; i++) {
+                if (this->lsd0_solution[i] == 1) {
+                    osd_min_weight += log(1 / this->channel_probabilities[i]);
+                }
+            }
+
+            std::vector<int> non_pivot_columns = plu_decomposition.not_pivot_cols;
+            for (auto &candidate_string: this->osd_candidate_strings) {
+                auto t_syndrome = syndrome;
+                int col_index = 0;
+                for (int col: non_pivot_columns) {
+                    if (candidate_string[col_index] == 1) {
+                        for (auto e = 0; e < this->pcm.at(col).size(); e++) {
+                            t_syndrome[e] ^= 1;
+                        }
+                    }
+                    col_index++;
+                }
+
+                auto candidate_solution = plu_decomposition.lu_solve(t_syndrome);
+                for (int i = 0; i < k; i++) {
+                    candidate_solution[non_pivot_columns[i]] = candidate_string[i];
+                }
+                candidate_weight = 0;
+
+                for (int i = 0; i < this->bit_count; i++) {
+                    if (candidate_solution[i] == 1) {
+                        candidate_weight += log(1 / this->channel_probabilities[i]);
+                    }
+                }
+                if (candidate_weight < osd_min_weight) {
+                    osd_min_weight = candidate_weight;
+                    this->osdw_decoding = candidate_solution;
+                }
+            }
+            return this->osdw_decoding;
+        }
+    };
+
+
     // TODO this should probably become a class
     struct LsdCluster {
         ldpc::bp::BpSparse &pcm;
@@ -47,7 +189,7 @@ namespace ldpc::lsd {
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
-        std::vector<int> absorbed_clusters; // tracks which clusters have been merged into the current one
+        std::vector<uint8_t> cluster_decoding;
 
         LsdCluster() = default;
 
@@ -89,7 +231,6 @@ namespace ldpc::lsd {
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
-            this->absorbed_clusters.clear();
         }
 
         /**
@@ -102,8 +243,7 @@ namespace ldpc::lsd {
          */
         void grow_cluster(const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                           const int bits_per_step = std::numeric_limits<int>::max(),
-                          const bool is_on_the_fly = false,
-                          const bool osd_mode = false) {
+                          const bool is_on_the_fly = false) {
             if (!this->active) {
                 return;
             }
@@ -135,7 +275,7 @@ namespace ldpc::lsd {
                     }
                 }
             }
-            this->merge_with_intersecting_clusters(is_on_the_fly, osd_mode);
+            this->merge_with_intersecting_clusters(is_on_the_fly);
         }
 
         /**
@@ -146,29 +286,11 @@ namespace ldpc::lsd {
          *
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
-        void merge_with_intersecting_clusters(const bool is_on_the_fly = false, const bool osd_mode = false) {
+        void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
             LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
-                auto cl1 = larger;
-                auto cl2 = cl;
                 larger = merge_clusters(larger, cl);
-                if (osd_mode) {
-                    // tracking absorbed clusters needs to be done 'transitively'
-                    if (larger->cluster_id == cl1->cluster_id) {
-                        larger->absorbed_clusters.push_back(cl2->cluster_id);
-                        larger->absorbed_clusters.insert(
-                                larger->absorbed_clusters.begin(),
-                                cl2->absorbed_clusters.begin(),
-                                cl2->absorbed_clusters.end());
-                    } else {
-                        larger->absorbed_clusters.push_back(cl1->cluster_id);
-                        larger->absorbed_clusters.insert(
-                                larger->absorbed_clusters.begin(),
-                                cl1->absorbed_clusters.begin(),
-                                cl1->absorbed_clusters.end());
-                    }
-                }
             }
             if (is_on_the_fly) {
                 // finally, we apply the on-the-fly elimination to the remaining cluster
@@ -435,11 +557,9 @@ namespace ldpc::lsd {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
             }
-            // first version of higher-order osd method
-            // this grows each cluster osd order many times
-            // todo in osd-w the w most reliable columns are chosen, perhaps we can use the weights passed above to decode which clusters to grow?
             if (osd_order > 0) {
-                this->apply_osd(clusters, bit_weights, osd_order);
+                auto wts = bit_weights;
+                this->apply_osd(clusters, wts, osd_order);
             } else {
                 for (auto cl: clusters) {
                     if (cl->active) {
@@ -465,92 +585,42 @@ namespace ldpc::lsd {
          * w-neighborhood of the clusters when computing the solutions.
          * @param clusters
          */
-        void apply_osd(std::vector<LsdCluster *> clusters,
-                       const std::vector<double> &bit_weights,
+        void apply_osd(std::vector<LsdCluster *> &clusters,
+                       std::vector<double> &bit_weights,
                        const int osd_order) {
-            if (osd_order < 1) {
-                throw std::invalid_argument("osd_order must be >= 1");
+            for (auto cl: clusters) {
+                bool unchanged = false;
+                if (cl->active) {
+                    while (cl->bit_nodes.size() < osd_order && !unchanged) {
+                        auto size_before = cl->bit_nodes.size();
+                        cl->grow_cluster(bit_weights, 1, true);
+                        auto size_after = cl->bit_nodes.size();
+                        unchanged = size_before == size_after;
+                    }
+                }
             }
-            std::vector<uint8_t> osd_decoding(this->bit_count);
-            std::map<int, LsdCluster> solved_clusters;
-            std::map<int, std::vector<uint8_t> > cluster_solutions;
-            // first, solve original clusters and store a copy of the clusters and solutions before additional growth
+
             for (auto cl: clusters) {
                 if (cl->active) {
-                    this->cluster_size_stats.push_back(cl->bit_nodes.size());
-                    auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
-                    // copy current clusters as fallback point before additional osd-w growth
-                    solved_clusters.insert({cl->cluster_id, *cl});
-                    cluster_solutions.insert({cl->cluster_id, solution});
-                }
-            }
-            // now do additional growth steps for all clusters (note: non-active ones aren't grown in the growth method)
-            for (auto cnt = 0; cnt < osd_order; cnt++) {
-                for (auto cl: clusters) {
-                    cl->grow_cluster(bit_weights, 1, true, true);
-                }
-            }
-            tsl::robin_set<int> reset_list;
-            // now we check the new estimates and their weight and decide whether to use the new estimate or the old one
-            for (auto i = 0; i < clusters.size(); i++) {
-                auto cl = clusters[i];
-                if (!cl->active) {
-                    // skip inactive clusters
-                    continue;
-                }
-                if (cl->valid) {
-                    // if cluster is valid after additional growth, we check if the osd_solution as lower weight
-                    auto osd_solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
-                    int old_wt_sum = std::accumulate(cluster_solutions[cl->cluster_id].begin(),
-                                                     cluster_solutions[cl->cluster_id].end(), 0);
-                    for (auto cl_idx: cl->absorbed_clusters) {
-                        old_wt_sum += std::accumulate(cluster_solutions[cl_idx].begin(),
-                                                      cluster_solutions[cl_idx].end(), 0);
-                    }
-                    // if the weight of the new soltion is lower, we use the new one
-                    if (std::accumulate(osd_solution.begin(), osd_solution.end(), 0) < old_wt_sum) {
-                        cluster_solutions.at(cl->cluster_id) = osd_solution;
-                    } else {
-                        // reset to old osd_solution if estimate weight is not smaller
-                        reset_list.insert(cl->cluster_id);
-                        // potentially, the cluster has been merged with other clusters, if we reset this one we need to reset the others as well
-                        for (auto absbd: cl->absorbed_clusters) {
-                            reset_list.insert(absbd);
+                    auto cl_osd_decoder = DenseOsdDecoder(
+                            cl->cluster_pcm,
+                            osd::COMBINATION_SWEEP,
+                            osd_order,
+                            cl->bit_nodes.size(),
+                            cl->check_nodes.size(),
+                            bit_weights);
+                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome, bit_weights);
+                    for (auto i = 0; i < res.size(); i++) {
+                        if (res[i] == 1) {
+                            int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                            this->decoding[bit_idx] = 1;
                         }
-                    }
-                } else {
-                    // if not valid anymore after additional growth, we reset to old solution
-                    // todo is this necessary?
-                    reset_list.insert(cl->cluster_id);
-                    for (auto absbd: cl->absorbed_clusters) {
-                        reset_list.insert(absbd);
-                    }
-                }
-            }
-            // now decide for each cluster whether the osd-grown is used or not and construction solution
-            std::vector<LsdCluster> final_clusters;
-            for (auto cl: clusters) {
-                if (reset_list.contains(cl->cluster_id)) {
-                    // if cluster is in reset list, we use the old solution
-                    final_clusters.push_back(solved_clusters.at(cl->cluster_id));
-                } else {
-                    if (cl->active && cl->valid) { // todo valid check should be redundant here
-                        final_clusters.push_back(*cl);
-                    }
-                }
-            }
-            for (auto cl: final_clusters) {
-                this->cluster_size_stats.push_back(cl.bit_nodes.size());
-                auto solution = cluster_solutions.at(cl.cluster_id);
-                for (auto i = 0; i < solution.size(); i++) {
-                    if (solution[i] == 1) {
-                        int bit_idx = cl.cluster_bit_idx_to_pcm_bit_idx[i];
-                        this->decoding[bit_idx] = 1;
                     }
                 }
             }
         }
     };
+
 
     std::string LsdCluster::to_string() {
         int count;

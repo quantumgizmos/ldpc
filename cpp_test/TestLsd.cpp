@@ -378,9 +378,9 @@ TEST(LsdDecoder, otf_hamming_code_osd5) {
     }
 }
 
-TEST(LsdDecoder, otf_ring_code_osd5) {
+TEST(LsdDecoder, otf_ring_code_osd2) {
 
-    for (auto length = 9; length < 15; length++) {
+    for (auto length = 3; length < 15; length++) {
 
         auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
@@ -392,7 +392,7 @@ TEST(LsdDecoder, otf_ring_code_osd5) {
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
-            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 5);
+            auto decoding = ufd.on_the_fly_decode(syndrome, bp.log_prob_ratios, 2);
             auto decoding_syndrome = pcm.mulvec(decoding);
 
             ASSERT_TRUE(syndrome == decoding_syndrome);
