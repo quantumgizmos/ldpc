@@ -6,7 +6,38 @@ from sinter import Decoder
 from beliefmatching import detector_error_model_to_check_matrices
 
 
+
 class SinterBpOsdDecoder(Decoder):
+
+    """
+    Initialize the SinterBPOSDDecoder object.
+
+    Parameters
+    ----------
+    max_iter : Optional[int], optional
+        The maximum number of iterations for the decoding algorithm, by default 0.
+    bp_method : Optional[str], optional
+        The belief propagation method used. Must be one of {'product_sum', 'minimum_sum'}, by default 'minimum_sum'.
+    ms_scaling_factor : Optional[float], optional
+        The scaling factor used in the minimum sum method, by default 1.0.
+    schedule : Optional[str], optional
+        The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
+    omp_thread_count : Optional[int], optional
+        The number of OpenMP threads used for parallel decoding, by default 1.
+    random_serial_schedule : Optional[int], optional
+        Whether to use a random serial schedule order, by default False.
+    serial_schedule_order : Optional[List[int]], optional
+        A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code, by default None.
+    osd_method : int, optional
+        The OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, by default 'OSD_0'.
+    osd_order : int, optional
+        The OSD order, by default 0.
+
+    Notes
+    -----
+    This class provides an interface for configuring and using the SinterBPOSDDecoder for quantum error correction.
+    """
+
     def __init__(self,
                  max_iter=0,
                  bp_method="ms",
@@ -17,29 +48,7 @@ class SinterBpOsdDecoder(Decoder):
                  serial_schedule_order=None,
                  osd_method="osd0",
                  osd_order=0):
-        """
-        Initialize the SinterBPOSDDecoder object.
 
-        max_iter : Optional[int], optional
-            The maximum number of iterations for the decoding algorithm, by default 0.
-        bp_method : Optional[str], optional
-            The belief propagation method used. Must be one of {'product_sum', 'minimum_sum'}, by default 'minimum_sum'.
-        ms_scaling_factor : Optional[float], optional
-            The scaling factor used in the minimum sum method, by default 1.0.
-        schedule : Optional[str], optional
-            The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
-        omp_thread_count : Optional[int], optional
-            The number of OpenMP threads used for parallel decoding, by default 1.
-        random_serial_schedule : Optional[int], optional
-            Whether to use a random serial schedule order, by default False.
-        serial_schedule_order : Optional[List[int]], optional
-            A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
-            by default None.
-        osd_method : int, optional
-            The OSD method used.  Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, by default 'OSD_0'.
-        osd_order : int, optional
-            The OSD order, by default 0.
-        """
         self.max_iter = max_iter
         self.bp_method = bp_method
         self.ms_scaling_factor = ms_scaling_factor
