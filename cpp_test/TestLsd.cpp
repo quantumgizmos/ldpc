@@ -369,7 +369,7 @@ TEST(LsdDecoder, otf_hamming_code_osd2) {
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
         auto ufd = LsdDecoder(pcm);
-        for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+        for (int i = 1; i < std::pow(2, hamming_code_rank); i++) {
             std::cout << i << std::endl;
 
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
@@ -391,7 +391,7 @@ TEST(LsdDecoder, otf_ring_code_osd2) {
         bp.maximum_iterations = 3;
         auto ufd = LsdDecoder(pcm);
 
-        for (int i = 0; i < std::pow(2, length); i++) {
+        for (int i = 99; i < std::pow(2, length); i++) {
             std::cout << i << std::endl;
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);

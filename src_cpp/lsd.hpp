@@ -27,6 +27,10 @@ namespace ldpc::lsd {
         return indices;
     }
 
+    /**
+     * This is the analog of the osd decoder in osd.hpp for the dense case used here.
+     * TODO move this to its own file or similar.
+     */
     class DenseOsdDecoder {
     public:
         osd::OsdMethod osd_method;
@@ -37,7 +41,6 @@ namespace ldpc::lsd {
         std::vector<uint8_t> lsd0_solution;
         std::vector<uint8_t> osdw_decoding;
         std::vector<std::vector<uint8_t>> osd_candidate_strings;
-        std::vector<int> column_ordering;
         gf2dense::PluDecomposition plu_decomposition;
 
         DenseOsdDecoder(
@@ -63,7 +66,6 @@ namespace ldpc::lsd {
             this->lsd0_solution.clear();
             this->osdw_decoding.clear();
             this->osd_candidate_strings.clear();
-            this->column_ordering.clear();
         }
 
 
@@ -71,16 +73,11 @@ namespace ldpc::lsd {
             int osd_candidate_string_count;
 
             this->osd_candidate_strings.clear();
-            this->plu_decomposition = ldpc::gf2dense::PluDecomposition(this->check_count, this->bit_count, this->pcm);
-
-            this->column_ordering.resize(this->bit_count);
-            this->plu_decomposition.rref(true, true);
-            this->k = this->bit_count - this->plu_decomposition.matrix_rank;
             if (this->osd_method == osd::OSD_OFF) {
                 return 0;
             }
-
-            this->column_ordering.resize(this->bit_count);
+            this->plu_decomposition = ldpc::gf2dense::PluDecomposition(this->check_count, this->bit_count, this->pcm);
+            this->plu_decomposition.rref(true, true);
             this->k = this->bit_count - this->plu_decomposition.matrix_rank;
 
             if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
@@ -89,21 +86,21 @@ namespace ldpc::lsd {
 
             if (this->osd_method == osd::EXHAUSTIVE) {
                 osd_candidate_string_count = pow(2, this->osd_order);
-                for (int i = 1; i < osd_candidate_string_count; i++) {
+                for (auto i = 1; i < osd_candidate_string_count; i++) {
                     this->osd_candidate_strings.push_back(ldpc::util::decimal_to_binary_reverse(i, k));
                 }
             }
 
             if (this->osd_method == osd::COMBINATION_SWEEP) {
-                for (int i = 0; i < k; i++) {
+                for (auto i = 0; i < k; i++) {
                     std::vector<uint8_t> osd_candidate;
                     osd_candidate.resize(k, 0);
                     osd_candidate[i] = 1;
                     this->osd_candidate_strings.push_back(osd_candidate);
                 }
 
-                for (int i = 0; i < this->osd_order; i++) {
-                    for (int j = 0; j < this->osd_order; j++) {
+                for (auto i = 0; i < this->osd_order; i++) {
+                    for (auto j = 0; j < this->osd_order; j++) {
                         if (j <= i) continue;
                         if (k > 0) {
                             std::vector<uint8_t> osd_candidate;
@@ -114,15 +111,14 @@ namespace ldpc::lsd {
                         }
                     }
                 }
-
             }
             return 1;
         }
 
 
-        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome,
-                                         std::vector<double> &log_prob_ratios) {
-            ldpc::sort::soft_decision_col_sort(log_prob_ratios, this->column_ordering, bit_count);
+        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome) {
+            // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
+            // of the clusters through the guided growth.
             this->plu_decomposition.rref(true, true);
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
 
@@ -135,11 +131,21 @@ namespace ldpc::lsd {
                 }
             }
 
-            std::vector<int> non_pivot_columns = plu_decomposition.not_pivot_cols;
+            // TODO pretty sure this deletion is not needed for the local clusters
+//            std::vector<int> rows_to_remove;
+//            for (auto& r: this->plu_decomposition.U) {
+//                for (auto c: non_pivot_columns) {
+//                    if(c < r.size()) {
+//                        r.erase(r.begin() + c);
+//                    }
+//                }
+//            }
+            auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
+
             for (auto &candidate_string: this->osd_candidate_strings) {
                 auto t_syndrome = syndrome;
                 int col_index = 0;
-                for (int col: non_pivot_columns) {
+                for (auto col: non_pivot_columns) {
                     if (candidate_string[col_index] == 1) {
                         for (auto e = 0; e < this->pcm.at(col).size(); e++) {
                             t_syndrome[e] ^= 1;
@@ -149,12 +155,12 @@ namespace ldpc::lsd {
                 }
 
                 auto candidate_solution = plu_decomposition.lu_solve(t_syndrome);
-                for (int i = 0; i < k; i++) {
+                for (auto i = 0; i < k; i++) {
                     candidate_solution[non_pivot_columns[i]] = candidate_string[i];
                 }
                 candidate_weight = 0;
 
-                for (int i = 0; i < this->bit_count; i++) {
+                for (auto i = 0; i < this->bit_count; i++) {
                     if (candidate_solution[i] == 1) {
                         candidate_weight += log(1 / this->channel_probabilities[i]);
                     }
@@ -609,7 +615,7 @@ namespace ldpc::lsd {
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),
                             bit_weights);
-                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome, bit_weights);
+                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome);
                     for (auto i = 0; i < res.size(); i++) {
                         if (res[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
