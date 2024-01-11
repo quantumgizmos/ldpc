@@ -162,7 +162,8 @@ namespace ldpc::lsd {
 
                 for (auto i = 0; i < this->bit_count; i++) {
                     if (candidate_solution[i] == 1) {
-                        candidate_weight += log(1 / this->channel_probabilities[i]);
+                        candidate_weight += log(1 /
+                                                this->channel_probabilities[i]); // TODO why not only Hamming weight considered here?
                     }
                 }
                 if (candidate_weight < osd_min_weight) {
