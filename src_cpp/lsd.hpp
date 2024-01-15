@@ -148,7 +148,7 @@ namespace ldpc::lsd {
                 int col_index = 0;
                 for (auto col: non_pivot_columns) {
                     if (candidate_string[col_index] == 1) {
-                        for (auto e = 0; e < this->pcm.at(col).size(); e++) {
+                        for (auto e: this->pcm.at(col)) {
                             t_syndrome[e] ^= 1;
                         }
                     }
