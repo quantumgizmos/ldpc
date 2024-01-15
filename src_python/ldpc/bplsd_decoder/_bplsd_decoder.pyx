@@ -106,7 +106,9 @@ cdef class BpLsdDecoder(BpDecoderBase):
         if zero_syndrome:
             self.bpd.converge = True
             return np.zeros(self.n,dtype=DTYPE)
-
+        # todo I am setting this here since this was not here before and bp might simply always converge?
+        # todo we might use something like max_iter = n*0.1? perhaps we can determine numerically which ones good
+        self.bpd.maximum_iterations = 5
         self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
         if self.bpd.converge:

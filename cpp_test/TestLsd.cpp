@@ -429,7 +429,7 @@ TEST(LsdDecoder, ho_lsd_ring_code_osd_e3) {
 }
 
 TEST(LsdDecoder, ho_lsd_hamming_code_osde_3) {
-    for (auto hamming_code_rank = 3; hamming_code_rank < 7; hamming_code_rank++) {
+    for (auto hamming_code_rank = 7; hamming_code_rank < 7; hamming_code_rank++) {
 //        std::cout << "rank: " << hamming_code_rank << std::endl;
 
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);

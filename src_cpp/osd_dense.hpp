@@ -104,16 +104,16 @@ namespace ldpc::osd {
             // of the clusters through the guided growth.
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
 
-            double candidate_weight, osd_min_weight;
+            int candidate_weight, osd_min_weight;
 
             osd_min_weight = 0;
             for (auto i = 0; i < this->bit_count; i++) {
                 if (this->lsd0_solution[i] == 1) {
-                    osd_min_weight += log(1 / this->channel_probabilities[i]);
+                    osd_min_weight++;
                 }
             }
             // reset if NaN
-            osd_min_weight = std::isnan(osd_min_weight) ? 0.0 : osd_min_weight;
+//            osd_min_weight = std::isnan(osd_min_weight) ? 0.0 : osd_min_weight;
 
             auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
             if (non_pivot_columns.empty()) {
@@ -140,12 +140,11 @@ namespace ldpc::osd {
 
                 for (auto i = 0; i < this->bit_count; i++) {
                     if (candidate_solution[i] == 1) {
-                        candidate_weight += log(1 /
-                                                this->channel_probabilities[i]); // TODO why not only Hamming weight considered here?
+                        candidate_weight++;
                     }
                 }
                 // reset if NaN
-                candidate_weight = std::isnan(candidate_weight) ? 0.0 : candidate_weight;
+//                candidate_weight = std::isnan(candidate_weight) ? 0.0 : candidate_weight;
                 if (candidate_weight < osd_min_weight) {
                     std::cout << "found lower weight solution" << std::endl;
                     osd_min_weight = candidate_weight;

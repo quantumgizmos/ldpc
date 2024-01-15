@@ -416,7 +416,7 @@ namespace ldpc::lsd {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
             }
-            if (osd_order > 0 && osd_method != osd::OSD_OFF) {
+            if (osd_order > 0) {
                 auto wts = bit_weights;
                 this->apply_osd(clusters, wts, osd_order, osd_method);
             } else {
@@ -448,10 +448,12 @@ namespace ldpc::lsd {
                        std::vector<double> &bit_weights,
                        const int osd_order,
                        const osd::OsdMethod osd_method = osd::COMBINATION_SWEEP) {
+            // first we grow all clusters additionally
             for (auto cl: clusters) {
                 bool unchanged = false;
                 if (cl->active) {
-                    while (cl->bit_nodes.size() < osd_order && !unchanged) {
+                    // n - rk(H) is number of bits in H_[NP]
+                    while ((cl->bit_nodes.size() - cl->pluDecomposition.matrix_rank) < osd_order && !unchanged) {
                         auto size_before = cl->bit_nodes.size();
                         cl->grow_cluster(bit_weights, 1, true);
                         auto size_after = cl->bit_nodes.size();
@@ -459,7 +461,7 @@ namespace ldpc::lsd {
                     }
                 }
             }
-
+            // then we apply osd to each individually (could be done in parallel)
             for (auto cl: clusters) {
                 if (cl->active) {
                     auto cl_osd_decoder = osd::DenseOsdDecoder(
