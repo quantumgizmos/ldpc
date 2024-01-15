@@ -45,14 +45,15 @@ namespace ldpc::lsd {
 
         DenseOsdDecoder(
                 gf2dense::CscMatrix &parity_check_matrix,
+                gf2dense::PluDecomposition &pluDecomposition,
                 osd::OsdMethod osd_method,
                 int osd_order,
                 int n,
                 int m,
                 std::vector<double> &channel_probs) :
                 pcm(parity_check_matrix),
-                channel_probabilities(channel_probs) {
-
+                channel_probabilities(channel_probs),
+                plu_decomposition(pluDecomposition) {
             this->bit_count = n;
             this->check_count = m;
             this->osd_order = osd_order;
@@ -76,8 +77,6 @@ namespace ldpc::lsd {
             if (this->osd_method == osd::OSD_OFF) {
                 return 0;
             }
-            this->plu_decomposition = ldpc::gf2dense::PluDecomposition(this->check_count, this->bit_count, this->pcm);
-            this->plu_decomposition.rref(true, true);
             this->k = this->bit_count - this->plu_decomposition.matrix_rank;
 
             if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
@@ -119,7 +118,6 @@ namespace ldpc::lsd {
         std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome) {
             // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
             // of the clusters through the guided growth.
-            this->plu_decomposition.rref(true, true);
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
 
             double candidate_weight, osd_min_weight;
@@ -141,7 +139,10 @@ namespace ldpc::lsd {
 //                }
 //            }
             auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
-
+            if (non_pivot_columns.empty()) {
+                std::cout << "no non-pivot columns" << std::endl;
+                return this->lsd0_solution;
+            }
             for (auto &candidate_string: this->osd_candidate_strings) {
                 auto t_syndrome = syndrome;
                 int col_index = 0;
@@ -171,6 +172,7 @@ namespace ldpc::lsd {
                     this->osdw_decoding = candidate_solution;
                 }
             }
+
             return this->osdw_decoding;
         }
     };
@@ -611,6 +613,7 @@ namespace ldpc::lsd {
                 if (cl->active) {
                     auto cl_osd_decoder = DenseOsdDecoder(
                             cl->cluster_pcm,
+                            cl->pluDecomposition,
                             osd::COMBINATION_SWEEP,
                             osd_order,
                             cl->bit_nodes.size(),
