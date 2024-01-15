@@ -281,30 +281,8 @@ TEST(OsdDenseDecoder, ring_code_test1) {
 }
 
 TEST(DenseOsdDecoder, DecodeHammingCode) {
-    ldpc::gf2dense::CscMatrix pcm_csc = {
-            {1, 0, 0},
-            {0, 1, 0},
-            {0, 0, 1},
-            {1, 1, 0},
-            {0, 1, 1},
-            {1, 0, 1},
-            {1, 1, 1}
-    };
-    auto pcm = ldpc::bp::BpSparse(3, 7);
-
-    // Set up the Hamming parity check matrix
-    pcm.insert_entry(0, 3);
-    pcm.insert_entry(0, 4);
-    pcm.insert_entry(0, 5);
-    pcm.insert_entry(0, 6);
-    pcm.insert_entry(1, 1);
-    pcm.insert_entry(1, 2);
-    pcm.insert_entry(1, 5);
-    pcm.insert_entry(1, 6);
-    pcm.insert_entry(2, 0);
-    pcm.insert_entry(2, 2);
-    pcm.insert_entry(2, 4);
-    pcm.insert_entry(2, 6);
+    auto pcm = ldpc::gf2codes::hamming_code(3);
+    auto pcm_csc = pcm.col_adjacency_list();
     auto error = vector<uint8_t>{0, 1, 0, 1, 0, 1, 1};
     auto syndrome = vector<uint8_t>{0, 0, 0};
     pcm.mulvec(error, syndrome);
@@ -323,7 +301,6 @@ TEST(DenseOsdDecoder, DecodeHammingCode) {
 
     ASSERT_EQ(osdD->osd_candidate_strings.size(), 0);
 
-
     osdD->osd_method = ldpc::osd::EXHAUSTIVE;
     osdD->osd_order = 4;
     osdD->osd_setup();
@@ -335,7 +312,6 @@ TEST(DenseOsdDecoder, DecodeHammingCode) {
     osdD->osd_setup();
 
     ASSERT_EQ(osdD->osd_candidate_strings.size(), 10);
-
 
     auto decoding = osdD->osd_decode(syndrome);
 
