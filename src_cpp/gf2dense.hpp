@@ -277,7 +277,7 @@ namespace ldpc {
             }
 
 
-            std::vector<uint8_t> lu_solve(std::vector<uint8_t> &y) {
+            std::vector<uint8_t> lu_solve(const std::vector<uint8_t> &y) {
                 /*
                 Equation: Ax = y
 

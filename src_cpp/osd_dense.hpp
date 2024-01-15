@@ -4,6 +4,10 @@
 
 #ifndef CPP_TEST_OSD_DENSE_HPP
 #define CPP_TEST_OSD_DENSE_HPP
+
+#include "osd.hpp"
+#include "gf2dense.hpp"
+
 namespace ldpc::osd {
 
 /**
@@ -12,7 +16,7 @@ namespace ldpc::osd {
  */
     class DenseOsdDecoder {
     public:
-        osd::OsdMethod osd_method;
+        OsdMethod osd_method;
         int osd_order;
         int k, bit_count, check_count;
         gf2dense::CscMatrix &pcm;
@@ -35,6 +39,7 @@ namespace ldpc::osd {
                 plu_decomposition(pluDecomposition) {
             this->bit_count = n;
             this->check_count = m;
+            this->k = 0;
             this->osd_order = osd_order;
             this->osd_method = osd_method;
             this->osd_setup();
@@ -94,7 +99,7 @@ namespace ldpc::osd {
         }
 
 
-        std::vector <uint8_t> &osd_decode(std::vector <uint8_t> &syndrome) {
+        std::vector<uint8_t> &osd_decode(const std::vector<uint8_t> &syndrome) {
             // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
             // of the clusters through the guided growth.
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
@@ -102,21 +107,14 @@ namespace ldpc::osd {
             double candidate_weight, osd_min_weight;
 
             osd_min_weight = 0;
-            for (int i = 0; i < this->bit_count; i++) {
+            for (auto i = 0; i < this->bit_count; i++) {
                 if (this->lsd0_solution[i] == 1) {
                     osd_min_weight += log(1 / this->channel_probabilities[i]);
                 }
             }
+            // reset if NaN
+            osd_min_weight = std::isnan(osd_min_weight) ? 0.0 : osd_min_weight;
 
-            // TODO pretty sure this deletion is not needed for the local clusters
-//            std::vector<int> rows_to_remove;
-//            for (auto& r: this->plu_decomposition.U) {
-//                for (auto c: non_pivot_columns) {
-//                    if(c < r.size()) {
-//                        r.erase(r.begin() + c);
-//                    }
-//                }
-//            }
             auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
             if (non_pivot_columns.empty()) {
 //                std::cout << "no non-pivot columns" << std::endl;
@@ -146,7 +144,10 @@ namespace ldpc::osd {
                                                 this->channel_probabilities[i]); // TODO why not only Hamming weight considered here?
                     }
                 }
+                // reset if NaN
+                candidate_weight = std::isnan(candidate_weight) ? 0.0 : candidate_weight;
                 if (candidate_weight < osd_min_weight) {
+                    std::cout << "found lower weight solution" << std::endl;
                     osd_min_weight = candidate_weight;
                     this->osdw_decoding = candidate_solution;
                 }
