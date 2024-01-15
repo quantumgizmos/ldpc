@@ -15,6 +15,7 @@
 
 #include "bp.hpp"
 #include "gf2dense.hpp"
+#include "osd_dense.hpp"
 
 namespace ldpc::lsd {
 
@@ -26,157 +27,6 @@ namespace ldpc::lsd {
         std::sort(indices.begin(), indices.end(), [&](int i, int j) { return B[i] < B[j]; });
         return indices;
     }
-
-    /**
-     * This is the analog of the osd decoder in osd.hpp for the dense case used here.
-     * TODO move this to its own file or similar.
-     */
-    class DenseOsdDecoder {
-    public:
-        osd::OsdMethod osd_method;
-        int osd_order;
-        int k, bit_count, check_count;
-        gf2dense::CscMatrix &pcm;
-        std::vector<double> &channel_probabilities;
-        std::vector<uint8_t> lsd0_solution;
-        std::vector<uint8_t> osdw_decoding;
-        std::vector<std::vector<uint8_t>> osd_candidate_strings;
-        gf2dense::PluDecomposition plu_decomposition;
-
-        DenseOsdDecoder(
-                gf2dense::CscMatrix &parity_check_matrix,
-                gf2dense::PluDecomposition &pluDecomposition,
-                osd::OsdMethod osd_method,
-                int osd_order,
-                int n,
-                int m,
-                std::vector<double> &channel_probs) :
-                pcm(parity_check_matrix),
-                channel_probabilities(channel_probs),
-                plu_decomposition(pluDecomposition) {
-            this->bit_count = n;
-            this->check_count = m;
-            this->osd_order = osd_order;
-            this->osd_method = osd_method;
-            this->osd_setup();
-        }
-
-
-        ~DenseOsdDecoder() {
-            this->channel_probabilities.clear();
-            this->lsd0_solution.clear();
-            this->osdw_decoding.clear();
-            this->osd_candidate_strings.clear();
-        }
-
-
-        int osd_setup() {
-            int osd_candidate_string_count;
-
-            this->osd_candidate_strings.clear();
-            if (this->osd_method == osd::OSD_OFF) {
-                return 0;
-            }
-            this->k = this->bit_count - this->plu_decomposition.matrix_rank;
-
-            if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
-                return 1;
-            }
-
-            if (this->osd_method == osd::EXHAUSTIVE) {
-                osd_candidate_string_count = pow(2, this->osd_order);
-                for (auto i = 1; i < osd_candidate_string_count; i++) {
-                    this->osd_candidate_strings.push_back(ldpc::util::decimal_to_binary_reverse(i, k));
-                }
-            }
-
-            if (this->osd_method == osd::COMBINATION_SWEEP) {
-                for (auto i = 0; i < k; i++) {
-                    std::vector<uint8_t> osd_candidate;
-                    osd_candidate.resize(k, 0);
-                    osd_candidate[i] = 1;
-                    this->osd_candidate_strings.push_back(osd_candidate);
-                }
-
-                for (auto i = 0; i < this->osd_order; i++) {
-                    for (auto j = 0; j < this->osd_order; j++) {
-                        if (j <= i) continue;
-                        if (k > 0) {
-                            std::vector<uint8_t> osd_candidate;
-                            osd_candidate.resize(k, 0);
-                            osd_candidate[i] = 1;
-                            osd_candidate[j] = 1;
-                            this->osd_candidate_strings.push_back(osd_candidate);
-                        }
-                    }
-                }
-            }
-            return 1;
-        }
-
-
-        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome) {
-            // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
-            // of the clusters through the guided growth.
-            this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
-
-            double candidate_weight, osd_min_weight;
-
-            osd_min_weight = 0;
-            for (int i = 0; i < this->bit_count; i++) {
-                if (this->lsd0_solution[i] == 1) {
-                    osd_min_weight += log(1 / this->channel_probabilities[i]);
-                }
-            }
-
-            // TODO pretty sure this deletion is not needed for the local clusters
-//            std::vector<int> rows_to_remove;
-//            for (auto& r: this->plu_decomposition.U) {
-//                for (auto c: non_pivot_columns) {
-//                    if(c < r.size()) {
-//                        r.erase(r.begin() + c);
-//                    }
-//                }
-//            }
-            auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
-            if (non_pivot_columns.empty()) {
-                std::cout << "no non-pivot columns" << std::endl;
-                return this->lsd0_solution;
-            }
-            for (auto &candidate_string: this->osd_candidate_strings) {
-                auto t_syndrome = syndrome;
-                int col_index = 0;
-                for (auto col: non_pivot_columns) {
-                    if (candidate_string[col_index] == 1) {
-                        for (auto e: this->pcm.at(col)) {
-                            t_syndrome[e] ^= 1;
-                        }
-                    }
-                    col_index++;
-                }
-
-                auto candidate_solution = plu_decomposition.lu_solve(t_syndrome);
-                for (auto i = 0; i < k; i++) {
-                    candidate_solution[non_pivot_columns[i]] = candidate_string[i];
-                }
-                candidate_weight = 0;
-
-                for (auto i = 0; i < this->bit_count; i++) {
-                    if (candidate_solution[i] == 1) {
-                        candidate_weight += log(1 /
-                                                this->channel_probabilities[i]); // TODO why not only Hamming weight considered here?
-                    }
-                }
-                if (candidate_weight < osd_min_weight) {
-                    osd_min_weight = candidate_weight;
-                    this->osdw_decoding = candidate_solution;
-                }
-            }
-
-            return this->osdw_decoding;
-        }
-    };
-
 
     // TODO this should probably become a class
     struct LsdCluster {
@@ -503,7 +353,6 @@ namespace ldpc::lsd {
     class LsdDecoder {
 
     private:
-        bool weighted;
         ldpc::bp::BpSparse &pcm;
 
     public:
@@ -516,14 +365,14 @@ namespace ldpc::lsd {
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
-            this->weighted = false;
         }
 
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
-                                                const int osd_order = 0) {
-            return this->lsd_decode(syndrome, bit_weights, 1, true, osd_order);
+                                                const int osd_order = 0,
+                                                const osd::OsdMethod osd_method = osd::COMBINATION_SWEEP) {
+            return this->lsd_decode(syndrome, bit_weights, 1, true, osd_order, osd_method);
         }
 
         std::vector<uint8_t> &
@@ -531,7 +380,8 @@ namespace ldpc::lsd {
                    const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                    const int bits_per_step = 1,
                    const bool is_on_the_fly = true,
-                   const int osd_order = 0) {
+                   const int osd_order = 0,
+                   const osd::OsdMethod osd_method = osd::COMBINATION_SWEEP) {
 
             this->cluster_size_stats.clear();
             fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -566,9 +416,9 @@ namespace ldpc::lsd {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
             }
-            if (osd_order > 0) {
+            if (osd_order > 0 && osd_method != osd::OSD_OFF) {
                 auto wts = bit_weights;
-                this->apply_osd(clusters, wts, osd_order);
+                this->apply_osd(clusters, wts, osd_order, osd_method);
             } else {
                 for (auto cl: clusters) {
                     if (cl->active) {
@@ -596,7 +446,8 @@ namespace ldpc::lsd {
          */
         void apply_osd(std::vector<LsdCluster *> &clusters,
                        std::vector<double> &bit_weights,
-                       const int osd_order) {
+                       const int osd_order,
+                       const osd::OsdMethod osd_method = osd::COMBINATION_SWEEP) {
             for (auto cl: clusters) {
                 bool unchanged = false;
                 if (cl->active) {
@@ -611,10 +462,10 @@ namespace ldpc::lsd {
 
             for (auto cl: clusters) {
                 if (cl->active) {
-                    auto cl_osd_decoder = DenseOsdDecoder(
+                    auto cl_osd_decoder = osd::DenseOsdDecoder(
                             cl->cluster_pcm,
                             cl->pluDecomposition,
-                            osd::COMBINATION_SWEEP,
+                            osd_method,
                             osd_order,
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),
