@@ -361,6 +361,23 @@ TEST(LsdDecoder, otf_hamming_code) {
     }
 }
 
+TEST(LsdDecoder, lsdw_decode) {
+    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++) {
+
+        auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
+        auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
+        bp.maximum_iterations = 2;
+        auto ufd = LsdDecoder(pcm);
+        for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+            auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
+            bp.decode(syndrome);
+            auto decoding = ufd.lsd_decode(syndrome, bp.log_prob_ratios,1,true,4);
+            auto decoding_syndrome = pcm.mulvec(decoding);
+            ASSERT_TRUE(syndrome == decoding_syndrome);
+        }
+    }
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

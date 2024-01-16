@@ -370,7 +370,8 @@ namespace ldpc::lsd {
         lsd_decode(std::vector<uint8_t> &syndrome,
                       const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                       const int bits_per_step = 1,
-                      const bool is_on_the_fly = true) {
+                      const bool is_on_the_fly = true,
+                      const int lsd_order = 0) {
 
             this->cluster_size_stats.clear();
             fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -406,18 +407,109 @@ namespace ldpc::lsd {
                           });
             }
 
-            for (auto cl: clusters) {
-                if (cl->active) {
-                    this->cluster_size_stats.push_back(cl->bit_nodes.size());
-                    auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
-                    for (auto i = 0; i < solution.size(); i++) {
-                        if (solution[i] == 1) {
-                            int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
-                            this->decoding[bit_idx] = 1;
+            if(lsd_order == 0){
+                for (auto cl: clusters) {
+                    if (cl->active) {
+                        this->cluster_size_stats.push_back(cl->bit_nodes.size());
+                        auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+                        for (auto i = 0; i < solution.size(); i++) {
+                            if (solution[i] == 1) {
+                                int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                                this->decoding[bit_idx] = 1;
+                            }
                         }
                     }
+                    delete cl; //delete the cluster now that we have the solution.
                 }
-                delete cl; //delete the cluster now that we have the solution.
+            }
+            else{
+                for(auto cl: clusters){
+                    if(cl->active){
+                        
+                        // first we measure the dimension of each cluster
+                        int cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
+                        
+                        //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches the lsd order. The number of bits added is limited to be at most the lsd order.
+
+                        int cluster_growth_count = 0;
+                        while(cluster_dimension < lsd_order && cluster_growth_count < lsd_order){
+                            cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
+                            cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
+                            cluster_growth_count++;
+                        }
+
+                        int search_depth = std::min(lsd_order, cluster_dimension);
+                        // we now solve for the LSD-0 solution
+
+                        auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+
+                        int solution_weight = 0;
+                        for (auto i = 0; i < solution.size(); i++) {
+                            if (solution[i] == 1) {
+                                solution_weight++;
+                            }
+                        }
+
+                        int min_solution_weight = solution_weight;
+                        auto best_solution = solution;
+                        
+                        //construct the cluster matrix for the non-pivot columns. We could potentially move this to part of the cluster_pcm growth function.
+                        gf2dense::CscMatrix cluster_non_pivot_matrix;
+                        for(int i = 0; i < search_depth; i++){
+                            cluster_non_pivot_matrix.emplace_back();
+
+                            int cluster_non_pivot_idx = cl->pluDecomposition.not_pivot_cols[i];
+                            int pcm_non_pivot_idx = cl->cluster_bit_idx_to_pcm_bit_idx[cluster_non_pivot_idx];
+                            for(auto e: this->pcm.iterate_column(pcm_non_pivot_idx)){
+                                int pcm_check_idx = e.row_index;
+                                int cluster_check_idx = cl->pcm_check_idx_to_cluster_check_idx[pcm_check_idx];
+                                cluster_non_pivot_matrix[i].push_back(cluster_check_idx);
+                            }
+                        }
+
+                        //measure the rank of the cluster
+                        int cluster_rank = cl->pluDecomposition.pivot_cols.size();
+
+                        //iterate over all of the weight-1 perturbations to the LSD-0 solution
+
+                        for(int j = 0; j < search_depth; j++){
+                            
+                            //calculate the correction to the cluster syndrome
+                            auto lsd_w_cluster_syndrome = cl->cluster_pcm_syndrome;
+                            for(int cluster_check_idx: cluster_non_pivot_matrix[j]){
+                                lsd_w_cluster_syndrome[cluster_check_idx] ^= 1;
+                            }
+
+                            //solve for the LSD-w solution
+                            auto lsd_w_solution = cl->pluDecomposition.lu_solve(lsd_w_cluster_syndrome);
+
+                            //add the correction to the non-information set
+                            lsd_w_cluster_syndrome[cluster_rank + j ] = 1;
+
+                            //calculate the weight of the LSD-w solution
+                            solution_weight = 0;
+                            for (auto i = 0; i < lsd_w_solution.size(); i++) {
+                                if (lsd_w_solution[i] == 1) {
+                                    solution_weight++;
+                                }
+                            }
+                            if(solution_weight < min_solution_weight){
+                                min_solution_weight = solution_weight;
+                                best_solution = lsd_w_solution;
+                            }
+
+                        }
+
+                        for (auto i = 0; i < best_solution.size(); i++) {
+                            if (best_solution[i] == 1) {
+                                int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                                this->decoding[bit_idx] = 1;
+                            }
+                        }
+
+                    }
+                    delete cl;
+                }
             }
             delete[] global_bit_membership;
             delete[] global_check_membership;
