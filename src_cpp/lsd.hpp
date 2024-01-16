@@ -432,11 +432,13 @@ namespace ldpc::lsd {
                         //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches the lsd order. The number of bits added is limited to be at most the lsd order.
 
                         int cluster_growth_count = 0;
-                        while(cluster_dimension < lsd_order && cluster_growth_count < lsd_order){
-                            cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
+                        while(cluster_dimension < lsd_order && cluster_growth_count < lsd_order && cl->bit_nodes.size()<this->pcm.n){
+                            cl->grow_cluster(bit_weights, 1, is_on_the_fly);
                             cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
                             cluster_growth_count++;
                         }
+
+                        // std::cout<<cl->to_string()<<std::endl;
 
                         int search_depth = std::min(lsd_order, cluster_dimension);
                         // we now solve for the LSD-0 solution
@@ -453,20 +455,6 @@ namespace ldpc::lsd {
                         int min_solution_weight = solution_weight;
                         auto best_solution = solution;
                         
-                        //construct the cluster matrix for the non-pivot columns. We could potentially move this to part of the cluster_pcm growth function.
-                        gf2dense::CscMatrix cluster_non_pivot_matrix;
-                        for(int i = 0; i < search_depth; i++){
-                            cluster_non_pivot_matrix.emplace_back();
-
-                            int cluster_non_pivot_idx = cl->pluDecomposition.not_pivot_cols[i];
-                            int pcm_non_pivot_idx = cl->cluster_bit_idx_to_pcm_bit_idx[cluster_non_pivot_idx];
-                            for(auto e: this->pcm.iterate_column(pcm_non_pivot_idx)){
-                                int pcm_check_idx = e.row_index;
-                                int cluster_check_idx = cl->pcm_check_idx_to_cluster_check_idx[pcm_check_idx];
-                                cluster_non_pivot_matrix[i].push_back(cluster_check_idx);
-                            }
-                        }
-
                         //measure the rank of the cluster
                         int cluster_rank = cl->pluDecomposition.pivot_cols.size();
 
@@ -474,9 +462,11 @@ namespace ldpc::lsd {
 
                         for(int j = 0; j < search_depth; j++){
                             
+                            int np_col = cl->pluDecomposition.not_pivot_cols[j];
+
                             //calculate the correction to the cluster syndrome
                             auto lsd_w_cluster_syndrome = cl->cluster_pcm_syndrome;
-                            for(int cluster_check_idx: cluster_non_pivot_matrix[j]){
+                            for(int cluster_check_idx: cl->cluster_pcm[np_col]){
                                 lsd_w_cluster_syndrome[cluster_check_idx] ^= 1;
                             }
 

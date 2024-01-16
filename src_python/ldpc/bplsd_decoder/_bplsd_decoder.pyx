@@ -47,7 +47,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, bits_per_step:int = 1, input_vector_type: str = "syndrome"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, bits_per_step:int = 1, input_vector_type: str = "syndrome", lsd_order: int = 0):
         self.MEMORY_ALLOCATED=False
         self.lsd = new lsd_decoder_cpp(self.pcm[0])
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
@@ -57,6 +57,10 @@ cdef class BpLsdDecoder(BpDecoderBase):
         else:
             self.bits_per_step = bits_per_step
         self.input_vector_type = "syndrome"
+
+        if(lsd_order < 0):
+            raise ValueError(f"lsd_order must be greater than or equal to 0. Not {lsd_order}.")
+        self.lsd_order = lsd_order
 
         self.MEMORY_ALLOCATED=True
 
@@ -107,7 +111,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
             for i in range(self.n): out[i] = self.bpd.decoding[i]
 
         if not self.bpd.converge:
-            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
+            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True, self.lsd_order)
             for i in range(self.n):
                 out[i] = self.lsd.decoding[i]
         
