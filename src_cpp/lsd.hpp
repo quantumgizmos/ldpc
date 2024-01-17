@@ -36,7 +36,7 @@ namespace ldpc::lsd {
         tsl::robin_set<int> bit_nodes;
         tsl::robin_set<int> check_nodes;
         tsl::robin_set<int> boundary_check_nodes;
-        std::vector<int> candidate_bit_nodes;
+        tsl::robin_set<int> candidate_bit_nodes;
         tsl::robin_set<int> enclosed_syndromes;
         LsdCluster **global_check_membership; // store which cluster a check belongs to
         LsdCluster **global_bit_membership; // store which cluster a bit belongs to
@@ -119,12 +119,14 @@ namespace ldpc::lsd {
                     cluster_bit_weights.push_back(bit_weights[bit]);
                 }
                 auto sorted_indices = sort_indices(cluster_bit_weights);
+                auto candidate_bit_nodes_vector = std::vector<int>(this->candidate_bit_nodes.begin(),
+                                                                   this->candidate_bit_nodes.end());
                 int count = 0;
                 for (auto i: sorted_indices) {
                     if (count == bits_per_step) {
                         break;
                     }
-                    int bit_index = this->candidate_bit_nodes[i];
+                    int bit_index = candidate_bit_nodes_vector[i];
                     this->add_bit_node_to_cluster(bit_index);
                     count++;
                 }
@@ -167,7 +169,7 @@ namespace ldpc::lsd {
                 for (auto &e: this->pcm.iterate_row(check_index)) {
                     // if bit is not in this cluster, add it to the candidate list.
                     if (this->global_bit_membership[e.col_index] != this) {
-                        candidate_bit_nodes.push_back(e.col_index);
+                        candidate_bit_nodes.insert(e.col_index);
                         erase = false;
                     }
                 }
@@ -426,6 +428,10 @@ namespace ldpc::lsd {
                 //cluster growth stage
                 for(auto cl: clusters){
                     if(cl->active){
+
+                        if(cl->bit_nodes.size()==1){
+                            continue;
+                        }
                         
                         // first we measure the dimension of each cluster
                         int cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
@@ -433,7 +439,8 @@ namespace ldpc::lsd {
                         //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches the lsd order. The number of bits added is limited to be at most the lsd order.
 
                         int cluster_growth_count = 0;
-                        while(cluster_dimension < lsd_order && cluster_growth_count < lsd_order && cl->bit_nodes.size()<this->pcm.n){
+                        int initial_cluster_size = cl->bit_nodes.size();
+                        while(cluster_dimension < lsd_order && cluster_growth_count < lsd_order && cl->bit_nodes.size()<this->pcm.n && cluster_growth_count <= initial_cluster_size){
                             cl->grow_cluster(bit_weights, 1, is_on_the_fly);
                             cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
                             cluster_growth_count++;
