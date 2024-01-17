@@ -53,11 +53,11 @@ TEST(LsdCluster, add_bitANDadd_check_add){
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
     
     cl.compute_growth_candidate_bit_nodes();
-    auto expected_candidate_bit_nodes = std::vector<int>{1,2};
+    auto expected_candidate_bit_nodes = tsl::robin_set<int>{1, 2};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
 
-    cl.add_bit(expected_candidate_bit_nodes[1]);
+    cl.add_bit(*(++expected_candidate_bit_nodes.begin()));
     cl.add_check(2,true);
     
     
@@ -77,7 +77,7 @@ TEST(LsdCluster, add_bitANDadd_check_add){
 
 
     // Test adding existing checks and bits
-    cl.add_bit(expected_candidate_bit_nodes[1]);
+    cl.add_bit(*(++expected_candidate_bit_nodes.begin()));
     cl.add_check(2,true);
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
@@ -91,7 +91,7 @@ TEST(LsdCluster, add_bitANDadd_check_add){
 
     //check that bit is remove from boundary check node is removed from boundary check nodes
     cl.compute_growth_candidate_bit_nodes();
-    expected_candidate_bit_nodes = std::vector<int>{1,3};
+    expected_candidate_bit_nodes = tsl::robin_set<int>{1, 3};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
     //add bit 3, verify that boundary check 2 is removed from the boundary check list
@@ -116,7 +116,7 @@ TEST(LsdCluster, add_bit_node_to_cluster){
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
     
     cl.compute_growth_candidate_bit_nodes();
-    auto expected_candidate_bit_nodes = std::vector<int>{1,2};
+    auto expected_candidate_bit_nodes = tsl::robin_set<int>{1, 2};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
 
@@ -141,7 +141,7 @@ TEST(LsdCluster, add_bit_node_to_cluster){
 
     cl.compute_growth_candidate_bit_nodes();
     auto expected_boundary_check_nodes = tsl::robin_set<int>{1,2};
-    expected_candidate_bit_nodes = std::vector<int>{1,3};
+    expected_candidate_bit_nodes = tsl::robin_set<int>{1, 3};
 
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
@@ -157,7 +157,7 @@ TEST(LsdCluster, add_bit_node_to_cluster){
     
     cl.compute_growth_candidate_bit_nodes();
     expected_boundary_check_nodes = tsl::robin_set<int>{0,2};
-    expected_candidate_bit_nodes = std::vector<int>{0,3};
+    expected_candidate_bit_nodes = tsl::robin_set<int>{0, 3};
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
@@ -201,7 +201,7 @@ TEST(LsdCluster, grow_cluster){
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
     
     cl.compute_growth_candidate_bit_nodes();
-    auto expected_candidate_bit_nodes = std::vector<int>{5,6};
+    auto expected_candidate_bit_nodes = tsl::robin_set<int>{5, 6};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
     auto bit_membership = cl.global_bit_membership[5];
     ASSERT_EQ(bit_membership, nullptr);
@@ -225,7 +225,7 @@ TEST(LsdCluster, grow_cluster){
 
     cl.compute_growth_candidate_bit_nodes();
     auto expected_boundary_check_nodes = tsl::robin_set<int>{4,6};
-    expected_candidate_bit_nodes = std::vector<int>{4,7};
+    expected_candidate_bit_nodes = tsl::robin_set<int>{4, 7};
 
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
