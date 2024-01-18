@@ -137,11 +137,21 @@ namespace ldpc::osd {
                 }
                 candidate_weight = 0;
 
+                auto decoded_t_syndrome = std::vector<uint8_t>(t_syndrome.size(), 0);
+
                 for (auto i = 0; i < this->bit_count; i++) {
                     if (candidate_solution[i] == 1) {
+                        for(int synd_idx: this->pcm.at(i)) {
+                            decoded_t_syndrome[synd_idx] ^= 1;
+                        }
                         candidate_weight++;
                     }
                 }
+
+                if(decoded_t_syndrome != syndrome){
+                    continue;
+                }
+
                 // reset if NaN
 //                candidate_weight = std::isnan(candidate_weight) ? 0.0 : candidate_weight;
                 if (candidate_weight < osd_min_weight) {

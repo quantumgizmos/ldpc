@@ -498,6 +498,7 @@ namespace ldpc::lsd {
                             cl->check_nodes.size(),
                             bit_weights);
                     auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome);
+
                     for (auto i = 0; i < res.size(); i++) {
                         if (res[i] == 1) {
                             int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];

@@ -362,14 +362,14 @@ TEST(LsdDecoder, otf_hamming_code) {
 }
 
 TEST(LsdDecoder, lsdw_decode) {
-    for (auto hamming_code_rank = 3; hamming_code_rank < 17; hamming_code_rank++) {
-        std::cout << "rank " << hamming_code_rank << std::endl;
+    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++) {
+        // std::cout << "rank " << hamming_code_rank << std::endl;
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
         auto ufd = LsdDecoder(pcm);
         for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
-            std::cout << i << std::endl;
+            // std::cout << i << std::endl;
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
             bp.decode(syndrome);
             auto decoding = ufd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 3);
