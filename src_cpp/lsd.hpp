@@ -15,6 +15,7 @@
 
 #include "bp.hpp"
 #include "gf2dense.hpp"
+#include "osd_dense.hpp"
 
 namespace ldpc::lsd {
 
@@ -339,6 +340,37 @@ namespace ldpc::lsd {
         }
 
         std::string to_string();
+
+        /**
+         * Reorders the non-pivot columns of the eliminated cluster pcm according to the bit_weights.
+         * @param bit_weights
+         */
+        void sort_non_pivot_cols(const std::vector<double> &bit_weights) {
+            if (bit_weights.empty() or this->pluDecomposition.not_pivot_cols.size() < 2) {
+                return;
+            }
+            // global index to cluster index mapping
+            tsl::robin_map<int, int> global_to_cluster_colum_map;
+            // local weight index to global bit index mapping
+            tsl::robin_map<int, int> weight_idx_to_global_idx;
+            // local weights to reorder
+            std::vector<double> weights;
+            for (auto not_pivot_col: this->pluDecomposition.not_pivot_cols) {
+                auto global_idx = this->cluster_bit_idx_to_pcm_bit_idx[not_pivot_col];
+                global_to_cluster_colum_map[global_idx] = not_pivot_col;
+                weight_idx_to_global_idx[weights.size()] = global_idx;
+                weights.push_back(bit_weights.at(global_idx));
+            }
+            auto sorted_indices = sort_indices(weights);
+            std::vector<int> resorted_np_cls;
+            resorted_np_cls.reserve(sorted_indices.size());
+            // iterate over resorted indices
+            // map local weight index to global bit index and then to cluster index
+            for (auto idx: sorted_indices) {
+                resorted_np_cls.push_back(global_to_cluster_colum_map[weight_idx_to_global_idx[idx]]);
+            }
+            this->pluDecomposition.not_pivot_cols = resorted_np_cls;
+        }
     };
 
 
@@ -424,49 +456,57 @@ namespace ldpc::lsd {
                     delete cl; //delete the cluster now that we have the solution.
                 }
             } else {
-                //cluster growth stage
-                for (auto cl: clusters) {
-                    if (cl->active) {
-
-                        // first we measure the dimension of each cluster
-                        int cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
-
-                        //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches the lsd order. The number of bits added is limited to be at most the lsd order.
-
-                        int cluster_growth_count = 0;
-                        int initial_cluster_size = cl->bit_nodes.size();
-                        while (cluster_dimension < lsd_order &&
-                               cluster_growth_count < lsd_order &&
-                               cl->bit_nodes.size() < this->pcm.n &&
-                               cluster_growth_count <= initial_cluster_size) {
-                            cl->grow_cluster(bit_weights, 1, is_on_the_fly);
-                            cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
-                            cluster_growth_count++;
-                        }
-                    }
-                }
-
-                for (auto cl: clusters) {
-                    if (cl->active) {
-
-                        this->cluster_size_stats.push_back(cl->bit_nodes.size());
-                        auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
-                        for (auto i = 0; i < solution.size(); i++) {
-                            if (solution[i] == 1) {
-                                int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
-                                this->decoding[bit_idx] = 1;
-                            }
-                        }
-
-                    }
-                    delete cl;
-                }
+                this->apply_lsdw(clusters, lsd_order, bit_weights);
             }
             delete[] global_bit_membership;
             delete[] global_check_membership;
             return this->decoding;
         }
 
+        void apply_lsdw(const std::vector<LsdCluster *> &clusters,
+                        int lsd_order,
+                        const std::vector<double> &bit_weights) {
+            //cluster growth stage
+            for (auto cl: clusters) {
+                if (cl->active) {
+                    // first we measure the dimension of each cluster
+                    auto cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
+                    //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches
+                    // the lsd order. The number of bits added is limited to be at most the lsd order.
+                    auto cluster_growth_count = 0;
+                    auto initial_cluster_size = cl->bit_nodes.size();
+                    while (cluster_dimension < lsd_order &&
+                           cluster_growth_count < lsd_order &&
+                           cl->bit_nodes.size() < this->pcm.n &&
+                           cluster_growth_count <= initial_cluster_size) {
+                        cl->grow_cluster(bit_weights, 1, true);
+                        cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
+                        cluster_growth_count++;
+                    }
+                }
+            }
+            // apply lsd-w to clusters
+            for (auto cl: clusters) {
+                if (cl->active) {
+                    cl->sort_non_pivot_cols(bit_weights);
+                    auto cl_osd_decoder = osd::DenseOsdDecoder(
+                            cl->cluster_pcm,
+                            cl->pluDecomposition,
+                            osd::OsdMethod::EXHAUSTIVE,
+                            lsd_order,
+                            cl->bit_nodes.size(),
+                            cl->check_nodes.size(),
+                            bit_weights);
+                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome);
+                    for (auto i = 0; i < res.size(); i++) {
+                        if (res[i] == 1) {
+                            int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
+                            this->decoding[bit_idx] = 1;
+                        }
+                    }
+                }
+            }
+        }
     };
 
     std::string LsdCluster::to_string() {
