@@ -41,7 +41,6 @@ class SinterBpOsdDecoder(Decoder):
                  ms_scaling_factor=0.625,
                  schedule="parallel",
                  omp_thread_count=1,
-                 random_serial_schedule=False,
                  serial_schedule_order=None,
                  osd_method="osd0",
                  osd_order=0):
@@ -51,7 +50,6 @@ class SinterBpOsdDecoder(Decoder):
         self.ms_scaling_factor = ms_scaling_factor
         self.schedule = schedule
         self.omp_thread_count = omp_thread_count
-        self.random_serial_schedule = random_serial_schedule
         self.serial_schedule_order = serial_schedule_order
         self.osd_method = osd_method
         self.osd_order = osd_order
