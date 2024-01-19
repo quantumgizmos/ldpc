@@ -6,7 +6,6 @@ from sinter import Decoder
 from beliefmatching import detector_error_model_to_check_matrices
 
 
-
 class SinterBpOsdDecoder(Decoder):
 
     """
@@ -24,8 +23,6 @@ class SinterBpOsdDecoder(Decoder):
         The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads used for parallel decoding, by default 1.
-    random_serial_schedule : Optional[int], optional
-        Whether to use a random serial schedule order, by default False.
     serial_schedule_order : Optional[List[int]], optional
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code, by default None.
     osd_method : int, optional
@@ -79,24 +76,23 @@ class SinterBpOsdDecoder(Decoder):
                                   ms_scaling_factor=self.ms_scaling_factor,
                                   schedule=self.schedule,
                                   omp_thread_count=self.omp_thread_count,
-                                  random_serial_schedule=self.random_serial_schedule,
                                   serial_schedule_order=self.serial_schedule_order,
                                   osd_method=self.osd_method,
                                   osd_order=self.osd_order)
 
         shots = stim.read_shot_data_file(
-            path=dets_b8_in_path, format="b8", num_detectors=self.dem.num_detectors
+            path=dets_b8_in_path, format="b8", num_detectors=num_dets
         )
         predictions = np.zeros(
-            (shots.shape[0], self.dem.num_observables), dtype=bool)
-        for i in range(shots.shape[0]):
+            (num_shots, num_obs), dtype=bool)
+        for i in range(num_shots):
             predictions[i, :] = self.decode(shots[i, :])
 
         stim.write_shot_data_file(
             data=predictions,
             path=obs_predictions_b8_out_path,
             format="b8",
-            num_observables=self.dem.num_observables,
+            num_observables=num_obs,
         )
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:

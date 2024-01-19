@@ -2,6 +2,8 @@ import numpy as np
 import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
+
+
 class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
@@ -28,8 +30,6 @@ class BpOsdDecoder(BpDecoderBase):
         The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads used for parallel decoding, by default 1.
-    random_serial_schedule : Optional[int], optional
-        Whether to use a random serial schedule order, by default False.
     serial_schedule_order : Optional[List[int]], optional
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
@@ -44,7 +44,6 @@ class BpOsdDecoder(BpDecoderBase):
     initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__del__`
     method deallocates memory if it has been allocated.
     """
-
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """
@@ -78,7 +77,6 @@ class BpOsdDecoder(BpDecoderBase):
 
         """
 
-
     @property
     def osd_method(self) -> Optional[str]:
         """
@@ -90,7 +88,6 @@ class BpOsdDecoder(BpDecoderBase):
             A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
             has been set, returns `None`.
         """
-
 
     @osd_method.setter
     def osd_method(self, method: Union[str, int, float]) -> None:
@@ -104,7 +101,6 @@ class BpOsdDecoder(BpDecoderBase):
             OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
 
-
     @property
     def osd_order(self) -> int:
         """
@@ -115,7 +111,6 @@ class BpOsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
-
 
     @osd_order.setter
     def osd_order(self, order: int) -> None:
@@ -139,7 +134,6 @@ class BpOsdDecoder(BpDecoderBase):
 
         """
 
-
     @property
     def decoding(self) -> np.ndarray:
         """
@@ -148,7 +142,6 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
-
 
     @property
     def bp_decoding(self) -> np.ndarray:
@@ -159,7 +152,6 @@ class BpOsdDecoder(BpDecoderBase):
             np.ndarray: A numpy array containing the BP decoding output.
         """
 
-
     @property
     def osd0_decoding(self) -> np.ndarray:
         """
@@ -169,7 +161,6 @@ class BpOsdDecoder(BpDecoderBase):
             np.ndarray: A numpy array containing the current decoded output.
         """
 
-
     @property
     def osdw_decoding(self) -> np.ndarray:
         """
@@ -178,4 +169,3 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
-
