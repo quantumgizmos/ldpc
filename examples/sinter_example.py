@@ -1,12 +1,12 @@
 import sinter
-from ldpc.sinter_decoders import SinterBpOsdDecoder
+from ldpc.sinter_decoders import SinterBeliefFindDecoder, SinterBpOsdDecoder
 import stim
 from matplotlib import pyplot as plt
 import numpy as np
 
 
 def generate_example_tasks():
-    for p in np.arange(0.001, 0.01, 0.001):
+    for p in np.arange(0.001, 0.01, 0.002):
         for d in [5, 7, 9]:
             sc_circuit = stim.Circuit.generated(
                 rounds=d,
@@ -33,13 +33,18 @@ def main():
         max_shots=20_000,
         max_errors=100,
         tasks=generate_example_tasks(),
-        decoders=['bposd'],
+        decoders=['bposd', 'belief_find'],
         custom_decoders={'bposd': SinterBpOsdDecoder(
             max_iter=5,
             bp_method="ms",
             ms_scaling_factor=0.625,
             schedule="parallel",
-            osd_method="osd0")},
+            osd_method="osd0"),
+            "belief_find": SinterBeliefFindDecoder(max_iter=5,
+                                                   bp_method="ms",
+                                                   ms_scaling_factor=0.625,
+                                                   schedule="parallel")},
+
         print_progress=True,
         save_resume_filepath=f'bposd_surface_code.csv',
     )
@@ -50,19 +55,30 @@ def main():
         print(sample.to_csv_line())
 
     # Render a matplotlib plot of the data.
-    fig, ax = plt.subplots(1, 1)
+    fig, axis = plt.subplots(1, 2, sharey=True, figsize=(10, 5))
     sinter.plot_error_rate(
-        ax=ax,
+        ax=axis[0],
         stats=samples,
-        group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']} dec={stat.decoder}",
+        group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']}",
+        filter_func=lambda stat: stat.decoder == 'bposd',
         x_func=lambda stat: stat.json_metadata['p'],
     )
-    ax.loglog()
-    ax.grid()
-    ax.set_title('Logical Error Rate vs Physical Error Rate')
-    ax.set_ylabel('Logical Error Probability (per shot)')
-    ax.set_xlabel('Physical Error Rate')
-    ax.legend()
+
+    sinter.plot_error_rate(
+        ax=axis[1],
+        stats=samples,
+        group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']}",
+        filter_func=lambda stat: stat.decoder == 'belief_find',
+        x_func=lambda stat: stat.json_metadata['p'],
+    )
+    axis[0].set_ylabel('Logical Error Rate')
+    axis[0].set_title('BPOSD')
+    axis[1].set_title('Belief Find')
+    for ax in axis:
+        ax.loglog()
+        ax.grid()
+        ax.set_xlabel('Physical Error Rate')
+        ax.legend()
 
     # Save to file and also open in a window.
     fig.savefig('plot.png')
