@@ -2,11 +2,11 @@ import stim
 import numpy as np
 import pathlib
 from ldpc.belief_find_decoder import BeliefFindDecoder
-from sinter import Decoder
+import sinter
 from beliefmatching import detector_error_model_to_check_matrices
 
 
-class SinterBeliefFindDecoder(Decoder):
+class SinterBeliefFindDecoder(sinter.Decoder):
     """
     A sinter decoder that combines Belief Propagation (BP) with the Union Find Decoder (UFD) algorithm.
 

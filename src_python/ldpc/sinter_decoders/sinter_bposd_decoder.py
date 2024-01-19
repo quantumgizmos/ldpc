@@ -2,11 +2,11 @@ import stim
 import numpy as np
 import pathlib
 from ldpc.bposd_decoder import BpOsdDecoder
-from sinter import Decoder
+import sinter
 from beliefmatching import detector_error_model_to_check_matrices
 
 
-class SinterBpOsdDecoder(Decoder):
+class SinterBpOsdDecoder(sinter.Decoder):
 
     """
     Initialize the SinterBPOSDDecoder object.

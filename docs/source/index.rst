@@ -27,6 +27,12 @@ Welcome to LDPC's documentation!
    quantum_decoder.ipynb
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Sinter Integration:
+
+   sinter_integration.ipynb
+
+.. toctree::
    :maxdepth: 1
    :titlesonly:
    :caption: ldpc API:
