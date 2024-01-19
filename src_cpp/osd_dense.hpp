@@ -148,7 +148,9 @@ namespace ldpc::osd {
                     }
                 }
 
+                //we abandon this candidate solution if the solution does satisfy the input
                 if(decoded_t_syndrome != syndrome){
+                    std::cout<<"Hello"<<std::endl;
                     continue;
                 }
 
