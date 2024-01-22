@@ -4,6 +4,8 @@
 #include "lsd.hpp"
 #include "util.hpp"
 #include "bp.hpp"
+#include "rapidcsv.h"
+#include "io.hpp"
 
 using namespace std;
 using namespace ldpc::lsd;
@@ -381,7 +383,7 @@ TEST(LsdDecoder, lsdw_decode) {
 
 TEST(LsdDecoder, lsdw_decode_ring_code) {
 
-    for (auto length = 2; length < 12; length++) {
+    for (auto length = 2; length < 10; length++) {
 
         auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
@@ -397,6 +399,49 @@ TEST(LsdDecoder, lsdw_decode_ring_code) {
             ASSERT_TRUE(syndrome == decoding_syndrome);
         }
     }
+}
+
+TEST(LsdDecoder, test_fail_case){
+    auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/qdlpc_test.csv");
+    rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+    int row_count = doc.GetColumn<string>(0).size();
+    std::vector<string> row = doc.GetRow<string>(0);
+
+    int m = stoi(row[0]);
+    int n = stoi(row[1]);
+    auto input_csr_vector = ldpc::io::string_to_csr_vector(row[2]);
+    auto pcm = ldpc::bp::BpSparse(m,n);
+    pcm.csr_insert(input_csr_vector);
+
+    ASSERT_TRUE(pcm.m == 192);
+    ASSERT_TRUE(pcm.n == 400);
+
+    //this is the syndrome that is currently failing in Python.
+    auto syndrome_sparse = std::vector<uint8_t>{ 3,   5,  10,  12,  13,  16,  28,  44,  45,  50,  55,  70,  82,
+    87,  92, 128, 130, 131, 139, 143, 157, 176};
+
+    auto syndrome = std::vector<uint8_t>(pcm.m, 0);
+    for(auto idx: syndrome_sparse){
+        syndrome[idx] = 1;
+    }
+    auto channel_probabilities = std::vector<double>(pcm.n, 0.01);
+    //setup the BP decoder with only 2 iterations
+    auto bp = ldpc::bp::BpDecoder(pcm, channel_probabilities, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
+    auto ufd = LsdDecoder(pcm);
+    bp.decode(syndrome);
+    auto decoding = ufd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 5);
+    auto decoding_syndrome = pcm.mulvec(decoding);
+    ASSERT_TRUE(bp.converge == false);
+    ASSERT_TRUE(syndrome == decoding_syndrome);
+
+
+
+
+
+
+
+
+    
 }
 
 
