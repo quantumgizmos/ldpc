@@ -27,6 +27,12 @@ Welcome to LDPC's documentation!
    quantum_decoder.ipynb
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Sinter Integration:
+
+   sinter_integration.ipynb
+
+.. toctree::
    :maxdepth: 1
    :titlesonly:
    :caption: ldpc API:
@@ -39,11 +45,8 @@ Welcome to LDPC's documentation!
    ldpc/bposd_decoder
    ldpc/union_find_decoder
    ldpc/monte_carlo_simulation
+   ldpc/sinter_decoders.rst
    ldpc/soft_info_belief_propagation.rst
-   
-
-
-
 
 Indices and tables
 ==================
