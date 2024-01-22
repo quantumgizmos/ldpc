@@ -404,12 +404,7 @@ TEST(LsdDecoder, lsdw_decode_ring_code) {
 TEST(LsdDecoder, test_fail_case){
     auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/qdlpc_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
-
-
     int row_count = doc.GetColumn<string>(0).size();
-
-
-
     std::vector<string> row = doc.GetRow<string>(0);
 
     int m = stoi(row[0]);
@@ -426,18 +421,13 @@ TEST(LsdDecoder, test_fail_case){
     87,  92, 128, 130, 131, 139, 143, 157, 176};
 
     auto syndrome = std::vector<uint8_t>(pcm.m, 0);
-
     for(auto idx: syndrome_sparse){
         syndrome[idx] = 1;
     }
-
     auto channel_probabilities = std::vector<double>(pcm.n, 0.01);
-
     //setup the BP decoder with only 2 iterations
     auto bp = ldpc::bp::BpDecoder(pcm, channel_probabilities, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
-
     auto ufd = LsdDecoder(pcm);
-
     bp.decode(syndrome);
     auto decoding = ufd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 5);
     auto decoding_syndrome = pcm.mulvec(decoding);

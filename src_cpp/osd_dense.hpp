@@ -60,7 +60,7 @@ namespace ldpc::osd {
             if (this->osd_method == osd::OSD_OFF) {
                 return 0;
             }
-            this->k = this->bit_count - this->plu_decomposition.matrix_rank;
+            this->k = this->plu_decomposition.not_pivot_cols.size();
 
             if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
                 return 1;
