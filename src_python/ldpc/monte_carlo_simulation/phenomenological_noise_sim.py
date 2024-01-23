@@ -9,12 +9,13 @@ if __name__ == "__main__":
     ps = np.linspace(0.015, 0.035, 6)
     fig, axis = plt.subplots(1, 2, sharey=True, figsize=(10, 5))
     nr_samples = 200
-    for size in [3, 5, 7]:
-        print(f"L={size}")
+    decoding_rds = 1
+    for dist in [3, 5, 7]:
+        print(f"d={dist}")
         lsd_lers = []
         osd_lers = []
         codename = "2DTC"
-        code = panqec.codes.Toric2DCode(size)
+        code = panqec.codes.Toric2DCode(dist)
         Hz = code.Hz.toarray().astype(np.int32)
         Lz = code.logicals_z[:, Hz.shape[1]:]
         for p in ps:
@@ -29,8 +30,8 @@ if __name__ == "__main__":
                 decoding_method="lsd",
                 check_side="Z",
                 analog_tg=False,
-                rounds=2 * size,  # how often to decode, i.e., how often we slide window-1
-                repetitions=2 * size,  # how many noisy syndromes, == window size == 2 * region_size
+                rounds=(decoding_rds + 1) * dist,  # how often to decode, i.e., how often we slide window-1
+                repetitions=2 * dist,  # how many noisy syndromes, == window size == 2 * region_size
                 experiment="test",
                 bp_params=BpParams(max_bp_iter=5)
             )
@@ -41,11 +42,11 @@ if __name__ == "__main__":
                 ser=p,
                 bias=[1.0, 0.0, 0.0],
                 codename=codename,
-                decoding_method="bposd",
+                decoding_method="matching",
                 check_side="Z",
                 analog_tg=False,
-                rounds=2 * size,  # how often to decode, i.e., how often we slide window-1
-                repetitions=4 * size,  # how many noisy syndromes, == window size == 2 * region_size
+                rounds=(decoding_rds + 1) * dist,  # how often to decode, i.e., how often we slide window-1
+                repetitions=2 * dist,  # how many noisy syndromes, == window size == 2 * region_size
                 experiment="test",
                 bp_params=BpParams(max_bp_iter=50)
             )
@@ -56,13 +57,13 @@ if __name__ == "__main__":
         axis[0].plot(
             ps,
             lsd_lers,
-            label=f"lsd d={size}",
+            label=f"lsd d={dist}",
             marker="o", linestyle="dashed",
         )
         axis[1].plot(
             ps,
             osd_lers,
-            label=f"bposd d={size}",
+            label=f"bposd d={dist}",
             marker="x",
             linestyle="solid",
         )
