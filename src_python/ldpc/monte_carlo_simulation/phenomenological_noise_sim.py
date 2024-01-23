@@ -8,7 +8,7 @@ from ldpc.monte_carlo_simulation.quasi_single_shot_v2 import QSS_SimulatorV2
 if __name__ == "__main__":
     ps = np.linspace(0.015, 0.035, 6)
     fig, axis = plt.subplots(1, 2, sharey=True, figsize=(10, 5))
-    nr_samples = 200
+    nr_samples = 1000
     decoding_rds = 1
     for dist in [3, 5, 7]:
         print(f"d={dist}")
