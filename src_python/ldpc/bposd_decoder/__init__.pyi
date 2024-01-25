@@ -2,8 +2,6 @@ import numpy as np
 import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
-
-
 class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
@@ -169,3 +167,4 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
+
