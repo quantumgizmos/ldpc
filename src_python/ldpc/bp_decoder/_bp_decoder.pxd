@@ -22,6 +22,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
     cdef enum BpSchedule:
         SERIAL = 0
         PARALLEL = 1
+        SERIAL_RELATIVE = 2
 
     cdef cppclass BpEntry "ldpc::bp::BpEntry":
         BpEntry() except +

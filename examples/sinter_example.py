@@ -22,7 +22,7 @@ def generate_example_tasks():
                 json_metadata={
                     'p': p,
                     'd': d,
-                    'rounds': d,
+                    'rounds': 3 * d,
                 },
             )
 
@@ -30,16 +30,23 @@ def generate_example_tasks():
 def main():
     samples = sinter.collect(
         num_workers=10,
-        max_shots=20_000,
-        max_errors=100,
+        max_shots=5000,
+        max_errors=200,
         tasks=generate_example_tasks(),
-        decoders=['bposd', 'belief_find'],
-        custom_decoders={'bposd': SinterBpOsdDecoder(
-            max_iter=5,
-            bp_method="ms",
-            ms_scaling_factor=0.625,
-            schedule="parallel",
-            osd_method="osd0"),
+        decoders=['bposd-sr', 'bposd', 'belief_find'],
+        custom_decoders={
+            'bposd-sr': SinterBpOsdDecoder(
+                max_iter=5,
+                bp_method="ms",
+                ms_scaling_factor=0.625,
+                schedule="serial_relative",
+                osd_method="osd0"),
+            'bposd': SinterBpOsdDecoder(
+                max_iter=5,
+                bp_method="ms",
+                ms_scaling_factor=0.625,
+                schedule="parallel",
+                osd_method="osd0"),
             "belief_find": SinterBeliefFindDecoder(max_iter=5,
                                                    bp_method="ms",
                                                    ms_scaling_factor=0.625,
@@ -55,7 +62,7 @@ def main():
         print(sample.to_csv_line())
 
     # Render a matplotlib plot of the data.
-    fig, axis = plt.subplots(1, 2, sharey=True, figsize=(10, 5))
+    fig, axis = plt.subplots(1, 3, sharey=True, figsize=(10, 5))
     sinter.plot_error_rate(
         ax=axis[0],
         stats=samples,
@@ -71,9 +78,17 @@ def main():
         filter_func=lambda stat: stat.decoder == 'belief_find',
         x_func=lambda stat: stat.json_metadata['p'],
     )
+    sinter.plot_error_rate(
+        ax=axis[2],
+        stats=samples,
+        group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']}",
+        filter_func=lambda stat: stat.decoder == 'bposd-sr',
+        x_func=lambda stat: stat.json_metadata['p'],
+    )
     axis[0].set_ylabel('Logical Error Rate')
     axis[0].set_title('BPOSD')
     axis[1].set_title('Belief Find')
+    axis[2].set_title('BPOSD-sr')
     for ax in axis:
         ax.loglog()
         ax.grid()
