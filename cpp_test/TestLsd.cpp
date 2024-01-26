@@ -446,7 +446,15 @@ TEST(LsdDecoder, test_cluster_stats) {
 
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 0);
     lsd.print_cluster_stats();
+    auto stats = lsd.statistics;
     ASSERT_TRUE(lsd.get_do_stats());
+    // check that there is one timestep with two entries in the statistics
+    ASSERT_TRUE(stats.individual_cluster_stats.size() == 2);
+    ASSERT_TRUE(stats.global_timestep_bit_history.size() == 1);
+    ASSERT_TRUE(stats.global_timestep_bit_history[0].size() == 2);
+    ASSERT_TRUE(stats.global_timestep_bit_history[0][0].size() == 1);
+    ASSERT_TRUE(stats.global_timestep_bit_history[0][1].size() == 2);
+    ASSERT_TRUE(stats.global_timestep_bit_history[1].size() == 0);
 }
 
 
