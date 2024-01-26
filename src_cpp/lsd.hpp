@@ -499,7 +499,7 @@ namespace ldpc::lsd {
                 std::vector<int> new_bits;
                 for (auto cl: invalid_clusters) {
                     if (cl->active) {
-                        cl->curr_timestep = timestep;
+                        cl->curr_timestep = timestep; // for stats
                         cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
                         if (this->do_stats) {
                             this->update_growth_stats(cl);
@@ -552,7 +552,7 @@ namespace ldpc::lsd {
 
         void apply_lsdw(const std::vector<LsdCluster *> &clusters,
                         int lsd_order,
-                        const std::vector<double> &bit_weights) {
+                        const std::vector<double> &bit_weights, std::size_t timestep = 0) {
             //cluster growth stage
             for (auto cl: clusters) {
                 if (cl->active) {
@@ -566,12 +566,14 @@ namespace ldpc::lsd {
                            cluster_growth_count < lsd_order &&
                            cl->bit_nodes.size() < this->pcm.n &&
                            cluster_growth_count <= initial_cluster_size) {
+                        cl->curr_timestep = timestep; // for stats
                         cl->grow_cluster(bit_weights, 1, true);
                         cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
                         cluster_growth_count++;
                         if (this->do_stats) {
                             this->update_growth_stats(cl);
                         }
+                        timestep++;
                     }
                 }
             }

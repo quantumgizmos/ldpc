@@ -66,13 +66,12 @@ class BpLsdDecoder(BpDecoderBase):
 
 
     @property
-    def cluster_size_stats(self):
+    def statistics(self):
         """
-        Returns the cluster size statistics for the LSD algorithm.
+        Returns the statistics for the LSD algorithm.
 
         Returns
         -------
-        np.ndarray
-            The cluster size statistics.
+        Statistics
+            The statistics object.
         """
-

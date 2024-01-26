@@ -2,8 +2,6 @@ import numpy as np
 import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
-
-
 class BpOsdDecoder(BpDecoderBase):
     """
     Belief propagation and Ordered Statistic Decoding (OSD) decoder for binary linear codes.
@@ -30,6 +28,8 @@ class BpOsdDecoder(BpDecoderBase):
         The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads used for parallel decoding, by default 1.
+    random_serial_schedule : Optional[int], optional
+        Whether to use a random serial schedule order, by default False.
     serial_schedule_order : Optional[List[int]], optional
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
@@ -169,3 +169,4 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
+
