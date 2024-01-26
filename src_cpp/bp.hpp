@@ -404,36 +404,35 @@ namespace ldpc::bp {
         }
 
         std::vector<uint8_t> &bp_decode_serial(std::vector<uint8_t> &syndrome) {
-
             int check_index;
             this->converge = false;
-
             // initialise BP
             this->initialise_log_domain_bp();
 
-
             for (int it = 1; it <= maximum_iterations; it++) {
-
                 if (this->random_schedule_seed > -1) {
                     this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                 } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
-                    // resort by reliabilities in each iteration to ensure that the most reliable bits are decoded first
+                    // resort by LLRs in each iteration to ensure that the most reliable bits are considered first
                     std::sort(this->serial_schedule_order.begin(), this->serial_schedule_order.end(),
-                              [this](int i1, int i2) {
-                                  return std::log((1 - channel_probabilities[i1]) / channel_probabilities[i1]) >
-                                         std::log((1 - channel_probabilities[i2]) / channel_probabilities[i2]);
+                              [this, it](int bit1, int bit2) {
+                                  if (it != 1) {
+                                      return this->log_prob_ratios[bit1] > this->log_prob_ratios[bit2];
+                                  } else {
+                                      return std::log((1 - channel_probabilities[bit1]) / channel_probabilities[bit1]) >
+                                             std::log((1 - channel_probabilities[bit2]) / channel_probabilities[bit2]);
+                                  }
                               });
                 }
 
                 for (int bit_index: this->serial_schedule_order) {
                     double temp;
+                    // todo should LLRs be reset in each iteration?
                     this->log_prob_ratios[bit_index] = std::log(
                             (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
-
                     if (this->bp_method == 0) {
                         for (auto &e: this->pcm.iterate_column(bit_index)) {
                             check_index = e.row_index;
-
                             e.check_to_bit_msg = 1.0;
                             for (auto &g: this->pcm.iterate_row(check_index)) {
                                 if (&g != &e) {
@@ -457,45 +456,33 @@ namespace ldpc::bp {
                                     if (g.bit_to_check_msg <= 0) sgn += 1;
                                 }
                             }
-
                             double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                             e.check_to_bit_msg = ms_scaling_factor * message_sign * temp;
                             e.bit_to_check_msg = log_prob_ratios[bit_index];
                             this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                         }
-
                     }
-
                     if (this->log_prob_ratios[bit_index] <= 0) {
                         this->decoding[bit_index] = 1;
                     } else {
                         this->decoding[bit_index] = 0;
                     }
-
                     temp = 0;
                     for (auto &e: this->pcm.reverse_iterate_column(bit_index)) {
                         e.bit_to_check_msg += temp;
                         temp += e.check_to_bit_msg;
                     }
-
                 }
 
-
-                // compute the syndrome for the current candidate decoding solution                
+                // compute the syndrome for the current candidate decoding solution
                 this->candidate_syndrome = pcm.mulvec(decoding, candidate_syndrome);
-
                 this->iterations = it;
                 if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
                     this->converge = true;
                     return this->decoding;
                 }
-
-
             }
-
-            // this->converge = false;
             return this->decoding;
-
         }
 
         std::vector<uint8_t> &

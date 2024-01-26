@@ -452,6 +452,19 @@ TEST(BpDecoder, relative_serial_schedule_order) {
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
     }
+    {// should order according to LLRs
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
+        auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.01, 0.01}, 2,
+                                       ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL_RELATIVE,
+                                       0.625, 1, vector<int>{0, 1, 2},
+                                       -1);
+        auto dummy_syndr = std::vector<uint8_t>{1, 0};
+        bpd.decode(dummy_syndr);
+        auto expected_order = vector<int>{1, 2, 0};
+        ASSERT_EQ(bpd.random_schedule_seed, -1);
+        ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+
+    }
 }
 
 //received vector decoding
