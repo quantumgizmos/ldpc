@@ -19,7 +19,6 @@
 #include "osd_dense.hpp"
 
 namespace ldpc::lsd {
-
     const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
     std::vector<int> sort_indices(std::vector<double> &B) {
@@ -49,9 +48,9 @@ namespace ldpc::lsd {
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
-        std::size_t nr_merges;
-        tsl::robin_map<std::size_t, tsl::robin_map<std::size_t, std::vector<int>>> *global_timestep_bit_history;
-        std::size_t curr_timestep = 0;
+        int nr_merges;
+        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history;
+        int curr_timestep = 0;
 
         LsdCluster() = default;
 
@@ -384,24 +383,64 @@ namespace ldpc::lsd {
         int final_bit_count = 0;
         int undergone_growth_steps = 0;
         int nr_merges = 0;
-        std::vector<std::size_t> size_history = {};
+        std::vector<int> size_history = {};
         bool active = false;
     };
 
     struct Statistics {
-        tsl::robin_map<int, ClusterStatistics> individual_cluster_stats;
-        tsl::robin_map<std::size_t, tsl::robin_map<std::size_t, std::vector<int>>> global_timestep_bit_history;
+        // todo didn't def those as tsl::robin_map due to the cython wrapping for now.
+        std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
+        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
 
         void clear() {
             this->individual_cluster_stats.clear();
             this->global_timestep_bit_history.clear();
+        }
+
+        [[nodiscard]] std::string toString() const {
+            // build json like string object from individual cluster stats and global timestep bit history
+            std::string result = "{";
+            result += "\"individual_cluster_stats\":{";
+            for (auto &kv: this->individual_cluster_stats) {
+                result += "\"" + std::to_string(kv.first) + "\":{";
+                result += "\"active\":" + std::to_string(kv.second.active) + ",";
+                result += "\"final_bit_count\":" + std::to_string(kv.second.final_bit_count) + ",";
+                result += "\"undergone_growth_steps\":" + std::to_string(kv.second.undergone_growth_steps) + ",";
+                result += "\"nr_merges\":" + std::to_string(kv.second.nr_merges) + ",";
+                result += "\"size_history\":[";
+                for (auto &s: kv.second.size_history) {
+                    result += std::to_string(s) + ",";
+                }
+                result.pop_back();
+                result += "]},";
+            }
+            result.pop_back();
+            result += "},";
+            result += "\"global_timestep_bit_history\":{";
+            for (auto &kv: this->global_timestep_bit_history) {
+                result += "\"" + std::to_string(kv.first) + "\":{";
+                for (auto &kv2: kv.second) {
+                    result += "\"" + std::to_string(kv2.first) + "\":[";
+                    for (auto &b: kv2.second) {
+                        result += std::to_string(b) + ",";
+                    }
+                    //remove last , from result
+                    result.pop_back();
+                    result += "],";
+                }
+                result.pop_back();
+                result += "},";
+            }
+            result.pop_back();
+            result += "}";
+            result += "}";
+            return result;
         }
     };
 
     // todo move this to separate file
     class LsdDecoder {
     private:
-        bool weighted;
         ldpc::bp::BpSparse &pcm;
         bool do_stats;
 
@@ -413,7 +452,6 @@ namespace ldpc::lsd {
         explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
             this->bit_count = pcm.n;
             this->decoding.resize(this->bit_count);
-            this->weighted = false;
             this->do_stats = false;
         }
 
@@ -479,7 +517,7 @@ namespace ldpc::lsd {
             auto **global_bit_membership = new LsdCluster *[pcm.n]();
             auto **global_check_membership = new LsdCluster *[pcm.m]();
             // timestep to added bits history for stats
-            auto *global_timestep_bits_history = new tsl::robin_map<std::size_t, tsl::robin_map<std::size_t, std::vector<int>>>{};
+            auto *global_timestep_bits_history = new std::unordered_map<int, std::unordered_map<int, std::vector<int>>>{};
             auto timestep = 0;
             for (auto i = 0; i < this->pcm.m; i++) {
                 if (syndrome[i] == 1) {
@@ -654,5 +692,7 @@ namespace ldpc::lsd {
 
 
 }//end namespace lsd
+
+
 
 #endif

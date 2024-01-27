@@ -445,8 +445,8 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
 
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 0);
-    lsd.print_cluster_stats();
     auto stats = lsd.statistics;
+    std::cout << stats.toString() << std::endl;
     ASSERT_TRUE(lsd.get_do_stats());
     // check that there is one timestep with two entries in the statistics
     ASSERT_TRUE(stats.individual_cluster_stats.size() == 2);

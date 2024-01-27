@@ -66,12 +66,32 @@ class BpLsdDecoder(BpDecoderBase):
 
 
     @property
-    def statistics(self):
+    def statistics(self) -> Statistics:
         """
         Returns the statistics for the LSD algorithm.
-
-        Returns
+        May be None if the statistics are not being collected.
         -------
         Statistics
             The statistics object.
+        """
+
+    @property
+    def do_stats(self) -> bool:
+        """
+        Returns whether the statistics are being collected.
+
+        Returns
+        -------
+        bool
+            Whether the statistics are being collected.
+        """
+
+    def set_do_stats(self, value: bool) -> None:
+        """
+        Sets whether the statistics are being collected.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the statistics are being collected.
         """
