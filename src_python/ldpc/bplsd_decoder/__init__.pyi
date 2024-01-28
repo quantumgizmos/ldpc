@@ -95,3 +95,4 @@ class BpLsdDecoder(BpDecoderBase):
         value : bool
             Whether the statistics are being collected.
         """
+

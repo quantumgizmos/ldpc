@@ -49,7 +49,7 @@ namespace ldpc::lsd {
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
         int nr_merges;
-        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history;
+        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history = nullptr;
         int curr_timestep = 0;
 
         LsdCluster() = default;
@@ -213,8 +213,10 @@ namespace ldpc::lsd {
                     this->merge_list.insert(bit_membership);
                 }
             }
-            // add bit to timestep history with timestep the map size -1
-            (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
+            if (this->global_timestep_bit_history != nullptr) {
+                // add bit to timestep history with timestep the map size -1
+                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
+            }
             // add incident checks
             this->add_column_to_cluster_pcm(bit_index);
             return true;
@@ -380,11 +382,12 @@ namespace ldpc::lsd {
 
     struct ClusterStatistics {
     public:
-        int final_bit_count = 0;
-        int undergone_growth_steps = 0;
-        int nr_merges = 0;
-        std::vector<int> size_history = {};
-        bool active = false;
+        int final_bit_count = 0; // nr of bits in 'final' cluster version, i.e., before solving for solution
+        int undergone_growth_steps = 0; // nr of growth steps the cluster underwent
+        int nr_merges = 0; // nr of merges the cluster underwent
+        std::vector<int> size_history = {}; // history of cluster sizes from 0 to final bit count
+        bool active = false; // if cluster is active, i.e., not merged into another cluster
+        int got_valid_in_timestep = -1; // timestep in which cluster got valid
     };
 
     struct Statistics {
@@ -407,6 +410,7 @@ namespace ldpc::lsd {
                 result += "\"final_bit_count\":" + std::to_string(kv.second.final_bit_count) + ",";
                 result += "\"undergone_growth_steps\":" + std::to_string(kv.second.undergone_growth_steps) + ",";
                 result += "\"nr_merges\":" + std::to_string(kv.second.nr_merges) + ",";
+                result += "\"got_valid_in_timestep\":" + std::to_string(kv.second.got_valid_in_timestep) + ",";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -474,6 +478,7 @@ namespace ldpc::lsd {
                 for (auto &s: kv.second.size_history) {
                     std::cout << s << " ";
                 }
+                std::cout << "Got valid in timestep: " << kv.second.got_valid_in_timestep << std::endl;
                 std::cout << std::endl;
             }
             // print global bit history map per timestep and cluster
@@ -548,6 +553,8 @@ namespace ldpc::lsd {
                 for (auto cl: clusters) {
                     if (cl->active && !cl->valid) {
                         invalid_clusters.push_back(cl);
+                    } else if (cl->active && cl->valid && this->do_stats) {
+                        this->statistics.individual_cluster_stats[cl->cluster_id].got_valid_in_timestep = timestep;
                     }
                     if (do_stats) {
                         this->statistics.individual_cluster_stats[cl->cluster_id].active = cl->active;
