@@ -25,7 +25,8 @@ namespace ldpc::bp {
     enum BpSchedule {
         SERIAL = 0,
         PARALLEL = 1,
-        SERIAL_RELATIVE = 2
+        SERIAL_RELATIVE = 2,
+        LAYERED = 3
     };
 
     enum BpInputType {
@@ -147,8 +148,6 @@ namespace ldpc::bp {
         }
 
         std::vector<uint8_t> decode(std::vector<uint8_t> &input_vector) {
-
-
             if ((this->bp_input_type == AUTO && input_vector.size() == this->bit_count) ||
                 this->bp_input_type == RECEIVED_VECTOR) {
                 auto syndrome = pcm.mulvec(input_vector);
@@ -157,23 +156,23 @@ namespace ldpc::bp {
                     rv_decoding = bp_decode_parallel(syndrome);
                 } else if (schedule == SERIAL || schedule == SERIAL_RELATIVE) {
                     rv_decoding = bp_decode_serial(syndrome);
-                } else throw std::runtime_error("Invalid BP schedule");
-
+                } else if (schedule == LAYERED) {
+                    rv_decoding = bp_decode_layered(syndrome);
+                } else {
+                    throw std::runtime_error("Invalid BP schedule");
+                }
                 for (int i = 0; i < this->bit_count; i++) {
                     this->decoding[i] = rv_decoding[i] ^ input_vector[i];
                 }
-
                 return this->decoding;
-
             }
-
-
             if (schedule == PARALLEL) {
                 return bp_decode_parallel(input_vector);
             } else if (schedule == SERIAL || schedule == SERIAL_RELATIVE) {
                 return bp_decode_serial(input_vector);
+            } else if (schedule == LAYERED) {
+                return bp_decode_layered(input_vector);
             } else { throw std::runtime_error("Invalid BP schedule"); }
-
         }
 
         std::vector<uint8_t> &bp_decode_parallel(std::vector<uint8_t> &syndrome) {
@@ -251,14 +250,10 @@ namespace ldpc::bp {
                     for (auto &e: this->pcm.iterate_column(i)) {
                         e.bit_to_check_msg = temp;
                         temp += e.check_to_bit_msg;
-                        // if(isnan(temp)) temp = e.bit_to_check_msg;
-
-
                     }
 
                     //make hard decision on basis of log probability ratio for bit i
                     this->log_prob_ratios[i] = temp;
-                    // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
                     if (temp <= 0) {
                         this->decoding[i] = 1;
                         for (auto &e: this->pcm.iterate_column(i)) {
@@ -478,6 +473,95 @@ namespace ldpc::bp {
                 this->iterations = it;
                 if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
                     this->converge = true;
+                    return this->decoding;
+                }
+            }
+            return this->decoding;
+        }
+
+        /**
+         * Dynamic layered schedule from https://ieeexplore.ieee.org/document/5353273
+         * @param syndrome
+         * @return
+         */
+        std::vector<uint8_t> &bp_decode_layered(std::vector<uint8_t> &syndrome) {
+            int check_index;
+            this->converge = false;
+            // initialise BP
+            this->initialise_log_domain_bp();
+            auto pre_update_llrs = this->log_prob_ratios;
+            auto post_update_llrs = this->log_prob_ratios;
+            std::vector<double> residual_llrs(this->bit_count, 0.0);
+            for (auto k = 0; k < residual_llrs.size(); k++) {
+                residual_llrs[k] = std::abs(
+                        (post_update_llrs[k] - pre_update_llrs[k]) / (post_update_llrs[k] + pre_update_llrs[k])
+                );
+            }
+            for (int it = 1; it <= maximum_iterations; it++) {
+                // find element with maximal residual llr
+                auto next_bit = std::distance(residual_llrs.begin(),
+                                              std::max_element(residual_llrs.begin(), residual_llrs.end()));
+                for (auto &check_nbr: pcm.iterate_column(next_bit)) {
+                    check_index = check_nbr.row_index;
+                    int sgn = 0;
+                    auto temp = std::numeric_limits<double>::max();
+                    // compute check to bit messages from check_nbr to all of its neighbouring bits
+                    for (auto &bit: pcm.iterate_row(check_index)) {
+                        for (auto &bbit: pcm.iterate_row(check_nbr.row_index)) {
+                            if (&bbit != &bit) {
+                                if (std::abs(bbit.bit_to_check_msg) < temp) {
+                                    temp = std::abs(bbit.bit_to_check_msg);
+                                }
+                                if (bbit.bit_to_check_msg <= 0) {
+                                    sgn ^= 1;
+                                }
+                            }
+                        }
+                        bit.check_to_bit_msg = ms_scaling_factor * pow(-1, sgn) * temp;
+                    }
+
+                    // now compute the bit to check messages for all neighbouring bits of check_nbr except for messages to check_nbr
+                    for (auto &bit: pcm.iterate_row(check_index)) {
+                        for (auto &c: pcm.iterate_column(bit.row_index)) {
+                            if (&c != &check_nbr) {
+                                for (auto &cc: pcm.iterate_column(bit.row_index)) {
+                                    if (&cc != &c) {
+                                        bit.bit_to_check_msg += cc.check_to_bit_msg;
+                                    } else {
+                                        log_prob_ratios[bit.col_index] += cc.check_to_bit_msg;
+                                    }
+                                }
+                                c.bit_to_check_msg += log_prob_ratios[bit.col_index];
+                            }
+                        }
+                        pre_update_llrs[bit.col_index] = log_prob_ratios[bit.col_index];
+                        log_prob_ratios[bit.col_index] = bit.bit_to_check_msg;
+                        post_update_llrs[bit.col_index] = log_prob_ratios[bit.col_index];
+                        residual_llrs[bit.col_index] = std::abs(
+                                (post_update_llrs[bit.col_index] - pre_update_llrs[bit.col_index]) /
+                                (post_update_llrs[bit.col_index] + pre_update_llrs[bit.col_index])
+                        );
+                    }
+                }
+                residual_llrs[next_bit] = 0.0;
+
+                // check termination criterion
+                for (int i = 0; i < this->bit_count; i++) {
+                    if (log_prob_ratios[i] <= 0) {
+                        this->decoding[i] = 1;
+                        for (auto &e: this->pcm.iterate_column(i)) {
+                            this->candidate_syndrome[e.row_index] ^= 1;
+                        }
+                    } else {
+                        this->decoding[i] = 0;
+                    }
+                }
+                if (std::equal(candidate_syndrome.begin(),
+                               candidate_syndrome.end(), syndrome.begin())) {
+                    this->converge = true;
+                }
+                this->iterations = it;
+                if (this->converge) {
                     return this->decoding;
                 }
             }
