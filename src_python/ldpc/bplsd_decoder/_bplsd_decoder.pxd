@@ -3,7 +3,6 @@
 from libc.stdlib cimport malloc, calloc, free
 from libcpp cimport bool
 from libcpp cimport long
-from libcpp cimport double
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 cimport numpy as np

@@ -395,7 +395,7 @@ namespace ldpc::lsd {
         int got_inactive_in_timestep = -1; // timestep in which cluster got inactive, i.e., was absorbed by another
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
         int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
-        double cluster_pcm_sparsity = 0.0; // nr of non zero entries in the cluster pcm
+        double cluster_pcm_sparsity = 0; // nr of non zero entries in the cluster pcm
     };
 
     struct Statistics {
@@ -499,11 +499,14 @@ namespace ldpc::lsd {
         void update_final_stats(const LsdCluster *cl) {
             this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
             this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
-            auto nr_nonzero_elems = gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
+            int nr_nonzero_elems = gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
             this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
                     nr_nonzero_elems;
-            this->statistics.individual_cluster_stats[cl->cluster_id].cluster_pcm_sparsity =
-                    1 - ((nr_nonzero_elems) / (cl->pluDecomposition.col_count * cl->pluDecomposition.row_count));
+            auto size = cl->pluDecomposition.col_count * cl->pluDecomposition.row_count;
+            if (size > 0) {
+                this->statistics.individual_cluster_stats[cl->cluster_id].cluster_pcm_sparsity =
+                        1.0 - ((static_cast<double>(nr_nonzero_elems)) / static_cast<double>(size));
+            }
         }
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
