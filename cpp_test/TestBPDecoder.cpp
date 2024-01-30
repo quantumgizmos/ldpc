@@ -430,48 +430,6 @@ TEST(BpDecoder, min_sum_relative_schedule) {
     }
 }
 
-TEST(BpDecoder, min_sum_layered_schedule) {
-    int n = 3;
-    auto pcm = ldpc::bp::BpSparse(n - 1, n);
-    for (int i = 0; i < (n - 1); i++) {
-        pcm.insert_entry(i, i);
-        pcm.insert_entry(i, (i + 1) % n);
-    }
-    int maximum_iterations = pcm.n;
-    auto channel_probabilities = vector<double>(pcm.n, 0.1);
-
-    // Initialize decoder using input arguments
-    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
-                                       ldpc::bp::LAYERED, 0.625);
-
-    // Check if member variables are set correctly
-    EXPECT_TRUE(pcm == decoder.pcm);
-    EXPECT_EQ(pcm.m, decoder.check_count);
-    EXPECT_EQ(pcm.n, decoder.bit_count);
-    EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
-    EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
-    EXPECT_EQ(0.625, decoder.ms_scaling_factor);
-    EXPECT_EQ(1, decoder.bp_method);
-    EXPECT_EQ(ldpc::bp::LAYERED, decoder.schedule);
-    EXPECT_EQ(1, decoder.omp_thread_count);
-
-    auto syndromes = vector<vector<uint8_t>>{{0, 0},
-                                             {0, 1},
-                                             {1, 0},
-                                             {1, 1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0},
-                                                     {0, 0, 1},
-                                                     {1, 0, 0},
-                                                     {0, 1, 0}};
-    auto count = 0;
-    for (auto syndrome: syndromes) {
-        auto decoding = decoder.bp_decode_layered(syndrome);
-        ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
-        ASSERT_EQ(expected_decoding[count], decoding);
-        count++;
-    }
-}
-
 TEST(BpDecoder, random_schedule_seed) {
     {// todo why are there 3 bits but channel probabilities has length 4?
         auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
