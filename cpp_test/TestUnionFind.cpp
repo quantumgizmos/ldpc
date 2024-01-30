@@ -201,8 +201,6 @@ TEST(UfDecoder, peeling_with_boundaries_edge_case){
 
     auto decoding = ufd.peel_decode(syndrome, bpd.log_prob_ratios,1);
 
-    ldpc::sparse_matrix_util::print_vector(decoding);
-
     auto decoding_syndrome = pcm.mulvec(decoding);
 
     ASSERT_EQ(decoding_syndrome,syndrome);

@@ -257,8 +257,8 @@ struct Cluster{
 
         // add the virtual boundary check
         if(this->contains_boundary_bits == true){
-            std::cout<<"Boundary check added"<<std::endl;
-            std::cout<<"Contains boundary bits: "<<this->contains_boundary_bits<<std::endl;
+            // std::cout<<"Boundary check added"<<std::endl;
+            // std::cout<<"Contains boundary bits: "<<this->contains_boundary_bits<<std::endl;
             this->check_nodes.insert(-1);
         }
 
@@ -314,9 +314,8 @@ struct Cluster{
 
         std::vector<int> erasure;
         tsl::robin_set<int> synds;
-        this->print();
         for(auto check_index: check_nodes){
-            std::cout<<"Check index: "<<check_index<<" "<<std::endl;
+            // std::cout<<"Check index: "<<check_index<<" "<<std::endl;
             if(syndrome[check_index] == 1) synds.insert(check_index);
         }
         if(this->contains_boundary_bits == true && this->parity() == 1 ){
@@ -327,17 +326,12 @@ struct Cluster{
 
         while(synds.size()>0){
 
-            for(auto synd_index: synds){
-                std::cout<<synd_index<<" ";
-            }
-            this->print();
+            // for(auto synd_index: synds){
+            //     std::cout<<synd_index<<" ";
+            // }
+            // this->print();
 
             int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
-            if(leaf_node_index == -1 && this->contains_boundary_bits == false){
-                
-                std::cout<<"Error: Boundary check not found"<<std::endl;
-                exit(22);
-            }
             int bit_index;
             int check2 = -1; //we assume it is a boundary node at first.
 
@@ -354,7 +348,6 @@ struct Cluster{
 
 
             for(auto& e: this->pcm.iterate_column(bit_index)){
-                std::cout<<"Row index in check 2 search: "<<e.row_index<<std::endl;
                 if(e.row_index!=leaf_node_index) {
                     check2 = e.row_index;
                 }
@@ -392,13 +385,13 @@ struct Cluster{
                 }
             }
 
-            std::cout<<"Erasure: ";
-            for(auto i: erasure) std::cout<<i<<" ";
-            std::cout<<std::endl;
-            std::cout<<"leaf node index: "<<leaf_node_index<<std::endl;
-            std::cout<<"Check2: "<<check2<<std::endl;
-            std::cout<<"Bit index: "<<bit_index<<std::endl;
-            std::cout<<std::endl;
+            // std::cout<<"Erasure: ";
+            // for(auto i: erasure) std::cout<<i<<" ";
+            // std::cout<<std::endl;
+            // std::cout<<"leaf node index: "<<leaf_node_index<<std::endl;
+            // std::cout<<"Check2: "<<check2<<std::endl;
+            // std::cout<<"Bit index: "<<bit_index<<std::endl;
+            // std::cout<<std::endl;
 
         }
 
@@ -672,7 +665,6 @@ class UfDecoder{
 
             for(auto cl: clusters){
                 if(cl->active){
-                    cl->print();
                     auto erasure = cl->peel_decode(syndrome);
 
                     for(int bit: erasure) this->decoding[bit] = 1;
