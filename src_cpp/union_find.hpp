@@ -269,6 +269,7 @@ struct Cluster{
             if(check_neighbours[0] == check_neighbours[1]){
                 check_neighbours[1] = -1; //set the first check neighbour to the boundary check.
                 this->spanning_tree_boundary_bit = bit_index;
+                std::cout<<"Spanning tree boundary bit at assignment: "<<this->spanning_tree_boundary_bit<<std::endl;
             }
         
             int root0 = this->find_spanning_tree_parent(check_neighbours[0]);
@@ -304,6 +305,8 @@ struct Cluster{
     }
 
     std::vector<int> peel_decode(const std::vector<uint8_t>& syndrome){
+
+        std::cout<<"Hello from peel cluster decode"<<std::endl;
         std::vector<int> erasure;
         tsl::robin_set<int> synds;
         for(auto check_index: check_nodes){
@@ -314,11 +317,21 @@ struct Cluster{
         }
 
         this->find_spanning_tree();
+        std::cout<<"Hello from peel cluster decode2"<<std::endl;
+
         while(synds.size()>0){
+
+            for(auto s: synds){
+                std::cout<<s<<" ";
+            }
+            std::cout<<std::endl;
 
             int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
             int bit_index = -1;
             int check2 = -1;
+
+            std::cout<<"Hello from peel cluster decode3"<<std::endl;
+
 
             if(leaf_node_index == -1){
                 bit_index = this->spanning_tree_boundary_bit;
@@ -331,10 +344,19 @@ struct Cluster{
                 }
             }
 
+            std::cout<<"Hello from peel cluster decode4"<<std::endl;
+            std::cout<<"Leaf node index: "<<leaf_node_index<<std::endl;
+            std::cout<<"Spanning tree boundary bit: "<<this->spanning_tree_boundary_bit<<std::endl;
+            std::cout<<"Bit index: "<<bit_index<<std::endl;
+            std::cout<<std::endl;
 
             for(auto& e: this->pcm.iterate_column(bit_index)){
+                std::cout<<"Row index: "<<e.row_index<<std::endl;
                 if(e.row_index!=leaf_node_index) check2 = e.row_index;
             }
+
+            std::cout<<"Hello from peel cluster decode5"<<std::endl;
+
 
 
 
@@ -352,6 +374,8 @@ struct Cluster{
                 // this->spanning_tree_leaf_nodes.insert(check2);
                 this->spanning_tree_bits.erase(bit_index);
             }
+
+            std::cout<<"Hello from peel cluster decode6"<<std::endl;
 
             //check whether new check node is a leaf
             int spanning_tree_connectivity = 0;
@@ -599,6 +623,9 @@ class UfDecoder{
                 throw(std::runtime_error("Peel decoder only works for planar codes. Use the matrix_decode method for more general codes."));
             }
 
+            std::cout<<"Hello from CPP"<<std::endl;
+
+
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
             std::vector<Cluster*> clusters;
@@ -633,9 +660,15 @@ class UfDecoder{
 
             }
 
+            std::cout<<"Hello from CPP2"<<std::endl;
+
+
             for(auto cl: clusters){
                 if(cl->active){
+                    cl->print();
                     auto erasure = cl->peel_decode(syndrome);
+                    std::cout<<"Hello from CPP2.5"<<std::endl;
+
                     for(int bit: erasure) this->decoding[bit] = 1;
                 }
                 delete cl;
@@ -643,6 +676,10 @@ class UfDecoder{
 
             delete[] global_bit_membership;
             delete[] global_check_membership;
+
+            std::cout<<"Hello from CPP3"<<std::endl;
+            ldpc::sparse_matrix_util::print_vector(this->decoding);
+
 
             return this->decoding;
 
@@ -859,6 +896,10 @@ void Cluster::print(){
         std::cout<<std::endl;
         std::cout<<"Spanning tree leaf nodes: ";
         for(auto i: this->spanning_tree_leaf_nodes) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Contains boundary bits: "<<this->contains_boundary_bits<<std::endl;
+        std::cout<<"Boundary bits: ";
+        for(auto i: this->planar_code_boundary_bits) std::cout<<i<<" ";
         std::cout<<std::endl;
         std::cout<<"........."<<std::endl;
     }
