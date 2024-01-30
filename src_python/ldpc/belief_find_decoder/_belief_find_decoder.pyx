@@ -118,9 +118,7 @@ cdef class BeliefFindDecoder(BpDecoderBase):
             if self.uf_method == "inversion":
                 self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
             elif self.uf_method == "peeling":
-                print(self.bpd.log_prob_ratios)
                 self.ufd.decoding = self.ufd.peel_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step)
-                print("hello")
             for i in range(self.n):
                 # self.bf_decoding[i] = self.ufd.decoding[i]^self.bpd.decoding[i]
                 out[i] = self.ufd.decoding[i]

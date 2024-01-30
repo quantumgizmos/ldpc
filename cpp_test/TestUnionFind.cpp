@@ -184,7 +184,7 @@ TEST(UfDecoder, peeling_with_boundaries_edge_case){
     auto error_rate = std::vector<double>(41,0.18);
     auto bpd = ldpc::bp::BpDecoder(pcm, error_rate, 1, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
 
-    auto syndrome_sparse = std::vector<int>{0,  1,  5,  6,  7,  9, 11, 14, 16, 17};
+    auto syndrome_sparse = std::vector<int>{3,  5,  7,  8, 12, 17, 18, 19};
 
     auto syndrome = std::vector<uint8_t>(pcm.m,0);
     for(int i : syndrome_sparse){
@@ -197,7 +197,7 @@ TEST(UfDecoder, peeling_with_boundaries_edge_case){
 
     auto ufd = UfDecoder(pcm);
 
-    ldpc::sparse_matrix_util::print_vector(bpd.log_prob_ratios);
+    // ldpc::sparse_matrix_util::print_vector(bpd.log_prob_ratios);
 
     auto decoding = ufd.peel_decode(syndrome, bpd.log_prob_ratios,1);
 
