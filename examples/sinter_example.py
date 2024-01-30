@@ -1,8 +1,8 @@
-import sinter
-from ldpc.sinter_decoders import SinterBeliefFindDecoder, SinterBpOsdDecoder
-import stim
-from matplotlib import pyplot as plt
 import numpy as np
+import sinter
+import stim
+from ldpc.sinter_decoders import SinterBeliefFindDecoder, SinterBpOsdDecoder
+from matplotlib import pyplot as plt
 
 
 def generate_example_tasks():
@@ -22,35 +22,37 @@ def generate_example_tasks():
                 json_metadata={
                     'p': p,
                     'd': d,
-                    'rounds': 3 * d,
+                    'rounds': d,
                 },
             )
 
 
 def main():
+    from src_python.ldpc.sinter_decoders.sinter_lsd_decoder import SinterLsdDecoder
     samples = sinter.collect(
         num_workers=10,
-        max_shots=5000,
-        max_errors=200,
+        max_shots=20_000,
+        max_errors=100,
         tasks=generate_example_tasks(),
-        decoders=['bposd-sr', 'bposd', 'belief_find'],
+        decoders=['bposd', 'belief_find', 'bplsd'],
         custom_decoders={
-            'bposd-sr': SinterBpOsdDecoder(
-                max_iter=5,
-                bp_method="ms",
-                ms_scaling_factor=0.625,
-                schedule="serial_relative",
-                osd_method="osd0"),
             'bposd': SinterBpOsdDecoder(
-                max_iter=5,
+                max_iter=10,
                 bp_method="ms",
                 ms_scaling_factor=0.625,
                 schedule="parallel",
                 osd_method="osd0"),
-            "belief_find": SinterBeliefFindDecoder(max_iter=5,
+            "belief_find": SinterBeliefFindDecoder(max_iter=10,
                                                    bp_method="ms",
                                                    ms_scaling_factor=0.625,
-                                                   schedule="parallel")},
+                                                   schedule="parallel"),
+            'bplsd': SinterLsdDecoder(
+                max_iter=2,
+                bp_method="ms",
+                ms_scaling_factor=0.625,
+                schedule="parallel",
+                lsd_order=0),
+        },
 
         print_progress=True,
         save_resume_filepath=f'bposd_surface_code.csv',
@@ -82,13 +84,13 @@ def main():
         ax=axis[2],
         stats=samples,
         group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']}",
-        filter_func=lambda stat: stat.decoder == 'bposd-sr',
+        filter_func=lambda stat: stat.decoder == 'lsd',
         x_func=lambda stat: stat.json_metadata['p'],
     )
     axis[0].set_ylabel('Logical Error Rate')
     axis[0].set_title('BPOSD')
     axis[1].set_title('Belief Find')
-    axis[2].set_title('BPOSD-sr')
+    axis[2].set_title('LSD')
     for ax in axis:
         ax.loglog()
         ax.grid()
