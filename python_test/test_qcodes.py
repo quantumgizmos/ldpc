@@ -61,8 +61,8 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
 
 
 def test_400_16_6_hgp():
-    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_400_16_6.npz")
+    hx = scipy.sparse.load_npz("pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("pcms/lx_400_16_6.npz")
 
     error_rate = 0.03
     run_count = 1000

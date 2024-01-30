@@ -51,6 +51,8 @@ namespace ldpc::lsd {
         int nr_merges;
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history = nullptr;
         int curr_timestep = 0;
+        int absorbed_into_cluster = -1;
+        int got_inactive_in_timestep = -1;
 
         LsdCluster() = default;
 
@@ -251,6 +253,8 @@ namespace ldpc::lsd {
                 larger->enclosed_syndromes.insert(j);
             }
             smaller->active = false; // smaller, absorbed cluster is deactivated
+            smaller->absorbed_into_cluster = larger->cluster_id;
+            smaller->got_inactive_in_timestep = smaller->curr_timestep;
             larger->nr_merges++;
             return larger;
         }
@@ -388,6 +392,8 @@ namespace ldpc::lsd {
         std::vector<int> size_history = {}; // history of cluster sizes from 0 to final bit count
         bool active = false; // if cluster is active, i.e., not merged into another cluster
         int got_valid_in_timestep = -1; // timestep in which cluster got valid
+        int got_inactive_in_timestep = -1; // timestep in which cluster got inactive, i.e., was absorbed by another
+        int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
     };
 
     struct Statistics {
@@ -411,6 +417,8 @@ namespace ldpc::lsd {
                 result += "\"undergone_growth_steps\":" + std::to_string(kv.second.undergone_growth_steps) + ",";
                 result += "\"nr_merges\":" + std::to_string(kv.second.nr_merges) + ",";
                 result += "\"got_valid_in_timestep\":" + std::to_string(kv.second.got_valid_in_timestep) + ",";
+                result += "\"absorbed_by_cluster\":" + std::to_string(kv.second.absorbed_by_cluster) + ",";
+                result += "\"got_inactive_in_timestep\":" + std::to_string(kv.second.got_inactive_in_timestep) + ",";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -450,7 +458,7 @@ namespace ldpc::lsd {
 
     public:
         std::vector<uint8_t> decoding;
-        Statistics statistics;
+        Statistics statistics{};
         int bit_count;
 
         explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
@@ -499,6 +507,8 @@ namespace ldpc::lsd {
             this->statistics.individual_cluster_stats[cl->cluster_id].undergone_growth_steps++;
             this->statistics.individual_cluster_stats[cl->cluster_id].size_history.push_back(cl->bit_nodes.size());
             this->statistics.individual_cluster_stats[cl->cluster_id].active = true;
+            this->statistics.individual_cluster_stats[cl->cluster_id].absorbed_by_cluster = cl->absorbed_into_cluster;
+            this->statistics.individual_cluster_stats[cl->cluster_id].got_inactive_in_timestep = cl->got_inactive_in_timestep;
         }
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
@@ -530,9 +540,7 @@ namespace ldpc::lsd {
                     clusters.push_back(cl);
                     invalid_clusters.push_back(cl);
                     if (this->do_stats) {
-                        this->statistics.individual_cluster_stats[cl->cluster_id] = ClusterStatistics{
-                                0, 0, 0, {0}
-                        };
+                        this->statistics.individual_cluster_stats[cl->cluster_id] = ClusterStatistics();
                         cl->global_timestep_bit_history = global_timestep_bits_history;
                     }
                 }
@@ -544,13 +552,13 @@ namespace ldpc::lsd {
                     if (cl->active) {
                         cl->curr_timestep = timestep; // for stats
                         cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
-                        if (this->do_stats) {
-                            this->update_growth_stats(cl);
-                        }
                     }
                 }
                 invalid_clusters.clear();
                 for (auto cl: clusters) {
+                    if (this->do_stats) {
+                        this->update_growth_stats(cl);
+                    }
                     if (cl->active && !cl->valid) {
                         invalid_clusters.push_back(cl);
                     } else if (cl->active && cl->valid && this->do_stats) {
@@ -564,7 +572,7 @@ namespace ldpc::lsd {
                           [](const LsdCluster *lhs, const LsdCluster *rhs) {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
-                timestep++;
+                timestep++; // for stats
             }
 
             if (lsd_order == 0) {

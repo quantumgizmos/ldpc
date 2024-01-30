@@ -21,6 +21,8 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         bool active
         vector[int] size_history
         int got_valid_in_timestep
+        int got_inactive_in_timestep
+        int absorbed_by_cluster
 
     cdef struct Statistics "ldpc::lsd::Statistics":
         cpp_map[int, ClusterStatistics] individual_cluster_stats
