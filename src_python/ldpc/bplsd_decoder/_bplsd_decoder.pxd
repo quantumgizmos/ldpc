@@ -3,6 +3,7 @@
 from libc.stdlib cimport malloc, calloc, free
 from libcpp cimport bool
 from libcpp cimport long
+from libcpp cimport double
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 cimport numpy as np
@@ -25,6 +26,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         int got_inactive_in_timestep
         int absorbed_by_cluster
         int nr_of_non_zero_check_matrix_entries
+        double cluster_pcm_sparsity
 
 
     cdef struct Statistics "ldpc::lsd::Statistics":

@@ -76,6 +76,7 @@ class BpLsdDecoder(BpDecoderBase):
             The statistics object.
         """
 
+
     @property
     def do_stats(self) -> bool:
         """
@@ -86,6 +87,7 @@ class BpLsdDecoder(BpDecoderBase):
         bool
             Whether the statistics are being collected.
         """
+
 
     def set_do_stats(self, value: bool) -> None:
         """

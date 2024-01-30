@@ -395,6 +395,7 @@ namespace ldpc::lsd {
         int got_inactive_in_timestep = -1; // timestep in which cluster got inactive, i.e., was absorbed by another
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
         int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
+        double cluster_pcm_sparsity = 0.0; // nr of non zero entries in the cluster pcm
     };
 
     struct Statistics {
@@ -424,6 +425,7 @@ namespace ldpc::lsd {
                 result += "\"got_inactive_in_timestep\":" + std::to_string(kv.second.got_inactive_in_timestep) + ",";
                 result += "\"nr_of_non_zero_check_matrix_entries\":" +
                           std::to_string(kv.second.nr_of_non_zero_check_matrix_entries) + ",";
+                result += "\"cluster_pcm_sparsity\":" + std::to_string(kv.second.cluster_pcm_sparsity) + ",";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -494,6 +496,16 @@ namespace ldpc::lsd {
             this->statistics.individual_cluster_stats[cl->cluster_id].got_inactive_in_timestep = cl->got_inactive_in_timestep;
         }
 
+        void update_final_stats(const LsdCluster *cl) {
+            this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
+            this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
+            auto nr_nonzero_elems = gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
+            this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
+                    nr_nonzero_elems;
+            this->statistics.individual_cluster_stats[cl->cluster_id].cluster_pcm_sparsity =
+                    1 - ((nr_nonzero_elems) / (cl->pluDecomposition.col_count * cl->pluDecomposition.row_count));
+        }
+
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
             return this->lsd_decode(syndrome, bit_weights, 1, true);
@@ -561,10 +573,7 @@ namespace ldpc::lsd {
             if (lsd_order == 0) {
                 for (auto cl: clusters) {
                     if (do_stats) {
-                        this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
-                        this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
-                        this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
-                                gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
+                        this->update_final_stats(cl);
                     }
                     if (cl->active) {
                         auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
@@ -589,7 +598,7 @@ namespace ldpc::lsd {
             }
             // always take time
             this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                        end_time - start_time).count();
+                    end_time - start_time).count();
 
             return this->decoding;
         }
@@ -624,10 +633,7 @@ namespace ldpc::lsd {
             // apply lsd-w to clusters
             for (auto cl: clusters) {
                 if (do_stats) {
-                    this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
-                    this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
-                    this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
-                            gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
+                    this->update_final_stats(cl);
                 }
                 if (cl->active) {
                     cl->sort_non_pivot_cols(bit_weights);
