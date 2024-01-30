@@ -73,6 +73,7 @@ struct Cluster{
         this->global_bit_membership = bcm;
         this->global_check_membership[syndrome_index]=this;
         this->contains_boundary_bits = false;
+        this->spanning_tree_boundary_bit = -1;
 
 
 
@@ -251,7 +252,7 @@ struct Cluster{
         }
 
         // add the virtual boundary check
-        if(this->contains_boundary_bits = true){
+        if(this->contains_boundary_bits == true){
             this->check_nodes.insert(-1);
         }
 
