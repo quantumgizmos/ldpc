@@ -719,7 +719,13 @@ namespace ldpc {
 
         }
 
-
+        std::size_t count_non_zero_matrix_entries(const CscMatrix &csc_mat) {
+            std::size_t count = 0;
+            for (auto &col: csc_mat) {
+                count += col.size();
+            }
+            return count;
+        }
     }//end namespace gf2dense
 }//end namespace ldpc
 

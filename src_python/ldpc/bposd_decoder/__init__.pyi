@@ -45,6 +45,7 @@ class BpOsdDecoder(BpDecoderBase):
     method deallocates memory if it has been allocated.
     """
 
+
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.
@@ -77,6 +78,7 @@ class BpOsdDecoder(BpDecoderBase):
 
         """
 
+
     @property
     def osd_method(self) -> Optional[str]:
         """
@@ -88,6 +90,7 @@ class BpOsdDecoder(BpDecoderBase):
             A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
             has been set, returns `None`.
         """
+
 
     @osd_method.setter
     def osd_method(self, method: Union[str, int, float]) -> None:
@@ -101,6 +104,7 @@ class BpOsdDecoder(BpDecoderBase):
             OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
 
+
     @property
     def osd_order(self) -> int:
         """
@@ -111,6 +115,7 @@ class BpOsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
+
 
     @osd_order.setter
     def osd_order(self, order: int) -> None:
@@ -134,6 +139,7 @@ class BpOsdDecoder(BpDecoderBase):
 
         """
 
+
     @property
     def decoding(self) -> np.ndarray:
         """
@@ -142,6 +148,7 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
+
 
     @property
     def bp_decoding(self) -> np.ndarray:
@@ -152,6 +159,7 @@ class BpOsdDecoder(BpDecoderBase):
             np.ndarray: A numpy array containing the BP decoding output.
         """
 
+
     @property
     def osd0_decoding(self) -> np.ndarray:
         """
@@ -160,6 +168,7 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
+
 
     @property
     def osdw_decoding(self) -> np.ndarray:

@@ -2,6 +2,7 @@
 # distutils: language = c++
 import numpy as np
 from scipy.sparse import spmatrix
+import json
 
 cdef class BpLsdDecoder(BpDecoderBase):
   
@@ -130,7 +131,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         Statistics
             The statistics object.
         """
-        return self.lsd.statistics
+        return json.dumps(self.lsd.statistics)
 
     @property
     def do_stats(self) -> bool:

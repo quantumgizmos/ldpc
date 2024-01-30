@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse import spmatrix
+import json
 class BpLsdDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.

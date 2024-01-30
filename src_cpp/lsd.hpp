@@ -394,6 +394,7 @@ namespace ldpc::lsd {
         int got_valid_in_timestep = -1; // timestep in which cluster got valid
         int got_inactive_in_timestep = -1; // timestep in which cluster got inactive, i.e., was absorbed by another
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
+        int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
     };
 
     struct Statistics {
@@ -421,6 +422,8 @@ namespace ldpc::lsd {
                 result += "\"got_valid_in_timestep\":" + std::to_string(kv.second.got_valid_in_timestep) + ",";
                 result += "\"absorbed_by_cluster\":" + std::to_string(kv.second.absorbed_by_cluster) + ",";
                 result += "\"got_inactive_in_timestep\":" + std::to_string(kv.second.got_inactive_in_timestep) + ",";
+                result += "\"nr_of_non_zero_check_matrix_entries\":" +
+                          std::to_string(kv.second.nr_of_non_zero_check_matrix_entries) + ",";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -584,6 +587,8 @@ namespace ldpc::lsd {
                     if (do_stats) {
                         this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
                         this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
+                        this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
+                                gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
                     }
                     if (cl->active) {
                         auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
@@ -604,9 +609,12 @@ namespace ldpc::lsd {
             delete[] global_check_membership;
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
-                this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
-                        end_time - start_time).count();
+
             }
+            // always take time
+            this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                        end_time - start_time).count();
+
             return this->decoding;
         }
 
