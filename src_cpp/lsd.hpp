@@ -483,31 +483,7 @@ namespace ldpc::lsd {
         }
 
         void print_cluster_stats() {
-            for (auto &kv: this->statistics.individual_cluster_stats) {
-                std::cout << "Cluster " << kv.first << std::endl;
-                std::cout << "Active: " << kv.second.active << std::endl;
-                std::cout << "Final bit count: " << kv.second.final_bit_count << std::endl;
-                std::cout << "Undergone growth steps: " << kv.second.undergone_growth_steps << std::endl;
-                std::cout << "Nr merges: " << kv.second.nr_merges << std::endl;
-                std::cout << "Size history: ";
-                for (auto &s: kv.second.size_history) {
-                    std::cout << s << " ";
-                }
-                std::cout << "Got valid in timestep: " << kv.second.got_valid_in_timestep << std::endl;
-                std::cout << std::endl;
-            }
-            // print global bit history map per timestep and cluster
-            for (auto &kv: this->statistics.global_timestep_bit_history) {
-                std::cout << "Timestep " << kv.first << std::endl;
-                for (auto &kv2: kv.second) {
-                    std::cout << "Cluster " << kv2.first << std::endl;
-                    std::cout << "Bits: ";
-                    for (auto &b: kv2.second) {
-                        std::cout << b << " ";
-                    }
-                    std::cout << std::endl;
-                }
-            }
+            std::cout << this->statistics.toString() << std::endl;
         }
 
         void update_growth_stats(const LsdCluster *cl) {
@@ -650,6 +626,8 @@ namespace ldpc::lsd {
                 if (do_stats) {
                     this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
                     this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
+                    this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
+                            gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
                 }
                 if (cl->active) {
                     cl->sort_non_pivot_cols(bit_weights);
