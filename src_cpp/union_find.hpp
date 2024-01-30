@@ -283,10 +283,8 @@ struct Cluster{
             }
         }
 
-        ldpc::sparse_matrix_util::print_sparse_matrix(this->pcm);
 
         for(int check_index: this->check_nodes){
-            std::cout<<"Check index "<<check_index<<std::endl;
             if(check_index == -1){
                 this->spanning_tree_leaf_nodes.insert(check_index);
             }
@@ -294,13 +292,11 @@ struct Cluster{
                 int spanning_tree_connectivity = 0;
                 for(auto& e: this->pcm.iterate_row(check_index)){
                     if(this->spanning_tree_bits.contains(e.col_index)){
-                        std::cout<<"Col index: "<<e.col_index<<std::endl;
                         spanning_tree_connectivity+=1;
                     }
                 }
                 if(spanning_tree_connectivity == 1){
                      this->spanning_tree_leaf_nodes.insert(check_index);
-                     std::cout<<"Leaf node insert: "<<check_index<<std::endl;
                 }
             }
         }
@@ -318,7 +314,6 @@ struct Cluster{
         }
 
         this->find_spanning_tree();
-        this->print();
         while(synds.size()>0){
 
             int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
@@ -336,9 +331,6 @@ struct Cluster{
                 }
             }
 
-  
-            std::cout<<"Leaf node index: "<<leaf_node_index<<std::endl;
-            std::cout<<"Bit index: "<<bit_index<<std::endl;
 
             for(auto& e: this->pcm.iterate_column(bit_index)){
                 if(e.row_index!=leaf_node_index) check2 = e.row_index;
@@ -363,7 +355,6 @@ struct Cluster{
 
             //check whether new check node is a leaf
             int spanning_tree_connectivity = 0;
-            std::cout<<"Check 2: "<<check2<<std::endl;
             if(check2 == -1){
                 this->spanning_tree_leaf_nodes.insert(check2);
             }
@@ -593,6 +584,9 @@ class UfDecoder{
                 }
                 else if(col_weight == 1){
                     this->planar_code_boundary_bits.insert(i);
+                }
+                else if(col_weight == 0){
+                    throw(std::runtime_error("Invalid parity check matrix. Column weight is zero."));
                 }
             }
 

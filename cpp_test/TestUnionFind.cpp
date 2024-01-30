@@ -123,22 +123,25 @@ TEST(UfDecoder, ring_code3){
 
 TEST(UfDecoder, rep_code){
 
-    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(6);
-    auto bpd = UfDecoder(pcm);
-    ASSERT_TRUE(bpd.is_planar_code);
-    tsl::robin_set<int> boundary_bits = {0,5};
-    ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
+    for(int n = 5; n < 20; n++){
 
-    auto syndrome = vector<uint8_t>{1, 0, 0, 0, 1};
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+        auto bpd = UfDecoder(pcm);
+        ASSERT_TRUE(bpd.is_planar_code);
+        tsl::robin_set<int> boundary_bits = {0,n-1};
+        ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
+        auto syndrome = vector<uint8_t>(n,0);
+        syndrome[0] = 1;
+        syndrome[n-2] = 1;
+        auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,1);
+        auto expected_decoding = vector<uint8_t>(n,0);
+        expected_decoding[0] = 1;
+        expected_decoding[n-1] = 1;
+        ASSERT_EQ(decoding,expected_decoding);
 
-    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,1);
-
-    auto expected_decoding = vector<uint8_t>{1, 0, 0, 0, 0, 1};
-
-    ASSERT_EQ(decoding,expected_decoding);
+    }
 
 }
-
 
 
 
