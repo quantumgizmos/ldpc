@@ -21,6 +21,7 @@
 namespace ldpc::uf{
 
 const std::vector<double> NULL_DOUBLE_VECTOR = {};
+tsl::robin_set<int> NULL_INT_ROBIN_SET = {};
 
 std::vector<int> sort_indices(std::vector<double>& B){
     std::vector<int> indices(B.size());
@@ -32,7 +33,9 @@ std::vector<int> sort_indices(std::vector<double>& B){
 
 struct Cluster{
     ldpc::bp::BpSparse& pcm;
+    tsl::robin_set<int>& planar_code_boundary_bits;
     int cluster_id;
+    bool contains_boundary_bits;
     bool active;
     bool valid;
     tsl::robin_set<int> bit_nodes;
@@ -43,6 +46,7 @@ struct Cluster{
     tsl::robin_map<int,int> spanning_tree_check_roots;
     tsl::robin_set<int> spanning_tree_bits;
     tsl::robin_set<int> spanning_tree_leaf_nodes;
+    int spanning_tree_boundary_bit;
 
     Cluster** global_check_membership;
     Cluster** global_bit_membership;
@@ -56,8 +60,8 @@ struct Cluster{
 
     Cluster() = default;
 
-    Cluster(ldpc::bp::BpSparse& parity_check_matrix, int syndrome_index, Cluster** ccm, Cluster** bcm):
-        pcm(parity_check_matrix){
+    Cluster(ldpc::bp::BpSparse& parity_check_matrix, int syndrome_index, Cluster** ccm, Cluster** bcm, tsl::robin_set<int>& planar_code_boundary_bits = NULL_INT_ROBIN_SET):
+        pcm(parity_check_matrix), planar_code_boundary_bits(planar_code_boundary_bits){
         
         this->active=true;
         this->valid=false;
@@ -68,6 +72,7 @@ struct Cluster{
         this->global_check_membership = ccm;
         this->global_bit_membership = bcm;
         this->global_check_membership[syndrome_index]=this;
+        this->contains_boundary_bits = false;
 
 
 
@@ -128,6 +133,10 @@ struct Cluster{
             //merged with the exisiting cluster.
             this->merge_list.insert(bit_membership);
             this->global_bit_membership[bit_index] = this;
+        }
+
+        if(this->planar_code_boundary_bits.contains(bit_index)){
+            this->contains_boundary_bits = true;
         }
 
         for(auto& e: this->pcm.iterate_column(bit_index)){
@@ -241,14 +250,26 @@ struct Cluster{
             this->spanning_tree_bits.insert(bit_index);
         }
 
+        // add the virtual boundary check
+        if(this->contains_boundary_bits = true){
+            this->check_nodes.insert(-1);
+        }
+
         for(int check_index: this->check_nodes){
             this->spanning_tree_check_roots[check_index] = check_index;
         }
+
+
 
         int check_neighbours[2];
         for(int bit_index: this->bit_nodes){
             check_neighbours[0] = this->pcm.column_heads[bit_index]->up->row_index;
             check_neighbours[1] = this->pcm.column_heads[bit_index]->down->row_index;
+
+            if(check_neighbours[0] == check_neighbours[1]){
+                check_neighbours[1] = -1; //set the first check neighbour to the boundary check.
+                this->spanning_tree_boundary_bit = bit_index;
+            }
         
             int root0 = this->find_spanning_tree_parent(check_neighbours[0]);
             int root1 = this->find_spanning_tree_parent(check_neighbours[1]);
@@ -262,12 +283,26 @@ struct Cluster{
             }
         }
 
+        ldpc::sparse_matrix_util::print_sparse_matrix(this->pcm);
+
         for(int check_index: this->check_nodes){
-            int spanning_tree_connectivity = 0;
-            for(auto& e: this->pcm.iterate_row(check_index)){
-                if(this->spanning_tree_bits.contains(e.col_index)) spanning_tree_connectivity+=1;
+            std::cout<<"Check index "<<check_index<<std::endl;
+            if(check_index == -1){
+                this->spanning_tree_leaf_nodes.insert(check_index);
             }
-            if(spanning_tree_connectivity == 1) this->spanning_tree_leaf_nodes.insert(check_index);
+            else{
+                int spanning_tree_connectivity = 0;
+                for(auto& e: this->pcm.iterate_row(check_index)){
+                    if(this->spanning_tree_bits.contains(e.col_index)){
+                        std::cout<<"Col index: "<<e.col_index<<std::endl;
+                        spanning_tree_connectivity+=1;
+                    }
+                }
+                if(spanning_tree_connectivity == 1){
+                     this->spanning_tree_leaf_nodes.insert(check_index);
+                     std::cout<<"Leaf node insert: "<<check_index<<std::endl;
+                }
+            }
         }
 
     }
@@ -278,19 +313,32 @@ struct Cluster{
         for(auto check_index: check_nodes){
             if(syndrome[check_index] == 1) synds.insert(check_index);
         }
+        if(this->contains_boundary_bits == true && this->parity() == 1 ){
+            synds.insert(-1);
+        }
 
         this->find_spanning_tree();
+        this->print();
         while(synds.size()>0){
 
             int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
             int bit_index = -1;
             int check2 = -1;
 
-            for(auto& e: this->pcm.iterate_row(leaf_node_index)){
-                bit_index = e.col_index;
-                if(this->spanning_tree_bits.contains(bit_index)) break;
+            if(leaf_node_index == -1){
+                bit_index = this->spanning_tree_boundary_bit;
             }
 
+            else{
+                for(auto& e: this->pcm.iterate_row(leaf_node_index)){
+                    bit_index = e.col_index;
+                    if(this->spanning_tree_bits.contains(bit_index)) break;
+                }
+            }
+
+  
+            std::cout<<"Leaf node index: "<<leaf_node_index<<std::endl;
+            std::cout<<"Bit index: "<<bit_index<<std::endl;
 
             for(auto& e: this->pcm.iterate_column(bit_index)){
                 if(e.row_index!=leaf_node_index) check2 = e.row_index;
@@ -315,10 +363,16 @@ struct Cluster{
 
             //check whether new check node is a leaf
             int spanning_tree_connectivity = 0;
-            for(auto& e: this->pcm.iterate_row(check2)){
-                if(this->spanning_tree_bits.contains(e.col_index)) spanning_tree_connectivity+=1;
+            std::cout<<"Check 2: "<<check2<<std::endl;
+            if(check2 == -1){
+                this->spanning_tree_leaf_nodes.insert(check2);
             }
-            if(spanning_tree_connectivity == 1) this->spanning_tree_leaf_nodes.insert(check2);
+            else{
+                for(auto& e: this->pcm.iterate_row(check2)){
+                    if(this->spanning_tree_bits.contains(e.col_index)) spanning_tree_connectivity+=1;
+                }
+                if(spanning_tree_connectivity == 1) this->spanning_tree_leaf_nodes.insert(check2);
+            }
 
         }
 
@@ -523,14 +577,33 @@ class UfDecoder{
         std::vector<uint8_t> decoding;
         int bit_count;
         int check_count;
+        tsl::robin_set<int> planar_code_boundary_bits;
+        bool is_planar_code;
         UfDecoder(ldpc::bp::BpSparse& parity_check_matrix): pcm(parity_check_matrix){
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
             this->weighted = false;
+
+            this->is_planar_code = true;
+            for(int i = 0; i<this->pcm.n; i++){
+                int col_weight = this->pcm.get_col_degree(i);
+                if(col_weight > 2){
+                    this->is_planar_code = false;
+                }
+                else if(col_weight == 1){
+                    this->planar_code_boundary_bits.insert(i);
+                }
+            }
+
+
         }
 
         std::vector<uint8_t>& peel_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
+
+            if(!this->is_planar_code){
+                throw(std::runtime_error("Peel decoder only works for planar codes. Use the matrix_decode method for more general codes."));
+            }
 
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
@@ -541,7 +614,7 @@ class UfDecoder{
 
             for(int i =0; i<this->pcm.m; i++){
                 if(syndrome[i] == 1){
-                    Cluster* cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership);
+                    Cluster* cl = new Cluster(this->pcm, i, global_check_membership, global_bit_membership, this->planar_code_boundary_bits);
                     clusters.push_back(cl);
                     invalid_clusters.push_back(cl);
                 }
@@ -557,7 +630,7 @@ class UfDecoder{
 
                 invalid_clusters.clear();
                 for(auto cl: clusters){
-                    if(cl->active == true && cl->parity() == 1){
+                    if(cl->active == true && cl->parity() == 1 && cl->contains_boundary_bits == false){
                         invalid_clusters.push_back(cl);
                     }
                 }
@@ -787,8 +860,11 @@ void Cluster::print(){
         std::cout<<"Boundary Checks: ";
         for(auto i: this->boundary_check_nodes) std::cout<<i<<" ";
         std::cout<<std::endl;
-        std::cout<<"Spanning tree: ";
+        std::cout<<"Spanning tree bits: ";
         for(auto i: this->spanning_tree_bits) std::cout<<i<<" ";
+        std::cout<<std::endl;
+        std::cout<<"Spanning tree leaf nodes: ";
+        for(auto i: this->spanning_tree_leaf_nodes) std::cout<<i<<" ";
         std::cout<<std::endl;
         std::cout<<"........."<<std::endl;
     }

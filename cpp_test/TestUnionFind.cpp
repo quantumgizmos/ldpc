@@ -4,6 +4,7 @@
 #include "union_find.hpp"
 #include "util.hpp"
 #include "bp.hpp"
+#include "robin_set.h"
 
 using namespace std;
 using namespace ldpc::uf;
@@ -113,12 +114,30 @@ TEST(UfDecoder, ring_code3){
 
     auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,3);
 
-
+    ASSERT_TRUE(bpd.is_planar_code);
+    tsl::robin_set<int> boundary_bits = {};
+    ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
 
 }
 
 
+TEST(UfDecoder, rep_code){
 
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(6);
+    auto bpd = UfDecoder(pcm);
+    ASSERT_TRUE(bpd.is_planar_code);
+    tsl::robin_set<int> boundary_bits = {0,5};
+    ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
+
+    auto syndrome = vector<uint8_t>{1, 0, 0, 0, 1};
+
+    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,1);
+
+    auto expected_decoding = vector<uint8_t>{1, 0, 0, 0, 0, 1};
+
+    ASSERT_EQ(decoding,expected_decoding);
+
+}
 
 
 
