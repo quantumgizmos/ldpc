@@ -2,6 +2,7 @@
 # distutils: language = c++
 from libc.stdlib cimport malloc, calloc, free
 from libcpp cimport bool
+from libcpp cimport long
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 cimport numpy as np
@@ -27,6 +28,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
     cdef struct Statistics "ldpc::lsd::Statistics":
         cpp_map[int, ClusterStatistics] individual_cluster_stats
         cpp_map[int, cpp_map[int, vector[int]]] global_timestep_bit_history
+        long elapsed_time
 
     cdef cppclass LsdDecoderCpp "ldpc::lsd::LsdDecoder":
         LsdDecoderCpp(BpSparse& pcm) except +

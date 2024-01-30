@@ -400,6 +400,7 @@ namespace ldpc::lsd {
         // todo didn't def those as tsl::robin_map due to the cython wrapping for now.
         std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
+        long elapsed_time;
 
         void clear() {
             this->individual_cluster_stats.clear();
@@ -409,6 +410,7 @@ namespace ldpc::lsd {
         [[nodiscard]] std::string toString() const {
             // build json like string object from individual cluster stats and global timestep bit history
             std::string result = "{";
+            result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
             result += "\"individual_cluster_stats\":{";
             for (auto &kv: this->individual_cluster_stats) {
                 result += "\"" + std::to_string(kv.first) + "\":{";
@@ -448,6 +450,8 @@ namespace ldpc::lsd {
             result += "}";
             return result;
         }
+
+
     };
 
     // todo move this to separate file
@@ -522,7 +526,7 @@ namespace ldpc::lsd {
                    const int bits_per_step = 1,
                    const bool is_on_the_fly = true,
                    const int lsd_order = 0) {
-
+            auto start_time = std::chrono::high_resolution_clock::now();
             this->statistics.clear();
 
             fill(this->decoding.begin(), this->decoding.end(), 0);
@@ -595,10 +599,13 @@ namespace ldpc::lsd {
             } else {
                 this->apply_lsdw(clusters, lsd_order, bit_weights);
             }
+            auto end_time = std::chrono::high_resolution_clock::now();
             delete[] global_bit_membership;
             delete[] global_check_membership;
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
+                this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                        end_time - start_time).count();
             }
             return this->decoding;
         }
