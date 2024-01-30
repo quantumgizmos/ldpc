@@ -143,6 +143,63 @@ TEST(UfDecoder, rep_code){
 
 }
 
+TEST(UfDecoder, peeling_with_boundaries){
+
+
+    auto pcm = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(2,7);
+    pcm.insert_entry(0,0);
+    pcm.insert_entry(0,1);
+    pcm.insert_entry(0,2);
+    pcm.insert_entry(0,3);
+    pcm.insert_entry(1,3);
+    pcm.insert_entry(1,4);
+    pcm.insert_entry(1,5);
+    pcm.insert_entry(1,6);
+
+    // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
+
+    auto bpd = UfDecoder(pcm);
+    ASSERT_TRUE(bpd.is_planar_code);
+    tsl::robin_set<int> boundary_bits = {0,1,2,4,5,6};
+    ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
+    auto syndrome = vector<uint8_t>{1,1};
+    auto weights = vector<double>{-1,0,0,10,0,0,-1};
+    auto decoding = bpd.peel_decode(syndrome, weights,1);
+    
+    // ldpc::sparse_matrix_util::print_vector(decoding);
+    auto expected_decoding = vector<uint8_t>(7,0);
+    expected_decoding[0] = 1;
+    expected_decoding[6] = 1;
+    ASSERT_EQ(decoding,expected_decoding);
+
+    
+
+}
+
+TEST(UfDecoder, peeling_with_boundaries_edge_case){
+
+    auto pcm = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(20,41);
+    pcm.insert_entry(0,0);pcm.insert_entry(0,5);pcm.insert_entry(0,25);pcm.insert_entry(1,1);pcm.insert_entry(1,6);pcm.insert_entry(1,25);pcm.insert_entry(1,26);pcm.insert_entry(2,2);pcm.insert_entry(2,7);pcm.insert_entry(2,26);pcm.insert_entry(2,27);pcm.insert_entry(3,3);pcm.insert_entry(3,8);pcm.insert_entry(3,27);pcm.insert_entry(3,28);pcm.insert_entry(4,4);pcm.insert_entry(4,9);pcm.insert_entry(4,28);pcm.insert_entry(5,5);pcm.insert_entry(5,10);pcm.insert_entry(5,29);pcm.insert_entry(6,6);pcm.insert_entry(6,11);pcm.insert_entry(6,29);pcm.insert_entry(6,30);pcm.insert_entry(7,7);pcm.insert_entry(7,12);pcm.insert_entry(7,30);pcm.insert_entry(7,31);pcm.insert_entry(8,8);pcm.insert_entry(8,13);pcm.insert_entry(8,31);pcm.insert_entry(8,32);pcm.insert_entry(9,9);pcm.insert_entry(9,14);pcm.insert_entry(9,32);pcm.insert_entry(10,10);pcm.insert_entry(10,15);pcm.insert_entry(10,33);pcm.insert_entry(11,11);pcm.insert_entry(11,16);pcm.insert_entry(11,33);pcm.insert_entry(11,34);pcm.insert_entry(12,12);pcm.insert_entry(12,17);pcm.insert_entry(12,34);pcm.insert_entry(12,35);pcm.insert_entry(13,13);pcm.insert_entry(13,18);pcm.insert_entry(13,35);pcm.insert_entry(13,36);pcm.insert_entry(14,14);pcm.insert_entry(14,19);pcm.insert_entry(14,36);pcm.insert_entry(15,15);pcm.insert_entry(15,20);pcm.insert_entry(15,37);pcm.insert_entry(16,16);pcm.insert_entry(16,21);pcm.insert_entry(16,37);pcm.insert_entry(16,38);pcm.insert_entry(17,17);pcm.insert_entry(17,22);pcm.insert_entry(17,38);pcm.insert_entry(17,39);pcm.insert_entry(18,18);pcm.insert_entry(18,23);pcm.insert_entry(18,39);pcm.insert_entry(18,40);pcm.insert_entry(19,19);pcm.insert_entry(19,24);pcm.insert_entry(19,40);
+
+    auto error_rate = std::vector<double>{41,0.03};
+    auto bpd = ldpc::bp::BpDecoder(pcm, error_rate, 1, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
+
+    auto syndrome = std::vector<uint8_t>{2,  3,  6,  7, 11, 12, 14, 16, 17, 18};
+
+    bpd.decode(syndrome);
+
+    ASSERT_FALSE(bpd.converge);
+
+    auto ufd = UfDecoder(pcm);
+
+    ldpc::sparse_matrix_util::print_vector(bpd.log_prob_ratios);
+
+    auto decoding = ufd.peel_decode(syndrome, bpd.log_prob_ratios,4);
+
+
+
+}
+
 
 
 int main(int argc, char **argv)
