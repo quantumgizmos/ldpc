@@ -597,18 +597,18 @@ class UfDecoder{
         int bit_count;
         int check_count;
         tsl::robin_set<int> planar_code_boundary_bits;
-        bool is_planar_code;
+        bool pcm_max_bit_degree_2;
         UfDecoder(ldpc::bp::BpSparse& parity_check_matrix): pcm(parity_check_matrix){
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
             this->weighted = false;
 
-            this->is_planar_code = true;
+            this->pcm_max_bit_degree_2 = true;
             for(int i = 0; i<this->pcm.n; i++){
                 int col_weight = this->pcm.get_col_degree(i);
                 if(col_weight > 2){
-                    this->is_planar_code = false;
+                    this->pcm_max_bit_degree_2 = false;
                 }
                 else if(col_weight == 1){
                     this->planar_code_boundary_bits.insert(i);
@@ -623,7 +623,7 @@ class UfDecoder{
 
         std::vector<uint8_t>& peel_decode(const std::vector<uint8_t>& syndrome, const std::vector<double>& bit_weights = NULL_DOUBLE_VECTOR, int bits_per_step = 1){
 
-            if(!this->is_planar_code){
+            if(!this->pcm_max_bit_degree_2){
                 throw(std::runtime_error("Peel decoder only works for planar codes. Use the matrix_decode method for more general codes."));
             }
 

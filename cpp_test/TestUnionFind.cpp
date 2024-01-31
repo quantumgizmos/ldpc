@@ -114,7 +114,7 @@ TEST(UfDecoder, ring_code3){
 
     auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,3);
 
-    ASSERT_TRUE(bpd.is_planar_code);
+    ASSERT_TRUE(bpd.pcm_max_bit_degree_2);
     tsl::robin_set<int> boundary_bits = {};
     ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
 
@@ -127,7 +127,7 @@ TEST(UfDecoder, rep_code){
 
         auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
         auto bpd = UfDecoder(pcm);
-        ASSERT_TRUE(bpd.is_planar_code);
+        ASSERT_TRUE(bpd.pcm_max_bit_degree_2);
         tsl::robin_set<int> boundary_bits = {0,n-1};
         ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
         auto syndrome = vector<uint8_t>(n,0);
@@ -159,7 +159,7 @@ TEST(UfDecoder, peeling_with_boundaries){
     // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
 
     auto bpd = UfDecoder(pcm);
-    ASSERT_TRUE(bpd.is_planar_code);
+    ASSERT_TRUE(bpd.pcm_max_bit_degree_2);
     tsl::robin_set<int> boundary_bits = {0,1,2,4,5,6};
     ASSERT_EQ(bpd.planar_code_boundary_bits,boundary_bits);
     auto syndrome = vector<uint8_t>{1,1};

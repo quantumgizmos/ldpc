@@ -145,10 +145,10 @@ def test_surface_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_surface_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_surface_20.npz")
 
-    error_rate = 0.03
-    run_count = 1000
+    error_rate = 0.01
+    run_count = 10000
     seed = 42
-    max_iter = 10
+    max_iter = 5
 
     print(hx.shape)
 
