@@ -455,6 +455,13 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.global_timestep_bit_history[0][0].size() == 1);
     ASSERT_TRUE(stats.global_timestep_bit_history[0][1].size() == 2);
     ASSERT_TRUE(stats.global_timestep_bit_history[1].size() == 0);
+    ASSERT_TRUE(stats.elapsed_time > 0.0);
+    ASSERT_TRUE(stats.individual_cluster_stats[0].active == false);
+    ASSERT_TRUE(stats.individual_cluster_stats[0].got_inactive_in_timestep == 0);
+    ASSERT_TRUE(stats.individual_cluster_stats[1].got_valid_in_timestep == 0);
+    ASSERT_TRUE(stats.individual_cluster_stats[0].size_history.size() == 1);
+    ASSERT_TRUE(stats.individual_cluster_stats[1].size_history[0] == 2);
+
 }
 
 
