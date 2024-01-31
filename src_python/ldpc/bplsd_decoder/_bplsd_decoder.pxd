@@ -13,7 +13,7 @@ from libcpp.unordered_map cimport unordered_map as cpp_map
 
 cdef extern from "lsd.hpp" namespace "ldpc::lsd":
 
-    cdef const vector[double] NULL_DOUBLE_VECTOR "ldpc::lsd::NULL_DOUBLE_VECTOR"
+    cdef const vector[double] EMPTY_DOUBLE_VECTOR "ldpc::lsd::EMPTY_DOUBLE_VECTOR"
 
     cdef struct ClusterStatistics "ldpc::lsd::ClusterStatistics":
         int final_bit_count
