@@ -2,6 +2,7 @@
 # distutils: language = c++
 import numpy as np
 from scipy.sparse import spmatrix
+import json
 
 cdef class BpLsdDecoder(BpDecoderBase):
   
@@ -46,11 +47,14 @@ cdef class BpLsdDecoder(BpDecoderBase):
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
+                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel',
+                 omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 bits_per_step:int = 1, input_vector_type: str = "syndrome", lsd_order: int = 0):
+                  bits_per_step:int = 1,
+                  input_vector_type: str = "syndrome",
+                  lsd_order: int = 0):
         self.MEMORY_ALLOCATED=False
-        self.lsd = new lsd_decoder_cpp(self.pcm[0])
+        self.lsd = new LsdDecoderCpp(self.pcm[0])
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
         # self.residual_syndrome.resize(self.m) #C vector for the bf decoding
         if bits_per_step == 0:
@@ -119,19 +123,37 @@ cdef class BpLsdDecoder(BpDecoderBase):
         return out
 
     @property
-    def cluster_size_stats(self):
+    def statistics(self) -> Statistics:
         """
-        Returns the cluster size statistics for the LSD algorithm.
+        Returns the statistics for the LSD algorithm.
+        May be None if the statistics are not being collected.
+        -------
+        Statistics
+            The statistics object.
+        """
+        return json.dumps(self.lsd.statistics)
+
+    @property
+    def do_stats(self) -> bool:
+        """
+        Returns whether the statistics are being collected.
 
         Returns
         -------
-        np.ndarray
-            The cluster size statistics.
+        bool
+            Whether the statistics are being collected.
         """
 
-        cdef vector[int] clss = self.lsd.cluster_size_stats
-        cdef int i
-        out = np.zeros(clss.size(),dtype=int)
-        for i in range(clss.size()):
-            out[i] = clss[i]
-        return out
+        return self.lsd.get_do_stats()
+
+    def set_do_stats(self, value: bool) -> None:
+        """
+        Sets whether the statistics are being collected.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the statistics are being collected.
+        """
+
+        self.lsd.set_do_stats(value)

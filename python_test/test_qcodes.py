@@ -32,7 +32,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
                 continue
 
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
-            clss = DECODER.cluster_size_stats
+            clss = DECODER.statistics
             additional_stats.append(clss)
 
         if np.any((lx@residual)%2):
@@ -61,8 +61,8 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
 
 
 def test_400_16_6_hgp():
-    hx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("/home/luca/Documents/codeRepos/ldpc/python_test/pcms/lx_400_16_6.npz")
+    hx = scipy.sparse.load_npz("pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("pcms/lx_400_16_6.npz")
 
     error_rate = 0.03
     run_count = 1000
@@ -103,8 +103,10 @@ def test_400_16_6_hgp():
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625,
                            schedule="parallel", bits_per_step=1, lsd_order=osd_order)
+    decoder.set_do_stats(True)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
+    print(decoder.statistics)
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")

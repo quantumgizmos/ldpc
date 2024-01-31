@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse import spmatrix
+import json
 class BpLsdDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
@@ -66,13 +67,35 @@ class BpLsdDecoder(BpDecoderBase):
 
 
     @property
-    def cluster_size_stats(self):
+    def statistics(self) -> Statistics:
         """
-        Returns the cluster size statistics for the LSD algorithm.
+        Returns the statistics for the LSD algorithm.
+        May be None if the statistics are not being collected.
+        -------
+        Statistics
+            The statistics object.
+        """
+
+
+    @property
+    def do_stats(self) -> bool:
+        """
+        Returns whether the statistics are being collected.
 
         Returns
         -------
-        np.ndarray
-            The cluster size statistics.
+        bool
+            Whether the statistics are being collected.
+        """
+
+
+    def set_do_stats(self, value: bool) -> None:
+        """
+        Sets whether the statistics are being collected.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the statistics are being collected.
         """
 
