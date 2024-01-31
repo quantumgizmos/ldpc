@@ -112,7 +112,7 @@ TEST(UfDecoder, ring_code3){
 
     auto syndrome = vector<uint8_t>{1, 0, 1};
 
-    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,3);
+    auto decoding = bpd.peel_decode(syndrome, ldpc::uf::EMPTY_DOUBLE_VECTOR, 3);
 
     ASSERT_TRUE(bpd.pcm_max_bit_degree_2);
     tsl::robin_set<int> boundary_bits = {};
@@ -133,7 +133,7 @@ TEST(UfDecoder, rep_code){
         auto syndrome = vector<uint8_t>(n,0);
         syndrome[0] = 1;
         syndrome[n-2] = 1;
-        auto decoding = bpd.peel_decode(syndrome, ldpc::uf::NULL_DOUBLE_VECTOR,1);
+        auto decoding = bpd.peel_decode(syndrome, ldpc::uf::EMPTY_DOUBLE_VECTOR, 1);
         auto expected_decoding = vector<uint8_t>(n,0);
         expected_decoding[0] = 1;
         expected_decoding[n-1] = 1;
