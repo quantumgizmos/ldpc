@@ -1,24 +1,27 @@
+import pytest
 import numpy as np
 from ldpc.belief_find_decoder import BeliefFindDecoder
+from ldpc.codes import hamming_code, rep_code, ring_code
 
-pcm = np.zeros((2,7)).astype(int)
-pcm[0,0] = 1
-pcm[0,1] = 1
-pcm[0,2] = 1
-pcm[0,3] = 1
-pcm[1,3] = 1
-pcm[1,4] = 1
-pcm[1,5] = 1
-pcm[1,6] = 1
+def test_peeling_input():
 
-print(pcm)
+    pcm = rep_code(3)
+    decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
 
-syndrome = np.array([0,1])
+    pcm = ring_code(3)
+    decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
 
-bpd = BeliefFindDecoder(pcm,error_rate = 0.1,uf_method = 'peeling',max_iter = 0)
+    pcm = hamming_code(3)
 
-decoding = bpd.decode(syndrome)
-print(bpd.converge)
+    # decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
 
-print(decoding)
+    with pytest.raises(ValueError):
+        decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
+
+
+if __name__ == "__main__":
+    test_peeling_input()
+
+
+
 

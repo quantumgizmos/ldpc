@@ -40,6 +40,9 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
 
+        int get_col_degree(int col)
+        int get_row_degree(int row)
+
     cdef cppclass BpDecoderCpp "ldpc::bp::BpDecoder":
             BpDecoderCpp(
                 BpSparse& parity_check_matrix,

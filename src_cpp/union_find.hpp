@@ -30,7 +30,6 @@ std::vector<int> sort_indices(std::vector<double>& B){
     return indices;
 }
 
-
 struct Cluster{
     ldpc::bp::BpSparse& pcm;
     tsl::robin_set<int>& planar_code_boundary_bits;
@@ -96,9 +95,6 @@ struct Cluster{
         std::vector<int> erase_boundary_check;
         this->candidate_bit_nodes.clear();
 
-        // std::cout<<"After candidate bits"<<std::endl;
-
-
         for(int check_index: boundary_check_nodes){
             bool erase = true;
             for(auto& e: this->pcm.iterate_row(check_index)){
@@ -119,8 +115,6 @@ struct Cluster{
     }
 
     int add_bit_node_to_cluster(int bit_index){
-
-        // std::cout<<"Add bit node function. Bit: "<<bit_index<<std::endl;
 
         auto bit_membership = this->global_bit_membership[bit_index];
         if(bit_membership == this) return 0; //if the bit is already in the cluster terminate.
@@ -163,21 +157,15 @@ struct Cluster{
 
     void merge_with_cluster(Cluster* cl2){
 
-        // std::cout<<"Hello from merge function"<<std::endl;
-
         for(auto bit_index: cl2->bit_nodes){
             this->bit_nodes.insert(bit_index);
             this->global_bit_membership[bit_index] = this;
         }
 
-        // std::cout<<"bit nodes copied"<<std::endl;
-
         for(auto check_index: cl2->check_nodes){
             this->check_nodes.insert(check_index);
             this->global_check_membership[check_index] = this;
         }
-
-        // std::cout<<"check nodes copied"<<std::endl;
 
         for(auto check_index: cl2->boundary_check_nodes){
             this->boundary_check_nodes.insert(check_index);
@@ -186,8 +174,6 @@ struct Cluster{
         if(cl2->contains_boundary_bits == true){
             this->contains_boundary_bits = true;
         }
-
-        // std::cout<<"boundary check nodes copied"<<std::endl;
 
         cl2->active = false;
         for(auto j: cl2->enclosed_syndromes){
@@ -225,11 +211,6 @@ struct Cluster{
 
         }
 
-        // std::cout<<"Before merge"<<std::endl;
-
-        // for(auto cl: merge_list) std::cout<<cl<<" ";
-        // std::cout<<std::endl;
-
         for(auto cl: merge_list){
             this->merge_with_cluster(cl);
             cl->active = false;
@@ -257,8 +238,6 @@ struct Cluster{
 
         // add the virtual boundary check
         if(this->contains_boundary_bits == true){
-            // std::cout<<"Boundary check added"<<std::endl;
-            // std::cout<<"Contains boundary bits: "<<this->contains_boundary_bits<<std::endl;
             this->check_nodes.insert(-1);
         }
 
@@ -285,7 +264,6 @@ struct Cluster{
                 this->spanning_tree_check_roots[root1] = root0;
             }
             else{
-                // std::cout<<bit_index<<std::endl;
                 this->spanning_tree_bits.erase(bit_index);
             }
         }
@@ -315,7 +293,6 @@ struct Cluster{
         std::vector<int> erasure;
         tsl::robin_set<int> synds;
         for(auto check_index: check_nodes){
-            // std::cout<<"Check index: "<<check_index<<" "<<std::endl;
             if(syndrome[check_index] == 1) synds.insert(check_index);
         }
         if(this->contains_boundary_bits == true && this->parity() == 1 ){
@@ -325,11 +302,6 @@ struct Cluster{
         this->find_spanning_tree();
 
         while(synds.size()>0){
-
-            // for(auto synd_index: synds){
-            //     std::cout<<synd_index<<" ";
-            // }
-            // this->print();
 
             int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
             int bit_index;
@@ -384,14 +356,6 @@ struct Cluster{
                     this->spanning_tree_leaf_nodes.insert(check2);
                 }
             }
-
-            // std::cout<<"Erasure: ";
-            // for(auto i: erasure) std::cout<<i<<" ";
-            // std::cout<<std::endl;
-            // std::cout<<"leaf node index: "<<leaf_node_index<<std::endl;
-            // std::cout<<"Check2: "<<check2<<std::endl;
-            // std::cout<<"Bit index: "<<bit_index<<std::endl;
-            // std::cout<<std::endl;
 
         }
 
@@ -489,101 +453,13 @@ struct Cluster{
             }
         }
 
-        // delete cluster_pcm;
-
         return this->cluster_decoding;
 
     }
-
-    std::vector<int> invert_decode2(const std::vector<uint8_t>& syndrome, std::vector<double>& bit_weights){
-        
-        auto cluster_pcm = this->convert_to_matrix(bit_weights);
-        
-        std::cout<<"After cluter pcm gen"<<std::endl;
-
-        std::vector<uint8_t> cluster_syndrome;
-        int synd_weight = 0;
-        for(int check_index: check_nodes){
-            cluster_syndrome.push_back(syndrome[check_index]);
-            synd_weight += syndrome[check_index];
-        }
-
-        // std::cout<<"HEllo"<<std::endl;
-
-        this->cluster_decoding.clear();
-        bool equal;
-        if(synd_weight > 0){
-
-
-
-            auto rr = ldpc::gf2sparse_linalg::RowReduce(cluster_pcm);
-            auto cluster_solution = rr.fast_solve(cluster_syndrome);
-            
-            auto candidate_cluster_syndrome = cluster_pcm.mulvec(cluster_solution);
-
-
-
-            equal = true;
-            for(int i =0; i<cluster_syndrome.size(); i++){
-                if(cluster_syndrome[i]!=candidate_cluster_syndrome[i]){
-                    equal = false;
-                    break;
-                }
-            }
-
-
-            for(int i = 0; i<cluster_solution.size(); i++){
-                if(cluster_solution[i] == 1){
-                    this->cluster_decoding.push_back(this->matrix_to_cluster_bit_map[i]);
-                }
-            }
-
-        }
-        else{
-            equal = false;
-        }
-
-        this->valid = equal;
-
-
-        // std::cout<<"HEllo2"<<std::endl;
-
-
-        return this->cluster_decoding;
-
-    }
-
 
     void print();
 
 };
-
-
-Cluster* bit_cluster(ldpc::bp::BpSparse& parity_check_matrix, int bit_index, Cluster** ccm, Cluster** bcm){
-
-    Cluster* cl = new Cluster(parity_check_matrix, bit_index, ccm, bcm);
-
-
-    cl->global_check_membership[bit_index] = NULL;
-    cl->global_bit_membership[bit_index] = cl;
-    cl->bit_nodes.insert(bit_index);
-    cl->check_nodes.clear();
-    cl->enclosed_syndromes.clear();
-    cl->boundary_check_nodes.clear();
-
-
-    for(auto& e: cl->pcm.iterate_column(bit_index)){
-        int check_index = e.row_index;
-        cl->check_nodes.insert(check_index);
-        cl->boundary_check_nodes.insert(check_index);
-        cl->global_check_membership[check_index] = cl;
-    }
-
-    return cl;
-
-}
-
-
 
 
 class UfDecoder{
@@ -706,12 +582,6 @@ class UfDecoder{
                     }
                 }
 
-                // for(auto cl: invalid_clusters){
-                //     if(cl->active){
-                //         auto cluster_decoding = cl->invert_decode(syndrome,bit_weights);
-                //     }
-                // }
-
                 invalid_clusters.clear();
                 for(auto cl: clusters){
                     if(cl->active == true && cl->valid == false){
@@ -733,136 +603,11 @@ class UfDecoder{
             delete[] global_bit_membership;
             delete[] global_check_membership;
 
-            // std::cout<<"hello from end of C++ function"<<std::endl;
-
             return this->decoding;
 
         }
 
-        std::vector<uint8_t>& bit_cluster_decode(const std::vector<uint8_t>& syndrome, std::vector<double>& bit_weights, int bits_per_step = 1, int cluster_count = 10){
-
-            fill(this->decoding.begin(), this->decoding.end(), 0);
-
-            std::vector<Cluster*> clusters;
-            std::vector<Cluster*> invalid_clusters;
-            Cluster** global_bit_membership = new Cluster*[pcm.n]();
-            Cluster** global_check_membership = new Cluster*[pcm.m]();
-
-            std::vector<int> sparse_syndrome;
-
-
-            for(int i =0; i<this->pcm.m; i++){
-                if(syndrome[i] == 1){
-                    sparse_syndrome.push_back(i);
-                }
-            }
-
-
-            std::vector<int> col_indices;
-            for(int i = 0; i<this->pcm.n; i++){
-                col_indices.push_back(i);
-            }
-
-            ldpc::sort::soft_decision_col_sort(bit_weights, col_indices, this->pcm.n);
-
-            int max_clusters = std::min(cluster_count, pcm.n);
-
-            for(int i = 0; i < max_clusters; i++){
-
-                int bit_index = col_indices[i];
-
-                Cluster* cl = new Cluster(this->pcm, bit_index, global_check_membership, global_bit_membership);
-                cl->active=true;
-                cl->valid=false;
-                cl->cluster_id = bit_index;
-                cl->boundary_check_nodes.clear();
-                cl->check_nodes.clear();
-                cl->enclosed_syndromes.clear();
-                cl->global_check_membership[bit_index] = NULL;
-                cl->global_bit_membership[bit_index] = cl;
-
-                clusters.push_back(cl);
-                invalid_clusters.push_back(cl);
-
-            }
-
-            // while(invalid_clusters.size()>0){
-
-            //     for(auto cl: invalid_clusters){
-            //         if(cl->active){
-            //             std::cout<<cl<<std::endl;
-            //             cl->print();
-
-            //             cl->grow_cluster(bit_weights,bits_per_step);
-            //             std::cout<<"HEllo64"<<std::endl;
-
-            //             auto cluster_decoding = cl->invert_decode2(syndrome,bit_weights);
-            //              std::cout<<"HEllo66"<<std::endl;
-            //         }
-            //     }
-
-               
-
-            //     invalid_clusters.clear();
-            //     for(auto cl: clusters){
-            //         if(cl->active == true && cl->valid == false){
-            //             invalid_clusters.push_back(cl);
-            //         }
-            //     }
-
-
-
-            //     sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster* lhs, const Cluster* rhs){return lhs->bit_nodes.size() < rhs->bit_nodes.size();});
-
-            //     bool exit_while = true;
-            //     for(auto synd_index: sparse_syndrome){
-            //         auto cl = global_check_membership[synd_index];
-            //         if(cl==NULL){
-            //             exit_while = false;
-            //         }
-            //         else if (cl->valid == false){
-            //             exit_while = false;
-            //         }
-                    
-            //     }
-
-
-
-            //     if(exit_while) break;
-
-
-
-            // }
-
-
-
-
-            for(auto cl: clusters){
-                if(cl->active){
-                    for(int bit: cl->cluster_decoding) this->decoding[bit] = 1;
-                }
-                // delete cl;
-            }
-
-
-            std::cout<<"HEllo7"<<std::endl;
-
-
-            // delete[] global_bit_membership;
-            // delete[] global_check_membership;
-
-            // std::cout<<"hello from end of C++ function"<<std::endl;
-
-
-
-
-            std::cout<<"HEllo3"<<std::endl;
-            ldpc::sparse_matrix_util::print_vector(this->decoding);
-
-
-            return this->decoding;
-
-        }
+       
 
 };
 

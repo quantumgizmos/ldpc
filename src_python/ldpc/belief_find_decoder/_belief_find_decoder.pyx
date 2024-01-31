@@ -54,12 +54,22 @@ cdef class BeliefFindDecoder(BpDecoderBase):
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = True, bits_per_step:int = 0, input_vector_type: str = "syndrome"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling", bits_per_step:int = 0, input_vector_type: str = "syndrome"):
         self.MEMORY_ALLOCATED=False
         self.ufd = new uf_decoder_cpp(self.pcm[0])
         self.bf_decoding.resize(self.n) #C vector for the bf decoding
         self.residual_syndrome.resize(self.m) #C vector for the bf decoding
-        self.uf_method = uf_method
+        if uf_method.lower() in ["inversion", "invert", "matrix"]:
+            self.uf_method = "inversion"
+        elif uf_method.lower() in ["peeling", "peel"]:
+            self.uf_method = "peeling"
+            # Check that the PCM is suitable for the peeling method
+            for i in range(self.n):
+                if self.pcm.get_col_degree(i) > 2:
+                    raise ValueError(f"The 'peeling' method is only suitable for LDPC codes with point like syndromes. Each column of the PCM must have at most 2 entries. Column {i} has degree {self.pcm.get_col_degree(i)}.")
+        else:
+            raise ValueError(f"Invalid UF method: {uf_method}. Must be one of 'inversion' or 'peeling'.")
+        
         if bits_per_step == 0:
             self.bits_per_step = pcm.shape[1]
         else:
@@ -129,17 +139,3 @@ cdef class BeliefFindDecoder(BpDecoderBase):
     @property
     def uf_method(self):
         return self.uf_method
-
-    @uf_method.setter
-    def uf_method(self, uf_method: str):
-        if uf_method.lower() in ["inversion", "invert", "matrix"]:
-            self.uf_method = "inversion"
-        elif uf_method.lower() in ["peeling", "peel"]:
-            self.uf_method = "peeling"
-        else:
-            raise ValueError(f"Invalid UF method: {uf_method}. Must be one of 'inversion' or 'peeling'.")
-
-
-
-    # def maximum_cluster_size(self):
-    #     return self.ufd.maximum_cluster_size[0], self.ufd.maximum_cluster_size[1]
