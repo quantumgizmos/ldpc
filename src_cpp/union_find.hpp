@@ -261,6 +261,8 @@ namespace ldpc::uf {
             }
             this->find_spanning_tree();
 
+            this->print();
+
             while (!synds.empty()) {
                 int leaf_node_index = *(this->spanning_tree_leaf_nodes.begin());
                 int bit_index;
