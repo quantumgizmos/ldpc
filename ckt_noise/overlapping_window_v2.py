@@ -25,7 +25,7 @@ def overlapping_window(
     window: int,
     commit: int,
     decompose_errors: bool = True,
-    shots: int = 5_000,
+    shots: int = 10_000,
     DEBUG: bool = False,
 ):
 
@@ -61,12 +61,21 @@ def overlapping_window(
     decoder = Matching.from_check_matrix(
         dem_matrices.check_matrix, weights=-np.log(dem_matrices.priors)
     )
-    np.set_printoptions()
+
     # sample from the detector error model
     detector_data, obs_data, _ = sampler.sample(shots=shots)
     obs_data = obs_data.astype(np.uint8)
+    detector_data = detector_data.astype(np.uint8)
     # decode the data
     total_errs = 0
+
+    weights = np.log1p(dem_matrices.priors) - np.log(dem_matrices.priors)
+    eps = 1e-14
+    min_weight = np.log1p(eps) - np.log(eps)
+
+    full_synd_inds = np.arange(dem_matrices.check_matrix.shape[0])
+    full_err_inds = np.arange(dem_matrices.check_matrix.shape[1])
+
     for obs, sample in zip(obs_data, detector_data):
         total_corr = np.zeros(dem_matrices.check_matrix.shape[1], dtype=np.bool_)
         for decoding in range(decodings):
@@ -80,30 +89,35 @@ def overlapping_window(
                 DEBUG=False,
             )
 
-            if decoding == 0:
+            if decodings == 1:
                 assert np.array_equal(sample, sample[synd_dec_inds])
+
+            # BUILD DECODER
+
+            decoder = Matching.from_check_matrix(
+                dem_matrices.check_matrix[synd_dec_inds, :],
+                weights=weights,
+            )
 
             corr = decoder.decode(sample[synd_dec_inds])
 
             if decoding != decodings - 1:
-                raise NotImplementedError(
-                    "This is not implemented for more than one decoding"
-                )
-
-                # TODO: Decoder implementation / init
-                # Make sure inds are correct
-                # Probably need to adjust decoder priors for the first block
-                total_corr[commit_inds] = corr[: len(commit_inds)]
+                # determine the partial correction / commit the correction
+                total_corr[commit_inds] = corr[commit_inds]
                 # modify syndrome to reflect the correction
-                sample[synd_commit_inds] = (dem_matrices.check_matrix @ total_corr % 2)[
-                    synd_commit_inds
+                sample[synd_dec_inds] ^= (dem_matrices.check_matrix @ total_corr % 2)[
+                    synd_dec_inds
                 ]
+
+                # set the weights in the commit region to be `min_weight` to reflect
+                # that these bits are now fixed
+                weights[commit_inds] = min_weight
 
             else:
                 # This is the final decoding, commit all
-                total_corr[dec_inds] = corr
+                total_corr[dec_inds] = corr[dec_inds]
 
-                if decoding == 0:
+                if decodings == 1:
                     assert np.array_equal(total_corr, corr)
 
         log_corr = dem_matrices.observables_matrix @ total_corr % 2
@@ -181,16 +195,21 @@ if __name__ == "__main__":
     # ax.set_xlabel("Physical Error Rate")
     # ax.set_ylabel("Logical Error Rate")
 
-    fig, ax = plt.subplots()
-    ps = np.geomspace(0.025, 0.06, 6)
-    for d in [5, 9, 13]:
-        pcm, logicals = rep_code(d)
-        # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
-        error_rates = [overlapping_window(p, pcm, logicals, 1, 2 * d, d) for p in ps]
-        ax.plot(ps, error_rates, label=f"d={d}", marker="o")
+    for decodings in [2, 3, 4, 5]:
+        fig, ax = plt.subplots()
+        ps = np.geomspace(0.02, 0.05, 6)
+        for d in [5, 9, 13]:
+            pcm, logicals = rep_code(d)
+            # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
+            error_rates = [
+                overlapping_window(p, pcm, logicals, 4, 2 * d, d) for p in ps
+            ]
+            ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Physical Error Rate")
-    ax.set_ylabel("Logical Error Rate")
-    plt.legend()
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("Physical Error Rate")
+        ax.set_ylabel("Logical Error Rate")
+        ax.set_title(f"Decodings: {decodings}")
+        plt.legend()
+        plt.show()
