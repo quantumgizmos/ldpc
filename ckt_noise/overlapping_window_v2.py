@@ -26,7 +26,6 @@ def overlapping_window(
     commit: int,
     decompose_errors: bool = True,
     shots: int = 10_000,
-    DEBUG: bool = False,
 ):
 
     # define relevant parameters
@@ -54,14 +53,6 @@ def overlapping_window(
     # create relevant detector check matrices and observables
     dem_matrices = detector_error_model_to_check_matrices(dem)
 
-    # create the decoder
-    # TODO: Move this to a function
-    # Exact decoder implementation still needs to be done
-    # TODO: Check if I can do everything just by adjusting the priors and the syndrome.
-    decoder = Matching.from_check_matrix(
-        dem_matrices.check_matrix, weights=-np.log(dem_matrices.priors)
-    )
-
     # sample from the detector error model
     detector_data, obs_data, _ = sampler.sample(shots=shots)
     obs_data = obs_data.astype(np.uint8)
@@ -73,56 +64,46 @@ def overlapping_window(
     eps = 1e-14
     min_weight = np.log1p(eps) - np.log(eps)
 
-    full_synd_inds = np.arange(dem_matrices.check_matrix.shape[0])
-    full_err_inds = np.arange(dem_matrices.check_matrix.shape[1])
+    # dense version of the correction
+    total_corr = np.zeros((shots, dem_matrices.check_matrix.shape[1]), dtype=np.bool_)
 
-    for obs, sample in zip(obs_data, detector_data):
-        total_corr = np.zeros(dem_matrices.check_matrix.shape[1], dtype=np.bool_)
-        for decoding in range(decodings):
-            # start by extracting the part of the detector syndrome that we want to decode
-            commit_inds, dec_inds, synd_commit_inds, synd_dec_inds = current_round_inds(
-                dem_matrices.check_matrix,
-                decoding,
-                window,
-                commit,
-                num_checks,
-                DEBUG=False,
-            )
+    for decoding in range(decodings):
+        # for obs, sample in zip(obs_data, detector_data):
+        commit_inds, dec_inds, synd_commit_inds, synd_dec_inds = current_round_inds(
+            dem_matrices.check_matrix, decoding, window, commit, num_checks
+        )
 
-            if decodings == 1:
-                assert np.array_equal(sample, sample[synd_dec_inds])
-
-            # BUILD DECODER
-
-            decoder = Matching.from_check_matrix(
-                dem_matrices.check_matrix[synd_dec_inds, :],
-                weights=weights,
-            )
-
-            corr = decoder.decode(sample[synd_dec_inds])
+        decoder = Matching.from_check_matrix(
+            dem_matrices.check_matrix[synd_dec_inds, :],
+            weights=weights,
+        )
+        for i in range(shots):
+            corr = decoder.decode(detector_data[i][synd_dec_inds])
 
             if decoding != decodings - 1:
                 # determine the partial correction / commit the correction
-                total_corr[commit_inds] = corr[commit_inds]
+                total_corr[i][commit_inds] = corr[commit_inds]
                 # modify syndrome to reflect the correction
-                sample[synd_dec_inds] ^= (dem_matrices.check_matrix @ total_corr % 2)[
-                    synd_dec_inds
-                ]
-
-                # set the weights in the commit region to be `min_weight` to reflect
-                # that these bits are now fixed
-                weights[commit_inds] = min_weight
+                detector_data[i][synd_dec_inds] ^= (
+                    dem_matrices.check_matrix @ total_corr[i] % 2
+                )[synd_dec_inds]
 
             else:
                 # This is the final decoding, commit all
-                total_corr[dec_inds] = corr[dec_inds]
+                total_corr[i][dec_inds] = corr[dec_inds]
 
-                if decodings == 1:
-                    assert np.array_equal(total_corr, corr)
+        # once all shots have been decoded for this round, update the weights
+        weights[commit_inds] = min_weight
 
-        log_corr = dem_matrices.observables_matrix @ total_corr % 2
-        if not np.array_equal(log_corr, obs):
+    for shot in range(shots):
+        if not np.array_equal(
+            (dem_matrices.observables_matrix @ total_corr[shot]) % 2, obs_data[shot]
+        ):
             total_errs += 1
+
+    # for obs, prediction in zip(obs_data, predictions):
+    #     if not np.array_equal(prediction, obs):
+    #         total_errs += 1
 
     return total_errs / shots
 
@@ -133,7 +114,6 @@ def current_round_inds(
     window: int,
     commit: int,
     num_checks: int,
-    DEBUG: bool = False,
 ) -> np.ndarray:
     """
     Get the indices of the current round in the detector syndrome.
@@ -144,11 +124,6 @@ def current_round_inds(
     start = decoding * commit * num_checks
     end_commit = start + num_checks_commit
     end_decoding = start + num_checks_decoding
-
-    if DEBUG:
-        print("Start:", start)
-        print("End commit:", end_commit)
-        print("End decoding:", end_decoding)
 
     # DCM.shape[1] indices / ERROR MECHANICSM
     min_index = dcm[start, :].nonzero()[1][0]
@@ -163,37 +138,26 @@ def current_round_inds(
     else:
         max_index_decoding = dcm.shape[1] - 1
 
-    if DEBUG:
-        print("Min index:", min_index)
-        print("Max index commit:", max_index_commit)
-        print("Max index decoding:", max_index_decoding)
-
     # error mechanism indices
-    commit_inds = np.arange(min_index, max_index_commit + 1)
-    decoding_inds = np.arange(min_index, max_index_decoding + 1)
+    # commit_inds = np.arange(min_index, max_index_commit + 1)
+    # decoding_inds = np.arange(min_index, max_index_decoding + 1)
+
+    # use slices instead of np.arange
+    commit_inds = slice(min_index, max_index_commit + 1)
+    decoding_inds = slice(min_index, max_index_decoding + 1)
 
     # detector indices
-    synd_commit_inds = np.arange(start, end_commit)
-    synd_decoding_inds = np.arange(start, end_decoding)
+    # synd_commit_inds = np.arange(start, end_commit)
+    # synd_decoding_inds = np.arange(start, end_decoding)
+
+    # use slices instead of np.arange
+    synd_commit_inds = slice(start, end_commit)
+    synd_decoding_inds = slice(start, end_decoding)
 
     return commit_inds, decoding_inds, synd_commit_inds, synd_decoding_inds
 
 
 if __name__ == "__main__":
-    # import matplotlib.pyplot as plt
-
-    # ps = np.geomspace(0.05, 0.1, 6)
-    # ds = [3, 5, 7]
-
-    # fig, ax = plt.subplots()
-    # for d in ds:
-    #     error_rates = [ec_experiment(p, d) for p in ps]
-    #     ax.plot(ps, error_rates, label=f"d={d}")
-
-    # ax.set_xscale("log")
-    # ax.set_yscale("log")
-    # ax.set_xlabel("Physical Error Rate")
-    # ax.set_ylabel("Logical Error Rate")
 
     for decodings in [2, 3, 4, 5]:
         fig, ax = plt.subplots()
@@ -202,7 +166,7 @@ if __name__ == "__main__":
             pcm, logicals = rep_code(d)
             # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
             error_rates = [
-                overlapping_window(p, pcm, logicals, 4, 2 * d, d) for p in ps
+                overlapping_window(p, pcm, logicals, decodings, 2 * d, d) for p in ps
             ]
             ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
