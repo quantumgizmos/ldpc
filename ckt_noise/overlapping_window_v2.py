@@ -1,3 +1,4 @@
+import sys
 from not_an_arb_ckt_simulator import (
     rep_code,
     get_stabilizer_time_steps,
@@ -61,20 +62,26 @@ def overlapping_window(
     total_errs = 0
 
     weights = np.log1p(dem_matrices.priors) - np.log(dem_matrices.priors)
-    eps = 1e-14
+    # set eps to mininum res of float32
+    eps = sys.float_info.min
     min_weight = np.log1p(eps) - np.log(eps)
 
+    dcm = dem_matrices.check_matrix
+    # dcm = dem_matrices.edge_check_matrix
+
     # dense version of the correction
-    total_corr = np.zeros((shots, dem_matrices.check_matrix.shape[1]), dtype=np.bool_)
+    total_corr = np.zeros((shots, dcm.shape[1]), dtype=np.uint8)
 
     for decoding in range(decodings):
         # for obs, sample in zip(obs_data, detector_data):
         commit_inds, dec_inds, synd_commit_inds, synd_dec_inds = current_round_inds(
-            dem_matrices.check_matrix, decoding, window, commit, num_checks
+            dcm, decoding, window, commit, num_checks
         )
 
+        round_dcm = dcm[synd_dec_inds, :]
+
         decoder = Matching.from_check_matrix(
-            dem_matrices.check_matrix[synd_dec_inds, :],
+            round_dcm,
             weights=weights,
         )
         for i in range(shots):
@@ -82,15 +89,13 @@ def overlapping_window(
 
             if decoding != decodings - 1:
                 # determine the partial correction / commit the correction
-                total_corr[i][commit_inds] = corr[commit_inds]
+                total_corr[i][commit_inds] += corr[commit_inds]
                 # modify syndrome to reflect the correction
-                detector_data[i][synd_dec_inds] ^= (
-                    dem_matrices.check_matrix @ total_corr[i] % 2
-                )[synd_dec_inds]
+                detector_data[i][synd_dec_inds] ^= round_dcm @ total_corr[i] % 2
 
             else:
                 # This is the final decoding, commit all
-                total_corr[i][dec_inds] = corr[dec_inds]
+                total_corr[i][dec_inds] += corr[dec_inds]
 
         # once all shots have been decoded for this round, update the weights
         weights[commit_inds] = min_weight
@@ -125,30 +130,13 @@ def current_round_inds(
     end_commit = start + num_checks_commit
     end_decoding = start + num_checks_decoding
 
-    # DCM.shape[1] indices / ERROR MECHANICSM
-    min_index = dcm[start, :].nonzero()[1][0]
-
-    if end_commit < dcm.shape[0]:
-        max_index_commit = dcm[end_commit, :].nonzero()[1][-1]
-    else:
-        max_index_commit = dcm.shape[1] - 1
-
-    if end_decoding < dcm.shape[0]:
-        max_index_decoding = dcm[end_decoding, :].nonzero()[1][-1]
-    else:
-        max_index_decoding = dcm.shape[1] - 1
-
-    # error mechanism indices
-    # commit_inds = np.arange(min_index, max_index_commit + 1)
-    # decoding_inds = np.arange(min_index, max_index_decoding + 1)
+    min_index = dcm[slice(start, end_commit), :].nonzero()[1].min()
+    max_index_commit = dcm[slice(start, end_commit), :].nonzero()[1].max()
+    max_index_decoding = dcm[slice(start, end_decoding), :].nonzero()[1].max()
 
     # use slices instead of np.arange
-    commit_inds = slice(min_index, max_index_commit + 1)
-    decoding_inds = slice(min_index, max_index_decoding + 1)
-
-    # detector indices
-    # synd_commit_inds = np.arange(start, end_commit)
-    # synd_decoding_inds = np.arange(start, end_decoding)
+    commit_inds = slice(min_index, max_index_commit)
+    decoding_inds = slice(min_index, max_index_decoding)
 
     # use slices instead of np.arange
     synd_commit_inds = slice(start, end_commit)
@@ -159,9 +147,9 @@ def current_round_inds(
 
 if __name__ == "__main__":
 
-    for decodings in [2, 3, 4, 5]:
+    for decodings in [1, 2, 3, 4, 5]:
         fig, ax = plt.subplots()
-        ps = np.geomspace(0.02, 0.05, 6)
+        ps = np.geomspace(0.02, 0.08, 6)
         for d in [5, 9, 13]:
             pcm, logicals = rep_code(d)
             # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
