@@ -78,17 +78,18 @@ cdef class BpLsdDecoder(BpDecoderBase):
             raise ValueError(f"lsd_order must be greater than or equal to 0. Not {lsd_order}.")
 
         if isinstance(lsd_method, str):
-            if lsd_method not in ["OSD_0", "OSD_E", "OSD_CS"]:
+            if lsd_method.lower() not in ["osd_0", "osd_e", "osd_cs"]:
                 raise ValueError(f"lsd_method must be one of 'OSD_0', 'OSD_E', 'OSD_CS'. Not {lsd_method}.")
         elif isinstance(lsd_method, int):
             if lsd_method not in [0, 1, 2]:
                 raise ValueError(f"lsd_method must be one of 0, 1, 2. Not {lsd_method}.")
         else:
-            raise ValueError(f"lsd_method must be one of 'OSD_0', 'OSD_E', 'OSD_CS'. Not {lsd_method}.")
+            raise ValueError(f"lsd_method must be one of 'OSD_0' (0), 'OSD_E' (1), 'OSD_CS' (2). Not {lsd_method}.")
 
         self.MEMORY_ALLOCATED = False
-        self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=lsd_method, lsd_order=lsd_order)
+        self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=OsdMethod.OSD_0, lsd_order=lsd_order)
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
+        self.lsd_method = lsd_method
 
         if bits_per_step == 0:
             self.bits_per_step = pcm.shape[1]
@@ -186,98 +187,98 @@ cdef class BpLsdDecoder(BpDecoderBase):
 
         self.lsd.set_do_stats(value)
 
-        @property
-        def lsd_method(self) -> Optional[str]:
-            """
-            The Ordered Statistic Decoding (OSD) method used.
+    @property
+    def lsd_method(self) -> Optional[str]:
+        """
+        The Ordered Statistic Decoding (OSD) method used.
 
-            Returns
-            -------
-            Optional[str]
-                A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
-                has been set, returns `None`.
-            """
-            if self.lsd.lsd_method == OsdMethod.OSD_0:
-                return 'OSD_0'
-            elif self.lsd.lsd_method == OsdMethod.EXHAUSTIVE:
-                return 'OSD_E'
-            elif self.lsd.lsd_method == OsdMethod.COMBINATION_SWEEP:
-                return 'OSD_CS'
-            elif self.lsd.lsd_method == OsdMethod.OSD_OFF:
-                return 'OSD_OFF'
-            else:
-                return None
+        Returns
+        -------
+        Optional[str]
+            A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
+            has been set, returns `None`.
+        """
+        if self.lsd.lsd_method == OsdMethod.OSD_0:
+            return 'OSD_0'
+        elif self.lsd.lsd_method == OsdMethod.EXHAUSTIVE:
+            return 'OSD_E'
+        elif self.lsd.lsd_method == OsdMethod.COMBINATION_SWEEP:
+            return 'OSD_CS'
+        elif self.lsd.lsd_method == OsdMethod.OSD_OFF:
+            return 'OSD_OFF'
+        else:
+            return None
 
-        @lsd_method.setter
-        def lsd_method(self, method: Union[str, int, float]) -> None:
-            """
-            Sets the OSD method used.
+    @lsd_method.setter
+    def lsd_method(self, method: Union[str, int, float]) -> None:
+        """
+        Sets the OSD method used.
 
-            Parameters
-            ----------
-            method : Union[str, int, float]
-                A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
-                OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
-            """
-            # OSD method
-            print(f"method {str(method)}")
-            if str(method).lower() in ['osd_0', '0', 'osd0']:
-                self.lsd.lsd_method = OsdMethod.OSD_0
-                self.lsd.lsd_order = 0
-            elif str(method).lower() in ['osd_e', 'e', 'exhaustive']:
-                self.lsd.lsd_method = OsdMethod.EXHAUSTIVE
-            elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep']:
-                self.lsd.lsd_method = OsdMethod.COMBINATION_SWEEP
-            elif str(method).lower() in ['off', 'osd_off', 'deactivated', -1]:
-                self.lsd.lsd_method = OsdMethod.OSD_OFF
-            else:
-                raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following methods:\
-                    'OSD_0', 'OSD_E' or 'OSD_CS'.")
-
-
-        @property
-        def lsd_order(self) -> int:
-            """
-            The OSD order used.
-
-            Returns
-            -------
-            int
-                An integer representing the OSD order used.
-            """
-            return self.lsd.lsd_order
+        Parameters
+        ----------
+        method : Union[str, int, float]
+            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
+            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
+        """
+        # OSD method
+        print(f"method {str(method)}")
+        if str(method).lower() in ['osd_0', '0', 'osd0']:
+            self.lsd.lsd_method = OsdMethod.OSD_0
+            self.lsd.lsd_order = 0
+        elif str(method).lower() in ['osd_e', 'e', 'exhaustive']:
+            self.lsd.lsd_method = OsdMethod.EXHAUSTIVE
+        elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep']:
+            self.lsd.lsd_method = OsdMethod.COMBINATION_SWEEP
+        elif str(method).lower() in ['off', 'osd_off', 'deactivated', -1]:
+            self.lsd.lsd_method = OsdMethod.OSD_OFF
+        else:
+            raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following methods:\
+                'OSD_0', 'OSD_E' or 'OSD_CS'.")
 
 
-        @lsd_order.setter
-        def lsd_order(self, order: int) -> None:
-            """
-            Set the order for the OSD method.
+    @property
+    def lsd_order(self) -> int:
+        """
+        The OSD order used.
 
-            Parameters
-            ----------
-            order : int
-                The order for the OSD method. Must be a positive integer.
+        Returns
+        -------
+        int
+            An integer representing the OSD order used.
+        """
+        return self.lsd.lsd_order
 
-            Raises
-            ------
-            ValueError
-                If order is less than 0.
 
-            Warns
-            -----
-            UserWarning
-                If the OSD method is 'OSD_E' and the order is greater than 15.
+    @lsd_order.setter
+    def lsd_order(self, order: int) -> None:
+        """
+        Set the order for the OSD method.
 
-            """
-            # OSD order
-            if order < 0:
-                raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
+        Parameters
+        ----------
+        order : int
+            The order for the OSD method. Must be a positive integer.
 
-            if self.lsd.lsd_method == OsdMethod.OSD_0 and order != 0:
-                raise ValueError(f"ERROR: OSD order '{order}' invalid. The 'osd_method' is set to 'OSD_0'. The osd order must therefore be set to 0.")
+        Raises
+        ------
+        ValueError
+            If order is less than 0.
 
-            if self.lsd.lsd_method == OsdMethod.EXHAUSTIVE and order > 15:
-                warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not "
-                            "recommended. Use the 'osd_cs' method instead.")
+        Warns
+        -----
+        UserWarning
+            If the OSD method is 'OSD_E' and the order is greater than 15.
 
-            self.lsd.lsd_order = order
+        """
+        # OSD order
+        if order < 0:
+            raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
+
+        if self.lsd.lsd_method == OsdMethod.OSD_0 and order != 0:
+            raise ValueError(f"ERROR: OSD order '{order}' invalid. The 'osd_method' is set to 'OSD_0'. The osd order must therefore be set to 0.")
+
+        if self.lsd.lsd_method == OsdMethod.EXHAUSTIVE and order > 15:
+            warnings.warn("WARNING: Running the 'OSD_E' (Exhaustive method) with search depth greater than 15 is not "
+                        "recommended. Use the 'osd_cs' method instead.")
+
+        self.lsd.lsd_order = order
