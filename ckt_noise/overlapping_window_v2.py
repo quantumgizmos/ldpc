@@ -106,10 +106,6 @@ def overlapping_window(
         ):
             total_errs += 1
 
-    # for obs, prediction in zip(obs_data, predictions):
-    #     if not np.array_equal(prediction, obs):
-    #         total_errs += 1
-
     return total_errs / shots
 
 
