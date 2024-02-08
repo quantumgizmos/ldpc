@@ -403,6 +403,8 @@ namespace ldpc::lsd {
         std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
         long elapsed_time;
+        osd::OsdMethod lsd_method;
+        int lsd_order;
 
         void clear() {
             this->individual_cluster_stats.clear();
@@ -413,6 +415,8 @@ namespace ldpc::lsd {
             // build json like string object from individual cluster stats and global timestep bit history
             std::string result = "{";
             result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
+            result += "\"lsd_method\":" + std::to_string(static_cast<int>(this->lsd_method)) + ",";
+            result += "\"lsd_order\":" + std::to_string(this->lsd_order) + ",";
             result += "\"individual_cluster_stats\":{";
             for (auto &kv: this->individual_cluster_stats) {
                 result += "\"" + std::to_string(kv.first) + "\":{";
@@ -469,11 +473,25 @@ namespace ldpc::lsd {
         std::vector<uint8_t> decoding;
         Statistics statistics{};
         int bit_count;
+        osd::OsdMethod lsd_method;
+        int lsd_order;
 
-        explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
+        explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix,
+                            osd::OsdMethod lsdMethod = osd::OsdMethod::COMBINATION_SWEEP,
+                            int lsd_order = 0) : pcm(parity_check_matrix),
+                                                 lsd_method(lsdMethod),
+                                                 lsd_order(lsd_order) {
             this->bit_count = pcm.n;
             this->decoding.resize(this->bit_count);
             this->do_stats = false;
+        }
+
+        osd::OsdMethod getLsdMethod() const {
+            return lsd_method;
+        }
+
+        void setLsdMethod(osd::OsdMethod lsdMethod) {
+            lsd_method = lsdMethod;
         }
 
         void set_do_stats(const bool on) {
@@ -518,8 +536,7 @@ namespace ldpc::lsd {
         lsd_decode(std::vector<uint8_t> &syndrome,
                    const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                    const int bits_per_step = 1,
-                   const bool is_on_the_fly = true,
-                   const int lsd_order = 0) {
+                   const bool is_on_the_fly = true) {
             auto start_time = std::chrono::high_resolution_clock::now();
             this->statistics.clear();
 
@@ -574,6 +591,8 @@ namespace ldpc::lsd {
             }
 
             if (lsd_order == 0) {
+                this->statistics.lsd_order = 0;
+                this->statistics.lsd_method = osd::OSD_0;
                 for (auto cl: clusters) {
                     if (do_stats) {
                         this->update_final_stats(cl);
@@ -590,6 +609,8 @@ namespace ldpc::lsd {
                     delete cl; //delete the cluster now that we have the solution.
                 }
             } else {
+                this->statistics.lsd_order = lsd_order;
+                this->statistics.lsd_method = this->lsd_method;
                 this->apply_lsdw(clusters, lsd_order, bit_weights);
             }
             auto end_time = std::chrono::high_resolution_clock::now();
@@ -643,7 +664,7 @@ namespace ldpc::lsd {
                     auto cl_osd_decoder = osd::DenseOsdDecoder(
                             cl->cluster_pcm,
                             cl->pluDecomposition,
-                            osd::OsdMethod::EXHAUSTIVE,
+                            this->lsd_method,
                             lsd_order,
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),

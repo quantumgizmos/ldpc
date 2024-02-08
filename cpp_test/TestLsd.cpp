@@ -443,11 +443,14 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto lsd = LsdDecoder(pcm);
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
-
+    lsd.setLsdMethod(ldpc::osd::OsdMethod::EXHAUSTIVE);
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 0);
+
     auto stats = lsd.statistics;
     std::cout << stats.toString() << std::endl;
     ASSERT_TRUE(lsd.get_do_stats());
+    ASSERT_TRUE(stats.lsd_method = ldpc::osd::OsdMethod::EXHAUSTIVE);
+    ASSERT_TRUE(stats.lsd_order == 0);
     // check that there is one timestep with two entries in the statistics
     ASSERT_TRUE(stats.individual_cluster_stats.size() == 2);
     ASSERT_TRUE(stats.global_timestep_bit_history.size() == 1);
