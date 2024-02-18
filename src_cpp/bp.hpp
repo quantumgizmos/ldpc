@@ -14,6 +14,7 @@
 #include "sparse_matrix_base.hpp"
 #include "gf2sparse.hpp"
 #include "rng.hpp"
+#include "sort.hpp"
 
 namespace ldpc::bp{
 
@@ -598,6 +599,57 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             converge = CONVERGED;
             return decoding;
         }
+
+        std::vector<uint8_t>& guided_decimatation_decode(std::vector<uint8_t>& syndrome, int max_gd_rounds){
+            int gd_rounds = 0;
+
+            auto channel_probabilities_save = this->channel_probabilities;
+            
+            while(gd_rounds < max_gd_rounds){
+                
+                if(this->schedule == PARALLEL){
+                    this->bp_decode_parallel(syndrome);
+                }
+
+                else if(this->schedule == SERIAL){
+                    this->bp_decode_serial(syndrome);
+                }
+
+                if(this->converge == true){
+                    break;
+                }
+
+
+                //find the index of the bit with the largest LLR.
+                double largest_absolute_value = 0;
+                int largest_absolute_value_bit_index = 0;
+                for(int i = 0; i<this->bit_count; i++){
+                    if( abs(this->log_prob_ratios[i]) > largest_absolute_value ){
+                        largest_absolute_value = abs(this->log_prob_ratios[i]);
+                        largest_absolute_value_bit_index = i;
+                    }
+                }
+
+                int sgn;
+                if(std::signbit(this->log_prob_ratios[largest_absolute_value])){
+                    sgn = 1;
+                }
+                else{
+                    sgn = -1;
+                }
+
+                //the channel probability for that bit is set to "high" value
+                this->channel_probabilities[largest_absolute_value] = sgn*1e6;
+
+                gd_rounds++;
+            }
+
+            //reset the channel probabilities
+            this->channel_probabilities = channel_probabilities_save;
+            return this->decoding;
+
+        }
+
     };
 } // end namespace bp
 

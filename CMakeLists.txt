@@ -75,6 +75,7 @@ set(TEST_EXECUTABLES
     TestGf2Dense
     TestUtil
     TestRng
+    TestBpGd
 )
 
 # Loop through the list of test executables to:
