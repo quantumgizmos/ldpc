@@ -212,7 +212,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
     @lsd_method.setter
     def lsd_method(self, method: Union[str, int, float]) -> None:
         """
-        Sets the OSD method used.
+        Sets the LSD method used. That is, the OSD method per cluster.
 
         Parameters
         ----------
@@ -239,7 +239,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
     @property
     def lsd_order(self) -> int:
         """
-        The OSD order used.
+        The LSD order used.
 
         Returns
         -------
@@ -252,7 +252,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
     @lsd_order.setter
     def lsd_order(self, order: int) -> None:
         """
-        Set the order for the OSD method.
+        Set the order for the LSD method.
 
         Parameters
         ----------
@@ -267,10 +267,9 @@ cdef class BpLsdDecoder(BpDecoderBase):
         Warns
         -----
         UserWarning
-            If the OSD method is 'OSD_E' and the order is greater than 15.
+            If the LSD method is 'OSD_E' and the order is greater than 15.
 
         """
-        # OSD order
         if order < 0:
             raise ValueError(f"ERROR: OSD order '{order}' invalid. Please choose a positive integer.")
 
