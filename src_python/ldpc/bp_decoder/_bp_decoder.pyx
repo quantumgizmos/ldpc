@@ -658,6 +658,27 @@ cdef class BpDecoder(BpDecoderBase):
         return out
         
 
+    def gd_decode(self, syndrome: np.ndarray, max_gd_rounds: int) -> np.ndarray:
+
+        cdef int i
+        cdef bool zero_input_vector = True
+        DTYPE = syndrome.dtype
+
+        cdef int len_input_vector = len(syndrome)
+        
+        for i in range(len_input_vector):
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]: zero_input_vector = False
+        if zero_input_vector:
+            self.bpd.converge = True
+            return np.zeros(self.bit_count,dtype=DTYPE)
+        self.bpd.guided_decimation_decode(self._syndrome,max_gd_rounds)
+        
+        out = np.zeros(self.n,dtype=DTYPE)
+        for i in range(self.n): out[i] = self.bpd.decoding[i]
+        return out
+
+
     @property
     def decoding(self) -> np.ndarray:
         """
@@ -742,7 +763,7 @@ cdef class SoftInfoBpDecoder(BpDecoderBase):
 
         out = np.zeros(self.n,dtype=np.uint8)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
-        return out
+        return out        
 
     @property
     def soft_syndrome(self) -> np.ndarray:

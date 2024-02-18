@@ -340,6 +340,7 @@ class BpDecoder(BpDecoderBase):
         """
 
 
+    def gd_decode(self, syndrome: np.ndarray, max_gd_rounds: int) -> np.ndarray:
     @property
     def decoding(self) -> np.ndarray:
         """

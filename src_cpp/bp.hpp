@@ -600,7 +600,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             return decoding;
         }
 
-        std::vector<uint8_t>& guided_decimatation_decode(std::vector<uint8_t>& syndrome, int max_gd_rounds){
+        std::vector<uint8_t>& guided_decimation_decode(std::vector<uint8_t>& syndrome, int max_gd_rounds){
             int gd_rounds = 0;
 
             auto channel_probabilities_save = this->channel_probabilities;

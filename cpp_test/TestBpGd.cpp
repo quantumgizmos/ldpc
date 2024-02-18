@@ -30,7 +30,7 @@ TEST(BpGdDecoder, BpGdInit){
     decoder.bp_decode_parallel(syndrome);
     ASSERT_FALSE(decoder.converge);
 
-    decoder.guided_decimatation_decode(syndrome,6);
+    decoder.guided_decimation_decode(syndrome,6);
     ASSERT_TRUE(decoder.converge);
 
 

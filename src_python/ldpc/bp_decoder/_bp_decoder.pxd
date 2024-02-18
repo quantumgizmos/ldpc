@@ -74,6 +74,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             bool random_schedule_at_every_iteration
             vector[uint8_t] decode(vector[uint8_t]& syndrome)
             vector[uint8_t] soft_info_decode_serial(vector[double]& soft_syndrome, double cutoff, double sigma)
+            vector[uint8_t] guided_decimation_decode(vector[uint8_t]& syndrome, int max_gd_rounds)
             void set_omp_thread_count(int count)
             BpInputType bp_input_type
 
