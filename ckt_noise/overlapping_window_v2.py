@@ -1,5 +1,7 @@
 import sys
 
+import panqec.codes
+import scipy
 from ldpc.bplsd_decoder._bplsd_decoder import BpLsdDecoder
 from ldpc.bposd_decoder._bposd_decoder import BpOsdDecoder
 
@@ -196,14 +198,15 @@ def current_round_inds(
 
 if __name__ == "__main__":
 
-    for decodings in [1, 2, 3, 4, 5]:
+    for decodings in [1, 3, 5]:
         fig, ax = plt.subplots()
-        ps = np.geomspace(0.02, 0.08, 6)
+        ps = np.geomspace(0.001, 0.01, 6)
         for d in [5, 9, 13]:
-            pcm, logicals = (rep_code(d))
-            # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
+            code  = panqec.codes.Planar2DCode(d)
+            pcm = code.Hz
+            logicals = scipy.sparse.csr_matrix(code.logicals_z[:,code.n:])
             error_rates = [
-                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, decoder='bposd') for p in ps
+                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, decoder='matching') for p in ps
             ]
             ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
