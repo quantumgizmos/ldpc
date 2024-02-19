@@ -1,4 +1,8 @@
 import sys
+
+from ldpc.bplsd_decoder._bplsd_decoder import BpLsdDecoder
+from ldpc.bposd_decoder._bposd_decoder import BpOsdDecoder
+
 from not_an_arb_ckt_simulator import (
     rep_code,
     get_stabilizer_time_steps,
@@ -19,17 +23,31 @@ from dem_matrices import detector_error_model_to_check_matrices
 
 
 def overlapping_window(
-    p: float,
-    pcm: csr_matrix,
-    logicals: csr_matrix,
-    decodings: int,
-    window: int,
-    commit: int,
-    decompose_errors: bool = True,
-    shots: int = 10_000,
+        p: float,
+        pcm: csr_matrix,
+        logicals: csr_matrix,
+        decodings: int,
+        window: int,
+        commit: int,
+        decompose_errors: bool = True,
+        shots: int = 10_000,
+        decoder: str = "matching",
+        bp_params=None,
+        ignore_decomposition_failures: bool = False,
 ):
-
     # define relevant parameters
+    if bp_params is None and decoder != "matching":
+        bp_params = {
+            "max_iter": 10,
+            "ms_scaling_factor": 0.6,
+            "method": 'minimum_sum',
+            "schedule": 'parallel',
+            "omp_thread_count": 1,
+            "random_schedule_seed": 0,
+            "serial_schedule_order": None,
+            "bits_per_step": 1,
+            "order": 0,
+        }
     num_checks, num_bits = pcm.shape
     rounds = (window - commit) + decodings * commit
 
@@ -48,7 +66,8 @@ def overlapping_window(
     )
 
     # create the detector error model
-    dem = circuit.detector_error_model(decompose_errors=decompose_errors)
+    dem = circuit.detector_error_model(decompose_errors=decompose_errors,
+                                       ignore_decomposition_failures=ignore_decomposition_failures)
     sampler = dem.compile_sampler()
 
     # create relevant detector check matrices and observables
@@ -67,7 +86,6 @@ def overlapping_window(
     min_weight = np.log1p(eps) - np.log(eps)
 
     dcm = dem_matrices.check_matrix
-    # dcm = dem_matrices.edge_check_matrix
 
     # dense version of the correction
     total_corr = np.zeros((shots, dcm.shape[1]), dtype=np.uint8)
@@ -79,11 +97,8 @@ def overlapping_window(
         )
 
         round_dcm = dcm[synd_dec_inds, :]
+        decoder = get_decoder(bp_params, round_dcm, weights, decoder)
 
-        decoder = Matching.from_check_matrix(
-            round_dcm,
-            weights=weights,
-        )
         for i in range(shots):
             corr = decoder.decode(detector_data[i][synd_dec_inds])
 
@@ -102,19 +117,55 @@ def overlapping_window(
 
     for shot in range(shots):
         if not np.array_equal(
-            (dem_matrices.observables_matrix @ total_corr[shot]) % 2, obs_data[shot]
+                (dem_matrices.observables_matrix @ total_corr[shot]) % 2, obs_data[shot]
         ):
             total_errs += 1
 
     return total_errs / shots
 
 
+def get_decoder(bp_params, round_dcm, weights, decoder: str = 'matching'):
+    if decoder == "matching":
+        decoder = Matching.from_check_matrix(
+            round_dcm,
+            weights=weights,
+        )
+    elif decoder == "bposd":
+        decoder = BpOsdDecoder(
+            pcm=round_dcm,
+            error_channel=weights,
+            max_iter=bp_params["max_iter"],
+            ms_scaling_factor=bp_params["ms_scaling_factor"],
+            osd_method=bp_params["method"],
+            schedule=bp_params["schedule"],
+            omp_thread_count=bp_params["omp_thread_count"],
+            random_schedule_seed=bp_params["random_schedule_seed"],
+            serial_schedule_order=bp_params["serial_schedule_order"],
+            bits_per_step=bp_params["bits_per_step"],
+            osd_order=bp_params["order"],
+        )
+    elif decoder == "bplsd":
+        decoder = BpLsdDecoder(
+            pcm=round_dcm,
+            error_channel=weights,
+            max_iter=bp_params["max_iter"],
+            ms_scaling_factor=bp_params["ms_scaling_factor"],
+            lsd_method=bp_params["method"],
+            schedule=bp_params["schedule"],
+            omp_thread_count=bp_params["omp_thread_count"],
+            random_schedule_seed=bp_params["random_schedule_seed"],
+            serial_schedule_order=bp_params["serial_schedule_order"],
+            bits_per_step=bp_params["bits_per_step"],
+            lsd_order=bp_params["order"],
+        )
+    return decoder
+
 def current_round_inds(
-    dcm: csr_matrix,
-    decoding: int,
-    window: int,
-    commit: int,
-    num_checks: int,
+        dcm: csr_matrix,
+        decoding: int,
+        window: int,
+        commit: int,
+        num_checks: int,
 ) -> np.ndarray:
     """
     Get the indices of the current round in the detector syndrome.
@@ -150,7 +201,7 @@ if __name__ == "__main__":
             pcm, logicals = rep_code(d)
             # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
             error_rates = [
-                overlapping_window(p, pcm, logicals, decodings, 2 * d, d) for p in ps
+                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, decoder='bplsd') for p in ps
             ]
             ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
