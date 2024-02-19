@@ -1,6 +1,7 @@
 #ifndef BP_H
 #define BP_H
 
+#include <iostream>
 #include <vector>
 #include <memory>
 #include <iterator>
@@ -604,9 +605,11 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             int gd_rounds = 0;
 
             auto channel_probabilities_save = this->channel_probabilities;
+
+            std::set<int> decimated_bits;
             
             while(gd_rounds < max_gd_rounds){
-                
+        
                 if(this->schedule == PARALLEL){
                     this->bp_decode_parallel(syndrome);
                 }
@@ -614,6 +617,9 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 else if(this->schedule == SERIAL){
                     this->bp_decode_serial(syndrome);
                 }
+
+                // std::cout << "After Decode converge? "<< this->converge << std::endl;
+
 
                 if(this->converge == true){
                     break;
@@ -624,24 +630,37 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 double largest_absolute_value = 0;
                 int largest_absolute_value_bit_index = 0;
                 for(int i = 0; i<this->bit_count; i++){
-                    if( abs(this->log_prob_ratios[i]) > largest_absolute_value ){
-                        largest_absolute_value = abs(this->log_prob_ratios[i]);
+                    double abs_llr = abs(this->log_prob_ratios[i]);
+                    if( abs_llr > largest_absolute_value ){
+                        if(decimated_bits.contains(i)){
+                            continue;
+                        }
+                        largest_absolute_value = abs_llr;
                         largest_absolute_value_bit_index = i;
                     }
                 }
 
+                // std::cout<< "Largest Absolute Value: " << largest_absolute_value << " Bit index: "<<largest_absolute_value_bit_index<< std::endl;
+
                 int sgn;
-                if(std::signbit(this->log_prob_ratios[largest_absolute_value])){
-                    sgn = 1;
-                }
-                else{
+                if(std::signbit(this->log_prob_ratios[largest_absolute_value_bit_index])){
                     sgn = -1;
                 }
+                else{
+                    sgn = 1;
+                }
+
+                // std::cout<<"hello2"<< std::endl;
+
 
                 //the channel probability for that bit is set to "high" value
-                this->channel_probabilities[largest_absolute_value] = sgn*1e6;
+                this->channel_probabilities[largest_absolute_value_bit_index] = sgn*1e9;
 
                 gd_rounds++;
+
+                // std::cout<<"hello2"<< std::endl;
+                // std::cout<<std::endl;
+
             }
 
             //reset the channel probabilities

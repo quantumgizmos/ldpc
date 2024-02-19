@@ -19,8 +19,10 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label):
     start_time = time.time()  # record start time
 
     for i in range(run_count):
+        # print(i)
         error = generate_bsc_error(hx.shape[1], error_rate)
         z = hx@error%2
+        # print(np.nonzero(z)[0])
         decoding = DECODER.decode(z)
         residual = (decoding + error) %2
 
@@ -62,12 +64,18 @@ def test_400_16_6_hgp():
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
 
-    decoder = BpDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel")
     class GdDecoder():
+        def __init__(self) -> None:
+            self.decoder = BpDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ps", ms_scaling_factor = 0.625, schedule="parallel")
+
         def decode(self,syndrome):
-            return decoder.gd_decode(syndrome,hx.shape[1])
+            return self.decoder.gd_decode(syndrome,hx.shape[1])
         
     gd_decoder = GdDecoder()
+
+    syndrome = hx@generate_bsc_error(hx.shape[1], error_rate)%2
+
+    decoding = gd_decoder.decode(syndrome)
     
     ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, gd_decoder, "Min-sum BpGd parallel schedule")
 
@@ -116,3 +124,7 @@ def test_toric_20():
 
     decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="peeling", bits_per_step=1)
     ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
+
+if __name__ == "__main__":
+    test_400_16_6_hgp()
+    # test_toric_20()
