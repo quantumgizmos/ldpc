@@ -40,7 +40,8 @@ def overlapping_window(
         bp_params = {
             "max_iter": 10,
             "ms_scaling_factor": 0.6,
-            "method": 'minimum_sum',
+            "method": 'osd_cs',
+            "bp_method": "minimum_sum",
             "schedule": 'parallel',
             "omp_thread_count": 1,
             "random_schedule_seed": 0,
@@ -133,15 +134,15 @@ def get_decoder(bp_params, round_dcm, weights, decoder: str = 'matching'):
     elif decoder == "bposd":
         decoder = BpOsdDecoder(
             pcm=round_dcm,
-            error_channel=weights,
+            channel_probs=weights,
             max_iter=bp_params["max_iter"],
             ms_scaling_factor=bp_params["ms_scaling_factor"],
             osd_method=bp_params["method"],
+            bp_method=bp_params["bp_method"],
             schedule=bp_params["schedule"],
             omp_thread_count=bp_params["omp_thread_count"],
             random_schedule_seed=bp_params["random_schedule_seed"],
             serial_schedule_order=bp_params["serial_schedule_order"],
-            bits_per_step=bp_params["bits_per_step"],
             osd_order=bp_params["order"],
         )
     elif decoder == "bplsd":
@@ -151,6 +152,7 @@ def get_decoder(bp_params, round_dcm, weights, decoder: str = 'matching'):
             max_iter=bp_params["max_iter"],
             ms_scaling_factor=bp_params["ms_scaling_factor"],
             lsd_method=bp_params["method"],
+            bp_method=bp_params["bp_method"],
             schedule=bp_params["schedule"],
             omp_thread_count=bp_params["omp_thread_count"],
             random_schedule_seed=bp_params["random_schedule_seed"],
@@ -198,10 +200,10 @@ if __name__ == "__main__":
         fig, ax = plt.subplots()
         ps = np.geomspace(0.02, 0.08, 6)
         for d in [5, 9, 13]:
-            pcm, logicals = rep_code(d)
+            pcm, logicals = (rep_code(d))
             # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
             error_rates = [
-                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, decoder='bplsd') for p in ps
+                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, decoder='bposd') for p in ps
             ]
             ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
