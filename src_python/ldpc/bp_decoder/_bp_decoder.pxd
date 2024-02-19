@@ -22,6 +22,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
     cdef enum BpSchedule:
         SERIAL = 0
         PARALLEL = 1
+        SERIAL_RELATIVE = 2
 
     cdef cppclass BpEntry "ldpc::bp::BpEntry":
         BpEntry() except +
@@ -39,6 +40,9 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
 
         vector[vector[int]] nonzero_coordinates()
         int entry_count()
+
+        int get_col_degree(int col)
+        int get_row_degree(int row)
 
     cdef cppclass BpDecoderCpp "ldpc::bp::BpDecoder":
             BpDecoderCpp(

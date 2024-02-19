@@ -2,6 +2,7 @@
 #define UF2_H
 
 #include <iostream>
+#include <memory>
 #include <vector>
 #include <memory>
 #include <iterator>
@@ -18,7 +19,6 @@
 #include "osd_dense.hpp"
 
 namespace ldpc::lsd {
-
     const std::vector<double> NULL_DOUBLE_VECTOR = {};
 
     std::vector<int> sort_indices(std::vector<double> &B) {
@@ -48,6 +48,11 @@ namespace ldpc::lsd {
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
+        int nr_merges;
+        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history = nullptr;
+        int curr_timestep = 0;
+        int absorbed_into_cluster = -1;
+        int got_inactive_in_timestep = -1;
 
         LsdCluster() = default;
 
@@ -70,11 +75,10 @@ namespace ldpc::lsd {
             this->pcm_check_idx_to_cluster_check_idx.insert(
                     std::pair<int, int>{syndrome_index, 0});
             this->cluster_check_idx_to_pcm_check_idx.push_back(syndrome_index);
-
+            this->nr_merges = 0;
             this->pluDecomposition = ldpc::gf2dense::PluDecomposition(this->check_nodes.size(),
                                                                       this->bit_nodes.size(),
                                                                       this->cluster_pcm);
-
         }
 
         ~LsdCluster() {
@@ -211,6 +215,10 @@ namespace ldpc::lsd {
                     this->merge_list.insert(bit_membership);
                 }
             }
+            if (this->global_timestep_bit_history != nullptr) {
+                // add bit to timestep history with timestep the map size -1
+                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
+            }
             // add incident checks
             this->add_column_to_cluster_pcm(bit_index);
             return true;
@@ -245,6 +253,9 @@ namespace ldpc::lsd {
                 larger->enclosed_syndromes.insert(j);
             }
             smaller->active = false; // smaller, absorbed cluster is deactivated
+            smaller->absorbed_into_cluster = larger->cluster_id;
+            smaller->got_inactive_in_timestep = smaller->curr_timestep;
+            larger->nr_merges++;
             return larger;
         }
 
@@ -373,27 +384,148 @@ namespace ldpc::lsd {
         }
     };
 
+    struct ClusterStatistics {
+    public:
+        int final_bit_count = 0; // nr of bits in 'final' cluster version, i.e., before solving for solution
+        int undergone_growth_steps = 0; // nr of growth steps the cluster underwent
+        int nr_merges = 0; // nr of merges the cluster underwent
+        std::vector<int> size_history = {}; // history of cluster sizes from 0 to final bit count
+        bool active = false; // if cluster is active, i.e., not merged into another cluster
+        int got_valid_in_timestep = -1; // timestep in which cluster got valid
+        int got_inactive_in_timestep = -1; // timestep in which cluster got inactive, i.e., was absorbed by another
+        int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
+        int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
+        double cluster_pcm_sparsity = 0; // nr of non zero entries in the cluster pcm
+    };
+
+    struct Statistics {
+        // todo didn't def those as tsl::robin_map due to the cython wrapping for now.
+        std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
+        std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
+        long elapsed_time;
+        osd::OsdMethod lsd_method;
+        int lsd_order;
+
+        void clear() {
+            this->individual_cluster_stats.clear();
+            this->global_timestep_bit_history.clear();
+        }
+
+        [[nodiscard]] std::string toString() const {
+            // build json like string object from individual cluster stats and global timestep bit history
+            std::string result = "{";
+            result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
+            result += "\"lsd_method\":" + std::to_string(static_cast<int>(this->lsd_method)) + ",";
+            result += "\"lsd_order\":" + std::to_string(this->lsd_order) + ",";
+            result += "\"individual_cluster_stats\":{";
+            for (auto &kv: this->individual_cluster_stats) {
+                result += "\"" + std::to_string(kv.first) + "\":{";
+                result += "\"active\":" + std::to_string(kv.second.active) + ",";
+                result += "\"final_bit_count\":" + std::to_string(kv.second.final_bit_count) + ",";
+                result += "\"undergone_growth_steps\":" + std::to_string(kv.second.undergone_growth_steps) + ",";
+                result += "\"nr_merges\":" + std::to_string(kv.second.nr_merges) + ",";
+                result += "\"got_valid_in_timestep\":" + std::to_string(kv.second.got_valid_in_timestep) + ",";
+                result += "\"absorbed_by_cluster\":" + std::to_string(kv.second.absorbed_by_cluster) + ",";
+                result += "\"got_inactive_in_timestep\":" + std::to_string(kv.second.got_inactive_in_timestep) + ",";
+                result += "\"nr_of_non_zero_check_matrix_entries\":" +
+                          std::to_string(kv.second.nr_of_non_zero_check_matrix_entries) + ",";
+                result += "\"cluster_pcm_sparsity\":" + std::to_string(kv.second.cluster_pcm_sparsity) + ",";
+                result += "\"size_history\":[";
+                for (auto &s: kv.second.size_history) {
+                    result += std::to_string(s) + ",";
+                }
+                result.pop_back();
+                result += "]},";
+            }
+            result.pop_back();
+            result += "},";
+            result += "\"global_timestep_bit_history\":{";
+            for (auto &kv: this->global_timestep_bit_history) {
+                result += "\"" + std::to_string(kv.first) + "\":{";
+                for (auto &kv2: kv.second) {
+                    result += "\"" + std::to_string(kv2.first) + "\":[";
+                    for (auto &b: kv2.second) {
+                        result += std::to_string(b) + ",";
+                    }
+                    //remove last , from result
+                    result.pop_back();
+                    result += "],";
+                }
+                result.pop_back();
+                result += "},";
+            }
+            result.pop_back();
+            result += "}";
+            result += "}";
+            return result;
+        }
+
+
+    };
 
     // todo move this to separate file
     class LsdDecoder {
-
     private:
-        bool weighted;
         ldpc::bp::BpSparse &pcm;
+        bool do_stats;
 
     public:
         std::vector<uint8_t> decoding;
-        std::vector<int> cluster_size_stats;
+        Statistics statistics{};
         int bit_count;
-        int check_count;
+        osd::OsdMethod lsd_method;
+        int lsd_order;
 
-        LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
+        explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix,
+                            osd::OsdMethod lsdMethod = osd::OsdMethod::COMBINATION_SWEEP,
+                            int lsd_order = 0) : pcm(parity_check_matrix),
+                                                 lsd_method(lsdMethod),
+                                                 lsd_order(lsd_order) {
             this->bit_count = pcm.n;
-            this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
-            this->weighted = false;
+            this->do_stats = false;
         }
 
+        osd::OsdMethod getLsdMethod() const {
+            return lsd_method;
+        }
+
+        void setLsdMethod(osd::OsdMethod lsdMethod) {
+            lsd_method = lsdMethod;
+        }
+
+        void set_do_stats(const bool on) {
+            this->do_stats = on;
+        }
+
+        bool get_do_stats() const {
+            return this->do_stats;
+        }
+
+        void print_cluster_stats() {
+            std::cout << this->statistics.toString() << std::endl;
+        }
+
+        void update_growth_stats(const LsdCluster *cl) {
+            this->statistics.individual_cluster_stats[cl->cluster_id].undergone_growth_steps++;
+            this->statistics.individual_cluster_stats[cl->cluster_id].size_history.push_back(cl->bit_nodes.size());
+            this->statistics.individual_cluster_stats[cl->cluster_id].active = true;
+            this->statistics.individual_cluster_stats[cl->cluster_id].absorbed_by_cluster = cl->absorbed_into_cluster;
+            this->statistics.individual_cluster_stats[cl->cluster_id].got_inactive_in_timestep = cl->got_inactive_in_timestep;
+        }
+
+        void update_final_stats(const LsdCluster *cl) {
+            this->statistics.individual_cluster_stats[cl->cluster_id].final_bit_count = cl->bit_nodes.size();
+            this->statistics.individual_cluster_stats[cl->cluster_id].nr_merges = cl->nr_merges;
+            int nr_nonzero_elems = gf2dense::count_non_zero_matrix_entries(cl->cluster_pcm);
+            this->statistics.individual_cluster_stats[cl->cluster_id].nr_of_non_zero_check_matrix_entries =
+                    nr_nonzero_elems;
+            auto size = cl->pluDecomposition.col_count * cl->pluDecomposition.row_count;
+            if (size > 0) {
+                this->statistics.individual_cluster_stats[cl->cluster_id].cluster_pcm_sparsity =
+                        1.0 - ((static_cast<double>(nr_nonzero_elems)) / static_cast<double>(size));
+            }
+        }
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
@@ -404,47 +536,68 @@ namespace ldpc::lsd {
         lsd_decode(std::vector<uint8_t> &syndrome,
                    const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                    const int bits_per_step = 1,
-                   const bool is_on_the_fly = true,
-                   const int lsd_order = 0) {
+                   const bool is_on_the_fly = true) {
+            auto start_time = std::chrono::high_resolution_clock::now();
+            this->statistics.clear();
 
-            this->cluster_size_stats.clear();
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
             std::vector<LsdCluster *> clusters;
             std::vector<LsdCluster *> invalid_clusters;
             auto **global_bit_membership = new LsdCluster *[pcm.n]();
             auto **global_check_membership = new LsdCluster *[pcm.m]();
-
+            // timestep to added bits history for stats
+            auto *global_timestep_bits_history = new std::unordered_map<int, std::unordered_map<int, std::vector<int>>>{};
+            auto timestep = 0;
             for (auto i = 0; i < this->pcm.m; i++) {
                 if (syndrome[i] == 1) {
                     auto *cl = new LsdCluster(this->pcm, i, global_check_membership, global_bit_membership);
                     clusters.push_back(cl);
                     invalid_clusters.push_back(cl);
+                    if (this->do_stats) {
+                        this->statistics.individual_cluster_stats[cl->cluster_id] = ClusterStatistics();
+                        cl->global_timestep_bit_history = global_timestep_bits_history;
+                    }
                 }
             }
 
             while (!invalid_clusters.empty()) {
+                std::vector<int> new_bits;
                 for (auto cl: invalid_clusters) {
                     if (cl->active) {
+                        cl->curr_timestep = timestep; // for stats
                         cl->grow_cluster(bit_weights, bits_per_step, is_on_the_fly);
                     }
                 }
                 invalid_clusters.clear();
                 for (auto cl: clusters) {
+                    if (this->do_stats) {
+                        this->update_growth_stats(cl);
+                    }
                     if (cl->active && !cl->valid) {
                         invalid_clusters.push_back(cl);
+                    } else if (cl->active && cl->valid && this->do_stats) {
+                        this->statistics.individual_cluster_stats[cl->cluster_id].got_valid_in_timestep = timestep;
+                    }
+                    if (do_stats) {
+                        this->statistics.individual_cluster_stats[cl->cluster_id].active = cl->active;
                     }
                 }
                 std::sort(invalid_clusters.begin(), invalid_clusters.end(),
                           [](const LsdCluster *lhs, const LsdCluster *rhs) {
                               return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                           });
+                timestep++; // for stats
             }
 
             if (lsd_order == 0) {
+                this->statistics.lsd_order = 0;
+                this->statistics.lsd_method = osd::OSD_0;
                 for (auto cl: clusters) {
+                    if (do_stats) {
+                        this->update_final_stats(cl);
+                    }
                     if (cl->active) {
-                        this->cluster_size_stats.push_back(cl->bit_nodes.size());
                         auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
                         for (auto i = 0; i < solution.size(); i++) {
                             if (solution[i] == 1) {
@@ -456,16 +609,27 @@ namespace ldpc::lsd {
                     delete cl; //delete the cluster now that we have the solution.
                 }
             } else {
+                this->statistics.lsd_order = lsd_order;
+                this->statistics.lsd_method = this->lsd_method;
                 this->apply_lsdw(clusters, lsd_order, bit_weights);
             }
+            auto end_time = std::chrono::high_resolution_clock::now();
             delete[] global_bit_membership;
             delete[] global_check_membership;
+            if (do_stats) {
+                this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
+
+            }
+            // always take time
+            this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
+                    end_time - start_time).count();
+
             return this->decoding;
         }
 
         void apply_lsdw(const std::vector<LsdCluster *> &clusters,
                         int lsd_order,
-                        const std::vector<double> &bit_weights) {
+                        const std::vector<double> &bit_weights, std::size_t timestep = 0) {
             //cluster growth stage
             for (auto cl: clusters) {
                 if (cl->active) {
@@ -479,20 +643,28 @@ namespace ldpc::lsd {
                            cluster_growth_count < lsd_order &&
                            cl->bit_nodes.size() < this->pcm.n &&
                            cluster_growth_count <= initial_cluster_size) {
+                        cl->curr_timestep = timestep; // for stats
                         cl->grow_cluster(bit_weights, 1, true);
                         cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
                         cluster_growth_count++;
+                        if (this->do_stats) {
+                            this->update_growth_stats(cl);
+                        }
+                        timestep++;
                     }
                 }
             }
             // apply lsd-w to clusters
             for (auto cl: clusters) {
+                if (do_stats) {
+                    this->update_final_stats(cl);
+                }
                 if (cl->active) {
                     cl->sort_non_pivot_cols(bit_weights);
                     auto cl_osd_decoder = osd::DenseOsdDecoder(
                             cl->cluster_pcm,
                             cl->pluDecomposition,
-                            osd::OsdMethod::EXHAUSTIVE,
+                            this->lsd_method,
                             lsd_order,
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),
@@ -558,5 +730,7 @@ namespace ldpc::lsd {
 
 
 }//end namespace lsd
+
+
 
 #endif

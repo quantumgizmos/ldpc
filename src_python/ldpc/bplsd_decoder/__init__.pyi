@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.sparse import spmatrix
+import json
+from ldpc.bposd_decoder cimport OsdMethod
+import warnings
 class BpLsdDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
@@ -33,7 +36,11 @@ class BpLsdDecoder(BpDecoderBase):
         by default None.
     bits_per_step : int, optional, NotImplemented
         Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
-
+    lsd_order: int, optional
+        The order of the OSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
+    lsd_method: OsdMethod
+        The OSD method of the OSD algorithm applied to each cluster. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
+        By default 'OSD_0'.
     Notes
     -----
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
@@ -66,13 +73,96 @@ class BpLsdDecoder(BpDecoderBase):
 
 
     @property
-    def cluster_size_stats(self):
+    def statistics(self) -> Statistics:
         """
-        Returns the cluster size statistics for the LSD algorithm.
+        Returns the statistics for the LSD algorithm.
+        May be None if the statistics are not being collected.
+        -------
+        Statistics
+            The statistics object.
+        """
+
+
+    @property
+    def do_stats(self) -> bool:
+        """
+        Returns whether the statistics are being collected.
 
         Returns
         -------
-        np.ndarray
-            The cluster size statistics.
+        bool
+            Whether the statistics are being collected.
+        """
+
+
+    def set_do_stats(self, value: bool) -> None:
+        """
+        Sets whether the statistics are being collected.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the statistics are being collected.
+        """
+
+
+    @property
+    def lsd_method(self) -> Optional[str]:
+        """
+        The Ordered Statistic Decoding (OSD) method used.
+
+        Returns
+        -------
+        Optional[str]
+            A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
+            has been set, returns `None`.
+        """
+
+
+    @lsd_method.setter
+    def lsd_method(self, method: Union[str, int, float]) -> None:
+        """
+        Sets the OSD method used.
+
+        Parameters
+        ----------
+        method : Union[str, int, float]
+            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
+            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
+        """
+
+
+    @property
+    def lsd_order(self) -> int:
+        """
+        The OSD order used.
+
+        Returns
+        -------
+        int
+            An integer representing the OSD order used.
+        """
+
+
+    @lsd_order.setter
+    def lsd_order(self, order: int) -> None:
+        """
+        Set the order for the OSD method.
+
+        Parameters
+        ----------
+        order : int
+            The order for the OSD method. Must be a positive integer.
+
+        Raises
+        ------
+        ValueError
+            If order is less than 0.
+
+        Warns
+        -----
+        UserWarning
+            If the OSD method is 'OSD_E' and the order is greater than 15.
+
         """
 

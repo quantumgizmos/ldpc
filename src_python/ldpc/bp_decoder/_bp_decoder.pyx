@@ -403,10 +403,12 @@ cdef class BpDecoderBase:
             return 'parallel'
         elif self.bpd.schedule == SERIAL:
             return 'serial'
+        elif self.bpd.schedule == SERIAL_RELATIVE:
+            return 'serial_relative'
         else:
             raise ValueError(f"The BP schedule method is invalid. \
                     Please choose from the following methods: \
-                    'schedule=parallel', 'schedule=serial'")
+                    'schedule=parallel', 'schedule=serial', 'schedule=serial_relative'")
 
     @schedule.setter
     def schedule(self, value: Union[str,int]) -> None:
@@ -423,10 +425,12 @@ cdef class BpDecoderBase:
             self.bpd.schedule = PARALLEL
         elif str(value).lower() in ['serial','s','1']:
             self.bpd.schedule = SERIAL
+        elif str(value).lower() in ['serial_relative', 'sr', '2']:
+            self.bpd.schedule = SERIAL_RELATIVE
         else:
             raise ValueError(f"The BP schedule method '{value}' is invalid. \
                     Please choose from the following methods: \
-                    'schedule=parallel', 'schedule=serial'")
+                    'schedule=parallel', 'schedule=serial', 'schedule=serial_relative'")
 
     @property
     def serial_schedule_order(self) -> Union[None, np.ndarray]:
@@ -568,7 +572,7 @@ cdef class BpDecoder(BpDecoderBase):
     ms_scaling_factor : Optional[float], optional
         The scaling factor for the minimum sum method, by default 1.0.
     schedule : Optional[str], optional
-        The scheduling method for belief propagation: 'parallel' or 'serial', by default 'parallel'.
+        The scheduling method for belief propagation: 'parallel', 'serial', or 'serial_relative'. By default 'parallel'.
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads to use, by default 1.
     random_schedule_seed : Optional[int], optional
@@ -598,7 +602,8 @@ cdef class BpDecoder(BpDecoderBase):
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
+                 input_vector_type: str = "auto", **kwargs):
         
         pass
 

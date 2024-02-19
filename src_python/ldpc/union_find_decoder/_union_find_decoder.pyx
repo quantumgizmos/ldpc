@@ -146,14 +146,14 @@ cdef class UnionFindDecoder:
             if llrs is not None:
                 self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, self.uf_llrs,self.bits_per_step)
             else:
-                self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, NULL_DOUBLE_VECTOR,self.bits_per_step)
+                self.ufd.decoding = self.ufd.matrix_decode(self._syndrome, EMPTY_DOUBLE_VECTOR,self.bits_per_step)
 
         else:
             if llrs is not None:
               
                 self.ufd.decoding = self.ufd.peel_decode(self._syndrome, self.uf_llrs,self.bits_per_step)
             else:
-                self.ufd.decoding = self.ufd.peel_decode(self._syndrome, NULL_DOUBLE_VECTOR,self.bits_per_step)
+                self.ufd.decoding = self.ufd.peel_decode(self._syndrome, EMPTY_DOUBLE_VECTOR,self.bits_per_step)
         
 
         out = np.zeros(self.n,dtype=DTYPE)

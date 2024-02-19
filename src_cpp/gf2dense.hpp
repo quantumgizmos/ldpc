@@ -719,7 +719,13 @@ namespace ldpc {
 
         }
 
-
+        int count_non_zero_matrix_entries(const CscMatrix &csc_mat) {
+            auto count = 0;
+            for (auto &col: csc_mat) {
+                count += col.size();
+            }
+            return count;
+        }
     }//end namespace gf2dense
 }//end namespace ldpc
 
