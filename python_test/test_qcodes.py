@@ -60,7 +60,7 @@ def test_882_24_24():
     hx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_hx.txt").astype(int)
     lx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_lx.txt").astype(int)
 
-    error_rate = 0.03
+    error_rate = 0.05
     run_count = 50
     seed = 42
 

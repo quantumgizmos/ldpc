@@ -656,10 +656,10 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 int sgn;
                 if(std::signbit(this->log_prob_ratios[largest_absolute_value_bit_index])){
                     // sgn = -1;
-                    this->channel_probabilities[largest_absolute_value_bit_index] = 1 - 1e-100;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 1 - 1e-5;
                 }
                 else{
-                    this->channel_probabilities[largest_absolute_value_bit_index] = 1e-100;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 0+1e-5;
                 }
 
                 // //the channel probability for that bit is set to a "high" value
@@ -671,6 +671,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             }
 
             std::cout<<"Guided Decimation rounds: "<<gd_rounds<<std::endl;
+            std::cout<<"Converged: "<<this->converge<<std::endl;
 
             //reset the channel probabilities
             this->channel_probabilities = channel_probabilities_save;
