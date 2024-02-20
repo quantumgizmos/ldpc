@@ -602,26 +602,32 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         }
 
         std::vector<uint8_t>& guided_decimation_decode(std::vector<uint8_t>& syndrome, int max_gd_rounds){
+            
+            // set the number of guided decimation rounds to zero
             int gd_rounds = 0;
 
+            // save the initial channel probabilities
             auto channel_probabilities_save = this->channel_probabilities;
 
+            // container for storing decimated bit indices
             std::set<int> decimated_bits;
             
+            // guided decimation loop
             while(gd_rounds < max_gd_rounds){
         
+                // decode with parallel schedule
                 if(this->schedule == PARALLEL){
                     this->bp_decode_parallel(syndrome);
                 }
 
+                // decode with serial schedule
                 else if(this->schedule == SERIAL){
                     this->bp_decode_serial(syndrome);
                 }
 
-                // std::cout << "After Decode converge? "<< this->converge << std::endl;
-
-
+                // check if the decoder has converged
                 if(this->converge == true){
+                    //break the loop if the decoder has converged
                     break;
                 }
 
@@ -629,39 +635,42 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 //find the index of the bit with the largest LLR.
                 double largest_absolute_value = 0;
                 int largest_absolute_value_bit_index = 0;
+                
                 for(int i = 0; i<this->bit_count; i++){
                     double abs_llr = abs(this->log_prob_ratios[i]);
                     if( abs_llr > largest_absolute_value ){
+                        
+                        // check if the bit has already been decimated
                         if(decimated_bits.contains(i)){
                             continue;
                         }
+
+                        // save the index of the bit with the largest LLR
                         largest_absolute_value = abs_llr;
                         largest_absolute_value_bit_index = i;
+
                     }
                 }
 
-                // std::cout<< "Largest Absolute Value: " << largest_absolute_value << " Bit index: "<<largest_absolute_value_bit_index<< std::endl;
-
+                // get the sign of the LLR with the highest absolute value
                 int sgn;
                 if(std::signbit(this->log_prob_ratios[largest_absolute_value_bit_index])){
-                    sgn = -1;
+                    // sgn = -1;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 1 - 1e-100;
                 }
                 else{
-                    sgn = 1;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 1e-100;
                 }
 
-                // std::cout<<"hello2"<< std::endl;
+                // //the channel probability for that bit is set to a "high" value
+                // this->channel_probabilities[largest_absolute_value_bit_index] = sgn*std::numeric_limits<double>::infinity();
 
-
-                //the channel probability for that bit is set to "high" value
-                this->channel_probabilities[largest_absolute_value_bit_index] = sgn*1e9;
 
                 gd_rounds++;
 
-                // std::cout<<"hello2"<< std::endl;
-                // std::cout<<std::endl;
-
             }
+
+            std::cout<<"Guided Decimation rounds: "<<gd_rounds<<std::endl;
 
             //reset the channel probabilities
             this->channel_probabilities = channel_probabilities_save;
