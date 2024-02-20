@@ -14,8 +14,36 @@ import sinter
 from time import time
 import matplotlib.pyplot as plt
 from pymatching import Matching
+from ldpc import BpOsdDecoder
 
 from dem_matrices import detector_error_model_to_check_matrices
+
+
+def surface_code(d: int):
+    """
+    Generate a surface code check matrix.
+
+    Parameters:`
+    - d (int): The dimension of the surface code.
+
+    Returns:
+    - csr_matrix: The check matrix of the surface code.
+    """
+
+    # load the code from file
+    hx = np.genfromtxt(
+        f"/Users/timo/Documents/GitHub/ldpc/paper_lsd_data_collection/generated_codes/surface_code_{d}/hx.txt",
+        delimiter=" ",
+        dtype=np.int8,
+    )
+
+    lx = np.genfromtxt(
+        f"/Users/timo/Documents/GitHub/ldpc/paper_lsd_data_collection/generated_codes/surface_code_{d}/lx.txt",
+        delimiter=" ",
+        dtype=np.int8,
+    )
+
+    return csr_matrix(hx), csr_matrix(lx)
 
 
 def overlapping_window(
@@ -26,7 +54,7 @@ def overlapping_window(
     window: int,
     commit: int,
     decompose_errors: bool = True,
-    shots: int = 10_000,
+    shots: int = 25_000,
 ):
 
     # define relevant parameters
@@ -62,12 +90,13 @@ def overlapping_window(
     total_errs = 0
 
     weights = np.log1p(dem_matrices.priors) - np.log(dem_matrices.priors)
+    # weights = dem_matrices.priors
     # set eps to mininum res of float32
     eps = sys.float_info.min
     min_weight = np.log1p(eps) - np.log(eps)
 
-    dcm = dem_matrices.check_matrix
-    # dcm = dem_matrices.edge_check_matrix
+    # dcm = dem_matrices.check_matrix
+    dcm = dem_matrices.edge_check_matrix
 
     # dense version of the correction
     total_corr = np.zeros((shots, dcm.shape[1]), dtype=np.uint8)
@@ -84,6 +113,16 @@ def overlapping_window(
             round_dcm,
             weights=weights,
         )
+
+        # decoder = BpOsdDecoder(
+        #     round_dcm,
+        #     error_channel=list(weights),
+        #     bp_method="ps",
+        #     ms_scaling_factor=0.625,
+        #     osd_order=30,
+        #     osd_method="osd_cs",
+        # )
+
         for i in range(shots):
             corr = decoder.decode(detector_data[i][synd_dec_inds])
 
@@ -107,6 +146,22 @@ def overlapping_window(
             total_errs += 1
 
     return total_errs / shots
+
+
+def hgp_code(d: int):
+    hx = np.genfromtxt(
+        f"/Users/timo/Documents/GitHub/ldpc/paper_lsd_data_collection/generated_codes/hgp_{d-3}_{d}/hx.txt",
+        delimiter=" ",
+        dtype=np.int8,
+    )
+
+    lx = np.genfromtxt(
+        f"/Users/timo/Documents/GitHub/ldpc/paper_lsd_data_collection/generated_codes/hgp_{d-3}_{d}/lx.txt",
+        delimiter=" ",
+        dtype=np.int8,
+    )
+
+    return csr_matrix(hx), csr_matrix(lx)
 
 
 def current_round_inds(
@@ -142,15 +197,19 @@ def current_round_inds(
 
 
 if __name__ == "__main__":
-
-    for decodings in [1, 2, 3, 4, 5]:
+    shots = 10_000
+    for decodings in [1, 4]:
         fig, ax = plt.subplots()
-        ps = np.geomspace(0.02, 0.08, 6)
-        for d in [5, 9, 13]:
-            pcm, logicals = rep_code(d)
+        ps = np.geomspace(0.002, 0.015, 6)
+        # ps = np.geomspace(0.02, 0.07, 6)
+        for d in [3, 4, 5, 6]:
+            # pcm, logicals = rep_code(d)
+            pcm, logicals = surface_code(d)
+            # pcm, logicals = hgp_code(d)
             # errs = overlapping_window(0.04, pcm, logicals, 1, 2 * d, 2 * d)
             error_rates = [
-                overlapping_window(p, pcm, logicals, decodings, 2 * d, d) for p in ps
+                overlapping_window(p, pcm, logicals, decodings, 2 * d, d, shots=shots)
+                for p in ps
             ]
             ax.plot(ps, error_rates, label=f"d={d}", marker="o")
 
