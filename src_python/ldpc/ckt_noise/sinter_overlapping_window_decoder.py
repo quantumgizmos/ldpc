@@ -5,8 +5,11 @@ from typing import Dict
 import numpy as np
 from sinter import Decoder, CompiledDecoder
 import stim
-from bposd_overlapping_window import BpOsdOverlappingWindowDecoder
-from ckt_noise.lsd_overlapping_window import LsdOverlappingWindowDecoder
+from ldpc.ckt_noise.bposd_overlapping_window import BpOsdOverlappingWindowDecoder
+from ldpc.ckt_noise.config import DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT, DEFAULT_BPOSD_DECODER_ARGS
+from ldpc.ckt_noise.lsd_overlapping_window import LsdOverlappingWindowDecoder
+
+from src_python.ldpc.ckt_noise.config import DEFAULT_LSD_DECODER_ARGS
 
 
 class SinterCompiledDecoder_OWD_Base(CompiledDecoder):
@@ -43,7 +46,7 @@ class SinterDecoder_Base_OWD(Decoder):
             self, *, dem: stim.DetectorErrorModel
     ) -> CompiledDecoder:
         return SinterCompiledDecoder_OWD_Base(
-            self.Decoder_cls(dem, self.decoder_kwargs)
+            self.Decoder_cls(dem, **self.decoder_kwargs)
         )
 
     def decode_via_files(
@@ -117,6 +120,10 @@ class SinterDecoder_LSD_OWD(SinterDecoder_Base_OWD):
         super().__init__(LsdOverlappingWindowDecoder, **decoder_kwargs)
 
 
-def sinter_decoders() -> Dict[str, Decoder]:
-    return {"bposd": SinterDecoder_BPOSD_OWD(),
-            "lsd": SinterDecoder_LSD_OWD()}
+def sinter_owd_decoders() -> Dict[str, Decoder]:
+    return {
+        "bposd_owd": SinterDecoder_BPOSD_OWD(
+        ),
+        "lsd_owd": SinterDecoder_LSD_OWD(
+        )
+    }

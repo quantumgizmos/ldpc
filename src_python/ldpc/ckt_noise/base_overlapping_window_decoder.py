@@ -1,5 +1,5 @@
 import stim
-from dem_matrices import detector_error_model_to_check_matrices
+from ldpc.ckt_noise.dem_matrices import detector_error_model_to_check_matrices
 from scipy.sparse import csr_matrix
 import numpy as np
 

@@ -1,19 +1,19 @@
 import numpy as np
 import stim
-from ldpc import BpLsdDecoder
+from ldpc.bplsd_decoder import BpLsdDecoder
 
-from base_overlapping_window_decoder import BaseOverlappingWindowDecoder
-from ckt_noise.config import DEFAULT_LSD_DECODER_ARGS, DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT
+from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
+from ldpc.ckt_noise.config import DEFAULT_LSD_DECODER_ARGS, DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT
 
 
 class LsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
     def __init__(self,
                  model: stim.DetectorErrorModel,
-                 decodings: int = DEFAULT_DECODINGS,
-                 window: int = DEFAULT_WINDOW,
-                 commit: int = DEFAULT_COMMIT,
-                 decoder_args: dict = DEFAULT_LSD_DECODER_ARGS,
-                 ):
+                 **kwargs):
+        decodings = kwargs.get('decodings', DEFAULT_DECODINGS)
+        window = kwargs.get('window', DEFAULT_WINDOW)
+        commit = kwargs.get('commit', DEFAULT_COMMIT)
+        decoder_args = kwargs.get('decoder_args', DEFAULT_LSD_DECODER_ARGS)
         super().__init__(
             model=model,
             decodings=decodings,
@@ -21,6 +21,7 @@ class LsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
             commit=commit,
             decoder_args=decoder_args,
         )
+
     def _get_dcm(self):
         """
         Set the detector check matrix for the decoder.

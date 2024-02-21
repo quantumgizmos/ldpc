@@ -5,7 +5,6 @@ from scipy.sparse import csc_matrix
 import numpy as np
 
 import stim
-import pymatching
 
 
 def iter_set_xor(set_list: List[List[int]]) -> FrozenSet[int]:
