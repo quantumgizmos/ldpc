@@ -43,7 +43,7 @@ class BaseOverlappingWindowDecoder:
         self.decodings = decodings
         self.window = window
         self.commit = commit
-
+        self.num_checks = self.dem_matrices.check_matrix.shape[0]
         self.dcm = self._get_dcm()
 
         self.decoder_args = decoder_args
@@ -99,7 +99,11 @@ class BaseOverlappingWindowDecoder:
 
         for decoding in range(self.decodings):
             commit_inds, dec_inds, synd_commit_inds, synd_dec_inds = current_round_inds(
-                decoding
+                dcm=self.dcm,
+                decoding=decoding,
+                window=self.window,
+                commit=self.commit,
+                num_checks=self.num_checks,
             )
 
             round_dcm = self.dcm[synd_dec_inds, :]
@@ -179,7 +183,11 @@ class BaseOverlappingWindowDecoder:
 
         for decoding in range(self.decodings):
             commit_inds, dec_inds, synd_commit_inds, synd_dec_inds = current_round_inds(
-                decoding
+                dcm=self.dcm,
+                decoding=decoding,
+                window=self.window,
+                commit=self.commit,
+                num_checks=self.num_checks
             )
 
             round_dcm = self.dcm[synd_dec_inds, :]
@@ -272,7 +280,7 @@ def current_round_inds(
     window: int,
     commit: int,
     num_checks: int,
-) -> np.ndarray:
+) -> tuple:
     """
     Get the indices of the current round in the detector syndrome.
 

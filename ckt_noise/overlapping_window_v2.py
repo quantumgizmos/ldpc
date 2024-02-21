@@ -114,6 +114,7 @@ def overlapping_window(
             weights=weights,
         )
 
+        # TODO
         # decoder = BpOsdDecoder(
         #     round_dcm,
         #     error_channel=list(weights),

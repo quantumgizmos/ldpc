@@ -1,18 +1,18 @@
 import numpy as np
 import stim
+from ldpc import BpLsdDecoder
+
 from base_overlapping_window_decoder import BaseOverlappingWindowDecoder
-from ldpc import BpOsdDecoder
-
-from ckt_noise.config import DEFAULT_BPOSD_DECODER_ARGS, DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT
+from ckt_noise.config import DEFAULT_LSD_DECODER_ARGS, DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT
 
 
-class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
+class LsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
     def __init__(self,
                  model: stim.DetectorErrorModel,
                  decodings: int = DEFAULT_DECODINGS,
                  window: int = DEFAULT_WINDOW,
                  commit: int = DEFAULT_COMMIT,
-                 decoder_args: dict = DEFAULT_BPOSD_DECODER_ARGS,
+                 decoder_args: dict = DEFAULT_LSD_DECODER_ARGS,
                  ):
         super().__init__(
             model=model,
@@ -21,7 +21,6 @@ class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
             commit=commit,
             decoder_args=decoder_args,
         )
-
     def _get_dcm(self):
         """
         Set the detector check matrix for the decoder.
@@ -47,7 +46,7 @@ class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         Initialize the decoder for a given round.
         """
 
-        decoder = BpOsdDecoder(
+        decoder = BpLsdDecoder(
             round_dcm,
             error_channel=list(weights),
             **self.decoder_args,
