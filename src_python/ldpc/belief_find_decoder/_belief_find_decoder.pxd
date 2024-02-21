@@ -15,7 +15,7 @@ cdef extern from "union_find.hpp" namespace "ldpc::uf":
         vector[uint8_t]& matrix_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
         vector[uint8_t] decoding
 
-    cdef const vector[double] NULL_DOUBLE_VECTOR
+    cdef const vector[double] EMPTY_DOUBLE_VECTOR
 
 cdef class BeliefFindDecoder(BpDecoderBase):
     cdef uf_decoder_cpp* ufd

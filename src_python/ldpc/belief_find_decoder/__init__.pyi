@@ -74,5 +74,3 @@ class BeliefFindDecoder(BpDecoderBase):
 
     @property
     def uf_method(self):
-    @uf_method.setter
-    def uf_method(self, uf_method: str):
