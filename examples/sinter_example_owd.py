@@ -36,7 +36,7 @@ def main():
         max_shots=5000,
         max_errors=100,
         tasks=generate_example_tasks(),
-        decoders=['bposd_owd', 'lsd_owd'],
+        decoders=['bposd_owd', 'lsd_owd'], # TODO can we plugin OWD information here to the decoer (i.e., window/commit/decodings)?
         custom_decoders=sinter_owd_decoders(),
         print_progress=True,
         save_resume_filepath=f'owd_sc.csv',

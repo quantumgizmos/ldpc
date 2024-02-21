@@ -208,7 +208,8 @@ class BaseOverlappingWindowDecoder:
                     total_corr[i][dec_inds] += corr[dec_inds]
 
             # once all shots have been decoded for this round, update the weights
-            weights[commit_inds] = self._min_weight
+            # TODO there is a problem with the slices here, tried to fix
+            weights[commit_inds] = [self._min_weight] * (commit_inds.stop - commit_inds.start)
 
         return total_corr
 
