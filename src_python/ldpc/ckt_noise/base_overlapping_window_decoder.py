@@ -27,7 +27,6 @@ class BaseOverlappingWindowDecoder:
         window = decoder_kwargs["window"]
         commit = decoder_kwargs["commit"]
         self.num_checks = decoder_kwargs["num_checks"]
-        self.decoder_args = decoder_kwargs
 
         self.dem_matrices = detector_error_model_to_check_matrices(
             model, allow_undecomposed_hyperedges=True
@@ -38,7 +37,8 @@ class BaseOverlappingWindowDecoder:
         rounds = (window - commit) + decodings * commit
         if not self.num_detectors % rounds == 0:
             raise ValueError(
-                "The number of detectors must be a multiple of the number of rounds."
+                f"The number of detectors must be a multiple of the number of rounds. There are {self.num_detectors} detectors and "
+                f"{rounds} rounds."
             )
 
         self.dcm = self._get_dcm()
