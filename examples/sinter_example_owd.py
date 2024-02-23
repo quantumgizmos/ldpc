@@ -46,8 +46,9 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
     for r in decodings:
         for p in ps:
             for d in ds:
+                rounds = int((r + 1) * d) - 1
                 sc_circuit = stim.Circuit.generated(
-                    rounds=int((r + 1) * d),
+                    rounds=rounds,
                     distance=int(d),
                     after_clifford_depolarization=p,
                     after_reset_flip_probability=p,
@@ -61,7 +62,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                     json_metadata={
                         "p": p,
                         "d": int(d),
-                        # "rounds": (r + 1) * d,
+                        "decodings": int(rounds)
                         # "commit": d,
                         # "window": 2 * d,
                         # "decoings": r,

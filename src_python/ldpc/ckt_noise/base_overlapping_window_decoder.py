@@ -23,9 +23,9 @@ class BaseOverlappingWindowDecoder:
         commit : int
             The number of rounds the decoding is committed to.
         """
-        decodings = decoder_kwargs["decodings"]
-        window = decoder_kwargs["window"]
-        commit = decoder_kwargs["commit"]
+        self.decodings = decoder_kwargs["decodings"]
+        self.window = decoder_kwargs["window"]
+        self.commit = decoder_kwargs["commit"]
         self.num_checks = decoder_kwargs["num_checks"]
 
         self.dem_matrices = detector_error_model_to_check_matrices(
@@ -34,7 +34,7 @@ class BaseOverlappingWindowDecoder:
         self.num_detectors = model.num_detectors
 
         # assert that the number of detectors is a integer multiple of the number of rounds
-        rounds = (window - commit) + decodings * commit
+        rounds = (self.window - self.commit) + self.decodings * self.commit
         if not self.num_detectors % rounds == 0:
             raise ValueError(
                 f"The number of detectors must be a multiple of the number of rounds. There are {self.num_detectors} detectors and "

@@ -23,6 +23,7 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         commit : int
             The number of rounds the decoding is committed to.
         """
+        self.decoder_args = decoder_kwargs
         super().__init__(
             model=model, **decoder_kwargs,
         )
@@ -67,6 +68,6 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         Initialize the decoder for a given round.
         """
 
-        decoder = Matching.from_check_matrix(round_dcm, weights, self.decoder_args)
+        decoder = Matching.from_check_matrix(round_dcm, weights, **self.decoder_args)
 
         return decoder
