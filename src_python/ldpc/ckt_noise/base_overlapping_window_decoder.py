@@ -9,10 +9,7 @@ class BaseOverlappingWindowDecoder:
     def __init__(
         self,
         model: stim.DetectorErrorModel,
-        decodings: int,
-        window: int,
-        commit: int,
-        decoder_args: dict = {},
+        **decoder_kwargs,
     ) -> None:
         """A base class for implementing decoders that work on stim circuits using the overlapping window approach.
 
@@ -26,11 +23,15 @@ class BaseOverlappingWindowDecoder:
         commit : int
             The number of rounds the decoding is committed to.
         """
+        decodings = decoder_kwargs["decodings"]
+        window = decoder_kwargs["window"]
+        commit = decoder_kwargs["commit"]
+        self.num_checks = decoder_kwargs["num_checks"]
+        self.decoder_args = decoder_kwargs
 
         self.dem_matrices = detector_error_model_to_check_matrices(
             model, allow_undecomposed_hyperedges=True
         )
-
         self.num_detectors = model.num_detectors
 
         # assert that the number of detectors is a integer multiple of the number of rounds
@@ -40,14 +41,9 @@ class BaseOverlappingWindowDecoder:
                 "The number of detectors must be a multiple of the number of rounds."
             )
 
-        self.decodings = decodings
-        self.window = window
-        self.commit = commit
-        self.num_checks = decoder_args["num_checks"]
         self.dcm = self._get_dcm()
         self.logical_observables_matrix = self._get_logical_observables_matrix()
 
-        self.decoder_args = decoder_args
 
     def _get_dcm(self) -> csr_matrix:
         """

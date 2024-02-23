@@ -37,7 +37,7 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
                 decodings=int(r),
                 window=int(2 * d),
                 commit=int(d),
-                decoder_args={"num_checks": int(d - 1)},
+                num_checks=int(d - 1)
             )
     return decoders
 
@@ -70,7 +70,6 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
 
 
 def main():
-
     decodings = np.array([1, 2, 3])
     ps = np.geomspace(0.02, 0.1, 9)
     ds = np.array([3, 5, 7])

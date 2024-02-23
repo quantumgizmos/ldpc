@@ -8,10 +8,8 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
 
     def __init__(
         self,
-        decodings: int,
-        window: int,
-        commit: int,
-        decoder_args: dict = {},
+        model,
+        **decoder_kwargs,
     ) -> None:
         """A class for decoding stim circuits using the overlapping window approach.
 
@@ -25,8 +23,9 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         commit : int
             The number of rounds the decoding is committed to.
         """
-
-        super().__init__(decodings, window, commit, decoder_args=decoder_args)
+        super().__init__(
+            model=model, **decoder_kwargs,
+        )
 
     def _get_dcm(self):
         """

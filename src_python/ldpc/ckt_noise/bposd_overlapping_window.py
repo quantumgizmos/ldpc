@@ -12,15 +12,9 @@ from ldpc.ckt_noise.config import (
 
 class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
     def __init__(self, model: stim.DetectorErrorModel, **kwargs):
-        decodings = kwargs.get("decodings", DEFAULT_DECODINGS)
-        window = kwargs.get("window", DEFAULT_WINDOW)
-        commit = kwargs.get("commit", DEFAULT_COMMIT)
         decoder_args = kwargs.get("decoder_args", DEFAULT_BPOSD_DECODER_ARGS)
         super().__init__(
             model=model,
-            decodings=decodings,
-            window=window,
-            commit=commit,
             decoder_args=decoder_args,
         )
 
