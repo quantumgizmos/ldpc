@@ -2,17 +2,20 @@ import numpy as np
 import stim
 from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
 from ldpc import BpOsdDecoder
-from ldpc.ckt_noise.config import DEFAULT_BPOSD_DECODER_ARGS, DEFAULT_DECODINGS, DEFAULT_WINDOW, DEFAULT_COMMIT
+from ldpc.ckt_noise.config import (
+    DEFAULT_BPOSD_DECODER_ARGS,
+    DEFAULT_DECODINGS,
+    DEFAULT_WINDOW,
+    DEFAULT_COMMIT,
+)
 
 
 class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
-    def __init__(self,
-                 model: stim.DetectorErrorModel,
-                 **kwargs):
-        decodings = kwargs.get('decodings', DEFAULT_DECODINGS)
-        window = kwargs.get('window', DEFAULT_WINDOW)
-        commit = kwargs.get('commit', DEFAULT_COMMIT)
-        decoder_args = kwargs.get('decoder_args', DEFAULT_BPOSD_DECODER_ARGS)
+    def __init__(self, model: stim.DetectorErrorModel, **kwargs):
+        decodings = kwargs.get("decodings", DEFAULT_DECODINGS)
+        window = kwargs.get("window", DEFAULT_WINDOW)
+        commit = kwargs.get("commit", DEFAULT_COMMIT)
+        decoder_args = kwargs.get("decoder_args", DEFAULT_BPOSD_DECODER_ARGS)
         super().__init__(
             model=model,
             decodings=decodings,
@@ -27,6 +30,13 @@ class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
 
         """
         return self.dem_matrices.check_matrix
+
+    def _get_logical_observables_matrix(self):
+        """
+        Set the logical observables matrix for the decoder.
+
+        """
+        return self.dem_matrices.observables_matrix
 
     @property
     def _min_weight(self):

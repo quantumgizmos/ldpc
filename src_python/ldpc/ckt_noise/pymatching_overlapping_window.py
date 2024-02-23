@@ -41,6 +41,13 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         return self.dem_matrices.edge_check_matrix
 
+    def _get_logical_observables_matrix(self):
+        """
+        Set the logical observables matrix for the decoder.
+        """
+
+        return self.dem_matrices.edge_observables_matrix
+
     @property
     def _min_weight(self):
         """

@@ -45,12 +45,20 @@ class BaseOverlappingWindowDecoder:
         self.commit = commit
         self.num_checks = decoder_args["num_checks"]
         self.dcm = self._get_dcm()
+        self.logical_observables_matrix = self._get_logical_observables_matrix()
 
         self.decoder_args = decoder_args
 
     def _get_dcm(self) -> csr_matrix:
         """
         Get the detector check matrix.
+        """
+
+        raise NotImplementedError("This method must be implemented by the subclass.")
+
+    def _get_logical_observables_matrix(self):
+        """
+        Set the logical observables matrix.
         """
 
         raise NotImplementedError("This method must be implemented by the subclass.")
@@ -75,7 +83,7 @@ class BaseOverlappingWindowDecoder:
         """
 
         corr = self._corr_multiple_rounds(syndrome)
-        return (self.dem_matrices.observables_matrix @ corr) % 2
+        return (self.logical_observables_matrix @ corr) % 2
 
     def _corr_multiple_rounds(self, syndrome: np.ndarray) -> np.ndarray:
         """Decode a syndrome using the overlapping window approach.
@@ -155,7 +163,7 @@ class BaseOverlappingWindowDecoder:
 
         corrs = self._corr_multiple_rounds_batch(shots)
 
-        predictions = (self.dem_matrices.observables_matrix @ corrs.T) % 2
+        predictions = (self.logical_observables_matrix @ corrs.T) % 2
 
         if bit_packed_predictions:
             predictions = np.packbits(predictions, axis=1, bitorder="little")
@@ -187,7 +195,7 @@ class BaseOverlappingWindowDecoder:
                 decoding=decoding,
                 window=self.window,
                 commit=self.commit,
-                num_checks=self.num_checks
+                num_checks=self.num_checks,
             )
 
             round_dcm = self.dcm[synd_dec_inds, :]
