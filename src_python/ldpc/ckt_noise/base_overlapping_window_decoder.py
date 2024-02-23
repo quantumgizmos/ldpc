@@ -43,7 +43,7 @@ class BaseOverlappingWindowDecoder:
         self.decodings = decodings
         self.window = window
         self.commit = commit
-        self.num_checks = self.dem_matrices.check_matrix.shape[0]
+        self.num_checks = decoder_args["num_checks"]
         self.dcm = self._get_dcm()
 
         self.decoder_args = decoder_args
@@ -208,8 +208,7 @@ class BaseOverlappingWindowDecoder:
                     total_corr[i][dec_inds] += corr[dec_inds]
 
             # once all shots have been decoded for this round, update the weights
-            # TODO there is a problem with the slices here, tried to fix
-            weights[commit_inds] = [self._min_weight] * (commit_inds.stop - commit_inds.start)
+            weights[commit_inds] = self._min_weight
 
         return total_corr
 
@@ -273,8 +272,6 @@ class BaseOverlappingWindowDecoder:
         raise NotImplementedError("This method must be implemented by the subclass.")
 
 
-# TODO: This function currently requires knowledge of the number of stabilizers in the parity check matrix
-#       of the code that is being decoded. This is not ideal. We should find a way to remove this requirement.
 def current_round_inds(
     dcm: csr_matrix,
     decoding: int,
