@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-from base_overlapping_window_decoder import BaseOverlappingWindowDecoder
+from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
 from pymatching import Matching
 
 

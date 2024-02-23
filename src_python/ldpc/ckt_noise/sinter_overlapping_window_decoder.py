@@ -11,7 +11,6 @@ import stim
 from ldpc.ckt_noise.bposd_overlapping_window import BpOsdOverlappingWindowDecoder
 from ldpc.ckt_noise.lsd_overlapping_window import LsdOverlappingWindowDecoder
 
-from src_python.ldpc.ckt_noise.config import DEFAULT_LSD_DECODER_ARGS
 
 
 class SinterCompiledDecoder_OWD_Base(CompiledDecoder):

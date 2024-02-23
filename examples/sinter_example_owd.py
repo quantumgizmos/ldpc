@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from ldpc.ckt_noise.sinter_overlapping_window_decoder import (
     SinterDecoder_BPOSD_OWD,
     SinterDecoder_LSD_OWD,
-    SinterDecoderPyMatchingOWD,
+    SinterDecoder_PyMatching_OWD,
 )
 
 
@@ -33,7 +33,7 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
             #     commit=d,
             #     decoder_args=DEFAULT_LSD_DECODER_ARGS,
             # )
-            decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoderPyMatchingOWD(
+            decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
                 decodings=r,
                 window=2 * d,
                 commit=d,
