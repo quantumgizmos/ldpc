@@ -34,10 +34,10 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
             #     decoder_args=DEFAULT_LSD_DECODER_ARGS,
             # )
             decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
-                decodings=r,
-                window=2 * d,
-                commit=d,
-                decoder_args={"num_checks": d - 1},
+                decodings=int(r),
+                window=int(2 * d),
+                commit=int(d),
+                decoder_args={"num_checks": int(d - 1)},
             )
     return decoders
 
@@ -47,8 +47,8 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
         for p in ps:
             for d in ds:
                 sc_circuit = stim.Circuit.generated(
-                    rounds=(r + 1) * d,
-                    distance=d,
+                    rounds=int((r + 1) * d),
+                    distance=int(d),
                     after_clifford_depolarization=p,
                     after_reset_flip_probability=p,
                     before_measure_flip_probability=p,
@@ -60,7 +60,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                     decoder=f"pymatching_owd_d{d}_r{r}",
                     json_metadata={
                         "p": p,
-                        "d": d,
+                        "d": int(d),
                         # "rounds": (r + 1) * d,
                         # "commit": d,
                         # "window": 2 * d,
