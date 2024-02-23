@@ -119,10 +119,12 @@ class SinterDecoder_LSD_OWD(SinterDecoder_Base_OWD):
         super().__init__(LsdOverlappingWindowDecoder, **decoder_kwargs)
 
 
-def sinter_owd_decoders() -> Dict[str, Decoder]:
+def sinter_owd_decoders(**decoder_kwargs) -> Dict[str, Decoder]:
     return {
         "bposd_owd": SinterDecoder_BPOSD_OWD(
+            decoder_kwargs=decoder_kwargs
         ),
         "lsd_owd": SinterDecoder_LSD_OWD(
+           decoder_kwargs=decoder_kwargs
         )
     }
