@@ -219,7 +219,6 @@ cdef class BpLsdDecoder(BpDecoderBase):
             OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
         # OSD method
-        print(f"method {str(method)}")
         if str(method).lower() in ['osd_0', '0', 'osd0']:
             self.lsd.lsd_method = OsdMethod.OSD_0
             self.lsd.lsd_order = 0
