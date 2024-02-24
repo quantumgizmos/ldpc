@@ -44,7 +44,6 @@ class BaseOverlappingWindowDecoder:
         self.dcm = self._get_dcm()
         self.logical_observables_matrix = self._get_logical_observables_matrix()
 
-
     def _get_dcm(self) -> csr_matrix:
         """
         Get the detector check matrix.
@@ -159,7 +158,11 @@ class BaseOverlappingWindowDecoder:
 
         corrs = self._corr_multiple_rounds_batch(shots)
 
-        predictions = (self.logical_observables_matrix @ corrs.T) % 2
+        predictions = np.zeros(
+            (shots.shape[0], self.logical_observables_matrix.shape[0]), dtype=bool
+        )
+        for i in range(shots.shape[0]):
+            predictions[i, :] = (self.logical_observables_matrix @ corrs[i]) % 2
 
         if bit_packed_predictions:
             predictions = np.packbits(predictions, axis=1, bitorder="little")

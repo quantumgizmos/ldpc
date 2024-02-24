@@ -37,7 +37,7 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
                 decodings=int(r),
                 window=int(2 * d),
                 commit=int(d),
-                num_checks=int(d - 1)
+                num_checks=int(d - 1),
             )
     return decoders
 
@@ -62,27 +62,27 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                     json_metadata={
                         "p": p,
                         "d": int(d),
-                        "decodings": int(rounds)
+                        # "decodings": int(rounds),
                         # "commit": d,
                         # "window": 2 * d,
-                        # "decoings": r,
+                        "decodings": int(r),
                     },
                 )
 
 
 def main():
     decodings = np.array([1, 2, 3])
-    ps = np.geomspace(0.02, 0.1, 9)
-    ds = np.array([3, 5, 7])
+    ps = np.geomspace(0.001, 0.02, 9)
+    ds = np.array([5, 9, 13])
 
     samples = sinter.collect(
-        num_workers=1,
-        max_shots=10000,
-        max_errors=100,
+        num_workers=6,
+        max_shots=100_000,
+        max_errors=500,
         tasks=generate_example_tasks(ps, ds, decodings),
         custom_decoders=generate_decoders(ds, decodings),
         print_progress=True,
-        save_resume_filepath=f"owd_sc.csv",
+        save_resume_filepath=f"owd_rep.csv",
     )
 
     # Print samples as CSV data.
@@ -91,7 +91,7 @@ def main():
         print(sample.to_csv_line())
 
     # Render a matplotlib plot of the data.
-    fig, axis = plt.subplots(1, 3, sharey=True, figsize=(10, 3))
+    fig, axis = plt.subplots(1, 3, sharey=True, figsize=(12, 4))
     sinter.plot_error_rate(
         ax=axis[0],
         stats=samples,
