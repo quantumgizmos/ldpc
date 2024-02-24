@@ -61,8 +61,6 @@ cdef class BpLsdDecoder(BpDecoderBase):
                   input_vector_type: str = "syndrome",
                   lsd_order: int = 0,
                   lsd_method: Union[str, int] = 0, **kwargs):
-        print(f"lsd method {lsd_method}")
-        print(f"lsd order {lsd_order}")
 
         # compatability with osd_method/osd_order
         if "osd_method" in kwargs:
