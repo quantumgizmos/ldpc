@@ -21,23 +21,22 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
     decoders = {}
     for d in ds:
         for r in decodings:
-            owd_args = {
-                "decodings": int(r),
-                "window": int(2 * d),
-                "commit": int(d),
-            }
             decoders[f"bposd_owd_d{d}_r{r}"] = SinterDecoder_BPOSD_OWD(
-                decoder_args=owd_args | DEFAULT_BPOSD_DECODER_ARGS,
-            )
-            decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
-                decoder_args=owd_args | DEFAULT_LSD_DECODER_ARGS,
-            )
-            decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
-                decodings=int(r),
+                decodings= int(r),
                 window=int(2 * d),
-                commit=int(d),
-                num_checks=int(d - 1),
+                commit= int(d),
+                num_checks=int(d-1),
+                bposd_args=DEFAULT_BPOSD_DECODER_ARGS
             )
+            # decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
+            #     decoder_args=owd_args | DEFAULT_LSD_DECODER_ARGS,
+            # )
+            # decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
+            #     decodings=int(r),
+            #     window=int(2 * d),
+            #     commit=int(d),
+            #     num_checks=int(d - 1),
+            # )
     return decoders
 
 
@@ -57,7 +56,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                 )
                 yield sinter.Task(
                     circuit=sc_circuit,
-                    decoder=f"pymatching_owd_d{d}_r{r}",
+                    decoder=f"bposd_owd_d{d}_r{r}",
                     json_metadata={
                         "p": p,
                         "d": int(d),
