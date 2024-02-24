@@ -72,7 +72,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
 
 def main():
     decodings = np.array([1, 2, 3])
-    ps = np.geomspace(0.001, 0.02, 9)
+    ps = np.geomspace(0.02, 0.1, 9)
     ds = np.array([5, 9, 13])
 
     samples = sinter.collect(
@@ -82,7 +82,7 @@ def main():
         tasks=generate_example_tasks(ps, ds, decodings),
         custom_decoders=generate_decoders(ds, decodings),
         print_progress=True,
-        save_resume_filepath=f"owd_rep.csv",
+        # save_resume_filepath=f"owd_rep.csv",
     )
 
     # Print samples as CSV data.

@@ -25,7 +25,8 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         self.decoder_args = decoder_kwargs
         super().__init__(
-            model=model, **decoder_kwargs,
+            model=model,
+            **decoder_kwargs,
         )
 
     def _get_dcm(self):
@@ -67,7 +68,6 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         Initialize the decoder for a given round.
         """
-
         decoder = Matching.from_check_matrix(round_dcm, weights, **self.decoder_args)
 
         return decoder

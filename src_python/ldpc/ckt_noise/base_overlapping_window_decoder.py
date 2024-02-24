@@ -203,7 +203,6 @@ class BaseOverlappingWindowDecoder:
 
             for i in range(num_shots):
                 corr = decoder.decode(shots[i][synd_dec_inds])
-
                 if decoding != self.decodings - 1:
                     # determine the partial correction / commit the correction
                     total_corr[i][commit_inds] += corr[commit_inds]
@@ -319,8 +318,8 @@ def current_round_inds(
     max_index_decoding = dcm[slice(start, end_decoding), :].nonzero()[1].max()
 
     # use slices instead of np.arange
-    commit_inds = slice(min_index, max_index_commit)
-    decoding_inds = slice(min_index, max_index_decoding)
+    commit_inds = slice(min_index, max_index_commit + 1)
+    decoding_inds = slice(min_index, max_index_decoding + 1)
 
     # use slices instead of np.arange
     synd_commit_inds = slice(start, end_commit)
