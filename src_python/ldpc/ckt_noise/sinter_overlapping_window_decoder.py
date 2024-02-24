@@ -91,7 +91,7 @@ class SinterDecoder_Base_OWD(Decoder):
                 via sinter deleting this directory after killing the decoder.
         """
         dem = stim.DetectorErrorModel.from_file(dem_path)
-        decoder = self.Decoder_cls(dem, self.decoder_kwargs)
+        decoder = self.Decoder_cls(dem, **self.decoder_kwargs)
         shots = stim.read_shot_data_file(
             path=dets_b8_in_path,
             format="b8",

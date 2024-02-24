@@ -9,26 +9,27 @@ from ldpc.ckt_noise.config import DEFAULT_LSD_DECODER_ARGS, DEFAULT_DECODINGS, D
 class LsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
     def __init__(self,
                  model: stim.DetectorErrorModel,
-                 **kwargs):
-        decodings = kwargs.get('decodings', DEFAULT_DECODINGS)
-        window = kwargs.get('window', DEFAULT_WINDOW)
-        commit = kwargs.get('commit', DEFAULT_COMMIT)
-        decoder_args = kwargs.get('decoder_args', DEFAULT_LSD_DECODER_ARGS)
+                 **decoder_kwargs):
+        self.decoder_args = decoder_kwargs
         super().__init__(
             model=model,
-            decodings=decodings,
-            window=window,
-            commit=commit,
-            decoder_args=decoder_args,
+            **decoder_kwargs
         )
 
     def _get_dcm(self):
+
         """
         Set the detector check matrix for the decoder.
 
         """
         return self.dem_matrices.check_matrix
 
+    def _get_logical_observables_matrix(self):
+        """
+        Set the logical observables matrix for the decoder.
+
+        """
+        return self.dem_matrices.observables_matrix
     @property
     def _min_weight(self):
         """
@@ -40,17 +41,20 @@ class LsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         Return the weights for the error channel of the decoder obtained from the detector error model.
         """
-        return list(self.dem_matrices.priors)
+        return self.dem_matrices.priors
 
     def _init_decoder(self, round_dcm: np.ndarray, weights: np.ndarray):
         """
         Initialize the decoder for a given round.
         """
-
+        args = self.decoder_args["lsd_args"] | DEFAULT_LSD_DECODER_ARGS
         decoder = BpLsdDecoder(
             round_dcm,
             error_channel=list(weights),
-            **self.decoder_args,
+            lsd_method=args["lsd_method"],
+            lsd_order=args["lsd_order"],
+            max_iter = args["max_iter"],
+            bp_method=args["bp_method"]
         )
 
         return decoder

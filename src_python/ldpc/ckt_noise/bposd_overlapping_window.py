@@ -1,7 +1,7 @@
 import numpy as np
 import stim
 from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
-from ldpc import BpOsdDecoder
+from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.ckt_noise.config import (
     DEFAULT_BPOSD_DECODER_ARGS,
     DEFAULT_DECODINGS,
@@ -45,7 +45,7 @@ class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         Return the weights for the error channel of the decoder obtained from the detector error model.
         """
-        return list(self.dem_matrices.priors)
+        return self.dem_matrices.priors
 
     def _init_decoder(self, round_dcm: np.ndarray, weights: np.ndarray):
         """
