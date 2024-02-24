@@ -3,13 +3,13 @@ import sinter
 import stim
 from matplotlib import pyplot as plt
 
-# from ldpc.ckt_noise.config import (
-#     DEFAULT_DECODINGS,
-#     DEFAULT_WINDOW,
-#     DEFAULT_COMMIT,
-#     DEFAULT_BPOSD_DECODER_ARGS,
-#     DEFAULT_LSD_DECODER_ARGS,
-# )
+from ldpc.ckt_noise.config import (
+    DEFAULT_DECODINGS,
+    DEFAULT_WINDOW,
+    DEFAULT_COMMIT,
+    DEFAULT_BPOSD_DECODER_ARGS,
+    DEFAULT_LSD_DECODER_ARGS,
+)
 from ldpc.ckt_noise.sinter_overlapping_window_decoder import (
     SinterDecoder_BPOSD_OWD,
     SinterDecoder_LSD_OWD,
@@ -21,18 +21,17 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
     decoders = {}
     for d in ds:
         for r in decodings:
-            # decoders[f"bposd_owd_d{d}_r{r}"] = SinterDecoder_BPOSD_OWD(
-            #     decodings=r,
-            #     window=2 * d,
-            #     commit=d,
-            #     decoder_args=DEFAULT_BPOSD_DECODER_ARGS,
-            # )
-            # decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
-            #     decodings=r,
-            #     window=2 * d,
-            #     commit=d,
-            #     decoder_args=DEFAULT_LSD_DECODER_ARGS,
-            # )
+            owd_args = {
+                "decodings": int(r),
+                "window": int(2 * d),
+                "commit": int(d),
+            }
+            decoders[f"bposd_owd_d{d}_r{r}"] = SinterDecoder_BPOSD_OWD(
+                decoder_args=owd_args | DEFAULT_BPOSD_DECODER_ARGS,
+            )
+            decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
+                decoder_args=owd_args | DEFAULT_LSD_DECODER_ARGS,
+            )
             decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
                 decodings=int(r),
                 window=int(2 * d),
