@@ -53,6 +53,8 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
+        tsl::robin_set<int> merge_bits;
+        std::vector<int> cols_to_eliminate;
 
         LsdCluster() = default;
 
@@ -93,6 +95,7 @@ namespace ldpc::lsd {
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
+            this->merge_bits.clear();
         }
 
         /**
@@ -151,7 +154,7 @@ namespace ldpc::lsd {
             LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
-                larger = merge_clusters(larger, cl);
+                larger = merge_clusters(larger, cl, this->merge_bit);
             }
             if (is_on_the_fly) {
                 // finally, we apply the on-the-fly elimination to the remaining cluster
@@ -200,27 +203,21 @@ namespace ldpc::lsd {
                 // bit already in current cluster
                 return false;
             }
-            if (bit_membership == nullptr) {
-                //if the bit has not yet been assigned to a cluster we add it.
-                // if we are in merge mode we add it
+            if (bit_membership == nullptr || in_merge) {
+                //if the bit has not yet been assigned to a cluster or we are in merge mode we add it directly.
                 this->add_bit(bit_index);
-            } else {
-                //if the bit already exists in a cluster, we mark down that this cluster should be
-                //merged with the exisiting cluster.
-                if (in_merge) {
-                    // if we are in merge mode we add it anyways
-                    this->add_bit(bit_index);
-                } else {
-                    // otherwise, we add its cluster to merge list and do not add directly.
-                    this->merge_list.insert(bit_membership);
+                if (this->global_timestep_bit_history != nullptr) {
+                    // add bit to timestep history with timestep the map size -1
+                    (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
                 }
+                // add incident checks as well, i.e., whole column to cluster pcm
+                this->add_column_to_cluster_pcm(bit_index);
+            } else {
+                // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
+                this->merge_list.insert(bit_membership);
+                // keep track of merge bits
+                this->merge_bits.insert(bit_index);
             }
-            if (this->global_timestep_bit_history != nullptr) {
-                // add bit to timestep history with timestep the map size -1
-                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
-            }
-            // add incident checks
-            this->add_column_to_cluster_pcm(bit_index);
             return true;
         }
 
@@ -230,7 +227,7 @@ namespace ldpc::lsd {
          * That is, the (reduced) parity check matrix of the larger cluster is kept.
          * @param cl2
          */
-        static LsdCluster *merge_clusters(LsdCluster *cl1, LsdCluster *cl2) {
+        static LsdCluster *merge_clusters(LsdCluster *cl1, LsdCluster *cl2, const int merge_bit) {
             LsdCluster *smaller;
             LsdCluster *larger;
             if (cl1->bit_nodes.size() < cl2->bit_nodes.size()) {
@@ -241,21 +238,44 @@ namespace ldpc::lsd {
                 larger = cl1;
             }
 
+            /**
+             * Merging the factorizations:
+             * 1. Merge the cluster pcms. I.e., insert smaller.plu_decomposition.matrix into larger.plu_decomposition.matrix
+             * 2. Merge the L und U matrices
+             * 3. Append the merge column to the larger cluster pcm and eliminate
+             *
+             * Comment: we can probably merge the matrices by just shifting the column indices of the smaller by #columns of the larger
+             *
+             */
+
             // we merge the smaller into the larger cluster
             for (auto bit_index: smaller->bit_nodes) {
-                larger->add_bit_node_to_cluster(bit_index, true);
+                if (bit_index != merge_bit) {
+                    // we add the columns to the larger cluster pcm, this takes care of indexing
+                    larger->add_bit_node_to_cluster(bit_index, true);
+                }
             }
-            // check nodes are added with the bits
+
+            larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, merge_bit);
+            larger->add_bit_node_to_cluster(merge_bit, true);
+            larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
+            larger->apply_on_the_fly_elimination();
+
+            // check nodes are added with the bits, update boundary check nodes here
             for (auto check_index: smaller->boundary_check_nodes) {
                 larger->boundary_check_nodes.insert(check_index);
             }
+            // merge activated syndrome nodes
             for (auto j: smaller->enclosed_syndromes) {
                 larger->enclosed_syndromes.insert(j);
             }
             smaller->active = false; // smaller, absorbed cluster is deactivated
+            // update statistics
             smaller->absorbed_into_cluster = larger->cluster_id;
             smaller->got_inactive_in_timestep = smaller->curr_timestep;
             larger->nr_merges++;
+
+            // return the larger cluster to enable further merges
             return larger;
         }
 
@@ -334,10 +354,10 @@ namespace ldpc::lsd {
          */
         bool apply_on_the_fly_elimination() {
             // add columns to existing decomposition matrix
-            // new bits are appended to cluster_pcm
-            for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
-                this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
-            }
+            // new bits are appended to cluster_pcm in the merge_clusters method
+//            for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
+//                this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
+//            }
 
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // std::vector<uint8_t> cluster_syndrome;

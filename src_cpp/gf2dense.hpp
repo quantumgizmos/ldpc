@@ -106,10 +106,12 @@ namespace ldpc {
          */
         class PluDecomposition {
         private:
-            CscMatrix csc_mat; // csc_mat[column][row]
+            // csc_mat[column][row] stores submatrix using local indices
+            // local indices are determined by the clusters pcm_check_idx_to_cluster_check_idx mapping
+            CscMatrix csc_mat;
             std::vector<uint8_t> y_image_check_vector;
         public:
-            CsrMatrix L;
+            CsrMatrix L; // L[row][col]
             CsrMatrix U;
             CscMatrix P;
             int matrix_rank;
@@ -440,12 +442,64 @@ namespace ldpc {
                 }
                 this->col_count++;
             }
+
+            /**
+             * Merges the PLU factorization of the current matrix with the PLU factorization of another matrix.
+             * Assumes that the csc_mat of the current object has been updated to include the new columns.
+             * We want to merge the two compositions, due
+             * @param other
+             */
+            void merge_with_decomposition(const PluDecomposition &other, int merge_bit_index) {
+                int col_offset = this->col_count - 1; // new 0 column index
+                int row_offset = this->row_count - 1; // new 0 row index
+
+                for (auto i = 0; i < other.matrix_rank; i++) {
+                    if (i != merge_bit_index) {
+                        this->swap_rows.push_back(other.swap_rows[i] + row_offset);
+                        this->pivot_cols.push_back(other.pivot_cols[i] + col_offset);
+                        this->elimination_rows.push_back(std::vector<int>{});
+                        for (auto row_idx: other.elimination_rows[i]) {
+                            this->elimination_rows[i].push_back(row_idx + row_offset);
+                        }
+                    }
+                }
+                bool pushed = false; // ensure that new L row is initialized only if we add something to it
+                // merge L of other into L of this
+                for (auto i = 0; i < other.L.size(); i++) {
+                    for (auto col_idx: other.L[i]) {
+                        if (col_idx != merge_bit_index) {
+                            if (!pushed) {
+                                this->L.push_back(std::vector<int>{});
+                                pushed = true;
+                            }
+                            this->L[i].push_back(col_idx + col_offset);
+                        }
+                    }
+                }
+                pushed = false;
+                // merge U matrix of other into U of this
+                for (auto i = 0; i < other.U.size(); i++) {
+                    for (auto col_idx: other.U[i]) {
+                        if(col_idx != merge_bit_index) {
+                            if (!pushed) {
+                                this->U.push_back(std::vector<int>{});
+                                pushed = true;
+                            }
+                            this->U[i].push_back(col_idx + col_offset);
+                        }
+                    }
+                }
+                // since we leave out the merge bit take into account that this could account for a rank decrease
+                // we eliminate the merge bit column later. If it contributes to rank it will be increased again.
+                this->matrix_rank += other.matrix_rank-1;
+                this->cols_eliminated += other.cols_eliminated-1;
+            }
         };
 
 
         int rank(int row_count, int col_count, CscMatrix &csc_mat) {
             auto plu = PluDecomposition(row_count, col_count, csc_mat);
-            plu.rref(false,false);
+            plu.rref(false, false);
             return plu.matrix_rank;
         }
 
@@ -455,7 +509,7 @@ namespace ldpc {
             // The CSR representation of mat is the CSC representation of mat.transpose().
 
             auto plu = PluDecomposition(col_count, row_count, csr_mat);
-            plu.rref(false,false);
+            plu.rref(false, false);
 
             std::vector<size_t> rr_col(col_count, 0);
             std::vector<std::vector<int>> ker;
@@ -489,7 +543,7 @@ namespace ldpc {
 
         std::vector<int> pivot_rows(int row_count, int col_count, CsrMatrix &csr_mat) {
             auto plu = PluDecomposition(col_count, row_count, csr_mat);
-            plu.rref(false,false);
+            plu.rref(false, false);
             return plu.pivot_cols;
         }
 
