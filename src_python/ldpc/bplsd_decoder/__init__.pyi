@@ -1,13 +1,12 @@
 import numpy as np
 from scipy.sparse import spmatrix
-class BeliefFindDecoder(BpDecoderBase):
+import json
+class BpLsdDecoder(BpDecoderBase):
     """
-    A class representing a decoder that combines Belief Propagation (BP) with the Union Find Decoder (UFD) algorithm.
+    A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
 
-    The BeliefFindDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
-    it falls back to the Union Find Decoder algorithm. The UFD algorithm is based on the principles outlined in
-    https://arxiv.org/abs/1709.06218, with an option to utilise a more general version as described in
-    https://arxiv.org/abs/2103.08049 for LDPC codes by setting `uf_method=True`.
+    The BpLsdDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
+    it falls back to the Localised Statistics Decoder algorithm.
 
     Parameters
     ----------
@@ -26,34 +25,29 @@ class BeliefFindDecoder(BpDecoderBase):
         The scaling factor used in the minimum sum method, by default 1.0.
     schedule : Optional[str], optional
         The scheduling method used. Must be one of {'parallel', 'serial'}, by default 'parallel'.
-    omp_thread_count : Optional[int], optional
+    omp_thread_count : Optional[int], optional, NotImplemented
         The number of OpenMP threads used for parallel decoding, by default 1.
     random_schedule_seed : Optional[int], optional
         Whether to use a random serial schedule order, by default 0.
     serial_schedule_order : Optional[List[int]], optional
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
-    uf_method : str, optional
-        The method used to solve the local decoding problem in each cluster. Choose from: 1) 'inversion' or 2) 'peeling'.
-        By default set to 'inversion'. The 'peeling' method is only suitable for LDPC codes with point like syndromes.
-        The inversion method can be applied to any parity check matrix.
-    bits_per_step : int, optional
-        Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
+    bits_per_step : int, optional, NotImplemented
+        Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
 
     Notes
     -----
-    The `BeliefFindDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
-    in the UFD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
-    The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
+    The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
+    in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     """
 
 
     def decode(self,syndrome):
         """
-        Decodes the input syndrome using the belief propagation and UFD decoding methods.
+        Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
         Initially, the method attempts to decode the syndrome using belief propagation. If this fails to converge,
-        it falls back to the UFD algorithm.
+        it falls back to the LSD algorithm.
 
         Parameters
         ----------
@@ -73,5 +67,35 @@ class BeliefFindDecoder(BpDecoderBase):
 
 
     @property
-    def uf_method(self):
-    def set_uf_method(self, uf_method: str):
+    def statistics(self) -> Statistics:
+        """
+        Returns the statistics for the LSD algorithm.
+        May be None if the statistics are not being collected.
+        -------
+        Statistics
+            The statistics object.
+        """
+
+
+    @property
+    def do_stats(self) -> bool:
+        """
+        Returns whether the statistics are being collected.
+
+        Returns
+        -------
+        bool
+            Whether the statistics are being collected.
+        """
+
+
+    def set_do_stats(self, value: bool) -> None:
+        """
+        Sets whether the statistics are being collected.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the statistics are being collected.
+        """
+

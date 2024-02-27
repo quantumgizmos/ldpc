@@ -1,8 +1,8 @@
-import sinter
-from ldpc.sinter_decoders import SinterBeliefFindDecoder, SinterBpOsdDecoder
-import stim
-from matplotlib import pyplot as plt
 import numpy as np
+import sinter
+import stim
+from ldpc.sinter_decoders import SinterBeliefFindDecoder, SinterBpOsdDecoder
+from matplotlib import pyplot as plt
 
 
 def generate_example_tasks():
@@ -28,22 +28,31 @@ def generate_example_tasks():
 
 
 def main():
+    from src_python.ldpc.sinter_decoders.sinter_lsd_decoder import SinterLsdDecoder
     samples = sinter.collect(
         num_workers=10,
         max_shots=20_000,
         max_errors=100,
         tasks=generate_example_tasks(),
-        decoders=['bposd', 'belief_find'],
-        custom_decoders={'bposd': SinterBpOsdDecoder(
-            max_iter=5,
-            bp_method="ms",
-            ms_scaling_factor=0.625,
-            schedule="parallel",
-            osd_method="osd0"),
-            "belief_find": SinterBeliefFindDecoder(max_iter=5,
+        decoders=['bposd', 'belief_find', 'bplsd'],
+        custom_decoders={
+            'bposd': SinterBpOsdDecoder(
+                max_iter=10,
+                bp_method="ms",
+                ms_scaling_factor=0.625,
+                schedule="parallel",
+                osd_method="osd0"),
+            "belief_find": SinterBeliefFindDecoder(max_iter=10,
                                                    bp_method="ms",
                                                    ms_scaling_factor=0.625,
-                                                   schedule="parallel")},
+                                                   schedule="parallel"),
+            'bplsd': SinterLsdDecoder(
+                max_iter=2,
+                bp_method="ms",
+                ms_scaling_factor=0.625,
+                schedule="parallel",
+                lsd_order=0),
+        },
 
         print_progress=True,
         save_resume_filepath=f'bposd_surface_code.csv',
@@ -55,7 +64,7 @@ def main():
         print(sample.to_csv_line())
 
     # Render a matplotlib plot of the data.
-    fig, axis = plt.subplots(1, 2, sharey=True, figsize=(10, 5))
+    fig, axis = plt.subplots(1, 3, sharey=True, figsize=(10, 5))
     sinter.plot_error_rate(
         ax=axis[0],
         stats=samples,
@@ -71,9 +80,17 @@ def main():
         filter_func=lambda stat: stat.decoder == 'belief_find',
         x_func=lambda stat: stat.json_metadata['p'],
     )
+    sinter.plot_error_rate(
+        ax=axis[2],
+        stats=samples,
+        group_func=lambda stat: f"Rotated Surface Code d={stat.json_metadata['d']}",
+        filter_func=lambda stat: stat.decoder == 'lsd',
+        x_func=lambda stat: stat.json_metadata['p'],
+    )
     axis[0].set_ylabel('Logical Error Rate')
     axis[0].set_title('BPOSD')
     axis[1].set_title('Belief Find')
+    axis[2].set_title('LSD')
     for ax in axis:
         ax.loglog()
         ax.grid()

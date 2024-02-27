@@ -17,7 +17,7 @@
 #include "rng.hpp"
 #include "sort.hpp"
 
-namespace ldpc::bp{
+namespace ldpc::bp {
 
     enum BpMethod {
         PRODUCT_SUM = 0,
@@ -27,6 +27,7 @@ namespace ldpc::bp{
     enum BpSchedule {
         SERIAL = 0,
         PARALLEL = 1,
+        SERIAL_RELATIVE = 2
     };
 
     enum BpInputType {
@@ -37,18 +38,20 @@ namespace ldpc::bp{
 
     const std::vector<int> NULL_INT_VECTOR = {};
 
-class BpEntry: public ldpc::sparse_matrix_base::EntryBase<BpEntry>{ 
-    public:  
-        double bit_to_check_msg=0.0;
-        double check_to_bit_msg=0.0;
+    class BpEntry : public ldpc::sparse_matrix_base::EntryBase<BpEntry> {
+    public:
+        double bit_to_check_msg = 0.0;
+        double check_to_bit_msg = 0.0;
+
         ~BpEntry() = default;
     };
 
 
-typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
+    typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
 
 
     class BpDecoder {
+        // TODO properties should be private and only accessible via getters and setters
     public:
         BpSparse &pcm;
         std::vector<double> channel_probabilities;
@@ -71,7 +74,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         bool converge;
         int random_schedule_seed;
         bool random_schedule_at_every_iteration;
-        ldpc::rng::RandomListShuffle<int> rng_list_shuffle; 
+        ldpc::rng::RandomListShuffle<int> rng_list_shuffle;
 
         BpDecoder(
                 BpSparse &parity_check_matrix,
@@ -82,7 +85,7 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                 double min_sum_scaling_factor = 0.625,
                 int omp_threads = 1,
                 std::vector<int> serial_schedule = NULL_INT_VECTOR,
-                int random_schedule_seed = 0,
+                int random_schedule_seed = -1, // TODO what should be default here? 0 is set but -1 is checked in decode method?
                 bool random_schedule_at_every_iteration = true,
                 BpInputType bp_input_type = AUTO) :
                 pcm(parity_check_matrix) //the parity check matrix is passed in by reference
@@ -106,12 +109,18 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             this->random_schedule_at_every_iteration = random_schedule_at_every_iteration;
             this->bp_input_type = bp_input_type;
 
+
+            if (this->channel_probabilities.size() != this->bit_count) {
+                throw std::runtime_error("Channel probabilities vector must have length equal to the number of bits");
+            }
             if (serial_schedule != NULL_INT_VECTOR) {
                 this->serial_schedule_order = serial_schedule;
                 this->random_schedule_seed = -1;
             } else {
                 this->serial_schedule_order.resize(bit_count);
-                for (int i = 0; i < bit_count; i++) this->serial_schedule_order[i] = i;
+                for (int i = 0; i < bit_count; i++) {
+                    this->serial_schedule_order[i] = i;
+                }
                 this->rng_list_shuffle.seed(this->random_schedule_seed);
             }
 
@@ -143,18 +152,17 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         std::vector<uint8_t> decode(std::vector<uint8_t> &input_vector) {
 
 
-            if((this->bp_input_type == AUTO && input_vector.size() == this->bit_count) || this->bp_input_type == RECEIVED_VECTOR){
+            if ((this->bp_input_type == AUTO && input_vector.size() == this->bit_count) ||
+                this->bp_input_type == RECEIVED_VECTOR) {
                 auto syndrome = pcm.mulvec(input_vector);
                 std::vector<uint8_t> rv_decoding;
-                if (schedule == PARALLEL){
+                if (schedule == PARALLEL) {
                     rv_decoding = bp_decode_parallel(syndrome);
-                }
-                else if (schedule == SERIAL){
+                } else if (schedule == SERIAL || schedule == SERIAL_RELATIVE) {
                     rv_decoding = bp_decode_serial(syndrome);
-                }
-                else throw std::runtime_error("Invalid BP schedule");
+                } else throw std::runtime_error("Invalid BP schedule");
 
-                for(int i = 0; i<this->bit_count; i++){
+                for (int i = 0; i < this->bit_count; i++) {
                     this->decoding[i] = rv_decoding[i] ^ input_vector[i];
                 }
 
@@ -163,9 +171,11 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
             }
 
 
-            if (schedule == PARALLEL) return bp_decode_parallel(input_vector);
-            else if (schedule == SERIAL) return bp_decode_serial(input_vector);
-            else throw std::runtime_error("Invalid BP schedule");
+            if (schedule == PARALLEL) {
+                return bp_decode_parallel(input_vector);
+            } else if (schedule == SERIAL || schedule == SERIAL_RELATIVE) {
+                return bp_decode_serial(input_vector);
+            } else { throw std::runtime_error("Invalid BP schedule"); }
 
         }
 
@@ -397,29 +407,34 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
         }
 
         std::vector<uint8_t> &bp_decode_serial(std::vector<uint8_t> &syndrome) {
-
             int check_index;
             this->converge = false;
-
             // initialise BP
             this->initialise_log_domain_bp();
 
-
             for (int it = 1; it <= maximum_iterations; it++) {
-
                 if (this->random_schedule_seed > -1) {
                     this->rng_list_shuffle.shuffle(this->serial_schedule_order);
+                } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
+                    // resort by LLRs in each iteration to ensure that the most reliable bits are considered first
+                    std::sort(this->serial_schedule_order.begin(), this->serial_schedule_order.end(),
+                              [this, it](int bit1, int bit2) {
+                                  if (it != 1) {
+                                      return this->log_prob_ratios[bit1] > this->log_prob_ratios[bit2];
+                                  } else {
+                                      return std::log((1 - channel_probabilities[bit1]) / channel_probabilities[bit1]) >
+                                             std::log((1 - channel_probabilities[bit2]) / channel_probabilities[bit2]);
+                                  }
+                              });
                 }
 
                 for (int bit_index: this->serial_schedule_order) {
                     double temp;
                     this->log_prob_ratios[bit_index] = std::log(
                             (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
-
                     if (this->bp_method == 0) {
                         for (auto &e: this->pcm.iterate_column(bit_index)) {
                             check_index = e.row_index;
-
                             e.check_to_bit_msg = 1.0;
                             for (auto &g: this->pcm.iterate_row(check_index)) {
                                 if (&g != &e) {
@@ -443,42 +458,33 @@ typedef ldpc::gf2sparse::GF2Sparse<BpEntry> BpSparse;
                                     if (g.bit_to_check_msg <= 0) sgn += 1;
                                 }
                             }
-
                             double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                             e.check_to_bit_msg = ms_scaling_factor * message_sign * temp;
                             e.bit_to_check_msg = log_prob_ratios[bit_index];
                             this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                         }
-
                     }
-
-                    if (this->log_prob_ratios[bit_index] <= 0) this->decoding[bit_index] = 1;
-                    else this->decoding[bit_index] = 0;
-
+                    if (this->log_prob_ratios[bit_index] <= 0) {
+                        this->decoding[bit_index] = 1;
+                    } else {
+                        this->decoding[bit_index] = 0;
+                    }
                     temp = 0;
                     for (auto &e: this->pcm.reverse_iterate_column(bit_index)) {
                         e.bit_to_check_msg += temp;
                         temp += e.check_to_bit_msg;
                     }
-
                 }
 
-
-                // compute the syndrome for the current candidate decoding solution                
+                // compute the syndrome for the current candidate decoding solution
                 this->candidate_syndrome = pcm.mulvec(decoding, candidate_syndrome);
-
                 this->iterations = it;
                 if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
                     this->converge = true;
                     return this->decoding;
                 }
-
-
             }
-
-            // this->converge = false;
             return this->decoding;
-
         }
 
         std::vector<uint8_t> &

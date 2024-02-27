@@ -304,7 +304,7 @@ class BpDecoder(BpDecoderBase):
     ms_scaling_factor : Optional[float], optional
         The scaling factor for the minimum sum method, by default 1.0.
     schedule : Optional[str], optional
-        The scheduling method for belief propagation: 'parallel' or 'serial', by default 'parallel'.
+        The scheduling method for belief propagation: 'parallel', 'serial', or 'serial_relative'. By default 'parallel'.
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads to use, by default 1.
     random_schedule_seed : Optional[int], optional

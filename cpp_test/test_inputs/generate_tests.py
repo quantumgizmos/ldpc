@@ -187,16 +187,16 @@ def lu_solve_tests():
     output_file = open("gf2_lu_solve_test.csv", "a")
 
     for j in tqdm(range(100)):
-        n = np.random.randint(1, 200)
-        m = np.random.randint(1, 150)
+        n = np.random.randint(1, 500)
+        m = np.random.randint(1, 500)
 
         pcm = random_binary_matrix(
-            height=m, width=n, sparsity=0.1 * np.random.randint(10)
+            height=m, width=n, sparsity=0.01
         )
 
-        for _ in range(np.random.randint(10)):
-            pcm[np.random.randint(0, m)] = pcm[np.random.randint(0, m)]
-            pcm[:, np.random.randint(0, n)] = np.zeros(m).astype(int)
+        # for _ in range(np.random.randint(10)):
+        #     pcm[np.random.randint(0, m)] = pcm[np.random.randint(0, m)]
+        #     pcm[:, np.random.randint(0, n)] = np.zeros(m).astype(int)
 
         vector = np.zeros(n).astype(int)
         for k in range(n):
@@ -217,4 +217,4 @@ def lu_solve_tests():
 
 if __name__ == "__main__":
     lu_solve_tests()
-    matmul_tests()
+    # matmul_tests()
