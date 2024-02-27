@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import stim
 from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
@@ -11,13 +12,14 @@ from ldpc.ckt_noise.config import (
 
 
 class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
-    def __init__(self,
-                 model: stim.DetectorErrorModel,
-                 **decoder_kwargs):
-        self.decoder_args = decoder_kwargs
+    def __init__(self, model: stim.DetectorErrorModel, **kwargs):
+        self.decoder_config = DEFAULT_BPOSD_DECODER_ARGS | kwargs.pop(
+            "decoder_config", {}
+        )
+
         super().__init__(
             model=model,
-            **decoder_kwargs,
+            **kwargs,
         )
 
     def _get_dcm(self):
@@ -51,14 +53,10 @@ class BpOsdOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         Initialize the decoder for a given round.
         """
-        args = self.decoder_args["bposd_args"] | DEFAULT_BPOSD_DECODER_ARGS
         decoder = BpOsdDecoder(
             round_dcm,
             error_channel=list(weights),
-            osd_method=args["osd_method"],
-            osd_order=args["osd_order"],
-            max_iter = args["max_iter"],
-            bp_method=args["bp_method"]
+            **self.decoder_config,
         )
 
         return decoder

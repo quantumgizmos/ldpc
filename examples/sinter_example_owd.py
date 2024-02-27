@@ -21,20 +21,26 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
     decoders = {}
     for d in ds:
         for r in decodings:
-            # decoders[f"bposd_owd_d{d}_r{r}"] = SinterDecoder_BPOSD_OWD(
-            #     decodings= int(r),
-            #     window=int(2 * d),
-            #     commit= int(d),
-            #     num_checks=int(d-1),
-            #     bposd_args=DEFAULT_BPOSD_DECODER_ARGS
-            # )
-            decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
-                decodings= int(r),
+            decoders[f"bposd_owd_d{d}_r{r}"] = SinterDecoder_BPOSD_OWD(
+                decodings=int(r),
                 window=int(2 * d),
-                commit= int(d),
-                num_checks=int(d-1),
-                lsd_args=DEFAULT_LSD_DECODER_ARGS
+                commit=int(d),
+                num_checks=int(d - 1),
             )
+            decoders[f"lsd_owd_d{d}_r{r}"] = SinterDecoder_LSD_OWD(
+                decodings=int(r),
+                window=int(2 * d),
+                commit=int(d),
+                num_checks=int(d - 1),
+            )
+            decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
+                decodings=int(r),
+                window=int(2 * d),
+                commit=int(d),
+                num_checks=int((d**2 - 1)),
+                decoder_config={},
+            )
+
             # decoders[f"pymatching_owd_d{d}_r{r}"] = SinterDecoder_PyMatching_OWD(
             #     decodings=int(r),
             #     window=int(2 * d),
@@ -48,7 +54,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
     for r in decodings:
         for p in ps:
             for d in ds:
-                rounds = int((r + 1) * d) - 1
+                rounds = int((r + 1) * d)
                 sc_circuit = stim.Circuit.generated(
                     rounds=rounds,
                     distance=int(d),
@@ -56,11 +62,11 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                     after_reset_flip_probability=p,
                     before_measure_flip_probability=p,
                     before_round_data_depolarization=p,
-                    code_task=f"repetition_code:memory",
+                    code_task=f"surface_code:rotated_memory_x",
                 )
                 yield sinter.Task(
                     circuit=sc_circuit,
-                    decoder=f"lsd_owd_d{d}_r{r}",
+                    decoder=f"pymatching_owd_d{d}_r{r}",
                     json_metadata={
                         "p": p,
                         "d": int(d),
@@ -73,18 +79,18 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
 
 
 def main():
-    decodings = np.array([1, 2, 3])
-    ps = np.geomspace(0.02, 0.1, 9)
-    ds = np.array([5, 9, 13])
+    decodings = np.array([2, 3])
+    ps = np.geomspace(2e-3, 0.011, 9)
+    ds = np.array([11])
 
     samples = sinter.collect(
         num_workers=6,
-        max_shots=100_000,
+        max_shots=50_000,
         max_errors=500,
         tasks=generate_example_tasks(ps, ds, decodings),
         custom_decoders=generate_decoders(ds, decodings),
         print_progress=True,
-        # save_resume_filepath=f"owd_rep.csv",
+        save_resume_filepath=f"owd_sc.csv",
     )
 
     # Print samples as CSV data.

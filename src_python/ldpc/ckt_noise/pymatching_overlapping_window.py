@@ -56,13 +56,15 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
 
         min_float = sys.float_info.min
-        return -np.log(min_float)
+        return np.clip(-np.log(min_float), -16777215, +16777215)
 
     def _get_weights(self):
         """
         Return the weights for the error channel of the decoder obtained from the detector error model.
         """
-        return np.log1p(self.dem_matrices.priors) - np.log(self.dem_matrices.priors)
+        probs = self.dem_matrices.hyperedge_to_edge_matrix @ self.dem_matrices.priors
+        probs[probs == 0] = 1e-308
+        return np.clip(np.log1p(probs) - np.log(probs), -16777215, +16777215)
 
     def _init_decoder(self, round_dcm: np.ndarray, weights: np.ndarray):
         """

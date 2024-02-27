@@ -8,8 +8,8 @@ from ldpc.ckt_noise.pymatching_overlapping_window import (
 import numpy as np
 from sinter import Decoder, CompiledDecoder
 import stim
-from ldpc.ckt_noise.bposd_overlapping_window import BpOsdOverlappingWindowDecoder
 from ldpc.ckt_noise.lsd_overlapping_window import LsdOverlappingWindowDecoder
+from ldpc.ckt_noise.bposd_overlapping_window import BpOsdOverlappingWindowDecoder
 
 
 class SinterCompiledDecoder_OWD_Base(CompiledDecoder):
@@ -23,9 +23,9 @@ class SinterCompiledDecoder_OWD_Base(CompiledDecoder):
         self.decoder = decoder
 
     def decode_shots_bit_packed(
-            self,
-            *,
-            bit_packed_detection_event_data: np.ndarray,
+        self,
+        *,
+        bit_packed_detection_event_data: np.ndarray,
     ) -> np.ndarray:
         return self.decoder.decode_batch(
             shots=bit_packed_detection_event_data,
@@ -36,30 +36,30 @@ class SinterCompiledDecoder_OWD_Base(CompiledDecoder):
 
 class SinterDecoder_Base_OWD(Decoder):
     def __init__(
-            self,
-            Decoder_cls,  # should be class compatible with SinterCompiledDecoder_OWD_Base
-            **decoder_kwargs,
+        self,
+        Decoder_cls,  # should be class compatible with SinterCompiledDecoder_OWD_Base
+        **decoder_kwargs,
     ):
         self.Decoder_cls = Decoder_cls
         self.decoder_kwargs = decoder_kwargs
 
     def compile_decoder_for_dem(
-            self, *, dem: stim.DetectorErrorModel
+        self, *, dem: stim.DetectorErrorModel
     ) -> CompiledDecoder:
         return SinterCompiledDecoder_OWD_Base(
             self.Decoder_cls(dem, **self.decoder_kwargs)
         )
 
     def decode_via_files(
-            self,
-            *,
-            num_shots: int,
-            num_dets: int,
-            num_obs: int,
-            dem_path: pathlib.Path,
-            dets_b8_in_path: pathlib.Path,
-            obs_predictions_b8_out_path: pathlib.Path,
-            tmp_dir: pathlib.Path,
+        self,
+        *,
+        num_shots: int,
+        num_dets: int,
+        num_obs: int,
+        dem_path: pathlib.Path,
+        dets_b8_in_path: pathlib.Path,
+        obs_predictions_b8_out_path: pathlib.Path,
+        tmp_dir: pathlib.Path,
     ) -> None:
         """Performs decoding by reading problems from, and writing solutions to, file paths.
         Args:
@@ -109,23 +109,23 @@ class SinterDecoder_Base_OWD(Decoder):
 
 class SinterDecoder_BPOSD_OWD(SinterDecoder_Base_OWD):
     def __init__(
-            self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
-            **decoder_kwargs,
+        self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
+        **decoder_kwargs,
     ):
         super().__init__(BpOsdOverlappingWindowDecoder, **decoder_kwargs)
 
 
 class SinterDecoder_LSD_OWD(SinterDecoder_Base_OWD):
     def __init__(
-            self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
-            **decoder_kwargs,
+        self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
+        **decoder_kwargs,
     ):
         super().__init__(LsdOverlappingWindowDecoder, **decoder_kwargs)
 
 
 class SinterDecoder_PyMatching_OWD(SinterDecoder_Base_OWD):
     def __init__(
-            self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
-            **decoder_kwargs,
+        self,  # should be class compatible with SinterCompiledDecoder_OWD_Base
+        **decoder_kwargs,
     ):
         super().__init__(PyMatchingOverlappingWindowDecoder, **decoder_kwargs)
