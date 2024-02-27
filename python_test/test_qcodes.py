@@ -9,15 +9,11 @@ from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.noise_models import generate_bsc_error
 
 
-<<<<<<< HEAD
 class GdDecoder(BpDecoder):
     def decode(self,syndrome):
         return self.gd_decode(syndrome,10)
 
 def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label):
-=======
-def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBUG = False):
->>>>>>> l4_dev
     np.random.seed(seed)
     fail = 0
     min_logical = hx.shape[1]
@@ -27,17 +23,10 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
     additional_stats = []
 
     for i in range(run_count):
-<<<<<<< HEAD
-        # print(i)
-        error = generate_bsc_error(hx.shape[1], error_rate)
-        z = hx@error%2
-        # print(np.nonzero(z)[0])
-=======
         if DEBUG: print(f"Iteration: {i}")
         error = generate_bsc_error(hx.shape[1], error_rate)
         z = hx@error%2
         if DEBUG: print(f"Syndrome: {np.nonzero(z)[0].__repr__()}")
->>>>>>> l4_dev
         decoding = DECODER.decode(z)
         residual = (decoding + error) %2
 
@@ -158,36 +147,6 @@ def test_toric_20():
     print("...................................................")
     print()
 
-<<<<<<< HEAD
-    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
-    ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
-        
-    gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ps", schedule="parallel")
-
-    syndrome = hx@generate_bsc_error(hx.shape[1], error_rate)%2
-
-    decoding = gd_decoder.decode(syndrome)
-    
-    ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, gd_decoder, "Min-sum BpGd parallel schedule")
-
-
-
- 
-    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd_cs", osd_order = 5)
-    # ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-cs-5 parallel schedule")
-
-    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd_e", osd_order = 5)
-    # ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-e-5 parallel schedule")
-
-    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")
-    # ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-0 serial schedule")
-  
-    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ps", schedule="parallel", osd_method = "osd0")
-    # ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Prod-sum osd-0 parallel schedule")
-
-    # decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="inversion", bits_per_step=1)
-    # ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
-=======
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
  
@@ -205,7 +164,6 @@ def test_toric_20():
 
     decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="peeling", bits_per_step=1)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
->>>>>>> l4_dev
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
                            schedule="parallel", bits_per_step=1, osd_order=5)
@@ -316,14 +274,5 @@ def test_failing_case_lsd_w():
     decoder.decode(syndrome)
 
 if __name__ == "__main__":
-
-<<<<<<< HEAD
-    decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="peeling", bits_per_step=1)
-    ler, min_logical, speed = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
-
-if __name__ == "__main__":
     test_882_24_24()
     # test_toric_20()
-=======
-    test_surface_20()
->>>>>>> l4_dev
