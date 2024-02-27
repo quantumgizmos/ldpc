@@ -480,7 +480,7 @@ namespace ldpc {
                 // merge U matrix of other into U of this
                 for (auto i = 0; i < other.U.size(); i++) {
                     for (auto col_idx: other.U[i]) {
-                        if(col_idx != merge_bit_index) {
+                        if (col_idx != merge_bit_index) {
                             if (!pushed) {
                                 this->U.push_back(std::vector<int>{});
                                 pushed = true;
@@ -491,8 +491,9 @@ namespace ldpc {
                 }
                 // since we leave out the merge bit take into account that this could account for a rank decrease
                 // we eliminate the merge bit column later. If it contributes to rank it will be increased again.
-                this->matrix_rank += other.matrix_rank-1;
-                this->cols_eliminated += other.cols_eliminated-1;
+                this->matrix_rank += other.matrix_rank - 1;
+                this->cols_eliminated =
+                        other.cols_eliminated > 0 ? this->cols_eliminated + other.cols_eliminated - 1 : 0;
             }
         };
 

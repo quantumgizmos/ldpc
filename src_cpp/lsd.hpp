@@ -53,7 +53,7 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
-        tsl::robin_set<int> merge_bits;
+        int merge_bit;
         std::vector<int> cols_to_eliminate;
 
         LsdCluster() = default;
@@ -95,7 +95,6 @@ namespace ldpc::lsd {
             this->cluster_check_idx_to_pcm_check_idx.clear();
             this->pcm_check_idx_to_cluster_check_idx.clear();
             this->cluster_bit_idx_to_pcm_bit_idx.clear();
-            this->merge_bits.clear();
         }
 
         /**
@@ -155,10 +154,6 @@ namespace ldpc::lsd {
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl, this->merge_bit);
-            }
-            if (is_on_the_fly) {
-                // finally, we apply the on-the-fly elimination to the remaining cluster
-                // if on the fly returns true, syndrome is in image and the cluster is valid
                 larger->valid = larger->apply_on_the_fly_elimination();
             }
         }
@@ -216,7 +211,10 @@ namespace ldpc::lsd {
                 // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
                 this->merge_list.insert(bit_membership);
                 // keep track of merge bits
-                this->merge_bits.insert(bit_index);
+                if (this->merge_bit != -1){
+                    throw std::runtime_error("Merge bit already set, this should not happen.");
+                }
+                this->merge_bit = bit_index;
             }
             return true;
         }
@@ -366,7 +364,7 @@ namespace ldpc::lsd {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
             }
             auto syndrome_in_image = this->pluDecomposition.rref_with_y_image_check(this->cluster_pcm_syndrome,
-                                                                                    pluDecomposition.cols_eliminated);
+                                                                                    this->pluDecomposition.cols_eliminated);
             return syndrome_in_image;
         }
 
