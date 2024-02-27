@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 #include <vector>
 #include <memory>
 #include <iterator>
@@ -53,6 +54,7 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
+        bool is_randomize_same_weight_indices = false;
 
         LsdCluster() = default;
 
@@ -126,6 +128,9 @@ namespace ldpc::lsd {
                 auto sorted_indices = sort_indices(cluster_bit_weights);
                 auto candidate_bit_nodes_vector = std::vector<int>(this->candidate_bit_nodes.begin(),
                                                                    this->candidate_bit_nodes.end());
+                if (this->is_randomize_same_weight_indices){
+                    sorted_indices = randomize_same_weight_indices(sorted_indices, cluster_bit_weights);
+                }
                 int count = 0;
                 for (auto i: sorted_indices) {
                     if (count == bits_per_step) {
@@ -137,6 +142,38 @@ namespace ldpc::lsd {
                 }
             }
             this->merge_with_intersecting_clusters(is_on_the_fly);
+        }
+
+        static std::vector<int> randomize_same_weight_indices(const std::vector<int> &sorted_indices,
+                                                              const std::vector<double> &cluster_bit_weights) {
+            if (cluster_bit_weights.empty() || sorted_indices.empty()) {
+                return {};
+            }
+            auto reshuffeled_indices = std::vector<int>(sorted_indices.size());
+            auto same_weight_indices = std::vector<int>();
+            auto other_indices = std::vector<int>();
+            auto least_wt = cluster_bit_weights[sorted_indices[0]];
+
+            for (auto sorted_index : sorted_indices) {
+                if (cluster_bit_weights[sorted_index] == least_wt) {
+                    same_weight_indices.push_back(sorted_index);
+                } else {
+                    other_indices.push_back(sorted_index);
+                }
+            }
+            // if there are bits with the same weight, randomize their indices
+            if (same_weight_indices.size() > 1) {
+                std::shuffle(same_weight_indices.begin(), same_weight_indices.end(),
+                             std::mt19937(std::random_device()()));
+                for (auto i = 0; i < same_weight_indices.size(); i++) {
+                    reshuffeled_indices[i] = same_weight_indices[i];
+                }
+                // add all other indices to the reshuffeled list
+                for (auto i = 0; i < other_indices.size(); i++) {
+                    reshuffeled_indices[i + same_weight_indices.size()] = other_indices[i];
+                }
+            }
+            return reshuffeled_indices;
         }
 
         /**
@@ -200,27 +237,20 @@ namespace ldpc::lsd {
                 // bit already in current cluster
                 return false;
             }
-            if (bit_membership == nullptr) {
-                //if the bit has not yet been assigned to a cluster we add it.
-                // if we are in merge mode we add it
+            if (bit_membership == nullptr || in_merge) {
+                //if the bit has not yet been assigned to a cluster or we are in merge mode we add it directly.
                 this->add_bit(bit_index);
-            } else {
-                //if the bit already exists in a cluster, we mark down that this cluster should be
-                //merged with the exisiting cluster.
-                if (in_merge) {
-                    // if we are in merge mode we add it anyways
-                    this->add_bit(bit_index);
-                } else {
-                    // otherwise, we add its cluster to merge list and do not add directly.
-                    this->merge_list.insert(bit_membership);
+                if (this->global_timestep_bit_history != nullptr) {
+                    // add bit to timestep history with timestep the map size -1
+                    (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
                 }
+                // add incident checks as well, i.e., whole column to cluster pcm
+                this->add_column_to_cluster_pcm(bit_index);
+            } else {
+                // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
+                this->merge_list.insert(bit_membership);
             }
-            if (this->global_timestep_bit_history != nullptr) {
-                // add bit to timestep history with timestep the map size -1
-                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
-            }
-            // add incident checks
-            this->add_column_to_cluster_pcm(bit_index);
+
             return true;
         }
 
