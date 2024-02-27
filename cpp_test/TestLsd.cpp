@@ -369,12 +369,12 @@ TEST(LsdDecoder, lsdw_decode) {
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
-        auto lsd = LsdDecoder(pcm);
+        auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP,3);
         for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
             // std::cout << i << std::endl;
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
             bp.decode(syndrome);
-            auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 3);
+            auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
             auto decoding_syndrome = pcm.mulvec(decoding);
             ASSERT_TRUE(syndrome == decoding_syndrome);
         }
@@ -388,13 +388,13 @@ TEST(LsdDecoder, lsdw_decode_ring_code) {
         auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 3;
-        auto lsd = LsdDecoder(pcm);
+        auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP,5);
 
         for (int i = 0; i < std::pow(2, length); i++) {
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
-            auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 5);
+            auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
             auto decoding_syndrome = pcm.mulvec(decoding);
             ASSERT_TRUE(syndrome == decoding_syndrome);
         }
@@ -427,9 +427,9 @@ TEST(LsdDecoder, test_fail_case){
     auto channel_probabilities = std::vector<double>(pcm.n, 0.01);
     //setup the BP decoder with only 2 iterations
     auto bp = ldpc::bp::BpDecoder(pcm, channel_probabilities, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
-    auto lsd = LsdDecoder(pcm);
+    auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP,5);
     bp.decode(syndrome);
-    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 5);
+    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
     auto decoding_syndrome = pcm.mulvec(decoding);
     ASSERT_TRUE(bp.converge == false);
     ASSERT_TRUE(syndrome == decoding_syndrome);
@@ -440,11 +440,10 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
     bp.maximum_iterations = 3;
-    auto lsd = LsdDecoder(pcm);
+    auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::EXHAUSTIVE,0);
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
-    lsd.setLsdMethod(ldpc::osd::OsdMethod::EXHAUSTIVE);
-    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true, 0);
+    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
 
     auto stats = lsd.statistics;
     std::cout << stats.toString() << std::endl;

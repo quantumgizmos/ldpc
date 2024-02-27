@@ -200,27 +200,20 @@ namespace ldpc::lsd {
                 // bit already in current cluster
                 return false;
             }
-            if (bit_membership == nullptr) {
-                //if the bit has not yet been assigned to a cluster we add it.
-                // if we are in merge mode we add it
+            if (bit_membership == nullptr || in_merge) {
+                //if the bit has not yet been assigned to a cluster or we are in merge mode we add it directly.
                 this->add_bit(bit_index);
-            } else {
-                //if the bit already exists in a cluster, we mark down that this cluster should be
-                //merged with the exisiting cluster.
-                if (in_merge) {
-                    // if we are in merge mode we add it anyways
-                    this->add_bit(bit_index);
-                } else {
-                    // otherwise, we add its cluster to merge list and do not add directly.
-                    this->merge_list.insert(bit_membership);
+                if (this->global_timestep_bit_history != nullptr) {
+                    // add bit to timestep history with timestep the map size -1
+                    (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
                 }
+                // add incident checks as well, i.e., whole column to cluster pcm
+                this->add_column_to_cluster_pcm(bit_index);
+            } else {
+                // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
+                this->merge_list.insert(bit_membership);
             }
-            if (this->global_timestep_bit_history != nullptr) {
-                // add bit to timestep history with timestep the map size -1
-                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
-            }
-            // add incident checks
-            this->add_column_to_cluster_pcm(bit_index);
+
             return true;
         }
 
