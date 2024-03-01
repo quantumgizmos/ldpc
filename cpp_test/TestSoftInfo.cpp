@@ -6,61 +6,35 @@
 
 using namespace std;
 
-// TEST(SoftInfoDecoder, above_cutoff_same_as_ms) {
+TEST(SoftInfoDecoder, above_cutoff_same_as_ms) {
 
-//     /*The soft into decoder should give the same result
-//     as min-sum BP if the syndrome is below the cutoff.*/
+    /*The soft into decoder should give the same result
+    as min-sum BP if the syndrome is below the cutoff.*/
 
-
-//     //Setup repetition code
-//     int N = 4;
-//     auto pcm = ldpc::bp::BpSparse::New(N-1, N);
-//     for(int i = 0; i<N-1; i++){
-//         pcm->insert_entry(i, i);
-//         pcm->insert_entry(i,i+1);
-//     }
-
-//     vector<double> error_channel(pcm->n,0.1);
-//     //could we come up with a sum product formulation for this?
-//     auto bpd = new ldpc::bp::BpDecoder(pcm,error_channel,N,1,1.0,1);
-
-//     for (int j = 0; j<(N-1); j++){
-        
-
-//         vector<double> soft_syndrome(pcm->m,2);
-//         soft_syndrome[j]*=-1;
-//         vector<uint8_t> hard_syndrome(pcm->m,0);
-//         hard_syndrome[j] = 1;
+    auto length = 3;
+    //Setup ring code
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(length);
 
 
-//         // ldpc::sparse_matrix_util::print_vector(soft_syndrome);
-//         // ldpc::sparse_matrix_util::print_sparse_matrix(*pcm);
-
-
-
-
-//         vector<uint8_t> normal_decoding;
-//         bpd->decode(hard_syndrome);
-//         for(auto bit: bpd->decoding) normal_decoding.push_back(bit);
-
-//         double cutoff = 1;
-//         vector<uint8_t> soft_decoding;
-//         bpd->soft_info_decode_serial(soft_syndrome,cutoff);
-//         // bpd->decode(hard_syndrome);
-
-//         for(auto bit: bpd->decoding) soft_decoding.push_back(bit);
-
-//         // cout<<"Decoding: "<<j<<endl;
-//         // ldpc::sparse_matrix_util::print_vector(normal_decoding);
-//         // ldpc::sparse_matrix_util::print_vector(soft_decoding);
-
-//         for(int i = 0; i<pcm->n; i++){
-//             ASSERT_EQ(normal_decoding[i],soft_decoding[i]);
-//         }
-
-//     }
-
-// }
+    vector<double> error_channel(pcm.n, 0.1);
+    //could we come up with a sum product formulation for this?
+    auto bpd = ldpc::bp::BpDecoder(pcm, error_channel, length);
+    vector<double> soft_syndrome(pcm.m, 2.0);
+    soft_syndrome[0] = -1.0;
+    double cutoff = 2;
+    //print soft_syndrome vector
+    std::cout << "soft_syndrome before: ";
+    for(auto s: soft_syndrome){
+        cout << static_cast<double>(s) << " ";
+    }
+    std::cout << std::endl;
+    auto res = bpd.soft_info_decode_serial(soft_syndrome, cutoff, 1.0);
+    // print res
+    std::cout << "decoding: " << std::endl;
+    for (auto bit: res) {
+        cout << static_cast<int>(bit) << " ";
+    }
+}
 
 
 // TEST(SoftInfoDecoder, errored_close_to_zero) {
@@ -96,7 +70,7 @@ using namespace std;
 //         ASSERT_EQ(soft_decoding[i],0);
 //     }
 
-    
+
 // }
 
 
@@ -133,7 +107,7 @@ using namespace std;
 //         ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
 //     }
 
-    
+
 // }
 
 
@@ -170,14 +144,13 @@ using namespace std;
 //         ASSERT_EQ(soft_decoding[i],expected_decoding[i]);
 //     }
 
-    
+
 // }
 
 
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

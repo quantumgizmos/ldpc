@@ -508,6 +508,7 @@ namespace ldpc::bp {
             std::set<int> check_indices_updated;
 
             for (int it = 1; it <= maximum_iterations; it++) {
+                std::cout << "iteration: " << it << std::endl;
                 if (CONVERGED) {
                     continue;
                 }
@@ -519,6 +520,7 @@ namespace ldpc::bp {
 
                 check_indices_updated.clear();
                 for (auto bit_index: serial_schedule_order) {
+                    std::cout << "bit index: " << bit_index << std::endl;
                     double temp;
                     log_prob_ratios[bit_index] = std::log(
                             (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
@@ -542,7 +544,7 @@ namespace ldpc::bp {
                         double soft_syndrome_magnitude = std::abs(this->soft_syndrome[check_index]);
 
                         // if the soft syndrome magnitude is below cutoff, we apply the virtual update rules
-                        if (soft_syndrome_magnitude < cutoff) {
+                        if (soft_syndrome_magnitude <= cutoff) {
                             if (soft_syndrome_magnitude < std::abs(min_bit_to_check_msg)) {
                                 propagated_msg = soft_syndrome_magnitude;
                                 int check_node_sgn = sgn;
@@ -551,6 +553,7 @@ namespace ldpc::bp {
                                 }
                                 // now we check whether we have to update the soft syndrome magnitude and sign
                                 if (check_node_sgn == syndrome[check_index]) {
+                                    auto before = this->soft_syndrome[check_index];
                                     if (std::abs(check_nbr.bit_to_check_msg) < min_bit_to_check_msg) {
                                         this->soft_syndrome[check_index] =
                                                 pow(-1, syndrome[check_index]) *
@@ -559,9 +562,16 @@ namespace ldpc::bp {
                                         this->soft_syndrome[check_index] =
                                                 pow(-1, syndrome[check_index]) * min_bit_to_check_msg;
                                     }
+                                    std::cout << "update soft syndrome magnitude from " << before
+                                              <<" to " <<this->soft_syndrome[check_index]  << std::endl;
                                 } else {
+                                    std::cout << "signs do not match" << std::endl;
+                                    std::cout << "syndrome before=" << static_cast<double>(syndrome[check_index]) <<
+                                    ", soft_syndrome before=" << static_cast<double>(this->soft_syndrome[check_index]) << std::endl;
                                     syndrome[check_index] ^= 1;
                                     this->soft_syndrome[check_index] *= -1;
+                                    std::cout << "syndrome after=" << static_cast<double>(syndrome[check_index]) <<
+                                              ", soft_syndrome after=" << static_cast<double>(this->soft_syndrome[check_index]) << std::endl;
                                 }
                             }
                         }
@@ -602,6 +612,18 @@ namespace ldpc::bp {
                 iterations = it;
             }
             converge = CONVERGED;
+            std::cout << "syndrome at end: ";
+            //print syndrome
+            for (auto i = 0; i < check_count; i++) {
+                std::cout << static_cast<int>(syndrome[i]) << " ";
+            }
+            std::cout << std::endl;
+            std::cout << "soft syndrome at end: ";
+            //print syndrome
+            for (auto i = 0; i < check_count; i++) {
+                std::cout << static_cast<double>(this->soft_syndrome[i]) << " ";
+            }
+            std::cout << std::endl;
             return decoding;
         }
     };
