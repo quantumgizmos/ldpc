@@ -150,6 +150,10 @@ namespace ldpc::lsd {
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
         void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
+            if (this->merge_list.empty()) {
+                this->valid = this->apply_on_the_fly_elimination();
+                return;
+            }
             LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
             for (auto cl: merge_list) {
@@ -211,7 +215,7 @@ namespace ldpc::lsd {
                 // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
                 this->merge_list.insert(bit_membership);
                 // keep track of merge bits
-                if (this->merge_bit != -1){
+                if (this->merge_bit != -1) {
                     throw std::runtime_error("Merge bit already set, this should not happen.");
                 }
                 this->merge_bit = bit_index;
@@ -257,7 +261,6 @@ namespace ldpc::lsd {
             larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, merge_bit);
             larger->add_bit_node_to_cluster(merge_bit, true);
             larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
-            larger->apply_on_the_fly_elimination();
 
             // check nodes are added with the bits, update boundary check nodes here
             for (auto check_index: smaller->boundary_check_nodes) {
