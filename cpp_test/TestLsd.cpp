@@ -402,7 +402,7 @@ using namespace ldpc::sparse_matrix_util;
 //    }
 //}
 //
-TEST(LsdDecoder, test_fail_case){
+TEST(LsdDecoder, test_fail_case) {
     auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/qdlpc_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
     int row_count = doc.GetColumn<string>(0).size();
@@ -411,18 +411,18 @@ TEST(LsdDecoder, test_fail_case){
     int m = stoi(row[0]);
     int n = stoi(row[1]);
     auto input_csr_vector = ldpc::io::string_to_csr_vector(row[2]);
-    auto pcm = ldpc::bp::BpSparse(m,n);
+    auto pcm = ldpc::bp::BpSparse(m, n);
     pcm.csr_insert(input_csr_vector);
 
     ASSERT_TRUE(pcm.m == 192);
     ASSERT_TRUE(pcm.n == 400);
 
     //this is the syndrome that is currently failing in Python.
-    auto syndrome_sparse = std::vector<uint8_t>{ 3,   5,  10,  12,  13,  16,  28,  44,  45,  50,  55,  70,  82,
-    87,  92, 128, 130, 131, 139, 143, 157, 176};
+    auto syndrome_sparse = std::vector<uint8_t>{3, 5, 10, 12, 13, 16, 28, 44, 45, 50, 55, 70, 82,
+                                                87, 92, 128, 130, 131, 139, 143, 157, 176};
 
     auto syndrome = std::vector<uint8_t>(pcm.m, 0);
-    for(auto idx: syndrome_sparse){
+    for (auto idx: syndrome_sparse) {
         syndrome[idx] = 1;
     }
     auto channel_probabilities = std::vector<double>(pcm.n, 0.01);
@@ -434,6 +434,40 @@ TEST(LsdDecoder, test_fail_case){
     auto decoding_syndrome = pcm.mulvec(decoding);
     ASSERT_TRUE(bp.converge == false);
     ASSERT_TRUE(syndrome == decoding_syndrome);
+}
+
+TEST(LsdCluster, new_merge_clusters_test) {
+
+
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
+    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    std::vector<double> weights = {1.0, 0.5, 1.0, 1.0, 1.0};
+    // auto syndrome_index = 0;
+    auto cl1 = ldpc::lsd::LsdCluster(pcm, 0, gcm, gbm);
+    auto cl2 = ldpc::lsd::LsdCluster(pcm, 1, gcm, gbm);
+
+    cl2.grow_cluster(weights, 1, true);
+    cl1.grow_cluster(weights, 1, true);
+
+    ASSERT_TRUE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    cl2.grow_cluster(weights, 1, true);
+
+    ASSERT_FALSE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    auto expected_bit_nodes = tsl::robin_set<int>{0, 1, 2, 3, 4};
+    auto expected_check_nodes = tsl::robin_set<int>{0, 1, 2, 3};
+    ASSERT_EQ(expected_bit_nodes, cl2.bit_nodes);
+    ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
+
+    ASSERT_TRUE(cl2.valid);
+
+    delete gbm;
+    delete gcm;
+
 }
 //
 //TEST(LsdDecoder, test_cluster_stats) {

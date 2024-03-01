@@ -53,7 +53,7 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
-        int merge_bit;
+        int merge_bit = -1;
         std::vector<int> cols_to_eliminate;
 
         LsdCluster() = default;
@@ -150,12 +150,17 @@ namespace ldpc::lsd {
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
         void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
+            // if there's nothing to merge, we only update the PLU decomposition otf
             if (this->merge_list.empty()) {
+                for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
+                    this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
+                }
                 this->valid = this->apply_on_the_fly_elimination();
                 return;
             }
-            LsdCluster *larger = this;
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
+            // then update the PLU factorization using otf elimination
+            LsdCluster *larger = this;
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl, this->merge_bit);
                 larger->valid = larger->apply_on_the_fly_elimination();
