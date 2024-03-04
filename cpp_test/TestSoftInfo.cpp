@@ -14,25 +14,48 @@ TEST(SoftInfoDecoder, above_cutoff_same_as_ms) {
     auto length = 3;
     //Setup ring code
     auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(length);
+    int N = 3;
+    auto pcm2 = ldpc::bp::BpSparse(length-1, length+2);
+    // 2 rows, 5 cols
+    pcm2.insert_entry(0, 0);
+    pcm2.insert_entry(0, 1);
+    pcm2.insert_entry(1, 1);
+    pcm2.insert_entry(1, 2);
+    pcm2.insert_entry(0, 3);
+    pcm2.insert_entry(1, 4);
 
 
     vector<double> error_channel(pcm.n, 0.1);
+    vector<double> error_channel2(pcm2.n, 0.1);
+    error_channel2[pcm2.n-2] = -3.28474883;
+    error_channel2[pcm2.n-1] =  6.56949766;
+
     //could we come up with a sum product formulation for this?
-    auto bpd = ldpc::bp::BpDecoder(pcm, error_channel, length);
+    auto bpd = ldpc::bp::BpDecoder(pcm, error_channel, 15);
+    auto bpd2 = ldpc::bp::BpDecoder(pcm2, error_channel2, 15);
+
     vector<double> soft_syndrome(pcm.m, 2.0);
     soft_syndrome[0] = -1.0;
-    double cutoff = 2;
+    double cutoff = 5;
     //print soft_syndrome vector
     std::cout << "soft_syndrome before: ";
     for(auto s: soft_syndrome){
         cout << static_cast<double>(s) << " ";
     }
     std::cout << std::endl;
-    auto res = bpd.soft_info_decode_serial(soft_syndrome, cutoff, 1.0);
+    auto res = bpd.soft_info_decode_serial(soft_syndrome, cutoff, 0.780304146072379);
     // print res
     std::cout << "decoding: " << std::endl;
     for (auto bit: res) {
         cout << static_cast<int>(bit) << " ";
+    }
+    std::cout << std::endl;
+    auto hs = std::vector<uint8_t>{1,0};
+    auto res2 = bpd2.decode(hs);
+    // print res
+    std::cout << "ATD decoding: " << std::endl;
+    for (auto bit2: res2) {
+        cout << static_cast<int>(bit2) << " ";
     }
 }
 
