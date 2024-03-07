@@ -492,11 +492,21 @@ namespace ldpc {
                 }
                 // since we leave out the merge bit take into account that this could account for a rank decrease
                 // we eliminate the merge bit column later. If it contributes to rank it will be increased again.
-                this->matrix_rank =
-                        other.matrix_rank > 0 ? this->matrix_rank + other.matrix_rank - 1 : this->matrix_rank;
+                std::cout << "other matrix rank: " << other.matrix_rank << " this matrix rank: " << this->matrix_rank
+                          << std::endl;
+                if (merge_bit_index != -1){
+                    this->matrix_rank =
+                            other.matrix_rank > 0 ? this->matrix_rank + other.matrix_rank - 1
+                                                                           : this->matrix_rank;
+
+                }else{
+                    this->matrix_rank = this->matrix_rank + other.matrix_rank;
+                }
+                std::cout << "Matrix rank after plu merge: " << this->matrix_rank << std::endl;
                 this->cols_eliminated =
                         other.cols_eliminated > 0 ? this->cols_eliminated + other.cols_eliminated - 1
                                                   : this->cols_eliminated;
+                std::cout << "Cols eliminated after plu merge: " << this->cols_eliminated << std::endl;
             }
         };
 

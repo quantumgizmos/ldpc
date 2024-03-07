@@ -111,6 +111,7 @@ namespace ldpc::lsd {
             if (!this->active) {
                 return;
             }
+            std::cout << "growing cluster " << this->cluster_id << std::endl;
             // compute a list of bit nodes to grow the cluster to
             // this->eliminated_col_index = this->bit_nodes.size();
             this->compute_growth_candidate_bit_nodes();
@@ -152,10 +153,12 @@ namespace ldpc::lsd {
         void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
             // if there's nothing to merge, we only update the PLU decomposition i.e., eliminate the new column
             if (this->merge_list.empty()) {
+                std::cout << "no merges for cluster " << this->cluster_id << std::endl;
                 for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
                     this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
                 }
                 this->valid = this->apply_on_the_fly_elimination();
+                std::cout << "after otf elimination cluster " << this->cluster_id << " valid: " << this->valid << std::endl;
                 return;
             }
             // if there are clusters in the merge list, we merge them with the current cluster keeping the larger one
@@ -177,7 +180,7 @@ namespace ldpc::lsd {
             std::vector<int> boundary_checks_to_erase;
             this->candidate_bit_nodes.clear();
             // we check for new candidate bit nodes as neighbours of boundary check nodes
-            for (auto check_index: boundary_check_nodes) {
+            for (auto check_index: this->boundary_check_nodes) {
                 bool erase = true;
                 for (auto &e: this->pcm.iterate_row(check_index)) {
                     // if bit is not in this cluster, add it to the candidate list.
@@ -260,15 +263,18 @@ namespace ldpc::lsd {
             // we merge the smaller into the larger cluster
             for (auto bit_index: smaller->bit_nodes) {
                 if (bit_index != merge_bit) {
+                    std::cout << "Merging bit " << bit_index << " into cluster " << larger->cluster_id << std::endl;
                     // we add the columns to the larger cluster pcm, this takes care of indexing
                     larger->add_bit_node_to_cluster(bit_index, true);
                 }
             }
-
+            std::cout << "Merging cluster plu " << smaller->cluster_id << " into cluster " << larger->cluster_id << std::endl;
             larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, larger->merge_bit);
             // in case the clusters overlap on a bit we need to re-eliminate the merge bit in the larger cluster
             // this is not necessarily the case, as the cluster merge might be triggered by an overlap in a boundary chec
             if (larger->merge_bit != -1) {
+                std::cout << "Re-eliminating merge bit " << larger->merge_bit << " in cluster " << larger->cluster_id
+                          << std::endl;
                 larger->add_bit_node_to_cluster(merge_bit, true);
                 larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
             }
@@ -593,6 +599,7 @@ namespace ldpc::lsd {
             }
 
             while (!invalid_clusters.empty()) {
+                std::cout << "new iteration " << std::endl;
                 std::vector<int> new_bits;
                 for (auto cl: invalid_clusters) {
                     if (cl->active) {
