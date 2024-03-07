@@ -328,7 +328,7 @@ namespace ldpc {
             bool rref_with_y_image_check(std::vector<uint8_t> &y, int start_col_idx = 0) {
                 if (start_col_idx < 0) {
                     throw std::invalid_argument("start_col_idx must be non-negative.");
-                } else if (start_col_idx == this->col_count) {
+                } else if (start_col_idx != 0 && start_col_idx == this->col_count) {
                     auto in_image = true;
                     for (int i = matrix_rank; i < this->row_count; i++) {
                         if (this->y_image_check_vector[i] == 1) {
@@ -446,7 +446,8 @@ namespace ldpc {
             /**
              * Merges the PLU factorization of the current matrix with the PLU factorization of another matrix.
              * Assumes that the csc_mat of the current object has been updated to include the new columns.
-             * We want to merge the two compositions, due
+             * The merge bit index is the col index of the bit that needs to be reeliminated as its the one where the
+             * two clusters overlap.
              * @param other
              */
             void merge_with_decomposition(const PluDecomposition &other, int merge_bit_index) {

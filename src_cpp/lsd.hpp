@@ -53,7 +53,7 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
-        int merge_bit = -1;
+        int merge_bit = -1; // for now I assumed single bit growth, i.e., there can be one shared bit between two clusters
         std::vector<int> cols_to_eliminate;
 
         LsdCluster() = default;
@@ -150,7 +150,7 @@ namespace ldpc::lsd {
          * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
          */
         void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
-            // if there's nothing to merge, we only update the PLU decomposition otf
+            // if there's nothing to merge, we only update the PLU decomposition i.e., eliminate the new column
             if (this->merge_list.empty()) {
                 for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
                     this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
@@ -158,8 +158,9 @@ namespace ldpc::lsd {
                 this->valid = this->apply_on_the_fly_elimination();
                 return;
             }
+            // if there are clusters in the merge list, we merge them with the current cluster keeping the larger one
             // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
-            // then update the PLU factorization using otf elimination
+            // then, we update the PLU factorization using otf elimination
             LsdCluster *larger = this;
             for (auto cl: merge_list) {
                 larger = merge_clusters(larger, cl, this->merge_bit);
@@ -223,6 +224,7 @@ namespace ldpc::lsd {
                 if (this->merge_bit != -1) {
                     throw std::runtime_error("Merge bit already set, this should not happen.");
                 }
+                // remember bit that caused merge as we need to reeliminate this one in the larger cluster
                 this->merge_bit = bit_index;
             }
             return true;
@@ -263,10 +265,13 @@ namespace ldpc::lsd {
                 }
             }
 
-            larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, merge_bit);
-            larger->add_bit_node_to_cluster(merge_bit, true);
-            larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
-
+            larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, larger->merge_bit);
+            // in case the clusters overlap on a bit we need to re-eliminate the merge bit in the larger cluster
+            // this is not necessarily the case, as the cluster merge might be triggered by an overlap in a boundary chec
+            if (larger->merge_bit != -1) {
+                larger->add_bit_node_to_cluster(merge_bit, true);
+                larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
+            }
             // check nodes are added with the bits, update boundary check nodes here
             for (auto check_index: smaller->boundary_check_nodes) {
                 larger->boundary_check_nodes.insert(check_index);
