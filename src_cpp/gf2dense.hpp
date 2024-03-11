@@ -507,6 +507,10 @@ namespace ldpc {
                         other.cols_eliminated > 0 ? this->cols_eliminated + other.cols_eliminated - 1
                                                   : this->cols_eliminated;
                 std::cout << "Cols eliminated after plu merge: " << this->cols_eliminated << std::endl;
+
+                this->rows.insert(this->rows.end(), other.rows.begin(), other.rows.end());
+                this->row_count += other.row_count;
+                this->col_count += merge_bit_index == -1 ? other.col_count : other.col_count + 1;
             }
         };
 

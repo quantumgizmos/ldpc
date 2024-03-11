@@ -378,6 +378,7 @@ namespace ldpc::lsd {
 
             // convert cluster syndrome to dense vector fitting the cluster pcm dimensions for solving the system.
             // std::vector<uint8_t> cluster_syndrome;
+            this->cluster_pcm_syndrome.clear();
             this->cluster_pcm_syndrome.resize(this->check_nodes.size(), 0);
             for (auto s: this->enclosed_syndromes) {
                 this->cluster_pcm_syndrome[this->pcm_check_idx_to_cluster_check_idx.at(s)] = 1;
