@@ -325,6 +325,65 @@ using namespace ldpc::sparse_matrix_util;
 //
 //
 //
+
+TEST(LsdCluster, merge_clusters_merge_plus) {
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
+    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    auto cl1 = ldpc::lsd::LsdCluster(pcm, 0, gcm, gbm);
+    auto cl2 = ldpc::lsd::LsdCluster(pcm, 2, gcm, gbm);
+
+    cl1.grow_cluster(std::vector<double>{
+            0.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0}, 1, true);
+    cl2.grow_cluster(std::vector<double>{
+            1.0,
+            1.0,
+            0.0,
+            1.0,
+            1.0}, 1, true);
+
+    ASSERT_TRUE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+    ASSERT_TRUE(cl1.bit_nodes.size() == 1);
+    ASSERT_TRUE(cl2.bit_nodes.size() == 1);
+
+    cl2.grow_cluster(std::vector<double>{
+            1.0,
+            0.0,
+            1.0,
+            1.0,
+            1.0}, 1, true);
+
+    ASSERT_FALSE(cl1.active);
+    ASSERT_TRUE(cl2.active);
+
+    auto expected_bit_nodes = tsl::robin_set<int>{0, 1, 2};
+    auto expected_check_nodes = tsl::robin_set<int>{0, 1, 2};
+    ASSERT_EQ(expected_bit_nodes, cl2.bit_nodes);
+    ASSERT_EQ(expected_check_nodes, cl2.check_nodes);
+    ASSERT_TRUE(cl2.valid);
+    auto solution = cl2.pluDecomposition.lu_solve(cl2.cluster_pcm_syndrome);
+
+    auto decoding = vector<uint8_t>(pcm.n, 0);
+    for (auto cluster_bit_idx: solution) {
+        decoding[cl2.cluster_bit_idx_to_pcm_bit_idx[cluster_bit_idx]] = 1;
+    }
+
+    auto decoding_syndrome = pcm.mulvec(decoding);
+
+    auto expected_syndrome = vector<uint8_t>{1, 0, 1, 0};
+
+    ASSERT_EQ(decoding_syndrome, expected_syndrome);
+
+    delete gbm;
+    delete gcm;
+
+}
+
 TEST(LsdDecoder, otf_ring_code) {
 
     for (auto length = 3; length < 12; length++) {

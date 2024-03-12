@@ -111,16 +111,23 @@ namespace ldpc::lsd {
             if (!this->active) {
                 return;
             }
+            /*
+             * First, we compute the growth candidates and add the new bit(s) to the cluster
+             */
             std::cout << "growing cluster " << this->cluster_id << std::endl;
-            // compute a list of bit nodes to grow the cluster to
-            // this->eliminated_col_index = this->bit_nodes.size();
-            this->compute_growth_candidate_bit_nodes();
             this->merge_list.clear();
-            if (bit_weights == NULL_DOUBLE_VECTOR) {
-                for (auto bit_index: this->candidate_bit_nodes) {
-                    this->add_bit_node_to_cluster(bit_index);
+            auto merge = this->compute_growth_candidate_bit_nodes();
+            if (merge) {
+                // we have detected a merge, so we need to merge the clusters and then add the connecting `merge` bit.
+                // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
+                // then, we update the PLU factorization using otf elimination
+                LsdCluster *larger = this;
+                for (auto cl: merge_list) {
+                    larger = merge_clusters(larger, cl, this->merge_bit);
+                    larger->valid = larger->apply_on_the_fly_elimination();
                 }
             } else {
+                // if no merge was detected, we do standard growth
                 std::vector<double> cluster_bit_weights;
                 cluster_bit_weights.reserve(this->candidate_bit_nodes.size());
                 for (auto bit: this->candidate_bit_nodes) {
@@ -138,53 +145,41 @@ namespace ldpc::lsd {
                     this->add_bit_node_to_cluster(bit_index);
                     count++;
                 }
-            }
-            this->merge_with_intersecting_clusters(is_on_the_fly);
-        }
-
-        /**
-         * Merge this cluster with all clusters that intersect with it.
-         * Keeps the larger cluster and merges the smaller cluster into it.
-         * That is, the (reduced) parity check matrix of the larger cluster is kept.
-         * After merging, the on-the-fly elimination is applied to the larger cluster.
-         *
-         * If on the fly elimination is applied true is returned if the syndrome is in the cluster.
-         */
-        void merge_with_intersecting_clusters(const bool is_on_the_fly = false) {
-            // if there's nothing to merge, we only update the PLU decomposition i.e., eliminate the new column
-            if (this->merge_list.empty()) {
                 std::cout << "no merges for cluster " << this->cluster_id << std::endl;
                 for (auto idx = pluDecomposition.col_count; idx < this->bit_nodes.size(); idx++) {
                     this->pluDecomposition.add_column_to_matrix(this->cluster_pcm[idx]);
                 }
                 this->valid = this->apply_on_the_fly_elimination();
-                std::cout << "after otf elimination cluster " << this->cluster_id << " valid: " << this->valid << std::endl;
+                std::cout << "after otf elimination cluster " << this->cluster_id << " valid: " << this->valid
+                          << std::endl;
                 return;
             }
-            // if there are clusters in the merge list, we merge them with the current cluster keeping the larger one
-            // merge with overlapping clusters while keeping the larger one always and deactivating the smaller ones
-            // then, we update the PLU factorization using otf elimination
-            LsdCluster *larger = this;
-            for (auto cl: merge_list) {
-                larger = merge_clusters(larger, cl, this->merge_bit);
-                larger->valid = larger->apply_on_the_fly_elimination();
-            }
         }
+
 
         /**
          * Compute a list of candidate bit nodes to add to cluster as neighbours of boundary check nodes.
          * In case there are no new candidate bit nodes for a boundary check node, the check node is removed from the
          * boundary check node list.
+         * Return true iff a merge was detected by a distance two cluster collision.
          */
-        void compute_growth_candidate_bit_nodes() {
+        bool compute_growth_candidate_bit_nodes() {
             std::vector<int> boundary_checks_to_erase;
             this->candidate_bit_nodes.clear();
             // we check for new candidate bit nodes as neighbours of boundary check nodes
             for (auto check_index: this->boundary_check_nodes) {
                 bool erase = true;
                 for (auto &e: this->pcm.iterate_row(check_index)) {
-                    // if bit is not in this cluster, add it to the candidate list.
+                    // if bit node has a neighbouring check that is in another cluster, we need to merge
                     if (this->global_bit_membership[e.col_index] != this) {
+                        for (auto &cc: this->pcm.iterate_column(e.col_index)) {
+                            if (this->global_check_membership[cc.row_index] != nullptr) {
+                                this->merge_bit = e.col_index; // the bit connected to two checks of two different clusters
+                                this->merge_list.insert(this->global_check_membership[cc.row_index]);
+                                return true;
+                            }
+                        }
+                        // if bit is not in this cluster, add it to the candidate list.
                         candidate_bit_nodes.insert(e.col_index);
                         erase = false;
                     }
@@ -197,6 +192,7 @@ namespace ldpc::lsd {
             for (auto check_index: boundary_checks_to_erase) {
                 this->boundary_check_nodes.erase(check_index);
             }
+            return false;
         }
 
         /**
@@ -262,22 +258,18 @@ namespace ldpc::lsd {
 
             // we merge the smaller into the larger cluster
             for (auto bit_index: smaller->bit_nodes) {
-                if (bit_index != merge_bit) {
-                    std::cout << "Merging bit " << bit_index << " into cluster " << larger->cluster_id << std::endl;
-                    // we add the columns to the larger cluster pcm, this takes care of indexing
-                    larger->add_bit_node_to_cluster(bit_index, true);
-                }
+                larger->add_bit_node_to_cluster(bit_index, true);
             }
-            std::cout << "Merging cluster plu " << smaller->cluster_id << " into cluster " << larger->cluster_id << std::endl;
+            std::cout << "Merging cluster plu " << smaller->cluster_id << " into cluster " << larger->cluster_id
+                      << std::endl;
             larger->pluDecomposition.merge_with_decomposition(smaller->pluDecomposition, larger->merge_bit);
             // in case the clusters overlap on a bit we need to re-eliminate the merge bit in the larger cluster
             // this is not necessarily the case, as the cluster merge might be triggered by an overlap in a boundary chec
-            if (larger->merge_bit != -1) {
-                std::cout << "Re-eliminating merge bit " << larger->merge_bit << " in cluster " << larger->cluster_id
-                          << std::endl;
-                larger->add_bit_node_to_cluster(merge_bit, true);
-                larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
-            }
+            std::cout << "Re-eliminating merge bit " << larger->merge_bit << " in cluster " << larger->cluster_id
+                      << std::endl;
+            larger->add_bit_node_to_cluster(merge_bit, true);
+            larger->pluDecomposition.add_column_to_matrix(larger->cluster_pcm[merge_bit]);
+
             // check nodes are added with the bits, update boundary check nodes here
             for (auto check_index: smaller->boundary_check_nodes) {
                 larger->boundary_check_nodes.insert(check_index);

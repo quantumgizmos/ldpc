@@ -124,7 +124,7 @@ namespace ldpc {
             std::vector<int> pivot_cols;
             std::vector<int> not_pivot_cols;
             bool LU_constructed = false;
-            int max_row_index = 0;
+
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
                     : row_count(row_count),
                       col_count(col_count),
@@ -150,7 +150,6 @@ namespace ldpc {
                 this->pivot_cols.clear();
                 this->not_pivot_cols.clear();
                 this->y_image_check_vector.clear();
-                this->max_row_index = 0;
                 for (auto &col: this->L) {
                     col.clear();
                 }
@@ -452,7 +451,7 @@ namespace ldpc {
              */
             void merge_with_decomposition(const PluDecomposition &other, int merge_bit_index) {
                 int col_offset = this->col_count; // new 0 column index
-                int row_offset = 0; // new 0 row index
+
                 this->elimination_rows.resize(this->elimination_rows.size() + other.elimination_rows.size(),
                                               std::vector<int>{});
                 for (auto i = 0; i < other.matrix_rank; i++) {
@@ -474,11 +473,11 @@ namespace ldpc {
                 for (auto i = 0; i < other.L.size(); i++) {
                     for (auto col_idx: other.L[i]) {
                         if (col_idx != merge_bit_index) {
-                            if (this->L.size() <= i) {
-                                this->L.resize(i + 1, std::vector<int>{});
+                            if (this->L.size() <= i + this->matrix_rank) {
+                                this->L.resize(i + this->matrix_rank + 1, std::vector<int>{});
                             }
                             // x,y offset == matrix rank since we only have non zero entries in L for pivot cols
-                            this->L[i+this->matrix_rank].push_back(col_idx+this->matrix_rank);
+                            this->L[i + this->matrix_rank].push_back(col_idx + this->matrix_rank);
                         }
                     }
                 }
@@ -486,10 +485,10 @@ namespace ldpc {
                 for (auto i = 0; i < other.U.size(); i++) {
                     for (auto col_idx: other.U[i]) {
                         if (col_idx != merge_bit_index) {
-                            if (this->U.size() <= i) {
-                                this->U.resize(i + 1, std::vector<int>{});
+                            if (this->U.size() <= i + this->matrix_rank) {
+                                this->U.resize(i + this->matrix_rank + 1, std::vector<int>{});
                             }
-                            this->U[i].push_back(col_idx + this->matrix_rank);
+                            this->U[i+this->matrix_rank].push_back(col_idx + this->matrix_rank);
                         }
                     }
                 }
@@ -510,7 +509,10 @@ namespace ldpc {
                         other.cols_eliminated > 0 ? this->cols_eliminated + other.cols_eliminated - 1
                                                   : this->cols_eliminated;
                 std::cout << "Cols eliminated after plu merge: " << this->cols_eliminated << std::endl;
-                this->rows = other.rows;// TODO how to do this properly?
+                for (auto r: other.rows) {
+                    this->rows.push_back(r + this->matrix_rank);
+                }
+
                 this->row_count = this->rows.size();
                 this->col_count = this->not_pivot_cols.size() + this->pivot_cols.size();
             }

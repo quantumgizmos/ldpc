@@ -379,16 +379,30 @@ TEST(PluDecomposition, merge_with_other) {
     // ldpc::gf2dense::print_csr(pcm_csr);
     auto pcm_csc1 = ldpc::gf2dense::csc_to_csr(pcm_csr1);
     auto plu1 = ldpc::gf2dense::PluDecomposition(matrix.size(), matrix.at(0).size(), pcm_csc1);
-    auto syndr1 = std::vector<uint8_t>{1,0,0,0,0};
+    auto syndr1 = std::vector<uint8_t>{1, 0, 0, 0, 0};
     plu1.rref_with_y_image_check(syndr1);
     plu1.print();
+    auto plu1_nrcols_before = plu1.col_count;
+    auto plu1_piv_cols_before = plu1.pivot_cols;
 
     auto pcm_csc2 = ldpc::gf2dense::csc_to_csr(pcm_csr2);
     auto plu2 = ldpc::gf2dense::PluDecomposition(matrix2.size(), matrix2.at(0).size(), pcm_csc2);
-    auto syndr2 = std::vector<uint8_t>{0,0,0,1,0};
+    auto syndr2 = std::vector<uint8_t>{0, 0, 0, 1, 0};
     plu2.rref_with_y_image_check(syndr1);
     plu2.print();
 
     plu1.merge_with_decomposition(plu2, 3);
     plu1.print();
+    ASSERT_TRUE(plu1.row_count == plu1.rows.size());
+    ASSERT_TRUE(plu1.row_count == 6);
+
+    ASSERT_TRUE(plu1.L.size() == plu1.row_count);
+    ASSERT_TRUE(plu1.U.size() == plu1.matrix_rank);
+
+    ASSERT_TRUE(plu1.col_count == plu1_nrcols_before + plu2.col_count);
+    ASSERT_TRUE(plu1.pivot_cols.size() == plu1_piv_cols_before.size() + plu2.pivot_cols.size());
+    auto pivot_cols = plu1_piv_cols_before;
+    pivot_cols.insert(pivot_cols.end(), plu2.pivot_cols.begin(),
+                                                  plu2.pivot_cols.end());
+    ASSERT_TRUE(plu1.pivot_cols == pivot_cols);
 }
