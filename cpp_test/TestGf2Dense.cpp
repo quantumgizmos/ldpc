@@ -57,8 +57,8 @@ TEST(PluDecomposition, hamming_code) {
     auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.n); i++){
-        auto error = ldpc::util::decimal_to_binary(i,pcm.n);
+    for (auto i = 0; i < std::pow(2, pcm.n); i++) {
+        auto error = ldpc::util::decimal_to_binary(i, pcm.n);
         auto synd = pcm.mulvec(error);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
@@ -70,9 +70,9 @@ TEST(PluDecomposition, hamming_code) {
 TEST(PluDecomposition, hamming_code_not_full_row_rank) {
 
     auto pcm0 = hamming_code(3);
-    auto zero_mat = GF2Sparse<>(pcm0.m,pcm0.n);
+    auto zero_mat = GF2Sparse<>(pcm0.m, pcm0.n);
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0,pcm0};
+    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat, pcm0, pcm0};
     auto pcm = ldpc::gf2sparse::vstack(pstack_list);
 
     // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
@@ -82,8 +82,8 @@ TEST(PluDecomposition, hamming_code_not_full_row_rank) {
 
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.n); i++){
-        auto error = ldpc::util::decimal_to_binary(i,pcm.n);
+    for (auto i = 0; i < std::pow(2, pcm.n); i++) {
+        auto error = ldpc::util::decimal_to_binary(i, pcm.n);
         auto synd = pcm.mulvec(error);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
@@ -95,9 +95,9 @@ TEST(PluDecomposition, hamming_code_not_full_row_rank) {
 TEST(PluDecomposition, hamming_code_not_full_col_rank) {
 
     auto pcm0 = hamming_code(3);
-    auto zero_mat = GF2Sparse<>(pcm0.m,pcm0.n);
+    auto zero_mat = GF2Sparse<>(pcm0.m, pcm0.n);
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0,pcm0};
+    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat, pcm0, pcm0};
     auto pcm = ldpc::gf2sparse::hstack(pstack_list);
 
     auto pcm_csc = pcm.col_adjacency_list();
@@ -105,8 +105,8 @@ TEST(PluDecomposition, hamming_code_not_full_col_rank) {
 
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.m); i++){
-        auto synd  = ldpc::util::decimal_to_binary(i,pcm.m);
+    for (auto i = 0; i < std::pow(2, pcm.m); i++) {
+        auto synd = ldpc::util::decimal_to_binary(i, pcm.m);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
         ASSERT_EQ(x_synd, synd);
@@ -117,9 +117,9 @@ TEST(PluDecomposition, hamming_code_not_full_col_rank) {
 TEST(PluDecomposition, hamming_code_not_full_col_rank5) {
 
     auto pcm0 = hamming_code(5);
-    auto zero_mat = GF2Sparse<>(pcm0.m,pcm0.n);
+    auto zero_mat = GF2Sparse<>(pcm0.m, pcm0.n);
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0,pcm0};
+    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat, pcm0, pcm0};
     auto pcm = ldpc::gf2sparse::hstack(pstack_list);
 
     auto pcm_csc = pcm.col_adjacency_list();
@@ -127,8 +127,8 @@ TEST(PluDecomposition, hamming_code_not_full_col_rank5) {
 
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.m); i++){
-        auto synd  = ldpc::util::decimal_to_binary(i,pcm.m);
+    for (auto i = 0; i < std::pow(2, pcm.m); i++) {
+        auto synd = ldpc::util::decimal_to_binary(i, pcm.m);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
         // ldpc::sparse_matrix_util::print_vector(x);
@@ -143,9 +143,9 @@ TEST(PluDecomposition, hamming_code_not_full_col_rank5) {
 TEST(PluDecomposition, ring_code_left_padding) {
 
     auto pcm0 = ring_code(3);
-    auto zero_mat = GF2Sparse<>(pcm0.m,5);
+    auto zero_mat = GF2Sparse<>(pcm0.m, 5);
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0};
+    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat, pcm0};
     auto pcm = ldpc::gf2sparse::hstack(pstack_list);
 
     auto pcm_csc = pcm.col_adjacency_list();
@@ -153,8 +153,8 @@ TEST(PluDecomposition, ring_code_left_padding) {
 
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.n); i++){
-        auto error  = ldpc::util::decimal_to_binary(i,pcm.n);
+    for (auto i = 0; i < std::pow(2, pcm.n); i++) {
+        auto error = ldpc::util::decimal_to_binary(i, pcm.n);
         auto synd = pcm.mulvec(error);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
@@ -169,9 +169,9 @@ TEST(PluDecomposition, ring_code_left_padding) {
 TEST(PluDecomposition, ring_code_top_padding) {
 
     auto pcm0 = ring_code(3);
-    auto zero_mat = GF2Sparse<>(5,pcm0.n);
+    auto zero_mat = GF2Sparse<>(5, pcm0.n);
 
-    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat,pcm0,pcm0};
+    auto pstack_list = std::vector<decltype(pcm0)>{zero_mat, pcm0, pcm0};
     auto pcm = ldpc::gf2sparse::vstack(pstack_list);
 
     auto pcm_csc = pcm.col_adjacency_list();
@@ -179,8 +179,8 @@ TEST(PluDecomposition, ring_code_top_padding) {
 
     plu.rref();
 
-    for(auto i = 0; i<std::pow(2,pcm.n); i++){
-        auto error  = ldpc::util::decimal_to_binary(i,pcm.n);
+    for (auto i = 0; i < std::pow(2, pcm.n); i++) {
+        auto error = ldpc::util::decimal_to_binary(i, pcm.n);
         auto synd = pcm.mulvec(error);
         auto x = plu.lu_solve(synd);
         auto x_synd = pcm.mulvec(x);
@@ -193,16 +193,14 @@ TEST(PluDecomposition, ring_code_top_padding) {
 }
 
 
-
-
-TEST(GF2Sparse, lu_solve_batch){
+TEST(GF2Sparse, lu_solve_batch) {
 
     auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
     int row_count = doc.GetColumn<string>(0).size();
 
-    for(int i = 0; i<row_count; i++){
+    for (int i = 0; i < row_count; i++) {
 
         // std::cout<<i<<std::endl;
 
@@ -212,14 +210,14 @@ TEST(GF2Sparse, lu_solve_batch){
         auto input_csr_vector = ldpc::io::string_to_csr_vector(row[2]);
         auto synd = ldpc::io::binaryStringToVector(row[3]);
 
-        ASSERT_EQ(synd.size(),m);
+        ASSERT_EQ(synd.size(), m);
 
-        auto pcm = GF2Sparse<>(m,n);
+        auto pcm = GF2Sparse<>(m, n);
         pcm.csr_insert(input_csr_vector);
 
         auto pcm_csc = pcm.col_adjacency_list();
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
-        plu.rref(true,true);
+        plu.rref(true, true);
         auto x = plu.lu_solve(synd);
 
         auto x_synd = pcm.mulvec(x);
@@ -230,14 +228,14 @@ TEST(GF2Sparse, lu_solve_batch){
 }
 
 
-TEST(GF2Sparse, fast_lu_solve_batch){
+TEST(GF2Sparse, fast_lu_solve_batch) {
 
     auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/gf2_lu_solve_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
 
     int row_count = doc.GetColumn<string>(0).size();
 
-    for(int i = 0; i<row_count; i++){
+    for (int i = 0; i < row_count; i++) {
 
         // std::cout<<i<<std::endl;
 
@@ -246,9 +244,9 @@ TEST(GF2Sparse, fast_lu_solve_batch){
         int n = stoi(row[1]);
         auto input_csr_vector = ldpc::io::string_to_csr_vector(row[2]);
         auto synd = ldpc::io::binaryStringToVector(row[3]);
-        ASSERT_EQ(synd.size(),m);
-        
-        auto pcm = GF2Sparse<>(m,n);
+        ASSERT_EQ(synd.size(), m);
+
+        auto pcm = GF2Sparse<>(m, n);
         pcm.csr_insert(input_csr_vector);
         auto pcm_csc = pcm.col_adjacency_list();
         // ldpc::sparse_matrix_util::print_sparse_matrix(pcm);
@@ -258,7 +256,7 @@ TEST(GF2Sparse, fast_lu_solve_batch){
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
         auto x = plu.fast_lu_solve(synd);
 
-        
+
         auto x_synd = pcm.mulvec(x);
         ASSERT_EQ(x_synd, synd);
 
@@ -268,14 +266,14 @@ TEST(GF2Sparse, fast_lu_solve_batch){
 
 TEST(PluDecomposition, fast_solve_ring_code) {
 
-    for(int j = 3; j<10; j++){
+    for (int j = 3; j < 10; j++) {
 
         auto pcm = ring_code(j);
         auto pcm_csc = pcm.col_adjacency_list();
         auto plu = ldpc::gf2dense::PluDecomposition(pcm.m, pcm.n, pcm_csc);
 
-        for(auto i = 0; i<std::pow(2,pcm.n); i++){
-            auto error  = ldpc::util::decimal_to_binary(i,pcm.n);
+        for (auto i = 0; i < std::pow(2, pcm.n); i++) {
+            auto error = ldpc::util::decimal_to_binary(i, pcm.n);
             auto synd = pcm.mulvec(error);
             auto x = plu.fast_lu_solve(synd);
             auto x_synd = pcm.mulvec(x);
@@ -288,7 +286,7 @@ TEST(PluDecomposition, fast_solve_ring_code) {
 
 }
 
-TEST(PluDecomposition, ring_code_test7){
+TEST(PluDecomposition, ring_code_test7) {
 
     std::vector<std::vector<int>> matrix = {
             {1, 0, 1, 0, 0, 0, 0},
@@ -298,12 +296,12 @@ TEST(PluDecomposition, ring_code_test7){
             {0, 0, 0, 1, 0, 0, 1},
             {0, 0, 0, 0, 1, 1, 0},
             {0, 0, 0, 0, 0, 1, 1}
-        };
+    };
 
-    auto pcm_csr = std::vector<std::vector<int>>{7,std::vector<int>{}};
-    for(auto i =0; i<7; i++){
-        for(auto j=0; j<7; j++){
-            if(matrix[i][j] == 1){
+    auto pcm_csr = std::vector<std::vector<int>>{7, std::vector<int>{}};
+    for (auto i = 0; i < 7; i++) {
+        for (auto j = 0; j < 7; j++) {
+            if (matrix[i][j] == 1) {
                 pcm_csr[i].push_back(j);
             }
         }
@@ -315,7 +313,7 @@ TEST(PluDecomposition, ring_code_test7){
 
     auto plu = ldpc::gf2dense::PluDecomposition(7, 7, pcm_csc);
 
-    auto synd = std::vector<uint8_t>{1,1,0,1,1,1,1};
+    auto synd = std::vector<uint8_t>{1, 1, 0, 1, 1, 1, 1};
     auto x = plu.fast_lu_solve(synd);
 
     auto pcm = ldpc::gf2sparse::csc_to_gf2sparse(pcm_csc);
@@ -323,11 +321,74 @@ TEST(PluDecomposition, ring_code_test7){
     auto x_synd = pcm.mulvec(x);
 
     ldpc::gf2dense::print_csr(plu.L);
-    std::cout<<std::endl;
+    std::cout << std::endl;
     ldpc::gf2dense::print_csr(plu.U);
 
     ASSERT_EQ(x_synd, synd);
 
 
+}
+/**
+ * Tests the merge of two plu decompositions
+ * Ring code is used as simple exmaple here.
+ */
+TEST(PluDecomposition, merge_with_other) {
+    //setup first plu decomposition
+    std::vector<std::vector<int>> matrix = {
+            {1, 1, 0},
+            {0, 1, 1},
+            {0, 0, 1},
+            {0, 0, 0},
+            {0, 0, 0},
+            {0, 0, 0},
+//            {1, 1, 0, 0, 0, 0, 0},
+//            {0, 1, 1, 0, 0, 0, 0},
+//            {0, 0, 1, 1, 0, 0, 0},
+//            {0, 0, 0, 1, 1, 0, 0},
+//            {0, 0, 0, 0, 1, 1, 0},
+//            {0, 0, 0, 0, 0, 1, 1},
+    };
 
+    std::vector<std::vector<int>> matrix2 = {
+            {0, 0, 0},
+            {0, 0, 0},
+            {0, 0, 0},
+            {1, 0, 0},
+            {1, 1, 0},
+            {0, 1, 1},
+    };
+
+    auto pcm_csr1 = std::vector<std::vector<int>>{6, std::vector<int>{}};
+    for (auto i = 0; i < matrix.size(); i++) {
+        for (auto j = 0; j < matrix.at(i).size(); j++) {
+            if (matrix[i][j] == 1) {
+                pcm_csr1[i].push_back(j);
+            }
+        }
+    }
+
+    auto pcm_csr2 = std::vector<std::vector<int>>{6, std::vector<int>{}};
+    for (auto i = 0; i < matrix2.size(); i++) {
+        for (auto j = 0; j < matrix2.at(i).size(); j++) {
+            if (matrix2[i][j] == 1) {
+                pcm_csr2[i].push_back(j);
+            }
+        }
+    }
+
+    // ldpc::gf2dense::print_csr(pcm_csr);
+    auto pcm_csc1 = ldpc::gf2dense::csc_to_csr(pcm_csr1);
+    auto plu1 = ldpc::gf2dense::PluDecomposition(matrix.size(), matrix.at(0).size(), pcm_csc1);
+    auto syndr1 = std::vector<uint8_t>{1,0,0,0,0};
+    plu1.rref_with_y_image_check(syndr1);
+    plu1.print();
+
+    auto pcm_csc2 = ldpc::gf2dense::csc_to_csr(pcm_csr2);
+    auto plu2 = ldpc::gf2dense::PluDecomposition(matrix2.size(), matrix2.at(0).size(), pcm_csc2);
+    auto syndr2 = std::vector<uint8_t>{0,0,0,1,0};
+    plu2.rref_with_y_image_check(syndr1);
+    plu2.print();
+
+    plu1.merge_with_decomposition(plu2, 3);
+    plu1.print();
 }

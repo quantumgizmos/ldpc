@@ -112,7 +112,7 @@ namespace ldpc {
             std::vector<uint8_t> y_image_check_vector;
         public:
             CsrMatrix L; // L[row][col]
-            CsrMatrix U;
+            CsrMatrix U; // U[row][col]
             CscMatrix P;
             int matrix_rank;
             int cols_eliminated;
@@ -120,11 +120,11 @@ namespace ldpc {
             int col_count;
             std::vector<int> rows;
             std::vector<int> swap_rows;
-            std::vector<std::vector<int>> elimination_rows;
+            std::vector<std::vector<int>> elimination_rows; // stores the rows to eliminate for each column, i.e., non zero entries below pivot
             std::vector<int> pivot_cols;
             std::vector<int> not_pivot_cols;
             bool LU_constructed = false;
-
+            int max_row_index = 0;
             PluDecomposition(int row_count, int col_count, std::vector<std::vector<int>> &csc_mat)
                     : row_count(row_count),
                       col_count(col_count),
@@ -150,7 +150,7 @@ namespace ldpc {
                 this->pivot_cols.clear();
                 this->not_pivot_cols.clear();
                 this->y_image_check_vector.clear();
-
+                this->max_row_index = 0;
                 for (auto &col: this->L) {
                     col.clear();
                 }
@@ -451,42 +451,45 @@ namespace ldpc {
              * @param other
              */
             void merge_with_decomposition(const PluDecomposition &other, int merge_bit_index) {
-                int col_offset = this->col_count - 1; // new 0 column index
-                int row_offset = this->row_count - 1; // new 0 row index
-
+                int col_offset = this->col_count; // new 0 column index
+                int row_offset = 0; // new 0 row index
+                this->elimination_rows.resize(this->elimination_rows.size() + other.elimination_rows.size(),
+                                              std::vector<int>{});
                 for (auto i = 0; i < other.matrix_rank; i++) {
                     if (i != merge_bit_index) {
-                        this->swap_rows.push_back(other.swap_rows[i] + row_offset);
+                        this->swap_rows.push_back(other.swap_rows[i]);
                         this->pivot_cols.push_back(other.pivot_cols[i] + col_offset);
-                        this->elimination_rows.push_back(std::vector<int>{});
                         for (auto row_idx: other.elimination_rows[i]) {
-                            this->elimination_rows[i].push_back(row_idx + row_offset);
+                            if (col_offset + i >= this->elimination_rows.size()) {
+                                this->elimination_rows.resize(col_offset + i + 1, std::vector<int>{});
+                            }
+                            this->elimination_rows[col_offset + i].push_back(row_idx);
                         }
                     }
                 }
-                bool pushed = false; // ensure that new L row is initialized only if we add something to it
+                for (auto s: other.not_pivot_cols) {
+                    this->not_pivot_cols.push_back(col_offset + s);
+                }
                 // merge L of other into L of this
                 for (auto i = 0; i < other.L.size(); i++) {
                     for (auto col_idx: other.L[i]) {
                         if (col_idx != merge_bit_index) {
-                            if (!pushed) {
-                                this->L.push_back(std::vector<int>{});
-                                pushed = true;
+                            if (this->L.size() <= i) {
+                                this->L.resize(i + 1, std::vector<int>{});
                             }
-                            this->L[i].push_back(col_idx + col_offset);
+                            // x,y offset == matrix rank since we only have non zero entries in L for pivot cols
+                            this->L[i+this->matrix_rank].push_back(col_idx+this->matrix_rank);
                         }
                     }
                 }
-                pushed = false;
                 // merge U matrix of other into U of this
                 for (auto i = 0; i < other.U.size(); i++) {
                     for (auto col_idx: other.U[i]) {
                         if (col_idx != merge_bit_index) {
-                            if (!pushed) {
-                                this->U.push_back(std::vector<int>{});
-                                pushed = true;
+                            if (this->U.size() <= i) {
+                                this->U.resize(i + 1, std::vector<int>{});
                             }
-                            this->U[i].push_back(col_idx + col_offset);
+                            this->U[i].push_back(col_idx + this->matrix_rank);
                         }
                     }
                 }
@@ -494,12 +497,12 @@ namespace ldpc {
                 // we eliminate the merge bit column later. If it contributes to rank it will be increased again.
                 std::cout << "other matrix rank: " << other.matrix_rank << " this matrix rank: " << this->matrix_rank
                           << std::endl;
-                if (merge_bit_index != -1){
+                if (merge_bit_index != -1) {
                     this->matrix_rank =
                             other.matrix_rank > 0 ? this->matrix_rank + other.matrix_rank - 1
-                                                                           : this->matrix_rank;
+                                                  : this->matrix_rank;
 
-                }else{
+                } else {
                     this->matrix_rank = this->matrix_rank + other.matrix_rank;
                 }
                 std::cout << "Matrix rank after plu merge: " << this->matrix_rank << std::endl;
@@ -507,10 +510,69 @@ namespace ldpc {
                         other.cols_eliminated > 0 ? this->cols_eliminated + other.cols_eliminated - 1
                                                   : this->cols_eliminated;
                 std::cout << "Cols eliminated after plu merge: " << this->cols_eliminated << std::endl;
+                this->rows = other.rows;// TODO how to do this properly?
+                this->row_count = this->rows.size();
+                this->col_count = this->not_pivot_cols.size() + this->pivot_cols.size();
+            }
 
-                this->rows.insert(this->rows.end(), other.rows.begin(), other.rows.end());
-                this->row_count += other.row_count;
-                this->col_count += merge_bit_index == -1 ? other.col_count : other.col_count + 1;
+            void print() {
+                std::cout << "PluDecomposition:" << std::endl;
+                // print all fields of PluDecomposition, including matrices
+                std::cout << "row_count: " << row_count << std::endl;
+                std::cout << "col_count: " << col_count << std::endl;
+                std::cout << "matrix_rank: " << matrix_rank << std::endl;
+                std::cout << "cols_eliminated: " << cols_eliminated << std::endl;
+                std::cout << "rows: [ ";
+                //print rows vector
+                for (auto r: rows) {
+                    std::cout << r << " ";
+                }
+                std::cout << "]";
+                std::cout << std::endl;
+
+                std::cout << "swap_rows: [ ";
+                for (auto r: swap_rows) {
+                    std::cout << r << " ";
+                }
+                std::cout << "]";
+                std::cout << std::endl;
+
+                std::cout << "elimination_rows: " << std::endl;
+                print_csc(elimination_rows);
+                std::cout << std::endl;
+
+                std::cout << "pivot_cols: [ ";
+                for (auto r: pivot_cols) {
+                    std::cout << r << " ";
+                }
+                std::cout << "]";
+                std::cout << std::endl;
+
+                std::cout << "not_pivot_cols: [";
+                for (auto r: not_pivot_cols) {
+                    std::cout << r << " ";
+                }
+                std::cout << " ]";
+                std::cout << std::endl;
+
+                std::cout << "y_image_check_vector: [";
+                for (auto r: y_image_check_vector) {
+                    std::cout << r << " ";
+                }
+                std::cout << " ]";
+                std::cout << std::endl;
+
+                std::cout << "L: " << std::endl;
+                print_csr(L);
+                std::cout << std::endl;
+
+                std::cout << "U: " << std::endl;
+                print_csr(U);
+                std::cout << std::endl;
+
+                std::cout << "P: " << std::endl;
+                print_csc(P);
+                std::cout << std::endl;
             }
         };
 
