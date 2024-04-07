@@ -39,8 +39,9 @@ namespace ldpc::lsd {
         tsl::robin_set<int> boundary_check_nodes;
         tsl::robin_set<int> candidate_bit_nodes;
         tsl::robin_set<int> enclosed_syndromes;
-        LsdCluster **global_check_membership; // store which cluster a check belongs to
-        LsdCluster **global_bit_membership; // store which cluster a bit belongs to
+        std::shared_ptr<std::vector<LsdCluster*>> global_check_membership; // store which cluster a check belongs to
+        std::shared_ptr<std::vector<LsdCluster*>> global_bit_membership; // store which cluster a check belongs to
+//        LsdCluster **global_bit_membership; // store which cluster a bit belongs to
         tsl::robin_set<LsdCluster *> merge_list;
         gf2dense::CscMatrix cluster_pcm;
         std::vector<uint8_t> cluster_pcm_syndrome;
@@ -58,8 +59,8 @@ namespace ldpc::lsd {
 
         LsdCluster(ldpc::bp::BpSparse &parity_check_matrix,
                    int syndrome_index,
-                   LsdCluster **ccm, // global check cluster membership
-                   LsdCluster **bcm, // global bit cluster membership
+                   std::shared_ptr<std::vector<LsdCluster*>> ccm , // global check cluster membership
+                   std::shared_ptr<std::vector<LsdCluster*>> bcm, // global bit cluster membership
                    bool on_the_fly = false) :
                 pcm(parity_check_matrix) {
             this->active = true;
@@ -70,7 +71,7 @@ namespace ldpc::lsd {
             this->global_check_membership = ccm;
             this->global_bit_membership = bcm;
             this->check_nodes.insert(syndrome_index);
-            this->global_check_membership[syndrome_index] = this;
+            this->global_check_membership->at(syndrome_index) = this;
             this->cluster_pcm_syndrome.clear();
             this->pcm_check_idx_to_cluster_check_idx.insert(
                     std::pair<int, int>{syndrome_index, 0});
@@ -173,7 +174,7 @@ namespace ldpc::lsd {
                 bool erase = true;
                 for (auto &e: this->pcm.iterate_row(check_index)) {
                     // if bit is not in this cluster, add it to the candidate list.
-                    if (this->global_bit_membership[e.col_index] != this) {
+                    if (this->global_bit_membership->at(e.col_index) != this) {
                         candidate_bit_nodes.insert(e.col_index);
                         erase = false;
                     }
@@ -194,7 +195,7 @@ namespace ldpc::lsd {
          * @return true if the bit was added to the cluster, false otherwise.
          */
         bool add_bit_node_to_cluster(const int bit_index, const bool in_merge = false) {
-            auto bit_membership = this->global_bit_membership[bit_index];
+            auto bit_membership = this->global_bit_membership->at(bit_index);
             //if the bit is already in the cluster return.
             if (bit_membership == this) {
                 // bit already in current cluster
@@ -271,11 +272,11 @@ namespace ldpc::lsd {
             }
             auto inserted = this->check_nodes.insert(check_index);
             if (!inserted.second) {
-                this->global_check_membership[check_index] = this;
+                this->global_check_membership->at(check_index) = this;
                 return this->pcm_check_idx_to_cluster_check_idx[check_index];
             }
 
-            this->global_check_membership[check_index] = this;
+            this->global_check_membership->at(check_index) = this;
             this->cluster_check_idx_to_pcm_check_idx.push_back(check_index);
             int local_idx = this->cluster_check_idx_to_pcm_check_idx.size() - 1;
             this->pcm_check_idx_to_cluster_check_idx.insert(
@@ -292,7 +293,7 @@ namespace ldpc::lsd {
             if (!inserted.second) {
                 return;
             }
-            this->global_bit_membership[bit_index] = this;
+            this->global_bit_membership->at(bit_index) = this;
             // also add to cluster pcm
             this->cluster_bit_idx_to_pcm_bit_idx.push_back(bit_index);
         }
@@ -306,7 +307,7 @@ namespace ldpc::lsd {
             std::vector<int> col;
             for (auto &e: this->pcm.iterate_column(bit_index)) {
                 int check_index = e.row_index;
-                auto check_membership = this->global_check_membership[check_index];
+                auto check_membership = this->global_check_membership->at(check_index);
                 if (check_membership == this) {
                     // if already in cluster, add to cluster_pcm column of the bit and go to next
                     // an index error on the map here indicates an error in the program logic.
@@ -544,8 +545,10 @@ namespace ldpc::lsd {
 
             std::vector<LsdCluster *> clusters;
             std::vector<LsdCluster *> invalid_clusters;
-            auto **global_bit_membership = new LsdCluster *[pcm.n]();
-            auto **global_check_membership = new LsdCluster *[pcm.m]();
+            auto global_bit_membership = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(this->pcm.n));
+            auto global_check_membership = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(this->pcm.m));
+//            auto **global_bit_membership = new LsdCluster *[pcm.n]();
+//            auto **global_check_membership = new LsdCluster *[pcm.m]();
             // timestep to added bits history for stats
             auto *global_timestep_bits_history = new std::unordered_map<int, std::unordered_map<int, std::vector<int>>>{};
             auto timestep = 0;
@@ -606,7 +609,7 @@ namespace ldpc::lsd {
                             }
                         }
                     }
-                    delete cl; //delete the cluster now that we have the solution.
+//                    delete cl; //delete the cluster now that we have the solution.
                 }
             } else {
                 this->statistics.lsd_order = lsd_order;
@@ -614,8 +617,7 @@ namespace ldpc::lsd {
                 this->apply_lsdw(clusters, lsd_order, bit_weights);
             }
             auto end_time = std::chrono::high_resolution_clock::now();
-            delete[] global_bit_membership;
-            delete[] global_check_membership;
+
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
 
@@ -623,7 +625,12 @@ namespace ldpc::lsd {
             // always take time
             this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
                     end_time - start_time).count();
-
+            // cleanup
+            for (auto cl: clusters){
+                delete cl;
+            }
+            global_bit_membership->clear();
+            global_check_membership->clear();
             return this->decoding;
         }
 
