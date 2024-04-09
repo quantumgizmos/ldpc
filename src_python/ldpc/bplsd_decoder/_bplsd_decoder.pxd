@@ -26,8 +26,8 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         int absorbed_by_cluster
         int nr_of_non_zero_check_matrix_entries
         double cluster_pcm_sparsity
-        vector[int] solution
-        vector[double] bit_llrs
+        vector[uint8_t] solution
+
 
 
     cdef struct Statistics "ldpc::lsd::Statistics":
@@ -36,6 +36,10 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         long elapsed_time
         int lsd_order
         OsdMethod lsd_method
+        vector[double] bit_llrs
+        vector[uint8_t] error
+        vector[uint8_t] syndrome
+        vector[uint8_t] compare_recover
 
     cdef cppclass LsdDecoderCpp "ldpc::lsd::LsdDecoder":
         LsdDecoderCpp(BpSparse& pcm, OsdMethod lsd_method, int lsd_order) except +
@@ -47,6 +51,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         int lsd_order
         bool get_do_stats()
         void set_do_stats(bool do_stats)
+        void set_additional_stat_fields(vector[int] error, vector[int] syndrome, vector[int] compare_recover)
 
 cdef class BpLsdDecoder(BpDecoderBase):
     cdef LsdDecoderCpp* lsd

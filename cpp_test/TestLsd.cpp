@@ -448,6 +448,9 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::EXHAUSTIVE, 0);
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
+    lsd.statistics.error = std::vector<uint8_t>(pcm.n, 1);
+    lsd.statistics.syndrome = std::vector<uint8_t>(pcm.m, 1);;
+    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
 
     auto stats = lsd.statistics;
@@ -470,7 +473,9 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.individual_cluster_stats[1].size_history[0] == 2);
     ASSERT_TRUE(stats.individual_cluster_stats[1].solution.size() == 2);
     ASSERT_TRUE(stats.bit_llrs.size() == pcm.n);
-
+    ASSERT_TRUE(stats.error.size() == pcm.n);
+    ASSERT_TRUE(stats.syndrome.size() == pcm.n);
+    ASSERT_TRUE(stats.compare_recover.size() == pcm.n);
 }
 
 TEST(LsdDecoder, test_reshuffle_same_wt_indices) {

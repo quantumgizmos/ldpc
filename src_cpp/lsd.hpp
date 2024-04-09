@@ -430,13 +430,15 @@ namespace ldpc::lsd {
     };
 
     struct Statistics {
-        // todo didn't def those as tsl::robin_map due to the cython wrapping for now.
         std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
         long elapsed_time;
         osd::OsdMethod lsd_method;
         int lsd_order;
         std::vector<double> bit_llrs;
+        std::vector<uint8_t> error; // the original error
+        std::vector<uint8_t> syndrome; // the syndrome to decode
+        std::vector<uint8_t> compare_recover; // a recovery vector to compare against
 
         void clear() {
             this->individual_cluster_stats.clear();
@@ -454,6 +456,32 @@ namespace ldpc::lsd {
             for (auto i = 0; i < this->bit_llrs.size(); i++) {
                 result += std::to_string(this->bit_llrs.at(i));
                 if (i < this->bit_llrs.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            result += "\"error\":[";
+            for (auto i = 0; i < this->error.size(); i++) {
+                result += std::to_string(this->error.at(i));
+                if (i < this->error.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            // print syndrome
+            result += "\"syndrome\":[";
+            for (auto i = 0; i < this->syndrome.size(); i++) {
+                result += std::to_string(this->syndrome.at(i));
+                if (i < this->syndrome.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            // print compare_recover
+            result += "\"compare_recover\":[";
+            for (auto i = 0; i < this->compare_recover.size(); i++) {
+                result += std::to_string(this->compare_recover.at(i));
+                if (i < this->compare_recover.size() - 1) {
                     result += ",";
                 }
             }

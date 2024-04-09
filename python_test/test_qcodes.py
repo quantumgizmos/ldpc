@@ -27,6 +27,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         decoding = DECODER.decode(z)
         residual = (decoding + error) %2
 
+
         if isinstance(DECODER, BpDecoder):
             if not DECODER.converge:
                 fail+=1
@@ -35,6 +36,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
             clss = DECODER.statistics
             additional_stats.append(clss)
+            DECODER.set_additional_stat_fields(error, z, error)
 
         if np.any((lx@residual)%2):
             fail+=1
