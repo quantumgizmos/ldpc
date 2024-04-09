@@ -128,7 +128,7 @@ namespace ldpc::lsd {
                 auto sorted_indices = sort_indices(cluster_bit_weights);
                 auto candidate_bit_nodes_vector = std::vector<int>(this->candidate_bit_nodes.begin(),
                                                                    this->candidate_bit_nodes.end());
-                if (this->is_randomize_same_weight_indices){
+                if (this->is_randomize_same_weight_indices) {
                     sorted_indices = randomize_same_weight_indices(sorted_indices, cluster_bit_weights);
                 }
                 int count = 0;
@@ -154,7 +154,7 @@ namespace ldpc::lsd {
             auto other_indices = std::vector<int>();
             auto least_wt = cluster_bit_weights[sorted_indices[0]];
 
-            for (auto sorted_index : sorted_indices) {
+            for (auto sorted_index: sorted_indices) {
                 if (cluster_bit_weights[sorted_index] == least_wt) {
                     same_weight_indices.push_back(sorted_index);
                 } else {
@@ -426,6 +426,7 @@ namespace ldpc::lsd {
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
         int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
         double cluster_pcm_sparsity = 0; // nr of non zero entries in the cluster pcm
+        std::vector<uint8_t> solution; // local recovery, solution of cluster
     };
 
     struct Statistics {
@@ -460,6 +461,15 @@ namespace ldpc::lsd {
                 result += "\"nr_of_non_zero_check_matrix_entries\":" +
                           std::to_string(kv.second.nr_of_non_zero_check_matrix_entries) + ",";
                 result += "\"cluster_pcm_sparsity\":" + std::to_string(kv.second.cluster_pcm_sparsity) + ",";
+                // print solution vector
+                result += "\"solution\":[";
+                for (auto i = 0; i < kv.second.solution.size(); i++) {
+                    result += std::to_string(kv.second.solution.at(i));
+                    if (i < kv.second.solution.size() - 1) {
+                        result += ",";
+                    }
+                }
+                result += "],";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -629,6 +639,7 @@ namespace ldpc::lsd {
                     }
                     if (cl->active) {
                         auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+                        this->statistics.individual_cluster_stats[cl->cluster_id].solution = solution;
                         for (auto i = 0; i < solution.size(); i++) {
                             if (solution[i] == 1) {
                                 int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
