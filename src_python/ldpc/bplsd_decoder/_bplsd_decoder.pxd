@@ -27,6 +27,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         int nr_of_non_zero_check_matrix_entries
         double cluster_pcm_sparsity
         vector[int] solution
+        vector[double] bit_llrs
 
 
     cdef struct Statistics "ldpc::lsd::Statistics":

@@ -436,6 +436,7 @@ namespace ldpc::lsd {
         long elapsed_time;
         osd::OsdMethod lsd_method;
         int lsd_order;
+        std::vector<double> bit_llrs;
 
         void clear() {
             this->individual_cluster_stats.clear();
@@ -448,6 +449,15 @@ namespace ldpc::lsd {
             result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
             result += "\"lsd_method\":" + std::to_string(static_cast<int>(this->lsd_method)) + ",";
             result += "\"lsd_order\":" + std::to_string(this->lsd_order) + ",";
+            // print bit_llrs
+            result += "\"bit_llrs\":[";
+            for (auto i = 0; i < this->bit_llrs.size(); i++) {
+                result += std::to_string(this->bit_llrs.at(i));
+                if (i < this->bit_llrs.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
             result += "\"individual_cluster_stats\":{";
             for (auto &kv: this->individual_cluster_stats) {
                 result += "\"" + std::to_string(kv.first) + "\":{";
@@ -499,6 +509,7 @@ namespace ldpc::lsd {
             result += "}";
             return result;
         }
+
 
 
     };
@@ -659,6 +670,7 @@ namespace ldpc::lsd {
             delete[] global_check_membership;
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
+                this->statistics.bit_llrs = bit_weights;
 
             }
             // always take time

@@ -1,3 +1,4 @@
+import json
 import time
 
 import numpy as np
@@ -106,7 +107,7 @@ def test_400_16_6_hgp():
     decoder.set_do_stats(True)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    print(decoder.statistics)
+    print(json.dumps(decoder.statistics))
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")

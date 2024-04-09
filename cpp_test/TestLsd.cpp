@@ -469,6 +469,7 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.individual_cluster_stats[0].size_history.size() == 1);
     ASSERT_TRUE(stats.individual_cluster_stats[1].size_history[0] == 2);
     ASSERT_TRUE(stats.individual_cluster_stats[1].solution.size() == 2);
+    ASSERT_TRUE(stats.bit_llrs.size() == pcm.n);
 
 }
 
