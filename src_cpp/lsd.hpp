@@ -620,7 +620,6 @@ namespace ldpc::lsd {
 
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
-
             }
             // always take time
             this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -631,6 +630,7 @@ namespace ldpc::lsd {
             }
             global_bit_membership->clear();
             global_check_membership->clear();
+            delete global_timestep_bits_history;
             return this->decoding;
         }
 
