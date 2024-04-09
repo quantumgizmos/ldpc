@@ -59,15 +59,17 @@ class SinterBeliefFindDecoder(sinter.Decoder):
     The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
     """
 
-    def __init__(self,
-                 max_iter=0,
-                 bp_method="ms",
-                 ms_scaling_factor=0.625,
-                 schedule="parallel",
-                 omp_thread_count=1,
-                 serial_schedule_order=None,
-                 uf_method="inversion",
-                 bits_per_step=0):
+    def __init__(
+        self,
+        max_iter=0,
+        bp_method="ms",
+        ms_scaling_factor=0.625,
+        schedule="parallel",
+        omp_thread_count=1,
+        serial_schedule_order=None,
+        uf_method="inversion",
+        bits_per_step=0,
+    ):
 
         self.max_iter = max_iter
         self.bp_method = bp_method
@@ -120,24 +122,23 @@ class SinterBeliefFindDecoder(sinter.Decoder):
         """
         self.dem = stim.DetectorErrorModel.from_file(dem_path)
         self.matrices = detector_error_model_to_check_matrices(self.dem)
-        self.belief_find = BeliefFindDecoder(self.matrices.check_matrix,
-                                             error_channel=list(
-                                                 self.matrices.priors),
-                                             max_iter=self.max_iter,
-                                             bp_method=self.bp_method,
-                                             ms_scaling_factor=self.ms_scaling_factor,
-                                             schedule=self.schedule,
-                                             omp_thread_count=self.omp_thread_count,
-                                             serial_schedule_order=self.serial_schedule_order,
-                                             uf_method=self.uf_method,
-                                             bits_per_step=self.bits_per_step
-                                             )
+        self.belief_find = BeliefFindDecoder(
+            self.matrices.check_matrix,
+            error_channel=list(self.matrices.priors),
+            max_iter=self.max_iter,
+            bp_method=self.bp_method,
+            ms_scaling_factor=self.ms_scaling_factor,
+            schedule=self.schedule,
+            omp_thread_count=self.omp_thread_count,
+            serial_schedule_order=self.serial_schedule_order,
+            uf_method=self.uf_method,
+            bits_per_step=self.bits_per_step,
+        )
 
         shots = stim.read_shot_data_file(
             path=dets_b8_in_path, format="b8", num_detectors=num_dets
         )
-        predictions = np.zeros(
-            (num_shots, num_obs), dtype=bool)
+        predictions = np.zeros((num_shots, num_obs), dtype=bool)
         for i in range(num_shots):
             predictions[i, :] = self.decode(shots[i, :])
 
