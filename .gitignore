@@ -358,3 +358,5 @@ build
 
 
 .DS_Store
+/paper_lsd_data
+/paper_toms_data
