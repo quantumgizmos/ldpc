@@ -11,13 +11,14 @@ using namespace std;
 using namespace ldpc::lsd;
 using namespace ldpc::sparse_matrix_util;
 
-
-TEST(LsdCluster, init1) {
+TEST(LsdCluster, init1)
+{
 
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
-
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto syndrome_index = 0;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
 
@@ -35,22 +36,22 @@ TEST(LsdCluster, init1) {
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_enclosed_syndromes, cl.enclosed_syndromes);
-    ASSERT_EQ(gcm[syndrome_index], &cl);
+    ASSERT_EQ(gcm->at(syndrome_index), &cl);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
-
-TEST(LsdCluster, add_bitANDadd_check_add) {
+TEST(LsdCluster, add_bitANDadd_check_add)
+{
 
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n]; //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m]; //global check dictionary
-
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n]; //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m]; //global check dictionary
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto syndrome_index = 1;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
 
@@ -58,10 +59,8 @@ TEST(LsdCluster, add_bitANDadd_check_add) {
     auto expected_candidate_bit_nodes = tsl::robin_set<int>{1, 2};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
-
     cl.add_bit(*(++expected_candidate_bit_nodes.begin()));
     cl.add_check(2, true);
-
 
     auto expected_bit_nodes = tsl::robin_set<int>{2};
     auto expected_check_nodes = tsl::robin_set<int>{syndrome_index, 2};
@@ -70,51 +69,50 @@ TEST(LsdCluster, add_bitANDadd_check_add) {
                                                                                 {2, 1}};
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
-    ASSERT_EQ(cl.global_bit_membership[2], &cl);
+    ASSERT_EQ(cl.global_bit_membership.get()->at(2), &cl);
     ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
-    ASSERT_EQ(cl.global_check_membership[1], &cl);
-    ASSERT_EQ(cl.global_check_membership[2], &cl);
-
+    ASSERT_EQ(cl.global_check_membership.get()->at(1), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(2), &cl);
 
     // Test adding existing checks and bits
     cl.add_bit(*(++expected_candidate_bit_nodes.begin()));
     cl.add_check(2, true);
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
-    ASSERT_EQ(cl.global_bit_membership[2], &cl);
+    ASSERT_EQ(cl.global_bit_membership.get()->at(2), &cl);
     ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
-    ASSERT_EQ(cl.global_check_membership[1], &cl);
-    ASSERT_EQ(cl.global_check_membership[2], &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(1), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(2), &cl);
 
-    //check that bit is remove from boundary check node is removed from boundary check nodes
+    // check that bit is remove from boundary check node is removed from boundary check nodes
     cl.compute_growth_candidate_bit_nodes();
     expected_candidate_bit_nodes = tsl::robin_set<int>{1, 3};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
-    //add bit 3, verify that boundary check 2 is removed from the boundary check list
+    // add bit 3, verify that boundary check 2 is removed from the boundary check list
     cl.add_bit(3);
     cl.compute_growth_candidate_bit_nodes();
     auto expected_boundary_check_nodes = tsl::robin_set<int>{1};
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
-TEST(LsdCluster, add_bit_node_to_cluster) {
-
+TEST(LsdCluster, add_bit_node_to_cluster)
+{
 
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
-
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto syndrome_index = 1;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
 
@@ -122,8 +120,7 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
     auto expected_candidate_bit_nodes = tsl::robin_set<int>{1, 2};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
-
-    auto bit_membership = cl.global_bit_membership[0];
+    auto bit_membership = cl.global_bit_membership.get()->at(0);
 
     // add bit 2 to the cluster
     cl.add_bit_node_to_cluster(2);
@@ -135,13 +132,13 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
                                                                                 {2, 1}};
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
-    ASSERT_EQ(cl.global_bit_membership[2], &cl);
+    ASSERT_EQ(cl.global_bit_membership.get()->at(2), &cl);
     ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
-    ASSERT_EQ(cl.global_check_membership[1], &cl);
-    ASSERT_EQ(cl.global_check_membership[2], &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(1), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(2), &cl);
 
     cl.compute_growth_candidate_bit_nodes();
     auto expected_boundary_check_nodes = tsl::robin_set<int>{1, 2};
@@ -150,13 +147,12 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
-    //check the cluster pcm
+    // check the cluster pcm
     auto expected_column = std::vector<int>{0, 1};
     ASSERT_TRUE(cl.cluster_pcm.size() == 1);
     ASSERT_EQ(expected_column, cl.cluster_pcm[0]);
 
-
-    //add bit 3, verify that check 1 is removed from the boundary check list
+    // add bit 3, verify that check 1 is removed from the boundary check list
     cl.add_bit_node_to_cluster(1);
 
     cl.compute_growth_candidate_bit_nodes();
@@ -164,7 +160,6 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
     expected_candidate_bit_nodes = tsl::robin_set<int>{0, 3};
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
-
 
     expected_bit_nodes = tsl::robin_set<int>{1, 2};
     expected_check_nodes = tsl::robin_set<int>{0, 1, 2};
@@ -174,15 +169,15 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
                                                                            {0, 2}};
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
-    ASSERT_EQ(cl.global_bit_membership[1], &cl);
+    ASSERT_EQ(cl.global_bit_membership.get()->at(1), &cl);
     ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 2);
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
-    ASSERT_EQ(cl.global_check_membership[0], &cl);
-    ASSERT_EQ(cl.global_check_membership[2], &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(0), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(2), &cl);
 
-    //check the cluster pcm
+    // check the cluster pcm
     expected_column = std::vector<int>{0, 1};
     ASSERT_TRUE(cl.cluster_pcm.size() == 2);
     ASSERT_EQ(expected_column, cl.cluster_pcm[0]);
@@ -190,26 +185,25 @@ TEST(LsdCluster, add_bit_node_to_cluster) {
     expected_column = std::vector<int>{2, 0};
     ASSERT_EQ(expected_column, cl.cluster_pcm[1]);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
-
-TEST(LsdCluster, grow_cluster) {
-
+TEST(LsdCluster, grow_cluster)
+{
 
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
-
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto syndrome_index = 5;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
 
     cl.compute_growth_candidate_bit_nodes();
     auto expected_candidate_bit_nodes = tsl::robin_set<int>{5, 6};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
-    auto bit_membership = cl.global_bit_membership[5];
+    auto bit_membership = cl.global_bit_membership.get()->at(5);
     ASSERT_EQ(bit_membership, nullptr);
 
     cl.grow_cluster();
@@ -222,14 +216,14 @@ TEST(LsdCluster, grow_cluster) {
                                                                                 {6, 2}};
 
     ASSERT_EQ(expected_bit_nodes, cl.bit_nodes);
-    ASSERT_EQ(cl.global_bit_membership[5], &cl);
+    ASSERT_EQ(cl.global_bit_membership.get()->at(5), &cl);
     ASSERT_EQ(cl.cluster_bit_idx_to_pcm_bit_idx[0], 5);
     ASSERT_EQ(expected_check_nodes, cl.check_nodes);
     ASSERT_EQ(expected_cluster_check_idx_to_pcm_check_idx, cl.cluster_check_idx_to_pcm_check_idx);
     ASSERT_EQ(expected_pcm_check_idx_to_cluster_check_idx, cl.pcm_check_idx_to_cluster_check_idx);
-    ASSERT_EQ(cl.global_check_membership[4], &cl);
-    ASSERT_EQ(cl.global_check_membership[5], &cl);
-    ASSERT_EQ(cl.global_check_membership[6], &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(4), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(5), &cl);
+    ASSERT_EQ(cl.global_check_membership.get()->at(6), &cl);
 
     cl.compute_growth_candidate_bit_nodes();
     auto expected_boundary_check_nodes = tsl::robin_set<int>{4, 6};
@@ -238,7 +232,7 @@ TEST(LsdCluster, grow_cluster) {
     ASSERT_EQ(expected_boundary_check_nodes, cl.boundary_check_nodes);
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
 
-    //check the cluster pcm
+    // check the cluster pcm
     auto expected_column = std::vector<int>{1, 0};
     ASSERT_TRUE(cl.cluster_pcm.size() == 2);
     ASSERT_EQ(expected_column, cl.cluster_pcm[0]);
@@ -246,20 +240,19 @@ TEST(LsdCluster, grow_cluster) {
     expected_column = std::vector<int>{0, 2};
     ASSERT_EQ(expected_column, cl.cluster_pcm[1]);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
-
-TEST(LsdCluster, merge_clusters_test) {
-
+TEST(LsdCluster, merge_clusters_test)
+{
 
     auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
-
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
     // auto syndrome_index = 0;
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto cl1 = ldpc::lsd::LsdCluster(pcm, 0, gcm, gbm);
     auto cl2 = ldpc::lsd::LsdCluster(pcm, 3, gcm, gbm);
 
@@ -281,15 +274,17 @@ TEST(LsdCluster, merge_clusters_test) {
 
     ASSERT_TRUE(cl2.valid);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
-TEST(LsdCluster, merge_clusters_otf_test) {
+TEST(LsdCluster, merge_clusters_otf_test)
+{
     auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(5);
-    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
-    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    //    auto gbm = new ldpc::lsd::LsdCluster *[pcm.n](); //global bit dictionary
+    //    auto gcm = new ldpc::lsd::LsdCluster *[pcm.m](); //global check dictionary
+    auto gbm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.n));
+    auto gcm = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(pcm.m));
     auto cl1 = ldpc::lsd::LsdCluster(pcm, 0, gcm, gbm);
     auto cl2 = ldpc::lsd::LsdCluster(pcm, 2, gcm, gbm);
 
@@ -312,9 +307,9 @@ TEST(LsdCluster, merge_clusters_otf_test) {
 
     auto solution = cl2.pluDecomposition.lu_solve(cl2.cluster_pcm_syndrome);
 
-
     auto decoding = vector<uint8_t>(pcm.n, 0);
-    for (auto cluster_bit_idx: solution) {
+    for (auto cluster_bit_idx : solution)
+    {
         decoding[cl2.cluster_bit_idx_to_pcm_bit_idx[cluster_bit_idx]] = 1;
     }
 
@@ -324,22 +319,23 @@ TEST(LsdCluster, merge_clusters_otf_test) {
 
     ASSERT_EQ(decoding_syndrome, expected_syndrome);
 
-    delete gbm;
-    delete gcm;
-
+    //    delete gbm;
+    //    delete gcm;
 }
 
+TEST(LsdDecoder, otf_ring_code)
+{
 
-TEST(LsdDecoder, otf_ring_code) {
-
-    for (auto length = 2; length < 12; length++) {
+    for (auto length = 2; length < 12; length++)
+    {
 
         auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 3;
         auto lsd = LsdDecoder(pcm);
 
-        for (int i = 0; i < std::pow(2, length); i++) {
+        for (int i = 0; i < std::pow(2, length); i++)
+        {
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
@@ -350,15 +346,17 @@ TEST(LsdDecoder, otf_ring_code) {
     }
 }
 
-
-TEST(LsdDecoder, otf_hamming_code) {
-    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++) {
+TEST(LsdDecoder, otf_hamming_code)
+{
+    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++)
+    {
 
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
         auto lsd = LsdDecoder(pcm);
-        for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+        for (int i = 0; i < std::pow(2, hamming_code_rank); i++)
+        {
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
             bp.decode(syndrome);
             auto decoding = lsd.on_the_fly_decode(syndrome, bp.log_prob_ratios);
@@ -368,14 +366,18 @@ TEST(LsdDecoder, otf_hamming_code) {
     }
 }
 
-TEST(LsdDecoder, lsdw_decode) {
-    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++) {
+TEST(LsdDecoder, lsdw_decode)
+{
+    for (auto hamming_code_rank = 3; hamming_code_rank < 9; hamming_code_rank++)
+    {
         // std::cout << "rank " << hamming_code_rank << std::endl;
         auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(hamming_code_rank);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 2;
-        auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP, 3);
-        for (int i = 0; i < std::pow(2, hamming_code_rank); i++) {
+        auto lsd = LsdDecoder(pcm);
+        lsd.lsd_order = 3;
+        for (int i = 0; i < std::pow(2, hamming_code_rank); i++)
+        {
             // std::cout << i << std::endl;
             auto syndrome = ldpc::util::decimal_to_binary(i, hamming_code_rank);
             bp.decode(syndrome);
@@ -386,16 +388,19 @@ TEST(LsdDecoder, lsdw_decode) {
     }
 }
 
-TEST(LsdDecoder, lsdw_decode_ring_code) {
+TEST(LsdDecoder, lsdw_decode_ring_code)
+{
 
-    for (auto length = 2; length < 10; length++) {
+    for (auto length = 2; length < 10; length++)
+    {
 
         auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
         auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
         bp.maximum_iterations = 3;
-        auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP, 5);
-
-        for (int i = 0; i < std::pow(2, length); i++) {
+        auto lsd = LsdDecoder(pcm);
+        lsd.lsd_order = 5;
+        for (int i = 0; i < std::pow(2, length); i++)
+        {
             auto error = ldpc::util::decimal_to_binary(i, length);
             auto syndrome = pcm.mulvec(error);
             bp.decode(syndrome);
@@ -406,7 +411,8 @@ TEST(LsdDecoder, lsdw_decode_ring_code) {
     }
 }
 
-TEST(LsdDecoder, test_fail_case) {
+TEST(LsdDecoder, test_fail_case)
+{
     auto csv_path = ldpc::io::getFullPath("cpp_test/test_inputs/qdlpc_test.csv");
     rapidcsv::Document doc(csv_path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
     int row_count = doc.GetColumn<string>(0).size();
@@ -421,18 +427,20 @@ TEST(LsdDecoder, test_fail_case) {
     ASSERT_TRUE(pcm.m == 192);
     ASSERT_TRUE(pcm.n == 400);
 
-    //this is the syndrome that is currently failing in Python.
+    // this is the syndrome that is currently failing in Python.
     auto syndrome_sparse = std::vector<uint8_t>{3, 5, 10, 12, 13, 16, 28, 44, 45, 50, 55, 70, 82,
                                                 87, 92, 128, 130, 131, 139, 143, 157, 176};
 
     auto syndrome = std::vector<uint8_t>(pcm.m, 0);
-    for (auto idx: syndrome_sparse) {
+    for (auto idx : syndrome_sparse)
+    {
         syndrome[idx] = 1;
     }
     auto channel_probabilities = std::vector<double>(pcm.n, 0.01);
-    //setup the BP decoder with only 2 iterations
+    // setup the BP decoder with only 2 iterations
     auto bp = ldpc::bp::BpDecoder(pcm, channel_probabilities, 100, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625);
-    auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::COMBINATION_SWEEP, 5);
+    auto lsd = LsdDecoder(pcm);
+    lsd.lsd_order = 5;
     bp.decode(syndrome);
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
     auto decoding_syndrome = pcm.mulvec(decoding);
@@ -440,7 +448,8 @@ TEST(LsdDecoder, test_fail_case) {
     ASSERT_TRUE(syndrome == decoding_syndrome);
 }
 
-TEST(LsdDecoder, test_cluster_stats) {
+TEST(LsdDecoder, test_cluster_stats)
+{
     auto length = 5;
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(length);
     auto bp = ldpc::bp::BpDecoder(pcm, std::vector<double>(pcm.n, 0.1));
@@ -448,9 +457,7 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::EXHAUSTIVE, 0);
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
-    lsd.statistics.error = std::vector<uint8_t>(pcm.n, 1);
-    lsd.statistics.syndrome = std::vector<uint8_t>(pcm.m, 1);
-    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
+    lsd.setLsdMethod(ldpc::osd::OsdMethod::EXHAUSTIVE);
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
 
     auto stats = lsd.statistics;
@@ -478,7 +485,8 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.compare_recover.size() == pcm.n);
 }
 
-TEST(LsdDecoder, test_reshuffle_same_wt_indices) {
+TEST(LsdDecoder, test_reshuffle_same_wt_indices)
+{
     std::vector<double> weights = {0.1, 0.1, 0.1, 0.5, 1.5, 0.1, 0.6, 0.1, 0.1, 0.1, 0.1, 1.5, 1.9, 0.1, 0.1, 0.1, 0.1};
     std::vector<int> sorted_indices = ldpc::lsd::sort_indices(weights);
     auto res = ldpc::lsd::LsdCluster::randomize_same_weight_indices(sorted_indices, weights);
@@ -521,8 +529,8 @@ TEST(LsdDecoder, test_reshuffle_same_wt_indices) {
     ASSERT_TRUE(sorted_indices == res);
 }
 
-
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
