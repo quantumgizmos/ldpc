@@ -1,4 +1,9 @@
 zscratch*
+<<<<<<< Updated upstream
+paper_lsd_data_collection/
+=======
+paper_lsd_data_collection/*
+>>>>>>> Stashed changes
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -350,3 +355,6 @@ build
 *.exe
 *.out
 *.app
+
+
+.DS_Store
