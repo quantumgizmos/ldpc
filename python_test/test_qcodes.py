@@ -1,3 +1,4 @@
+import json
 import time
 
 import numpy as np
@@ -38,6 +39,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
             clss = DECODER.statistics
             additional_stats.append(clss)
+            DECODER.set_additional_stat_fields(error, z, error)
 
         if np.any((lx@residual)%2):
             fail+=1
@@ -100,6 +102,7 @@ def test_400_16_6_hgp():
     print("...................................................")
     print()
 
+<<<<<<< HEAD
     decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed,_ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
 
@@ -126,13 +129,41 @@ def test_400_16_6_hgp():
                            schedule="parallel", bits_per_step=1, lsd_order=0)
     ler, min_logical, speed,_ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-0 parallel schedule")
+=======
+    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
+    #
+    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
+    #                        schedule="parallel", osd_method="osd_cs", osd_order=osd_order)
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+    #                                             f"Min-sum osd-cs-{osd_order} parallel schedule")
+    #
+    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
+    #                        schedule="parallel", osd_method="osd_e", osd_order=osd_order)
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+    #                                             f"Min-sum osd-e-{osd_order} parallel schedule")
+    #
+    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum osd-0 serial schedule")
+    #
+    # decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ps", schedule="parallel", osd_method = "osd0")
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Prod-sum osd-0 parallel schedule")
+    #
+    # decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="inversion", bits_per_step=1)
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
+
+    # decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
+    #                        schedule="parallel", bits_per_step=1, lsd_order=0, lsd_method="osd_cs")
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+    #                                             f"Min-sum LSD-0 parallel schedule")
+>>>>>>> l4_dev
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625,
-                           schedule="parallel", bits_per_step=1, lsd_order=osd_order)
+                           schedule="parallel", bits_per_step=1, lsd_order=osd_order, lsd_method="osd_cs")
     decoder.set_do_stats(True)
     ler, min_logical, speed,_ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    print(decoder.statistics)
+    print(json.dumps(decoder.statistics))
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")

@@ -33,14 +33,16 @@ class SinterLsdDecoder(sinter.Decoder):
     This class provides an interface for configuring and using the SinterBPLSDDecoder for quantum error correction.
     """
 
-    def __init__(self,
-                 max_iter=0,
-                 bp_method="ms",
-                 ms_scaling_factor=0.625,
-                 schedule="parallel",
-                 omp_thread_count=1,
-                 serial_schedule_order=None,
-                 lsd_order=0):
+    def __init__(
+        self,
+        max_iter=0,
+        bp_method="ms",
+        ms_scaling_factor=0.625,
+        schedule="parallel",
+        omp_thread_count=1,
+        serial_schedule_order=None,
+        lsd_order=0,
+    ):
         self.max_iter = max_iter
         self.bp_method = bp_method
         self.ms_scaling_factor = ms_scaling_factor
@@ -50,15 +52,15 @@ class SinterLsdDecoder(sinter.Decoder):
         self.lsd_order = lsd_order
 
     def decode_via_files(
-            self,
-            *,
-            num_shots: int,
-            num_dets: int,
-            num_obs: int,
-            dem_path: pathlib.Path,
-            dets_b8_in_path: pathlib.Path,
-            obs_predictions_b8_out_path: pathlib.Path,
-            tmp_dir: pathlib.Path,
+        self,
+        *,
+        num_shots: int,
+        num_dets: int,
+        num_obs: int,
+        dem_path: pathlib.Path,
+        dets_b8_in_path: pathlib.Path,
+        obs_predictions_b8_out_path: pathlib.Path,
+        tmp_dir: pathlib.Path,
     ) -> None:
         """Performs decoding by reading problems from, and writing solutions to, file paths.
         Args:
@@ -91,21 +93,22 @@ class SinterLsdDecoder(sinter.Decoder):
         """
         self.dem = stim.DetectorErrorModel.from_file(dem_path)
         self.matrices = detector_error_model_to_check_matrices(self.dem)
-        self.lsd = BpLsdDecoder(self.matrices.check_matrix,
-                                error_channel=list(self.matrices.priors),
-                                max_iter=self.max_iter,
-                                bp_method=self.bp_method,
-                                ms_scaling_factor=self.ms_scaling_factor,
-                                schedule=self.schedule,
-                                omp_thread_count=self.omp_thread_count,
-                                serial_schedule_order=self.serial_schedule_order,
-                                lsd_order=self.lsd_order)
+        self.lsd = BpLsdDecoder(
+            self.matrices.check_matrix,
+            error_channel=list(self.matrices.priors),
+            max_iter=self.max_iter,
+            bp_method=self.bp_method,
+            ms_scaling_factor=self.ms_scaling_factor,
+            schedule=self.schedule,
+            omp_thread_count=self.omp_thread_count,
+            serial_schedule_order=self.serial_schedule_order,
+            lsd_order=self.lsd_order,
+        )
 
         shots = stim.read_shot_data_file(
             path=dets_b8_in_path, format="b8", num_detectors=num_dets
         )
-        predictions = np.zeros(
-            (num_shots, num_obs), dtype=bool)
+        predictions = np.zeros((num_shots, num_obs), dtype=bool)
         for i in range(num_shots):
             predictions[i, :] = self.decode(shots[i, :])
 
