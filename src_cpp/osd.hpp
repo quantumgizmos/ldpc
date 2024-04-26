@@ -111,7 +111,6 @@ namespace ldpc::osd {
 
 
         std::vector<uint8_t> &decode(std::vector<uint8_t> &syndrome, std::vector<double> &log_prob_ratios) {
-
             ldpc::sort::soft_decision_col_sort(log_prob_ratios, this->column_ordering, bit_count);
 
             if (this->osd_order == 0) {
@@ -119,19 +118,10 @@ namespace ldpc::osd {
                                                                                               this->column_ordering);
                 return this->osd0_decoding;
             }
-
             //row reduce the matrix according to the new column ordering
             this->LuDecomposition->rref(false, true, this->column_ordering);
-
             // find the OSD0 solution
             this->osd0_decoding = this->osdw_decoding = LuDecomposition->lu_solve(syndrome);
-
-            // this->osd0_decoding = this->LuDecomposition->fast_solve(syndrome,this->column_ordering);
-
-            // if(osd_order==0){
-            //     return this->osd0_decoding;
-            // }
-
             double candidate_weight, osd_min_weight;
 
             osd_min_weight = 0;
@@ -157,7 +147,6 @@ namespace ldpc::osd {
             }
 
             for (auto &candidate_string: this->osd_candidate_strings) {
-
                 auto t_syndrome = syndrome;
                 int col_index = 0;
                 for (int col: non_pivot_columns) {
@@ -181,17 +170,11 @@ namespace ldpc::osd {
                 }
                 if (candidate_weight < osd_min_weight) {
                     osd_min_weight = candidate_weight;
-
                     this->osdw_decoding = candidate_solution;
-
                 }
-
             }
-
             return this->osdw_decoding;
-
         }
-
     };
 
 }//end osd namespace
