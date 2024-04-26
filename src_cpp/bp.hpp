@@ -621,12 +621,12 @@ namespace ldpc::bp {
             // guided decimation loop
             while(gd_rounds < max_gd_rounds){
         
-                // decode with parallel schedule
+                // decode with parallel bp schedule
                 if(this->schedule == PARALLEL){
                     this->bp_decode_parallel(syndrome);
                 }
 
-                // decode with serial schedule
+                // decode with serial bp schedule
                 else if(this->schedule == SERIAL){
                     this->bp_decode_serial(syndrome);
                 }
