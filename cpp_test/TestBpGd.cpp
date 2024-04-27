@@ -2,12 +2,15 @@
 #include "ldpc.hpp"
 #include "bp.hpp"
 #include "gf2codes.hpp"
+#include <limits>
 // #include "gd.hpp"
 
 using namespace std;
 
 
 TEST(BpGdDecoder, BpGdInit){
+
+
     
     auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(6);
     auto error = std::vector<uint8_t>(6,0);
@@ -25,12 +28,12 @@ TEST(BpGdDecoder, BpGdInit){
     ldpc::bp::BpSchedule bp_schedule = ldpc::bp::PARALLEL;
 
     // Initialize decoder using input arguments and optional parameters
-    auto decoder = ldpc::bp::BpDecoder(pcm, error_channel, 6, bp_method, bp_schedule, min_sum_scaling_factor);
+    auto decoder = ldpc::bp::BpDecoder(pcm, error_channel, 100, bp_method, bp_schedule, min_sum_scaling_factor);
     
     decoder.bp_decode_parallel(syndrome);
     ASSERT_FALSE(decoder.converge);
 
-    decoder.guided_decimation_decode(syndrome,6);
+    decoder.guided_decimation_decode(syndrome,10);
     ASSERT_TRUE(decoder.converge);
 
 

@@ -16,6 +16,7 @@
 #include "gf2sparse.hpp"
 #include "rng.hpp"
 #include "sort.hpp"
+#include "sparse_matrix_util.hpp"
 
 namespace ldpc::bp {
 
@@ -607,7 +608,7 @@ namespace ldpc::bp {
             return decoding;
         }
 
-        std::vector<uint8_t>& guided_decimation_decode(std::vector<uint8_t>& syndrome, int max_gd_rounds){
+        std::vector<uint8_t>& guided_decimation_decode_old(std::vector<uint8_t>& syndrome, int gd_frequency){
             
             // set the number of guided decimation rounds to zero
             int gd_rounds = 0;
@@ -619,7 +620,7 @@ namespace ldpc::bp {
             std::set<int> decimated_bits;
             
             // guided decimation loop
-            while(gd_rounds < max_gd_rounds){
+            while(gd_rounds < gd_frequency){
         
                 // decode with parallel bp schedule
                 if(this->schedule == PARALLEL){
@@ -634,7 +635,8 @@ namespace ldpc::bp {
                 // check if the decoder has converged
                 if(this->converge == true){
                     //break the loop if the decoder has converged
-                    break;
+                    this->channel_probabilities = channel_probabilities_save;
+                    return this->decoding;
                 }
 
 
@@ -662,10 +664,10 @@ namespace ldpc::bp {
                 int sgn;
                 if(std::signbit(this->log_prob_ratios[largest_absolute_value_bit_index])){
                     // sgn = -1;
-                    this->channel_probabilities[largest_absolute_value_bit_index] = 1 - 1e-5;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 1 - 1e-25;
                 }
                 else{
-                    this->channel_probabilities[largest_absolute_value_bit_index] = 0+1e-5;
+                    this->channel_probabilities[largest_absolute_value_bit_index] = 0+1e-25;
                 }
 
                 // //the channel probability for that bit is set to a "high" value
@@ -684,6 +686,155 @@ namespace ldpc::bp {
             return this->decoding;
 
         }
+
+
+        std::vector<uint8_t>& guided_decimation_decode(std::vector<uint8_t>& syndrome, int gd_frequency) {
+
+            this->converge = 0;
+
+            this->initialise_log_domain_bp();
+
+            std::set<int> decimated_bits;
+
+            //main interation loop
+            for (int it = 1; it <= this->maximum_iterations; it++) {
+
+                if (this->bp_method == PRODUCT_SUM) {
+                    for (int i = 0; i < this->check_count; i++) {
+                        this->candidate_syndrome[i] = 0;
+
+                        double temp = 1.0;
+                        for (auto &e: this->pcm.iterate_row(i)) {
+                            e.check_to_bit_msg = temp;
+                            temp *= std::tanh(e.bit_to_check_msg / 2);
+                        }
+
+                        temp = 1;
+                        for (auto &e: this->pcm.reverse_iterate_row(i)) {
+                            e.check_to_bit_msg *= temp;
+                            int message_sign = syndrome[i] ? -1.0 : 1.0;
+                            e.check_to_bit_msg =
+                                    message_sign * std::log((1 + e.check_to_bit_msg) / (1 - e.check_to_bit_msg));
+                            temp *= std::tanh(e.bit_to_check_msg / 2);
+                        }
+                    }
+                } else if (this->bp_method == MINIMUM_SUM) {
+                    //check to bit updates
+                    for (int i = 0; i < check_count; i++) {
+
+                        this->candidate_syndrome[i] = 0;
+                        int total_sgn;
+                        int sgn;
+                        total_sgn = syndrome[i];
+                        double temp = std::numeric_limits<double>::max();
+
+                        for (auto &e: this->pcm.iterate_row(i)) {
+                            if (e.bit_to_check_msg <= 0) total_sgn += 1;
+                            e.check_to_bit_msg = temp;
+                            double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
+                            if (abs_bit_to_check_msg < temp) {
+                                temp = abs_bit_to_check_msg;
+                            }
+                        }
+
+                        temp = std::numeric_limits<double>::max();
+                        for (auto &e: this->pcm.reverse_iterate_row(i)) {
+                            sgn = total_sgn;
+                            if (e.bit_to_check_msg <= 0) sgn += 1;
+                            if (temp < e.check_to_bit_msg) {
+                                e.check_to_bit_msg = temp;
+                            }
+
+                            int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
+                            e.check_to_bit_msg *= message_sign * ms_scaling_factor;
+
+                            double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
+                            if (abs_bit_to_check_msg < temp) {
+                                temp = abs_bit_to_check_msg;
+                            }
+
+                        }
+
+                    }
+                }
+
+
+                double largest_absolute_value = 0;
+                int largest_absolute_value_bit_index = -1;
+
+                //compute log probability ratios
+                for (int i = 0; i < this->bit_count; i++) {
+                    double temp = initial_log_prob_ratios[i];
+                    for (auto &e: this->pcm.iterate_column(i)) {
+                        e.bit_to_check_msg = temp;
+                        temp += e.check_to_bit_msg;
+                        if(std::isnan(temp)) temp = 0;
+                    }
+
+                    //make hard decision on basis of log probability ratio for bit i
+                    this->log_prob_ratios[i] = temp;
+
+                    // find the bit with the largest absolute value
+                    // if(it%gd_frequency == 0) std::cout<<"Absolute value: "<<abs(temp)<<"; Largest absolute value: "<<largest_absolute_value<<std::endl;
+                    if ((it%gd_frequency == 0) && (abs(temp) >= largest_absolute_value) && (!decimated_bits.contains(i))) {
+                        largest_absolute_value = abs(temp);
+                        largest_absolute_value_bit_index = i;
+                    }
+
+                    // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
+                    if (temp <= 0) {
+                        this->decoding[i] = 1;
+                        for (auto &e: this->pcm.iterate_column(i)) {
+                            this->candidate_syndrome[e.row_index] ^= 1;
+                        }
+                    } else this->decoding[i] = 0;
+                }
+
+                if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
+                    this->converge = true;
+                }
+
+                this->iterations = it;
+
+                // ldpc::sparse_matrix_util::print_vector(this->log_prob_ratios);
+
+
+                if (this->converge) return this->decoding;
+
+
+                if(it%gd_frequency == 0){
+                    // get the sign of the LLR with the highest absolute value
+                    if(this->log_prob_ratios[largest_absolute_value_bit_index] > 0){
+                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = 1e100;
+                    }
+                    else{
+                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = -1e100;
+                    }
+                    decimated_bits.insert(largest_absolute_value_bit_index);
+                    std::cout<<"It: "<< it<< "; Decimated bit: "<<largest_absolute_value_bit_index<<std::endl;
+                }
+
+
+                //compute bit to check update
+                for (int i = 0; i < bit_count; i++) {
+                    double temp = 0;
+                    for (auto &e: this->pcm.reverse_iterate_column(i)) {
+                        e.bit_to_check_msg += temp;
+                        temp += e.check_to_bit_msg;
+                    }
+                }
+
+            
+                // guided decimation
+            
+            
+            }
+
+
+            return this->decoding;
+
+        }
+
 
     };
 } // end namespace bp
