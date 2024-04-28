@@ -39,7 +39,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
     osd_method : int, optional
         The OSD method used.  Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
     osd_order : int, optional
-        The OSD order, by default 0.
+        The OSD order, by default 0. Note that if OSD_CS is chosen with osd_order > 0, the algorithm will consider weight
+        one solutions of the osd_order many most reliable bits only.
 
     Notes
     -----
@@ -129,6 +130,8 @@ cdef class BpOsdDecoder(BpDecoderBase):
             for i in range(self.n):
                 out[i] = self.bpd.decoding[i]
         else:
+            if self.osdD.osd_method == OSD_CS and self.osd_order > 0:
+                print(f"Using OSD_CS with osd_order={self.osd_order}, checking osd_order many weight one solutions only.")
             self.osdD.decode(self._syndrome, self.bpd.log_prob_ratios)
             for i in range(self.n):
                 out[i] = self.osdD.osdw_decoding[i]
