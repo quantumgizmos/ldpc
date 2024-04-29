@@ -257,8 +257,8 @@ def test_surface_20_kruskall():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_surface_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_surface_20.npz")
 
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+    # hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
+    # lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
 
     error_rate = 0.01
     run_count = 1000
