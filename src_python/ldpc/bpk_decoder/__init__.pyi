@@ -46,6 +46,39 @@ class BpKruskalDecoder(BpDecoderBase):
     """
 
 
+    def decode2(self, syndrome: np.ndarray) -> np.ndarray:
+        """
+        Decodes the input syndrome using the belief propagation and OSD decoding methods.
+
+        This method takes an input syndrome and decodes it using the belief propagation (BP) decoding method. If the BP
+        decoding method converges, it returns the decoding output. Otherwise, the method falls back to using the Ordered
+        Statistic Decoding (OSD) decoding method.
+
+        Parameters
+        ----------
+        syndrome : np.ndarray
+            The input syndrome to decode.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the decoded output.
+
+        Raises
+        ------
+        ValueError
+            If the length of the input syndrome is not equal to the length of the code.
+
+        Notes
+        -----
+        This method first checks if the input syndrome is all zeros. If it is, it returns an array of zeros of the same
+        length as the codeword. If the BP decoding method converges, it returns the decoding output. Otherwise, it falls back
+        to using the OSD decoding method. The OSD method used is specified by the `osd_method` parameter passed to the class
+        constructor. The OSD order used is specified by the `osd_order` parameter passed to the class constructor.
+
+        """
+
+
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.

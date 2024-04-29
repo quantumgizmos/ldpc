@@ -33,7 +33,8 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
             if not DECODER.converge:
                 fail+=1
                 if(isinstance(DECODER, BpKruskalDecoder)):
-                    print("Kruskal converge fail")
+                    # print("Kruskal converge fail")
+                    pass
                 continue
 
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
@@ -261,7 +262,7 @@ def test_surface_20_kruskall():
     # lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
 
     error_rate = 0.01
-    run_count = 1000
+    run_count = 10000
     seed = 42
     max_iter = 50
 
@@ -271,11 +272,11 @@ def test_surface_20_kruskall():
     print("...................................................")
     print()
 
-    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
+    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ps", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
  
-    decoder = BpKruskalDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel")
-    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum Kruskall parallel schedule")
+    decoder = BpKruskalDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ps", ms_scaling_factor = 0.625, schedule="parallel")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum Kruskall parallel schedule",DEBUG=False)
    
 
 

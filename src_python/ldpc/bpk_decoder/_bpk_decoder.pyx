@@ -55,7 +55,7 @@ cdef class BpKruskalDecoder(BpDecoderBase):
         pass
         
         
-    def decode(self, syndrome: np.ndarray) -> np.ndarray:
+    def decode2(self, syndrome: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.
 
@@ -110,6 +110,66 @@ cdef class BpKruskalDecoder(BpDecoderBase):
                 out[i] = self.bpd.decoding[i]
         else:
             bp_k_decode(self.bpd[0],self._syndrome)
+            for i in range(self.n):
+                out[i] = self.bpd.decoding[i]
+
+        return out
+
+    def decode(self, syndrome: np.ndarray) -> np.ndarray:
+        """
+        Decodes the input syndrome using the belief propagation and OSD decoding methods.
+
+        This method takes an input syndrome and decodes it using the belief propagation (BP) decoding method. If the BP
+        decoding method converges, it returns the decoding output. Otherwise, the method falls back to using the Ordered
+        Statistic Decoding (OSD) decoding method.
+
+        Parameters
+        ----------
+        syndrome : np.ndarray
+            The input syndrome to decode.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the decoded output.
+
+        Raises
+        ------
+        ValueError
+            If the length of the input syndrome is not equal to the length of the code.
+
+        Notes
+        -----
+        This method first checks if the input syndrome is all zeros. If it is, it returns an array of zeros of the same
+        length as the codeword. If the BP decoding method converges, it returns the decoding output. Otherwise, it falls back
+        to using the OSD decoding method. The OSD method used is specified by the `osd_method` parameter passed to the class
+        constructor. The OSD order used is specified by the `osd_order` parameter passed to the class constructor.
+
+        """
+
+        cdef int i
+
+        if not len(syndrome) == self.m:
+            raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
+        
+        zero_syndrome = True
+        
+        for i in range(self.m):
+            self._syndrome[i] = syndrome[i]
+            if self._syndrome[i]:
+                zero_syndrome = False
+        if zero_syndrome:
+            self.bpd.converge = True
+            return np.zeros(self.n, dtype=syndrome.dtype)
+        
+        self.bpd.decode(self._syndrome)
+        out = np.zeros(self.n, dtype=syndrome.dtype)
+
+        if self.bpd.converge:
+            for i in range(self.n):
+                out[i] = self.bpd.decoding[i]
+        else:
+            bp_k_decode_ps(self.bpd[0],self._syndrome)
             for i in range(self.n):
                 out[i] = self.bpd.decoding[i]
 

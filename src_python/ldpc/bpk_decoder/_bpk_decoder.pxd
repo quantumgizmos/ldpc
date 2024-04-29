@@ -10,6 +10,7 @@ ctypedef np.uint8_t uint8_t
 cdef extern from "bp_k.hpp" namespace "ldpc::bpk" nogil:
 
     cdef vector[uint8_t]& bp_k_decode(BpDecoderCpp& bpd, vector[uint8_t]& syndrome)
+    cdef vector[uint8_t]& bp_k_decode_ps(BpDecoderCpp& bpd, vector[uint8_t]& syndrome)
 
 cdef class BpKruskalDecoder(BpDecoderBase):
     pass

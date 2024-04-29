@@ -12,6 +12,7 @@
 #include "bp.hpp"
 #include "sort.hpp"
 #include "util.hpp"
+#include "gf2sparse.hpp"
 #include "gf2sparse_linalg.hpp"
 
 namespace ldpc::bpk{
@@ -98,6 +99,52 @@ namespace ldpc::bpk{
         bpd.maximum_iterations = max_iter_backup;
         
         return bpd.decoding;
+    
+    }
+
+std::vector<uint8_t>& bp_k_decode_ps(ldpc::bp::BpDecoder& bpd, std::vector<uint8_t>& syndrome){
+
+        std::vector<int> bit_order(bpd.pcm.n);
+        for(int i=0; i<bpd.pcm.n; i++) bit_order[i] = i;
+        ldpc::sort::soft_decision_col_sort(bpd.log_prob_ratios, bit_order,bpd.pcm.n);
+        auto pcm = bpd.pcm;
+        auto stb = find_weighted_spanning_tree(bpd.pcm, bit_order);
+        auto pcm_st = ldpc::gf2sparse::copy_cols(pcm, stb.spanning_tree_bits);
+
+        // std::cout<<"Copy cols and spanning tree done"<<std::endl;
+
+        auto bpd_st_channel = std::vector<double>(pcm_st.n, 0);
+        for(int i = 0; i < pcm_st.n; i++){
+            bpd_st_channel[i] = bpd.channel_probabilities[stb.spanning_tree_bits[i]];
+        }
+
+        // std::cout<<"Channel probabilities copied"<<std::endl;
+
+        ldpc::bp::BpDecoder bpd_st(pcm_st, bpd_st_channel, pcm.n, ldpc::bp::PRODUCT_SUM, ldpc::bp::PARALLEL, 0.625);
+
+        // std::cout<<"Bpd_st initialized"<<std::endl;
+
+        auto decoding_st = bpd_st.decode(syndrome);
+
+        // std::cout<<"Decoding done"<<std::endl;
+
+        auto decoding = std::vector<uint8_t>(pcm.n, 0);
+        for(int i = 0; i < pcm_st.n; i++){
+            if(decoding_st[i] == 1){
+                decoding[stb.spanning_tree_bits[i]] = 1;
+            }
+        }
+
+        if(bpd_st.converge){
+            bpd.converge = true;
+        }
+        else{
+            bpd.converge = false;
+        }
+
+        bpd.decoding = decoding;
+        
+        return decoding;
     
     }
 
