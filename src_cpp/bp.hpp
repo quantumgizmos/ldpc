@@ -255,7 +255,7 @@ namespace ldpc::bp {
                     for (auto &e: this->pcm.iterate_column(i)) {
                         e.bit_to_check_msg = temp;
                         temp += e.check_to_bit_msg;
-                        // if(isnan(temp)) temp = e.bit_to_check_msg;
+                        if(std::isnan(temp)) temp = 0;
 
 
                     }
@@ -805,13 +805,13 @@ namespace ldpc::bp {
                 if(it%gd_frequency == 0){
                     // get the sign of the LLR with the highest absolute value
                     if(this->log_prob_ratios[largest_absolute_value_bit_index] > 0){
-                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = 1e100;
+                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = 25;
                     }
                     else{
-                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = -1e100;
+                        this->initial_log_prob_ratios[largest_absolute_value_bit_index] = -25;
                     }
                     decimated_bits.insert(largest_absolute_value_bit_index);
-                    std::cout<<"It: "<< it<< "; Decimated bit: "<<largest_absolute_value_bit_index<<std::endl;
+                    // std::cout<<"It: "<< it<< "; Decimated bit: "<<largest_absolute_value_bit_index<<std::endl;
                 }
 
 

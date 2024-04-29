@@ -71,10 +71,10 @@ def test_882_24_24():
     lx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_lx.txt").astype(int)
 
     error_rate = 0.05
-    run_count = 50
+    run_count = 1000
     seed = 42
 
-    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=0, bp_method="ps", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")        
+    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")        
     gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=5000, bp_method="ps", ms_scaling_factor = 0.625, schedule="parallel")
 
     syndrome = hx@generate_bsc_error(hx.shape[1], error_rate)%2
@@ -82,9 +82,9 @@ def test_882_24_24():
     decoding = gd_decoder.decode(syndrome)
     
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, gd_decoder, "Min-sum BpGd parallel schedule")
-    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "BP+OSD parallel schedule")
+    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "BP+OSD parallel schedule")
 
-    print("hello")
+    # print("hello")
 
 
 def test_400_16_6_hgp():
