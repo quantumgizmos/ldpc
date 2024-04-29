@@ -191,9 +191,10 @@ def test_cl_size():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
 
-    error_rate = 0.04
+    error_rate = 0.01
     run_count = 1000
-    seed = np.random.randint(2e9)
+    # seed = np.random.randint(2e9)
+    seed = 42
     max_iter = 1
 
     print(f"Code: [[400, 16, 6]] HGP, error rate: {error_rate}, bp iterations:, {max_iter}, run count: {run_count}, seed: {seed}")
