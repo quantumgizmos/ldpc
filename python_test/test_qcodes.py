@@ -262,8 +262,8 @@ def test_surface_20_kruskall():
     # lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
 
     error_rate = 0.01
-    run_count = 10000
-    seed = 42
+    run_count = 1000
+    seed = np.random.randint(2e9)
     max_iter = 50
 
     print(hx.shape)

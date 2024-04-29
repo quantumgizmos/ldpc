@@ -120,7 +120,7 @@ std::vector<uint8_t>& bp_k_decode_ps(ldpc::bp::BpDecoder& bpd, std::vector<uint8
 
         // std::cout<<"Channel probabilities copied"<<std::endl;
 
-        ldpc::bp::BpDecoder bpd_st(pcm_st, bpd_st_channel, pcm.n, ldpc::bp::PRODUCT_SUM, ldpc::bp::PARALLEL, 0.625);
+        ldpc::bp::BpDecoder bpd_st(pcm_st, bpd_st_channel, pcm_st.n, ldpc::bp::PRODUCT_SUM, ldpc::bp::SERIAL, 0.625,1,ldpc::bp::NULL_INT_VECTOR,3,true);
 
         // std::cout<<"Bpd_st initialized"<<std::endl;
 
