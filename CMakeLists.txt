@@ -77,6 +77,7 @@ set(TEST_EXECUTABLES
     TestUtil
     TestRng
     TestUnionFind
+    TestBpK
 )
 
 # Loop through the list of test executables to:
