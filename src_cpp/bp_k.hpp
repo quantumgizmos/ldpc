@@ -51,9 +51,7 @@ namespace ldpc::bpk{
                 check_roots.insert(check_root);
 
                 spanning_tree_check_roots[check_root] = first_root;
-                // ldpc::sparse_matrix_util::print_vector(spanning_tree_check_roots);
 
-            
             }
 
             if(!loop_found){

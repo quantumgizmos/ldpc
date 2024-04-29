@@ -8,7 +8,7 @@
 
 using namespace std;
 
-TEST(Kruskal, rep_code){
+TEST(Kruskal, ring_code){
     {
         auto rep_code = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(3);
         auto bit_weights = std::vector<int>{0,1,2};
@@ -24,6 +24,47 @@ TEST(Kruskal, rep_code){
         auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{1,2};
+        ASSERT_EQ(stb, expected);
+    }
+}
+
+TEST(Kruskal, double_ring_code){
+    {
+        auto rep_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
+        rep_code.insert_entry(0, 0);
+        rep_code.insert_entry(0, 1);
+        rep_code.insert_entry(1, 1);
+        rep_code.insert_entry(1, 2);
+        rep_code.insert_entry(2, 0);
+        rep_code.insert_entry(2, 2);
+        rep_code.insert_entry(3, 0);
+        rep_code.insert_entry(3, 3);
+
+        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        auto bit_weights = std::vector<int>{0,1,2,3};
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        // ldpc::sparse_matrix_util::print_vector(stb);
+        auto expected = std::vector<int>{0,1,3};
+        ASSERT_EQ(stb, expected);
+    }
+
+    {
+        auto rep_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
+        rep_code.insert_entry(0, 0);
+        rep_code.insert_entry(0, 1);
+        rep_code.insert_entry(1, 1);
+        rep_code.insert_entry(1, 2);
+        rep_code.insert_entry(1, 3);
+        rep_code.insert_entry(2, 0);
+        rep_code.insert_entry(2, 2);
+        rep_code.insert_entry(3, 1);
+        rep_code.insert_entry(3, 3);
+
+        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        auto bit_weights = std::vector<int>{0,1,2,3};
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        // ldpc::sparse_matrix_util::print_vector(stb);
+        auto expected = std::vector<int>{0,1};
         ASSERT_EQ(stb, expected);
     }
 
