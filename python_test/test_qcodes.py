@@ -8,6 +8,7 @@ from ldpc.bp_decoder import BpDecoder
 from ldpc.bplsd_decoder import BpLsdDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.noise_models import generate_bsc_error
+from ldpc.bpk_decoder import BpKruskalDecoder
 
 
 def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBUG = False):
@@ -28,7 +29,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         residual = (decoding + error) %2
 
 
-        if isinstance(DECODER, BpDecoder):
+        if isinstance(DECODER, (BpDecoder, BpKruskalDecoder)):
             if not DECODER.converge:
                 fail+=1
                 continue
@@ -250,6 +251,33 @@ def test_failing_case_lsd_w():
 
     decoder.decode(syndrome)
 
+def test_surface_20_kruskall():
+    hx = scipy.sparse.load_npz("python_test/pcms/hx_surface_20.npz")
+    lx = scipy.sparse.load_npz("python_test/pcms/lx_surface_20.npz")
+
+    # hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
+    # lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+
+    error_rate = 0.05
+    run_count = 1000
+    seed = 42
+    max_iter = 50
+
+    print(hx.shape)
+
+    print(f"Code: [[761, 1, 20]] Surface, error rate: {error_rate}, bp iterations:, {max_iter}, run count: {run_count}, seed: {seed}")
+    print("...................................................")
+    print()
+
+    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum osd-0 parallel schedule")
+ 
+    decoder = BpKruskalDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "Min-sum Kruskall parallel schedule")
+   
+
+
+
 if __name__ == "__main__":
 
-    test_surface_20()
+    test_surface_20_kruskall()

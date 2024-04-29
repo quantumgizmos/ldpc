@@ -73,7 +73,7 @@ namespace ldpc::bpk{
 
     }
 
-    std::vector<uint8_t>& bp_k_decode(ldpc::bp::BpDecoder& bpd, std::vector<uint8_t> syndrome){
+    std::vector<uint8_t>& bp_k_decode(ldpc::bp::BpDecoder& bpd, std::vector<uint8_t>& syndrome){
 
         std::vector<int> bit_order(bpd.pcm.n);
         for(int i=0; i<bpd.pcm.n; i++) bit_order[i] = i;
@@ -89,8 +89,8 @@ namespace ldpc::bpk{
             bpd.channel_probabilities[bit] = 0;
         }
 
-        ldpc::sparse_matrix_util::print_vector(stb.spanning_tree_bits);
-        ldpc::sparse_matrix_util::print_vector(stb.not_spanning_tree_bits);
+        // ldpc::sparse_matrix_util::print_vector(stb.spanning_tree_bits);
+        // ldpc::sparse_matrix_util::print_vector(stb.not_spanning_tree_bits);
         
         bpd.maximum_iterations = bpd.pcm.n;
         auto decoding = bpd.decode(syndrome);
