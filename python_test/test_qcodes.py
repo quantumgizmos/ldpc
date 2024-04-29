@@ -32,6 +32,8 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         if isinstance(DECODER, (BpDecoder, BpKruskalDecoder)):
             if not DECODER.converge:
                 fail+=1
+                if(isinstance(DECODER, BpKruskalDecoder)):
+                    print("Kruskal converge fail")
                 continue
 
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
@@ -255,10 +257,10 @@ def test_surface_20_kruskall():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_surface_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_surface_20.npz")
 
-    # hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
-    # lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
 
-    error_rate = 0.05
+    error_rate = 0.01
     run_count = 1000
     seed = 42
     max_iter = 50
