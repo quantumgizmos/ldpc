@@ -191,7 +191,7 @@ def test_cl_size():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
 
-    error_rate = 0.02
+    error_rate = 0.04
     run_count = 1000
     seed = np.random.randint(2e9)
     max_iter = 1
@@ -201,10 +201,23 @@ def test_cl_size():
     print()
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", bits_per_step=1)
+    decoder.set_do_stats(True)
     ler, min_logical, speed, clss = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
 
     for cls in clss:
-        print(cls.tolist())
+        # print(cls['individual_cluster_stats'])
+        bit_counts = []
+        # print(cls['individual_cluster_stats'].values())
+        # print(cls)
+        for cl in cls['individual_cluster_stats'].values():
+            if cl['active']:
+                bit_counts.append(cl['final_bit_count'])
+        print(bit_counts)
+        # for cl in cls:
+        #     print(cl)
+            
+        # print(bit_counts)
+                
 
 def test_400_16_6_hgp_lsd_w():
 
@@ -252,4 +265,5 @@ def test_failing_case_lsd_w():
 
 if __name__ == "__main__":
 
-    test_surface_20()
+    test_cl_size()
+    # test_surface_20()
