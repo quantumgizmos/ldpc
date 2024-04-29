@@ -7,6 +7,7 @@
 #include <cmath> 
 #include <limits>
 #include <set>
+#include <numeric>
 
 #include "bp.hpp"
 #include "sort.hpp"
@@ -24,13 +25,18 @@ namespace ldpc::bpk{
         }
     }
 
-    std::vector<int> find_weighted_spanning_tree(ldpc::bp::BpSparse& pcm, std::vector<int>& bit_order){
+    struct SpanningTreeBits{
+        std::vector<int> spanning_tree_bits;
+        std::vector<int> not_spanning_tree_bits;
+    };
+
+    SpanningTreeBits find_weighted_spanning_tree(ldpc::bp::BpSparse& pcm, std::vector<int>& bit_order){
 
         int check_count = pcm.m;
         std::vector<int> spanning_tree_check_roots(check_count, 0);
         for(int i = 0; i < check_count; i++) spanning_tree_check_roots[i] = i;
         
-        std::vector<int> spanning_tree_bits;
+        SpanningTreeBits spanning_tree;
 
         for(int bit: bit_order){
             std::set<int> check_roots;
@@ -54,14 +60,45 @@ namespace ldpc::bpk{
 
             }
 
-            if(!loop_found){
-                spanning_tree_bits.push_back(bit);
+            if(loop_found){
+                spanning_tree.not_spanning_tree_bits.push_back(bit);
+            }
+            else{
+                spanning_tree.spanning_tree_bits.push_back(bit);
             }
 
         }
 
-        return spanning_tree_bits;
+        return spanning_tree;
 
+    }
+
+    std::vector<uint8_t>& bp_k_decode(ldpc::bp::BpDecoder& bpd, std::vector<uint8_t> syndrome){
+
+        std::vector<int> bit_order(bpd.pcm.n);
+        for(int i=0; i<bpd.pcm.n; i++) bit_order[i] = i;
+
+        ldpc::sort::soft_decision_col_sort(bpd.log_prob_ratios, bit_order,bpd.pcm.n);
+
+        auto pcm = bpd.pcm;
+        auto stb = find_weighted_spanning_tree(bpd.pcm, bit_order);
+        auto channel_probabilites_backup = bpd.channel_probabilities;
+        auto max_iter_backup = bpd.maximum_iterations;
+
+        for(int bit: stb.not_spanning_tree_bits){
+            bpd.channel_probabilities[bit] = 0;
+        }
+
+        ldpc::sparse_matrix_util::print_vector(stb.spanning_tree_bits);
+        ldpc::sparse_matrix_util::print_vector(stb.not_spanning_tree_bits);
+        
+        bpd.maximum_iterations = bpd.pcm.n;
+        auto decoding = bpd.decode(syndrome);
+        bpd.channel_probabilities = channel_probabilites_backup;
+        bpd.maximum_iterations = max_iter_backup;
+        
+        return bpd.decoding;
+    
     }
 
 }//end bpk namespace

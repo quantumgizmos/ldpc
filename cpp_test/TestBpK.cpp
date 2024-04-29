@@ -13,20 +13,44 @@ TEST(Kruskal, ring_code){
         auto rep_code = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(3);
         auto bit_weights = std::vector<int>{0,1,2};
         auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        auto spanning_tree_bits = stb.spanning_tree_bits;
+        auto not_spanning_tree_bits = stb.not_spanning_tree_bits;
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{0,1};
-        ASSERT_EQ(stb, expected);
+        ASSERT_EQ(spanning_tree_bits, expected);
+        expected = std::vector<int>{2};
+        ASSERT_EQ(not_spanning_tree_bits, expected);
     }
 
     {
         auto rep_code = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(3);
         auto bit_weights = std::vector<int>{1,2,0};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
-        // ldpc::sparse_matrix_util::print_vector(stb);
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights).spanning_tree_bits;
         auto expected = std::vector<int>{1,2};
         ASSERT_EQ(stb, expected);
     }
 }
+
+TEST(Kruskal, hamming_code){
+    {
+        auto rep_code = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(3);
+        auto bit_weights = std::vector<int>{0,1,2,3,4,5,6};
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        auto spanning_tree_bits = stb.spanning_tree_bits;
+        auto not_spanning_tree_bits = stb.not_spanning_tree_bits;
+        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        ldpc::sparse_matrix_util::print_vector(spanning_tree_bits);
+        ldpc::sparse_matrix_util::print_vector(not_spanning_tree_bits);
+        // auto expected = std::vector<int>{0,1};
+        // ASSERT_EQ(spanning_tree_bits, expected);
+        // expected = std::vector<int>{2};
+        // ASSERT_EQ(not_spanning_tree_bits, expected);
+    }
+
+}
+
+
+
 
 TEST(Kruskal, double_ring_code){
     {
@@ -42,7 +66,7 @@ TEST(Kruskal, double_ring_code){
 
         ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
         auto bit_weights = std::vector<int>{0,1,2,3};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights).spanning_tree_bits;
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{0,1,3};
         ASSERT_EQ(stb, expected);
@@ -62,12 +86,56 @@ TEST(Kruskal, double_ring_code){
 
         ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
         auto bit_weights = std::vector<int>{0,1,2,3};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights).spanning_tree_bits;
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{0,1};
         ASSERT_EQ(stb, expected);
     }
 
+
+}
+
+
+TEST(BpKDecoder, min_sum_parallel_hamming_code) {
+
+    int n = 3;
+    auto pcm = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(n);
+
+    int maximum_iterations = 1;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder using input arguments
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::PARALLEL, 0.625);
+
+    // Check if member variables are set correctly
+    EXPECT_TRUE(pcm == decoder.pcm);
+    EXPECT_EQ(pcm.m, decoder.check_count);
+    EXPECT_EQ(pcm.n, decoder.bit_count);
+    EXPECT_EQ(channel_probabilities, decoder.channel_probabilities);
+    EXPECT_EQ(maximum_iterations, decoder.maximum_iterations);
+    EXPECT_EQ(0.625, decoder.ms_scaling_factor);
+    EXPECT_EQ(1, decoder.bp_method);
+    EXPECT_EQ(ldpc::bp::PARALLEL, decoder.schedule);
+    EXPECT_EQ(1, decoder.omp_thread_count);
+
+    auto syndrome = vector<uint8_t>{0, 0, 1, 1, 1, 1};
+    auto decoding = decoder.decode(syndrome);
+    cout<<decoder.converge<<endl;
+    ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
+
+    auto bpk_decoding = ldpc::bpk::bp_k_decode(decoder, syndrome);
+
+    cout<<decoder.converge<<endl;
+    ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
+
+    // auto count = 0;
+    // for (auto syndrome: syndromes) {
+    //     auto decoding = decoder.decode(syndrome);
+    //     ldpc::sparse_matrix_util::print_vector(decoder.log_prob_ratios);
+    //     ASSERT_EQ(expected_decoding[count], decoding);
+    //     count++;
+    // }
 
 }
 
