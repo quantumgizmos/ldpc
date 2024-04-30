@@ -111,6 +111,22 @@ std::vector<uint8_t>& bp_k_decode_ps(ldpc::bp::BpDecoder& bpd, std::vector<uint8
         auto stb = find_weighted_spanning_tree(bpd.pcm, bit_order);
         auto pcm_st = ldpc::gf2sparse::copy_cols(pcm, stb.spanning_tree_bits);
 
+        //remove all duplicate weight one columns
+        std::set<int> row_indices;
+        for(int col = 0; col < pcm_st.n; col++){
+            if(pcm_st.get_col_degree(col) == 1){
+                auto&e = *pcm_st.iterate_column(col);
+                int row_index = e.row_index;
+                if(row_indices.contains(row_index)){
+                    pcm_st.remove(e);
+                    // std::cout<<"column removed"<<std::endl;
+                }
+                else{
+                    row_indices.insert(row_index);
+                }
+            }
+        }
+
         // std::cout<<"Copy cols and spanning tree done"<<std::endl;
 
         auto bpd_st_channel = std::vector<double>(pcm_st.n, 0);
