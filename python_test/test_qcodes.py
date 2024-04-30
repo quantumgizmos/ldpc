@@ -40,9 +40,21 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
 
         if np.any((lx@residual)%2):
             fail+=1
+
             if(np.sum(residual)<min_logical):
                 min_logical = np.sum(residual)
                 # print(f"New min logical: {min_logical}")
+
+        else:
+            bit_counts = []
+            try:
+                if not DECODER.converge:
+                    for cl in additional_stats[-1]['individual_cluster_stats'].values():
+                        if cl['active']:
+                            bit_counts.append(cl['final_bit_count'])
+                    print(bit_counts)
+            except IndexError:
+                pass           
 
     end_time = time.time()  # record end time
 
@@ -192,10 +204,10 @@ def test_cl_size():
     lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
 
     error_rate = 0.01
-    run_count = 1000
+    run_count = 10000
     # seed = np.random.randint(2e9)
     seed = 42
-    max_iter = 1
+    max_iter = 50
 
     print(f"Code: [[400, 16, 6]] HGP, error rate: {error_rate}, bp iterations:, {max_iter}, run count: {run_count}, seed: {seed}")
     print("...................................................")
@@ -205,19 +217,15 @@ def test_cl_size():
     decoder.set_do_stats(True)
     ler, min_logical, speed, clss = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
 
-    for cls in clss:
-        # print(cls['individual_cluster_stats'])
-        bit_counts = []
-        # print(cls['individual_cluster_stats'].values())
-        # print(cls)
-        for cl in cls['individual_cluster_stats'].values():
-            if cl['active']:
-                bit_counts.append(cl['final_bit_count'])
-        print(bit_counts)
-        # for cl in cls:
-        #     print(cl)
+    # for j, cls in enumerate(clss):
+    #     bit_counts = []
+    #     for i, cl in enumerate(cls['individual_cluster_stats'].values()):
+    #         if cl['active']:
+    #             bit_counts.append(cl['final_bit_count'])
+    #     print(j, bit_counts)
+
             
-        # print(bit_counts)
+
                 
 
 def test_400_16_6_hgp_lsd_w():
