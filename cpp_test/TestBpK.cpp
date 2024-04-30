@@ -33,12 +33,12 @@ TEST(Kruskal, ring_code){
 
 TEST(Kruskal, hamming_code){
     {
-        auto rep_code = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(3);
+        auto hamming_code = ldpc::gf2codes::hamming_code<ldpc::bp::BpEntry>(3);
         auto bit_weights = std::vector<int>{0,1,2,3,4,5,6};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights);
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(hamming_code, bit_weights);
         auto spanning_tree_bits = stb.spanning_tree_bits;
         auto not_spanning_tree_bits = stb.not_spanning_tree_bits;
-        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        ldpc::sparse_matrix_util::print_sparse_matrix(hamming_code);
         ldpc::sparse_matrix_util::print_vector(spanning_tree_bits);
         ldpc::sparse_matrix_util::print_vector(not_spanning_tree_bits);
         // auto expected = std::vector<int>{0,1};
@@ -54,39 +54,39 @@ TEST(Kruskal, hamming_code){
 
 TEST(Kruskal, double_ring_code){
     {
-        auto rep_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
-        rep_code.insert_entry(0, 0);
-        rep_code.insert_entry(0, 1);
-        rep_code.insert_entry(1, 1);
-        rep_code.insert_entry(1, 2);
-        rep_code.insert_entry(2, 0);
-        rep_code.insert_entry(2, 2);
-        rep_code.insert_entry(3, 0);
-        rep_code.insert_entry(3, 3);
+        auto double_ring_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
+        double_ring_code.insert_entry(0, 0);
+        double_ring_code.insert_entry(0, 1);
+        double_ring_code.insert_entry(1, 1);
+        double_ring_code.insert_entry(1, 2);
+        double_ring_code.insert_entry(2, 0);
+        double_ring_code.insert_entry(2, 2);
+        double_ring_code.insert_entry(3, 0);
+        double_ring_code.insert_entry(3, 3);
 
-        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        ldpc::sparse_matrix_util::print_sparse_matrix(double_ring_code);
         auto bit_weights = std::vector<int>{0,1,2,3};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights).spanning_tree_bits;
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(double_ring_code, bit_weights).spanning_tree_bits;
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{0,1,3};
         ASSERT_EQ(stb, expected);
     }
 
     {
-        auto rep_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
-        rep_code.insert_entry(0, 0);
-        rep_code.insert_entry(0, 1);
-        rep_code.insert_entry(1, 1);
-        rep_code.insert_entry(1, 2);
-        rep_code.insert_entry(1, 3);
-        rep_code.insert_entry(2, 0);
-        rep_code.insert_entry(2, 2);
-        rep_code.insert_entry(3, 1);
-        rep_code.insert_entry(3, 3);
+        auto double_ring_code = ldpc::gf2sparse::GF2Sparse<ldpc::bp::BpEntry>(4, 4);
+        double_ring_code.insert_entry(0, 0);
+        double_ring_code.insert_entry(0, 1);
+        double_ring_code.insert_entry(1, 1);
+        double_ring_code.insert_entry(1, 2);
+        double_ring_code.insert_entry(1, 3);
+        double_ring_code.insert_entry(2, 0);
+        double_ring_code.insert_entry(2, 2);
+        double_ring_code.insert_entry(3, 1);
+        double_ring_code.insert_entry(3, 3);
 
-        ldpc::sparse_matrix_util::print_sparse_matrix(rep_code);
+        ldpc::sparse_matrix_util::print_sparse_matrix(double_ring_code);
         auto bit_weights = std::vector<int>{0,1,2,3};
-        auto stb = ldpc::bpk::find_weighted_spanning_tree(rep_code, bit_weights).spanning_tree_bits;
+        auto stb = ldpc::bpk::find_weighted_spanning_tree(double_ring_code, bit_weights).spanning_tree_bits;
         // ldpc::sparse_matrix_util::print_vector(stb);
         auto expected = std::vector<int>{0,1};
         ASSERT_EQ(stb, expected);
