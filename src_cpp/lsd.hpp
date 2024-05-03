@@ -750,7 +750,12 @@ namespace ldpc::lsd {
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),
                             bit_weights);
-                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome);
+                    std::vector<double> cluster_bit_weights;
+                    cluster_bit_weights.reserve(cl->bit_nodes.size());
+                    for (auto bit: cl->bit_nodes) {
+                        cluster_bit_weights.push_back(bit_weights[bit]);
+                    }
+                    auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome, cluster_bit_weights);
 
                     for (auto i = 0; i < res.size(); i++) {
                         if (res[i] == 1) {

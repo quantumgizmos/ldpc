@@ -98,25 +98,21 @@ namespace ldpc::osd {
         }
 
 
-        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome) {
+        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome, std::vector<double>& cluster_channel_probs) {
             // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
             // of the clusters through the guided growth.
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
+            double candidate_weight, osd_min_weight;
+            osd_min_weight = 0.0;
 
-            int candidate_weight, osd_min_weight;
-
-            osd_min_weight = 0;
             for (auto i = 0; i < this->bit_count; i++) {
                 if (this->lsd0_solution[i] == 1) {
-                    osd_min_weight++;
+                    osd_min_weight+=log(1 / cluster_channel_probs[i]);
                 }
             }
-            // reset if NaN
-//            osd_min_weight = std::isnan(osd_min_weight) ? 0.0 : osd_min_weight;
-
             auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
+
             if (non_pivot_columns.empty()) {
-//                std::cout << "no non-pivot columns" << std::endl;
                 return this->lsd0_solution;
             }
             for (auto &candidate_string: this->osd_candidate_strings) {
@@ -136,7 +132,6 @@ namespace ldpc::osd {
                     candidate_solution[non_pivot_columns[i]] = candidate_string[i];
                 }
                 candidate_weight = 0;
-
                 auto decoded_t_syndrome = std::vector<uint8_t>(t_syndrome.size(), 0);
 
                 for (auto i = 0; i < this->bit_count; i++) {
@@ -144,20 +139,15 @@ namespace ldpc::osd {
                         for(int synd_idx: this->pcm.at(i)) {
                             decoded_t_syndrome[synd_idx] ^= 1;
                         }
-                        candidate_weight++;
+                        candidate_weight+=log(1 / cluster_channel_probs[i]);
                     }
                 }
-
                 //we abandon this candidate solution if the solution does satisfy the input
                 if(decoded_t_syndrome != syndrome){
                     std::cout<<"Hello"<<std::endl;
                     continue;
                 }
-
-                // reset if NaN
-//                candidate_weight = std::isnan(candidate_weight) ? 0.0 : candidate_weight;
                 if (candidate_weight < osd_min_weight) {
-//                    std::cout << "found lower weight solution" << std::endl;
                     osd_min_weight = candidate_weight;
                     this->osdw_decoding = candidate_solution;
                 }

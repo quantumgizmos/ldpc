@@ -99,18 +99,15 @@ def test_400_16_6_hgp():
     # decoder = BeliefFindDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625, schedule="parallel", uf_method="inversion", bits_per_step=1)
     # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
 
-    # decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
-    #                        schedule="parallel", bits_per_step=1, lsd_order=0, lsd_method="osd_cs")
-    # ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
-    #                                             f"Min-sum LSD-0 parallel schedule")
+    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
+                           schedule="parallel", bits_per_step=1, lsd_order=0, lsd_method="osd_cs")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+                                                f"Min-sum LSD-0 parallel schedule")
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625,
-                           schedule="parallel", bits_per_step=1, lsd_order=osd_order, lsd_method="osd_cs")
-    decoder.set_do_stats(True)
+                           schedule="parallel", bits_per_step=1, lsd_order=21, lsd_method="osd_cs")
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    print(json.dumps(decoder.statistics))
-
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
     lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
