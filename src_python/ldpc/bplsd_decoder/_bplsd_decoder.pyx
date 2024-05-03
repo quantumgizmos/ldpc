@@ -143,7 +143,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
             for i in range(self.n): out[i] = self.bpd.decoding[i]
 
         if not self.bpd.converge:
-            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
+            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True,
+            self.bpd.channel_probabilities)
             for i in range(self.n):
                 out[i] = self.lsd.decoding[i]
         

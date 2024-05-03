@@ -608,15 +608,17 @@ namespace ldpc::lsd {
         }
 
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
-                                                const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR) {
-            return this->lsd_decode(syndrome, bit_weights, 1, true);
+                                                const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
+                                                const std::vector<double> &channel_probs = NULL_DOUBLE_VECTOR) {
+            return this->lsd_decode(syndrome, bit_weights, 1, true, channel_probs);
         }
 
         std::vector<uint8_t> &
         lsd_decode(std::vector<uint8_t> &syndrome,
                    const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                    const int bits_per_step = 1,
-                   const bool is_on_the_fly = true) {
+                   const bool is_on_the_fly = true,
+                   const std::vector<double> &channel_probs = NULL_DOUBLE_VECTOR) {
             auto start_time = std::chrono::high_resolution_clock::now();
             this->statistics.clear();
 
@@ -711,7 +713,8 @@ namespace ldpc::lsd {
 
         void apply_lsdw(const std::vector<LsdCluster *> &clusters,
                         const int lsd_order,
-                        const std::vector<double> &bit_weights, std::size_t timestep = 0) {
+                        const std::vector<double> &bit_weights, std::size_t timestep = 0,
+                        const std::vector<double> &channel_probs = NULL_DOUBLE_VECTOR) {
             // apply lsd-w to clusters
             for (auto cl: clusters) {
                 if (do_stats) {
@@ -731,7 +734,7 @@ namespace ldpc::lsd {
                     std::vector<double> cluster_bit_weights;
                     cluster_bit_weights.reserve(cl->bit_nodes.size());
                     for (auto bit: cl->bit_nodes) {
-                        cluster_bit_weights.push_back(bit_weights[bit]);
+                        cluster_bit_weights.push_back(channel_probs[bit]);
                     }
                     auto res = cl_osd_decoder.osd_decode(cl->cluster_pcm_syndrome, cluster_bit_weights);
 

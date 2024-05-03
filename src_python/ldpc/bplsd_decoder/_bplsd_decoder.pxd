@@ -43,7 +43,9 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
 
     cdef cppclass LsdDecoderCpp "ldpc::lsd::LsdDecoder":
         LsdDecoderCpp(BpSparse& pcm, OsdMethod lsd_method, int lsd_order) except +
-        vector[uint8_t]& lsd_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step, bool on_the_fly_decode)
+        vector[uint8_t]& lsd_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step,
+            bool on_the_fly_decode,
+            const vector[double]& channel_probs)
         vector[uint8_t] decoding
         Statistics statistics
         bool do_stats
