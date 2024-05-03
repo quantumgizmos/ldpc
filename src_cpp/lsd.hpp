@@ -554,6 +554,7 @@ namespace ldpc::lsd {
         int bit_count;
         osd::OsdMethod lsd_method;
         int lsd_order;
+        bool higher_order_adaptive = true;
 
         explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix,
                             osd::OsdMethod lsdMethod = osd::OsdMethod::COMBINATION_SWEEP,
@@ -709,32 +710,8 @@ namespace ldpc::lsd {
         }
 
         void apply_lsdw(const std::vector<LsdCluster *> &clusters,
-                        int lsd_order,
+                        const int lsd_order,
                         const std::vector<double> &bit_weights, std::size_t timestep = 0) {
-            //cluster growth stage
-            for (auto cl: clusters) {
-                if (cl->active) {
-                    // first we measure the dimension of each cluster
-                    auto cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
-                    //if the cluster dimension is smaller than the lsd order, we grow the cluster until it reaches
-                    // the lsd order. The number of bits added is limited to be at most the lsd order.
-                    auto cluster_growth_count = 0;
-                    auto initial_cluster_size = cl->bit_nodes.size();
-                    while (cluster_dimension < lsd_order &&
-                           cluster_growth_count < lsd_order &&
-                           cl->bit_nodes.size() < this->pcm.n &&
-                           cluster_growth_count <= initial_cluster_size) {
-                        cl->curr_timestep = timestep; // for stats
-                        cl->grow_cluster(bit_weights, 1, true);
-                        cluster_dimension = cl->pluDecomposition.not_pivot_cols.size();
-                        cluster_growth_count++;
-                        if (this->do_stats) {
-                            this->update_growth_stats(cl);
-                        }
-                        timestep++;
-                    }
-                }
-            }
             // apply lsd-w to clusters
             for (auto cl: clusters) {
                 if (do_stats) {
@@ -749,7 +726,8 @@ namespace ldpc::lsd {
                             lsd_order,
                             cl->bit_nodes.size(),
                             cl->check_nodes.size(),
-                            bit_weights);
+                            bit_weights,
+                            this->higher_order_adaptive);
                     std::vector<double> cluster_bit_weights;
                     cluster_bit_weights.reserve(cl->bit_nodes.size());
                     for (auto bit: cl->bit_nodes) {

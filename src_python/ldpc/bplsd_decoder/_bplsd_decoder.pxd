@@ -49,6 +49,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         bool do_stats
         OsdMethod lsd_method
         int lsd_order
+        bool higher_order_adaptive
         bool get_do_stats()
         void set_do_stats(bool do_stats)
         void set_additional_stat_fields(vector[int] error, vector[int] syndrome, vector[int] compare_recover)

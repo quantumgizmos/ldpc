@@ -18,6 +18,7 @@ namespace ldpc::osd {
     public:
         OsdMethod osd_method;
         int osd_order;
+        bool adaptive;
         int k, bit_count, check_count;
         gf2dense::CscMatrix &pcm;
         const std::vector<double> &channel_probabilities;
@@ -33,10 +34,12 @@ namespace ldpc::osd {
                 int osd_order,
                 int n,
                 int m,
-                const std::vector<double> &channel_probs) :
+                const std::vector<double> &channel_probs,
+                bool adaptive = true) :
                 pcm(parity_check_matrix),
                 channel_probabilities(channel_probs),
-                plu_decomposition(pluDecomposition) {
+                plu_decomposition(pluDecomposition),
+                adaptive(adaptive) {
             this->bit_count = n;
             this->check_count = m;
             this->k = 0;
@@ -62,6 +65,9 @@ namespace ldpc::osd {
             }
             this->k = this->plu_decomposition.not_pivot_cols.size();
 
+            if (this->adaptive) {
+                this->osd_order = this->k;
+            }
             if (this->osd_method == osd::OSD_0 || this->osd_order == 0) {
                 return 1;
             }
@@ -98,7 +104,7 @@ namespace ldpc::osd {
         }
 
 
-        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome, std::vector<double>& cluster_channel_probs) {
+        std::vector<uint8_t> &osd_decode(std::vector<uint8_t> &syndrome, std::vector<double> &cluster_channel_probs) {
             // note that we do not include column orderings as in osd.hpp since this is already done 'by construction'
             // of the clusters through the guided growth.
             this->lsd0_solution = this->osdw_decoding = plu_decomposition.lu_solve(syndrome);
@@ -107,7 +113,7 @@ namespace ldpc::osd {
 
             for (auto i = 0; i < this->bit_count; i++) {
                 if (this->lsd0_solution[i] == 1) {
-                    osd_min_weight+=log(1 / cluster_channel_probs[i]);
+                    osd_min_weight += log(1 / cluster_channel_probs[i]);
                 }
             }
             auto non_pivot_columns = this->plu_decomposition.not_pivot_cols;
@@ -136,15 +142,14 @@ namespace ldpc::osd {
 
                 for (auto i = 0; i < this->bit_count; i++) {
                     if (candidate_solution[i] == 1) {
-                        for(int synd_idx: this->pcm.at(i)) {
+                        for (int synd_idx: this->pcm.at(i)) {
                             decoded_t_syndrome[synd_idx] ^= 1;
                         }
-                        candidate_weight+=log(1 / cluster_channel_probs[i]);
+                        candidate_weight += log(1 / cluster_channel_probs[i]);
                     }
                 }
                 //we abandon this candidate solution if the solution does satisfy the input
-                if(decoded_t_syndrome != syndrome){
-                    std::cout<<"Hello"<<std::endl;
+                if (decoded_t_syndrome != syndrome) {
                     continue;
                 }
                 if (candidate_weight < osd_min_weight) {
