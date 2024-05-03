@@ -32,7 +32,7 @@ namespace ldpc::lsd
         return indices;
     }
 
-    // TODO this should probably become a class
+    // TODO this should probably become a class?
     struct LsdCluster
     {
         ldpc::bp::BpSparse &pcm;
@@ -46,7 +46,6 @@ namespace ldpc::lsd
         tsl::robin_set<int> enclosed_syndromes;
         std::shared_ptr<std::vector<LsdCluster *>> global_check_membership; // store which cluster a check belongs to
         std::shared_ptr<std::vector<LsdCluster *>> global_bit_membership;   // store which cluster a check belongs to
-                                                                            //        LsdCluster **global_bit_membership; // store which cluster a bit belongs to
         tsl::robin_set<LsdCluster *> merge_list;
         gf2dense::CscMatrix cluster_pcm;
         std::vector<uint8_t> cluster_pcm_syndrome;
@@ -715,8 +714,6 @@ namespace ldpc::lsd
             std::vector<LsdCluster *> invalid_clusters;
             auto global_bit_membership = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(this->pcm.n));
             auto global_check_membership = std::make_shared<std::vector<LsdCluster *>>(std::vector<LsdCluster *>(this->pcm.m));
-            //            auto **global_bit_membership = new LsdCluster *[pcm.n]();
-            //            auto **global_check_membership = new LsdCluster *[pcm.m]();
             // timestep to added bits history for stats
             auto *global_timestep_bits_history = new std::unordered_map<int, std::unordered_map<int, std::vector<int>>>{};
             auto timestep = 0;
@@ -797,7 +794,6 @@ namespace ldpc::lsd
                             }
                         }
                     }
-                    //                    delete cl; //delete the cluster now that we have the solution.
                 }
             }
             else
