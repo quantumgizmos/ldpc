@@ -36,11 +36,12 @@ class BaseOverlappingWindowDecoder:
         self.dem_matrices = detector_error_model_to_check_matrices(
             model, allow_undecomposed_hyperedges=True
         )
+        # self.dem_matrices = DetectorSpacetimeCode(model)
         self.num_detectors = model.num_detectors
 
         # assert that the number of detectors is a integer multiple of the number of rounds
         rounds = (self.window - self.commit) + self.decodings * self.commit
-        if not self.num_detectors % rounds == 0:
+        if not self.num_detectors == rounds * self.num_checks:
             raise ValueError(
                 f"The number of detectors must be a multiple of the number of rounds. There are {self.num_detectors} detectors and "
                 f"{rounds} rounds."
@@ -116,17 +117,21 @@ class BaseOverlappingWindowDecoder:
                 num_checks=self.num_checks,
             )
 
-            round_dcm = self.dcm[synd_dec_inds, :]
-
-            decoder = self._get_decoder(decoding, round_dcm, weights)
+            # round_dcm = self.dcm[synd_dec_inds, :]
+            round_dcm = self.dcm[synd_dec_inds, dec_inds]
+            # decoder = self._get_decoder(decoding, round_dcm, weights)
+            decoder = self._get_decoder(decoding, round_dcm, weights[dec_inds])
 
             corr = decoder.decode(syndrome[synd_dec_inds])
 
             if decoding != self.decodings - 1:
                 # determine the partial correction / commit the correction
-                total_corr[commit_inds] += corr[commit_inds]
+                # total_corr[commit_inds] += corr[commit_inds]
+                total_corr[commit_inds] += corr[: len(commit_inds)]
+
                 # modify syndrome to reflect the correction
-                syndrome[synd_dec_inds] ^= round_dcm @ total_corr % 2
+                # syndrome[synd_dec_inds] ^= round_dcm @ total_corr % 2
+                syndrome[synd_dec_inds] ^= self.dcm[synd_dec_inds, :] @ total_corr % 2
 
             else:
                 # This is the final decoding, commit all
@@ -192,6 +197,7 @@ class BaseOverlappingWindowDecoder:
         """
 
         total_corr = np.zeros((shots.shape[0], self.dcm.shape[1]), dtype=np.uint8)
+        _corr = np.zeros(self.dcm.shape[1], dtype=np.uint8)
         weights = self._get_weights()
         num_shots = shots.shape[0]
 
@@ -206,20 +212,24 @@ class BaseOverlappingWindowDecoder:
 
             round_dcm = self.dcm[synd_dec_inds, :]
 
-            decoder = self._get_decoder(decoding, round_dcm, weights)
+            decoder = self._get_decoder(
+                decoding, round_dcm[:, dec_inds], weights[dec_inds]
+            )
 
             for i in range(num_shots):
-                corr = decoder.decode(shots[i][synd_dec_inds])
+                # corr = decoder.decode(shots[i][synd_dec_inds])
+                _corr[dec_inds] = decoder.decode(shots[i][synd_dec_inds])
                 if decoding != self.decodings - 1:
                     # determine the partial correction / commit the correction
-                    total_corr[i][commit_inds] += corr[commit_inds]
+                    total_corr[i][commit_inds] += _corr[commit_inds]
+
                     # modify syndrome to reflect the correction
                     shots[i][synd_dec_inds] ^= round_dcm @ total_corr[i] % 2
 
                 else:
                     # This is the final decoding, commit all
-                    total_corr[i][dec_inds] += corr[dec_inds]
-
+                    total_corr[i][dec_inds] += _corr[dec_inds]
+                _corr[:] = 0
             # once all shots have been decoded for this round, update the weights
             weights[commit_inds] = self._min_weight
 

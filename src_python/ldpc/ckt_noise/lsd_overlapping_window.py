@@ -5,9 +5,6 @@ from ldpc.bplsd_decoder import BpLsdDecoder
 from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
 from ldpc.ckt_noise.config import (
     DEFAULT_LSD_DECODER_ARGS,
-    DEFAULT_DECODINGS,
-    DEFAULT_WINDOW,
-    DEFAULT_COMMIT,
 )
 
 

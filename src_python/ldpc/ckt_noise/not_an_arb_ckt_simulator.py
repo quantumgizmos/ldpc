@@ -1,3 +1,4 @@
+from json import load
 from typing import Union, List, Union
 from scipy.sparse import csr_matrix
 import stim
@@ -196,36 +197,45 @@ def count_logical_errors(circuit: stim.Circuit, num_shots: int) -> int:
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
+    from scipy.sparse import load_npz
 
-    ps = np.linspace(0.03, 0.09, 11)
-    for d in [5, 9, 13, 17]:
-        rates = []
-        pcm = rep_code(d)
-        time_steps, measured_bits = get_stabilizer_time_steps(pcm)
-        logicals = csr_matrix([[1] + [0] * (d - 1)])
-        for p in ps:
-            circuit = stim_circuit_from_time_steps(
-                pcm,
-                logicals,
-                time_steps,
-                measured_bits,
-                before_round_data_depolarization=p,
-                after_clifford_depolarization=p,
-                after_reset_flip_probability=p,
-                before_measure_flip_probability=p,
-                rounds=d,
-            )
+    hx = load_npz("/Users/timo/Documents/GitHub/exp_ldpc/code_225_9_4/checks_x.npz")
+    lx = load_npz("/Users/timo/Documents/GitHub/exp_ldpc/code_225_9_4/logicals_x.npz")
 
-            num_shots = 50_000
-            num_logical_errors = count_logical_errors(circuit, num_shots)
+    time_steps, measured_bits = get_stabilizer_time_steps(hx)
 
-            rate = num_logical_errors / num_shots
-            rates.append(rate)
+    circuit = stim_circuit_from_time_steps(hx, lx, time_steps, measured_bits, rounds=3)
 
-        plt.plot(ps, rates, label=f"d={d}", marker="o")
+    # import matplotlib.pyplot as plt
 
-    plt.legend()
-    plt.yscale("log")
-    plt.xscale("log")
-    plt.show()
+    # ps = np.linspace(0.03, 0.09, 11)
+    # for d in [5, 9, 13, 17]:
+    #     rates = []
+    #     pcm = rep_code(d)
+    #     time_steps, measured_bits = get_stabilizer_time_steps(pcm)
+    #     logicals = csr_matrix([[1] + [0] * (d - 1)])
+    #     for p in ps:
+    #         circuit = stim_circuit_from_time_steps(
+    #             pcm,
+    #             logicals,
+    #             time_steps,
+    #             measured_bits,
+    #             before_round_data_depolarization=p,
+    #             after_clifford_depolarization=p,
+    #             after_reset_flip_probability=p,
+    #             before_measure_flip_probability=p,
+    #             rounds=d,
+    #         )
+
+    #         num_shots = 50_000
+    #         num_logical_errors = count_logical_errors(circuit, num_shots)
+
+    #         rate = num_logical_errors / num_shots
+    #         rates.append(rate)
+
+    #     plt.plot(ps, rates, label=f"d={d}", marker="o")
+
+    # plt.legend()
+    # plt.yscale("log")
+    # plt.xscale("log")
+    # plt.show()

@@ -85,9 +85,10 @@ cdef class BpLsdDecoder(BpDecoderBase):
             raise ValueError(f"lsd_method must be one of 'OSD_0' (0), 'OSD_E' (1), 'OSD_CS' (2). Not {lsd_method}.")
 
         self.MEMORY_ALLOCATED = False
-        self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=OsdMethod.OSD_0, lsd_order=lsd_order)
+        self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=OsdMethod.COMBINATION_SWEEP, lsd_order=lsd_order)
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
         self.lsd_method = lsd_method
+        # self.set_do_stats(True)
 
         if bits_per_step == 0:
             self.bits_per_step = pcm.shape[1]

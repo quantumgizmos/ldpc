@@ -1,5 +1,5 @@
 import pathlib
-
+import json
 import numpy as np
 import sinter
 import stim
@@ -42,6 +42,7 @@ class SinterLsdDecoder(sinter.Decoder):
         omp_thread_count=1,
         serial_schedule_order=None,
         lsd_order=0,
+        # file_path=None,
     ):
         self.max_iter = max_iter
         self.bp_method = bp_method
@@ -50,6 +51,8 @@ class SinterLsdDecoder(sinter.Decoder):
         self.omp_thread_count = omp_thread_count
         self.serial_schedule_order = serial_schedule_order
         self.lsd_order = lsd_order
+
+        # self.file_path = file_path
 
     def decode_via_files(
         self,
@@ -104,6 +107,7 @@ class SinterLsdDecoder(sinter.Decoder):
             serial_schedule_order=self.serial_schedule_order,
             lsd_order=self.lsd_order,
         )
+        # self.lsd.set_do_stats(True)
 
         shots = stim.read_shot_data_file(
             path=dets_b8_in_path, format="b8", num_detectors=num_dets
@@ -121,4 +125,18 @@ class SinterLsdDecoder(sinter.Decoder):
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         corr = self.lsd.decode(syndrome)
+
+        # dump statistics to file
+        # print("self.lsd.do_stats: ", self.lsd.do_stats)
+        # if self.lsd.do_stats:
+        #     if self.file_path == None:
+        #         file_path = "stats_new.csv"
+        #     else:
+        #         file_path = self.file_path
+
+        #     with open(file_path, "a") as f:
+        #         # print("Writing statistics to file")
+        #         json.dump(self.lsd.statistics, f, sort_keys=True)
+        #         f.write("\n")
+
         return (self.matrices.observables_matrix @ corr) % 2
