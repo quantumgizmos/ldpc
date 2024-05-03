@@ -609,7 +609,7 @@ namespace ldpc::lsd {
         std::vector<uint8_t> &on_the_fly_decode(std::vector<uint8_t> &syndrome,
                                                 const std::vector<double> &bit_weights = NULL_DOUBLE_VECTOR,
                                                 const std::vector<double>& channel_probs = NULL_DOUBLE_VECTOR) {
-            return this->lsd_decode(syndrome, bit_weights, 1, true);
+            return this->lsd_decode(syndrome, bit_weights, 1, true,channel_probs);
         }
 
         std::vector<uint8_t> &
@@ -693,7 +693,7 @@ namespace ldpc::lsd {
             } else {
                 this->statistics.lsd_order = lsd_order;
                 this->statistics.lsd_method = this->lsd_method;
-                this->apply_lsdw(clusters, lsd_order, bit_weights);
+                this->apply_lsdw(clusters, lsd_order, bit_weights,channel_probs);
             }
             auto end_time = std::chrono::high_resolution_clock::now();
             delete[] global_bit_membership;
@@ -712,8 +712,9 @@ namespace ldpc::lsd {
 
         void apply_lsdw(const std::vector<LsdCluster *> &clusters,
                         int lsd_order,
-                        const std::vector<double> &bit_weights, std::size_t timestep = 0,
-                        const std::vector<double>& channel_probs = NULL_DOUBLE_VECTOR) {
+                        const std::vector<double> &bit_weights,
+                        const std::vector<double>& channel_probs = NULL_DOUBLE_VECTOR,
+                        std::size_t timestep = 0) {
             //cluster growth stage
             for (auto cl: clusters) {
                 if (cl->active) {
