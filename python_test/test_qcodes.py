@@ -1,3 +1,4 @@
+import json
 import time
 
 import numpy as np
@@ -26,6 +27,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         decoding = DECODER.decode(z)
         residual = (decoding + error) %2
 
+
         if isinstance(DECODER, BpDecoder):
             if not DECODER.converge:
                 fail+=1
@@ -34,6 +36,7 @@ def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBU
         if isinstance(DECODER, BpLsdDecoder) and (not DECODER.converge):
             clss = DECODER.statistics
             additional_stats.append(clss)
+            DECODER.set_additional_stat_fields(error, z, error)
 
         if np.any((lx@residual)%2):
             fail+=1
@@ -106,7 +109,7 @@ def test_400_16_6_hgp():
     decoder.set_do_stats(True)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    print(decoder.statistics)
+    print(json.dumps(decoder.statistics))
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")

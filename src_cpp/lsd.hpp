@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 #include <vector>
 #include <memory>
 #include <iterator>
@@ -53,6 +54,7 @@ namespace ldpc::lsd {
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
         int got_inactive_in_timestep = -1;
+        bool is_randomize_same_weight_indices = false;
 
         LsdCluster() = default;
 
@@ -126,6 +128,9 @@ namespace ldpc::lsd {
                 auto sorted_indices = sort_indices(cluster_bit_weights);
                 auto candidate_bit_nodes_vector = std::vector<int>(this->candidate_bit_nodes.begin(),
                                                                    this->candidate_bit_nodes.end());
+                if (this->is_randomize_same_weight_indices) {
+                    sorted_indices = randomize_same_weight_indices(sorted_indices, cluster_bit_weights);
+                }
                 int count = 0;
                 for (auto i: sorted_indices) {
                     if (count == bits_per_step) {
@@ -137,6 +142,38 @@ namespace ldpc::lsd {
                 }
             }
             this->merge_with_intersecting_clusters(is_on_the_fly);
+        }
+
+        static std::vector<int> randomize_same_weight_indices(const std::vector<int> &sorted_indices,
+                                                              const std::vector<double> &cluster_bit_weights) {
+            if (cluster_bit_weights.empty() || sorted_indices.empty()) {
+                return {};
+            }
+            auto reshuffeled_indices = std::vector<int>(sorted_indices.size());
+            auto same_weight_indices = std::vector<int>();
+            auto other_indices = std::vector<int>();
+            auto least_wt = cluster_bit_weights[sorted_indices[0]];
+
+            for (auto sorted_index: sorted_indices) {
+                if (cluster_bit_weights[sorted_index] == least_wt) {
+                    same_weight_indices.push_back(sorted_index);
+                } else {
+                    other_indices.push_back(sorted_index);
+                }
+            }
+            // if there are bits with the same weight, randomize their indices
+            if (same_weight_indices.size() > 1) {
+                std::shuffle(same_weight_indices.begin(), same_weight_indices.end(),
+                             std::mt19937(std::random_device()()));
+                for (auto i = 0; i < same_weight_indices.size(); i++) {
+                    reshuffeled_indices[i] = same_weight_indices[i];
+                }
+                // add all other indices to the reshuffeled list
+                for (auto i = 0; i < other_indices.size(); i++) {
+                    reshuffeled_indices[i + same_weight_indices.size()] = other_indices[i];
+                }
+            }
+            return reshuffeled_indices;
         }
 
         /**
@@ -200,27 +237,20 @@ namespace ldpc::lsd {
                 // bit already in current cluster
                 return false;
             }
-            if (bit_membership == nullptr) {
-                //if the bit has not yet been assigned to a cluster we add it.
-                // if we are in merge mode we add it
+            if (bit_membership == nullptr || in_merge) {
+                //if the bit has not yet been assigned to a cluster or we are in merge mode we add it directly.
                 this->add_bit(bit_index);
-            } else {
-                //if the bit already exists in a cluster, we mark down that this cluster should be
-                //merged with the exisiting cluster.
-                if (in_merge) {
-                    // if we are in merge mode we add it anyways
-                    this->add_bit(bit_index);
-                } else {
-                    // otherwise, we add its cluster to merge list and do not add directly.
-                    this->merge_list.insert(bit_membership);
+                if (this->global_timestep_bit_history != nullptr) {
+                    // add bit to timestep history with timestep the map size -1
+                    (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
                 }
+                // add incident checks as well, i.e., whole column to cluster pcm
+                this->add_column_to_cluster_pcm(bit_index);
+            } else {
+                // if bit is in another cluster and we are not in merge mode, we add it to the merge list for later
+                this->merge_list.insert(bit_membership);
             }
-            if (this->global_timestep_bit_history != nullptr) {
-                // add bit to timestep history with timestep the map size -1
-                (*this->global_timestep_bit_history)[this->curr_timestep][this->cluster_id].push_back(bit_index);
-            }
-            // add incident checks
-            this->add_column_to_cluster_pcm(bit_index);
+
             return true;
         }
 
@@ -396,15 +426,19 @@ namespace ldpc::lsd {
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
         int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
         double cluster_pcm_sparsity = 0; // nr of non zero entries in the cluster pcm
+        std::vector<uint8_t> solution; // local recovery, solution of cluster
     };
 
     struct Statistics {
-        // todo didn't def those as tsl::robin_map due to the cython wrapping for now.
         std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
         long elapsed_time;
         osd::OsdMethod lsd_method;
         int lsd_order;
+        std::vector<double> bit_llrs;
+        std::vector<uint8_t> error; // the original error
+        std::vector<uint8_t> syndrome; // the syndrome to decode
+        std::vector<uint8_t> compare_recover; // a recovery vector to compare against
 
         void clear() {
             this->individual_cluster_stats.clear();
@@ -417,6 +451,41 @@ namespace ldpc::lsd {
             result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
             result += "\"lsd_method\":" + std::to_string(static_cast<int>(this->lsd_method)) + ",";
             result += "\"lsd_order\":" + std::to_string(this->lsd_order) + ",";
+            // print bit_llrs
+            result += "\"bit_llrs\":[";
+            for (auto i = 0; i < this->bit_llrs.size(); i++) {
+                result += std::to_string(this->bit_llrs.at(i));
+                if (i < this->bit_llrs.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            result += "\"error\":[";
+            for (auto i = 0; i < this->error.size(); i++) {
+                result += std::to_string(this->error.at(i));
+                if (i < this->error.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            // print syndrome
+            result += "\"syndrome\":[";
+            for (auto i = 0; i < this->syndrome.size(); i++) {
+                result += std::to_string(this->syndrome.at(i));
+                if (i < this->syndrome.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
+            // print compare_recover
+            result += "\"compare_recover\":[";
+            for (auto i = 0; i < this->compare_recover.size(); i++) {
+                result += std::to_string(this->compare_recover.at(i));
+                if (i < this->compare_recover.size() - 1) {
+                    result += ",";
+                }
+            }
+            result += "],";
             result += "\"individual_cluster_stats\":{";
             for (auto &kv: this->individual_cluster_stats) {
                 result += "\"" + std::to_string(kv.first) + "\":{";
@@ -430,6 +499,15 @@ namespace ldpc::lsd {
                 result += "\"nr_of_non_zero_check_matrix_entries\":" +
                           std::to_string(kv.second.nr_of_non_zero_check_matrix_entries) + ",";
                 result += "\"cluster_pcm_sparsity\":" + std::to_string(kv.second.cluster_pcm_sparsity) + ",";
+                // print solution vector
+                result += "\"solution\":[";
+                for (auto i = 0; i < kv.second.solution.size(); i++) {
+                    result += std::to_string(kv.second.solution.at(i));
+                    if (i < kv.second.solution.size() - 1) {
+                        result += ",";
+                    }
+                }
+                result += "],";
                 result += "\"size_history\":[";
                 for (auto &s: kv.second.size_history) {
                     result += std::to_string(s) + ",";
@@ -459,8 +537,6 @@ namespace ldpc::lsd {
             result += "}";
             return result;
         }
-
-
     };
 
     // todo move this to separate file
@@ -599,6 +675,7 @@ namespace ldpc::lsd {
                     }
                     if (cl->active) {
                         auto solution = cl->pluDecomposition.lu_solve(cl->cluster_pcm_syndrome);
+                        this->statistics.individual_cluster_stats[cl->cluster_id].solution = solution;
                         for (auto i = 0; i < solution.size(); i++) {
                             if (solution[i] == 1) {
                                 int bit_idx = cl->cluster_bit_idx_to_pcm_bit_idx[i];
@@ -616,6 +693,8 @@ namespace ldpc::lsd {
 
             if (do_stats) {
                 this->statistics.global_timestep_bit_history = *global_timestep_bits_history;
+                this->statistics.bit_llrs = bit_weights;
+
             }
             // always take time
             this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
