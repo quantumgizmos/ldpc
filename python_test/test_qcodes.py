@@ -12,11 +12,11 @@ from ldpc.noise_models import generate_bsc_error
 
 class GdDecoder(BpDecoder):
     def decode(self,syndrome):
-        super().decode(syndrome)
-        if self.converge == True:
-            return self.decoding
-        else:
-            return self.gd_decode(syndrome,10)
+        # super().decode(syndrome)
+        # if self.converge == True:
+        #     return self.decoding
+        # else:
+        return self.gd_decode(syndrome,10)
 
 def quantum_mc_sim(hx, lx, error_rate, run_count, seed, DECODER, run_label, DEBUG=False):
     np.random.seed(seed)
@@ -74,12 +74,16 @@ def test_882_24_24():
     hx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_hx.txt").astype(int)
     lx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_lx.txt").astype(int)
 
-    error_rate = 0.05
-    run_count = 100
+
+    hx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_hz.txt").astype(int)
+    lx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_lz.txt").astype(int)
+
+    error_rate = 0.01
+    run_count = 1000
     seed = 42
 
-    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel", osd_method = "osd0")        
-    gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=50, bp_method="ms", ms_scaling_factor = 0.625, schedule="parallel")
+    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=100, bp_method="ps", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")        
+    gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=8000, bp_method="ps", ms_scaling_factor = 0.625, schedule="serial")
 
     syndrome = hx@generate_bsc_error(hx.shape[1], error_rate)%2
 
