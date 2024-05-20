@@ -295,9 +295,9 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.lsd.statistics.syndrome = syndrome
         self.lsd.statistics.compare_recover = compare_recover
 
-    def reset_cluster_stats() -> None:
+    def reset_cluster_stats(self) -> None:
         """
-            Resets cluster statistics of the decoder.
-            Note that this also resets the additional stat fields, such as the error, and compare_recovery vectors
+        Resets cluster statistics of the decoder.
+        Note that this also resets the additional stat fields, such as the error, and compare_recovery vectors
         """
         self.lsd.reset_cluster_stats()

@@ -177,3 +177,10 @@ class BpLsdDecoder(BpDecoderBase):
             A list of strings representing the additional fields to be collected in the statistics.
         """
 
+
+    def reset_cluster_stats(self) -> None:
+        """
+        Resets cluster statistics of the decoder.
+        Note that this also resets the additional stat fields, such as the error, and compare_recovery vectors
+        """
+
