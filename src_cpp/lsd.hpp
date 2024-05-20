@@ -443,6 +443,13 @@ namespace ldpc::lsd {
         void clear() {
             this->individual_cluster_stats.clear();
             this->global_timestep_bit_history.clear();
+            this->elapsed_time = 0.0;
+            this->lsd_method = osd::OsdMethod::COMBINATION_SWEEP;
+            this->lsd_order = 0;
+            this->bit_llrs = {};
+            this->error = {};
+            this->syndrome= {};
+            this->compare_recover = {};
         }
 
         [[nodiscard]] std::string toString() const {
@@ -555,6 +562,10 @@ namespace ldpc::lsd {
         osd::OsdMethod lsd_method;
         int lsd_order;
 
+        void reset_cluster_stats(){
+            this->statistics.clear();
+        }
+
         explicit LsdDecoder(ldpc::bp::BpSparse &parity_check_matrix,
                             osd::OsdMethod lsdMethod = osd::OsdMethod::COMBINATION_SWEEP,
                             int lsd_order = 0) : pcm(parity_check_matrix),
@@ -618,6 +629,7 @@ namespace ldpc::lsd {
                    const bool is_on_the_fly = true) {
             auto start_time = std::chrono::high_resolution_clock::now();
             this->statistics.clear();
+            this->statistics.syndrome = syndrome;
 
             fill(this->decoding.begin(), this->decoding.end(), 0);
 
