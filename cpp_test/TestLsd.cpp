@@ -459,10 +459,10 @@ TEST(LsdDecoder, test_cluster_stats) {
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
     lsd.statistics.syndrome = std::vector<uint8_t>(pcm.m, 1);
-    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
     lsd.setLsdMethod(ldpc::osd::OsdMethod::EXHAUSTIVE);
     auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
     lsd.statistics.error = std::vector<uint8_t>(pcm.n, 1);
+    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
 
     auto stats = lsd.statistics;
     std::cout << stats.toString() << std::endl;
