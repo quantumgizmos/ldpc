@@ -21,7 +21,7 @@ TEST(LsdCluster, init1){
     auto gcm = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(pcm.m));
     auto syndrome_index = 0;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
-    
+
     ASSERT_TRUE(cl.active);
     ASSERT_FALSE(cl.valid);
 
@@ -55,7 +55,7 @@ TEST(LsdCluster, add_bitANDadd_check_add){
     auto gcm = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(pcm.m));
     auto syndrome_index = 1;
     auto cl = ldpc::lsd::LsdCluster(pcm, syndrome_index, gcm, gbm);
-    
+
     cl.compute_growth_candidate_bit_nodes();
     auto expected_candidate_bit_nodes = tsl::robin_set<int>{1, 2};
     ASSERT_EQ(expected_candidate_bit_nodes, cl.candidate_bit_nodes);
@@ -458,11 +458,11 @@ TEST(LsdDecoder, test_cluster_stats) {
     auto lsd = LsdDecoder(pcm, ldpc::osd::OsdMethod::EXHAUSTIVE, 0);
     lsd.set_do_stats(true);
     auto syndrome = std::vector<uint8_t>({1, 1, 0, 0, 0});
-    lsd.statistics.error = std::vector<uint8_t>(pcm.n, 1);
     lsd.statistics.syndrome = std::vector<uint8_t>(pcm.m, 1);
-    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
-    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
     lsd.setLsdMethod(ldpc::osd::OsdMethod::EXHAUSTIVE);
+    auto decoding = lsd.lsd_decode(syndrome, bp.log_prob_ratios, 1, true);
+    lsd.statistics.error = std::vector<uint8_t>(pcm.n, 1);
+    lsd.statistics.compare_recover = std::vector<uint8_t>(pcm.n, 0);
 
     auto stats = lsd.statistics;
     std::cout << stats.toString() << std::endl;
@@ -475,7 +475,7 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.global_timestep_bit_history[0].size() == 2);
     ASSERT_TRUE(stats.global_timestep_bit_history[0][0].size() == 1);
     ASSERT_TRUE(stats.global_timestep_bit_history[0][1].size() == 2);
-    ASSERT_TRUE(stats.global_timestep_bit_history[1].size() == 0);
+    ASSERT_TRUE(stats.global_timestep_bit_history[1].empty());
     ASSERT_TRUE(stats.elapsed_time > 0.0);
     ASSERT_TRUE(stats.individual_cluster_stats[0].active == false);
     ASSERT_TRUE(stats.individual_cluster_stats[0].got_inactive_in_timestep == 0);
@@ -487,6 +487,20 @@ TEST(LsdDecoder, test_cluster_stats) {
     ASSERT_TRUE(stats.error.size() == pcm.n);
     ASSERT_TRUE(stats.syndrome.size() == pcm.n);
     ASSERT_TRUE(stats.compare_recover.size() == pcm.n);
+
+    // now reset
+    lsd.reset_cluster_stats();
+    stats = lsd.statistics;
+    ASSERT_TRUE(lsd.get_do_stats());
+    ASSERT_TRUE(stats.lsd_method = ldpc::osd::OsdMethod::COMBINATION_SWEEP);
+    ASSERT_TRUE(stats.lsd_order == 0);
+    ASSERT_TRUE(stats.individual_cluster_stats.empty());
+    ASSERT_TRUE(stats.elapsed_time == 0.0);
+    ASSERT_TRUE(stats.global_timestep_bit_history.empty());
+    ASSERT_TRUE(stats.bit_llrs.empty());
+    ASSERT_TRUE(stats.error.empty());
+    ASSERT_TRUE(stats.syndrome.empty());
+    ASSERT_TRUE(stats.compare_recover.empty());
 }
 
 TEST(LsdDecoder, test_reshuffle_same_wt_indices) {

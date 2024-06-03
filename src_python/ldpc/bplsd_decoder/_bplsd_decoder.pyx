@@ -140,7 +140,10 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
         if self.bpd.converge:
-            for i in range(self.n): out[i] = self.bpd.decoding[i]
+            for i in range(self.n):
+                out[i] = self.bpd.decoding[i]
+            self.lsd.reset_cluster_stats()
+
 
         if not self.bpd.converge:
             self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
@@ -291,3 +294,10 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.lsd.statistics.error = error
         self.lsd.statistics.syndrome = syndrome
         self.lsd.statistics.compare_recover = compare_recover
+
+    def reset_cluster_stats(self) -> None:
+        """
+        Resets cluster statistics of the decoder.
+        Note that this also resets the additional stat fields, such as the error, and compare_recovery vectors
+        """
+        self.lsd.reset_cluster_stats()

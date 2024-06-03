@@ -52,6 +52,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         bool get_do_stats()
         void set_do_stats(bool do_stats)
         void set_additional_stat_fields(vector[int] error, vector[int] syndrome, vector[int] compare_recover)
+        void reset_cluster_stats()
 
 cdef class BpLsdDecoder(BpDecoderBase):
     cdef LsdDecoderCpp* lsd
