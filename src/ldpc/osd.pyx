@@ -154,7 +154,7 @@ cdef class bposd_decoder(bp_decoder):
             return self.osdw_decoding
 
     
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector):
+    cpdef np.ndarray[np.uint8_t, ndim=1] decode(self, input_vector):
 
         """
         Runs the BP+OSD decoder for a given syndrome.

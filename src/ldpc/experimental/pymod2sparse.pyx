@@ -87,7 +87,7 @@ cdef class pymod2sparse():
         
         return self
 
-    cpdef np.ndarray[np.int_t, ndim=1] mul(self, np.ndarray[np.int_t, ndim=1] vector):
+    cpdef np.ndarray[np.uint8_t, ndim=1] mul(self, np.ndarray[np.uint8_t, ndim=1] vector):
         
         if len(vector)!=self.n:
             raise ValueError(f'Dimension mismatch. The supplied vector of length {len(vector)} cannot be multiplied by a matrix with dimesnions ({self.m},{self.n})!')

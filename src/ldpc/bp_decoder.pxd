@@ -29,7 +29,7 @@ cdef class bp_decoder:
     cdef int MEM_ALLOCATED
     cdef int input_vector_type
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector)
+    cpdef np.ndarray[np.uint8_t, ndim=1] decode(self, input_vector)
 
     cdef char* bp_decode_cy(self)
 
