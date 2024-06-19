@@ -78,19 +78,20 @@ def test_882_24_24():
     hx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_hz.txt").astype(int)
     lx = np.loadtxt("python_test/pcms/lifted_product_[[882,24,24]]_lz.txt").astype(int)
 
-    error_rate = 0.01
-    run_count = 1000
+    error_rate = 0.04
+    run_count = 10000
     seed = 42
 
-    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=100, bp_method="ps", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")        
-    gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=8000, bp_method="ps", ms_scaling_factor = 0.625, schedule="serial")
+    decoder = BpOsdDecoder(hx, error_rate=error_rate, max_iter=882, bp_method="ms", ms_scaling_factor = 0.625, schedule="serial", osd_method = "osd0")        
+    gd_decoder = GdDecoder(hx, error_rate=error_rate, max_iter=8000, bp_method="ps", schedule="parallel")
 
     syndrome = hx@generate_bsc_error(hx.shape[1], error_rate)%2
 
     decoding = gd_decoder.decode(syndrome)
     
-    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, gd_decoder, "Min-sum BpGd parallel schedule")
-    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "BP+OSD parallel schedule")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder, "BP+OSD min-sum serial schedule")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, gd_decoder, "Prod-sum BpGd parallel schedule")
+
 
     # print("hello")
 
