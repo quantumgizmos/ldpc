@@ -5,8 +5,7 @@ on:
   pull_request:
   push:
     branches:
-     - release_v2
-     - ldpc_v2
+     - release
 
 jobs:
   build_sdist:
