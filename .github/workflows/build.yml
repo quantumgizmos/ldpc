@@ -64,10 +64,12 @@ jobs:
           # {os: windows-latest, dist: cp311-win_amd64},
 
           # ubuntu x86_64
-          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
-          # {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
-          # {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
-          # {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
+
 
         ]
     steps:
