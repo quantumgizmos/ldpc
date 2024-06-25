@@ -27,6 +27,7 @@ The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldp
 - Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
 - Generalised BP (https://arxiv.org/abs/2212.03214)
 - Functions need to be properly documented (in progress)
+- STIM integration
 - More functionality for studying classical codes. Eg. support for received vector decoding and the AWGN noise channel.
 - Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
 
@@ -47,10 +48,10 @@ pip install -Ue .
 
 ## Installation from Test PyPi
 
-This package is currenlty hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
+This package is currently hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
 
 ```
-pip install -U numpy scipy tqdm pytest
+pip install -U numpy scipy tqdm pytest stim sinter BeliefMatching
 pip install -i https://test.pypi.org/simple/ ldpc
 ```
 

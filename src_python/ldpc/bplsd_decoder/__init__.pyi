@@ -34,13 +34,13 @@ class BpLsdDecoder(BpDecoderBase):
     serial_schedule_order : Optional[List[int]], optional
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
-    bits_per_step : int, optional, NotImplemented
+    bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
     lsd_order: int, optional
-        The order of the OSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
-    lsd_method: OsdMethod
-        The OSD method of the OSD algorithm applied to each cluster. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
-        By default 'OSD_0'.
+        The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
+    lsd_method: str, optional
+        The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
+        By default 'LSD_0'.
     Notes
     -----
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
@@ -109,12 +109,12 @@ class BpLsdDecoder(BpDecoderBase):
     @property
     def lsd_method(self) -> Optional[str]:
         """
-        The Ordered Statistic Decoding (OSD) method used.
+        The Localized Statistic Decoding (LSD) method used.
 
         Returns
         -------
         Optional[str]
-            A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
+            A string representing the LSD method used. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}. If no LSD method
             has been set, returns `None`.
         """
 
@@ -127,8 +127,8 @@ class BpLsdDecoder(BpDecoderBase):
         Parameters
         ----------
         method : Union[str, int, float]
-            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
-            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
+            A string, integer or float representing the OSD method to use. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}, corresponding to
+            LSD order-0, LSD Exhaustive or LSD-Cominbation-Sweep.
         """
 
 

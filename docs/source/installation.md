@@ -1,23 +1,25 @@
 # Setup
 
-## Installation from PyPi (recommended method)
+## Python - Installation from source
 
-Installtion from [PyPi](https://pypi.org/project/ldpc/) requires Python>=3.6.
-To install via pip, run:
+The C++ source code can be found in src_cpp. Python bindings are implemented using Cython and can be found in src/ldpc. To install the Python version of the repository follows the instructions below: 
 
-```
-pip install -U ldpc
-```
-
-## Installation (from source)
-
-Installation from source requires Python>=3.6 and a local C compiler (eg. 'gcc' in Linux or 'clang' in Windows). The LDPC package can then be installed by running:
+- Download the repo.
+- Navigate to the root.
+- Pip install with `python>=3.8`.
+Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```
-git clone https://github.com/quantumgizmos/ldpc.git
+git clone git@github.com:quantumgizmos/ldpc_v2.git
 cd ldpc
-pip install -e ldpc
+pip install -Ue .
 ```
 
-## Dependencies
-This package makes use of the `mod2sparse` data structure from Radford Neal's [Software for Low Density Parity Check Codes](https://www.cs.toronto.edu/~radford/ftp/LDPC-2012-02-11/index.html) C package.
+## Installation from Test PyPi
+
+This package is currently hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
+
+```
+pip install -U numpy scipy tqdm pytest stim sinter BeliefMatching
+pip install -i https://test.pypi.org/simple/ ldpc
+```

@@ -38,13 +38,13 @@ cdef class BpLsdDecoder(BpDecoderBase):
     serial_schedule_order : Optional[List[int]], optional
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
-    bits_per_step : int, optional, NotImplemented
+    bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
     lsd_order: int, optional
-        The order of the OSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
-    lsd_method: OsdMethod
-        The OSD method of the OSD algorithm applied to each cluster. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
-        By default 'OSD_0'.
+        The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
+    lsd_method: str, optional
+        The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
+        By default 'LSD_0'.
     Notes
     -----
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
@@ -76,13 +76,13 @@ cdef class BpLsdDecoder(BpDecoderBase):
             raise ValueError(f"lsd_order must be greater than or equal to 0. Not {lsd_order}.")
 
         if isinstance(lsd_method, str):
-            if lsd_method.lower() not in ["osd_0", "osd_e", "osd_cs"]:
-                raise ValueError(f"lsd_method must be one of 'OSD_0', 'OSD_E', 'OSD_CS'. Not {lsd_method}.")
+            if lsd_method.lower() not in ['osd_0', 'osd_e', 'osd_cs', 'osde', 'osdcs', 'osd0', 'lsd_0', 'lsd_e','lsd_cs','lsd0','lsdcs','lsde']:
+                raise ValueError(f"lsd_method must be one of 'LSD_0', 'LSD_E', 'LSD_CS'. Not {lsd_method}.")
         elif isinstance(lsd_method, int):
             if lsd_method not in [0, 1, 2]:
                 raise ValueError(f"lsd_method must be one of 0, 1, 2. Not {lsd_method}.")
         else:
-            raise ValueError(f"lsd_method must be one of 'OSD_0' (0), 'OSD_E' (1), 'OSD_CS' (2). Not {lsd_method}.")
+            raise ValueError(f"lsd_method must be one of 'LSD_0' (0), 'LSD_E' (1), 'LSD_CS' (2). Not {lsd_method}.")
 
         self.MEMORY_ALLOCATED = False
         self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=OsdMethod.OSD_0, lsd_order=lsd_order)
@@ -191,22 +191,22 @@ cdef class BpLsdDecoder(BpDecoderBase):
     @property
     def lsd_method(self) -> Optional[str]:
         """
-        The Ordered Statistic Decoding (OSD) method used.
+        The Localized Statistic Decoding (LSD) method used.
 
         Returns
         -------
         Optional[str]
-            A string representing the OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}. If no OSD method
+            A string representing the LSD method used. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}. If no LSD method
             has been set, returns `None`.
         """
         if self.lsd.lsd_method == OsdMethod.OSD_0:
-            return 'OSD_0'
+            return 'lSD_0'
         elif self.lsd.lsd_method == OsdMethod.EXHAUSTIVE:
-            return 'OSD_E'
+            return 'LSD_E'
         elif self.lsd.lsd_method == OsdMethod.COMBINATION_SWEEP:
-            return 'OSD_CS'
+            return 'LSD_CS'
         elif self.lsd.lsd_method == OsdMethod.OSD_OFF:
-            return 'OSD_OFF'
+            return 'LSD_OFF'
         else:
             return None
 
@@ -218,22 +218,22 @@ cdef class BpLsdDecoder(BpDecoderBase):
         Parameters
         ----------
         method : Union[str, int, float]
-            A string, integer or float representing the OSD method to use. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}, corresponding to
-            OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
+            A string, integer or float representing the OSD method to use. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}, corresponding to
+            LSD order-0, LSD Exhaustive or LSD-Cominbation-Sweep.
         """
         # OSD method
-        if str(method).lower() in ['osd_0', '0', 'osd0']:
+        if str(method).lower() in ['osd_0', '0', 'osd0', 'lsd_0', 'lsd0']:
             self.lsd.lsd_method = OsdMethod.OSD_0
             self.lsd.lsd_order = 0
-        elif str(method).lower() in ['osd_e', 'e', 'exhaustive']:
+        elif str(method).lower() in ['osd_e', 'e', 'exhaustive', 'lsd_e', 'lsde']:
             self.lsd.lsd_method = OsdMethod.EXHAUSTIVE
-        elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep']:
+        elif str(method).lower() in ['osd_cs', '1', 'cs', 'combination_sweep', 'lsd_cs']:
             self.lsd.lsd_method = OsdMethod.COMBINATION_SWEEP
-        elif str(method).lower() in ['off', 'osd_off', 'deactivated', -1]:
+        elif str(method).lower() in ['off', 'osd_off', 'deactivated', -1, 'lsd_off']:
             self.lsd.lsd_method = OsdMethod.OSD_OFF
         else:
             raise ValueError(f"ERROR: OSD method '{method}' invalid. Please choose from the following methods:\
-                'OSD_0', 'OSD_E' or 'OSD_CS'.")
+                'LSD_0', 'LSD_E' or 'LSD_CS'.")
 
 
     @property

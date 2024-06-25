@@ -104,12 +104,12 @@ def test_400_16_6_hgp():
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-0 parallel schedule")
 
-    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=5, bp_method="ms", ms_scaling_factor=0.625,
-                           schedule="parallel", lsd_order=osd_order, lsd_method="osd_cs")
-    decoder.set_do_stats(True)
+    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
+                           schedule="parallel", lsd_order=osd_order, lsd_method="lsd_cs")
+    # decoder.set_do_stats(True)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    print(json.dumps(decoder.statistics))
+    # print(json.dumps(decoder.statistics))
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
