@@ -13,8 +13,6 @@ def test_peeling_input():
 
     pcm = hamming_code(3)
 
-    # decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
-
     with pytest.raises(ValueError):
         decoder = BeliefFindDecoder(pcm, error_rate = 0.1, uf_method="peeling")
 
