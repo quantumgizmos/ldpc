@@ -30,7 +30,7 @@ jobs:
 
 
   build_wheels:
-    # runs-on: ${{ matrix.os_dist.os }}
+    runs-on: ${{ matrix.os_dist.os }}
     # env:
     #   CIBW_BUILD: "${{ matrix.os_dist.dist }}"
     #   MACOSX_DEPLOYMENT_TARGET: "13.1"
