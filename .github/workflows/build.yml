@@ -1,50 +1,100 @@
-name: Build and Upload Python Package
+name: Build
 
 on:
+  workflow_dispatch:
+  pull_request:
   push:
     branches:
-      - release
+     - release
 
 jobs:
-  build_and_publish:
-    name: Build and Publish
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
-        python-version: [3.8, 3.9, 3.10, 3.11, 3.12]  # Add more versions as needed
-        architecture: [x64, arm64]  # Add arm64 for Apple Silicon
-
+  build_sdist:
+    name: Build SDist
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
-      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: ${{ matrix.architecture }}
+    - name: Checkout out repo and submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install wheel setuptools
+    - name: Build SDist
+      run: pipx run build --sdist
 
-      - name: Build wheel and sdist
-        run: python setup.py sdist bdist_wheel
+    - name: Check metadata
+      run: pipx run twine check dist/*
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+
+  build_wheels:
+    runs-on: ${{ matrix.os_dist.os }}
+    env:
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      MACOSX_DEPLOYMENT_TARGET: "13.1"
+      CIBW_ARCHS_MACOS: "arm64 x86_64"
+      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
+    strategy:
+      fail-fast: false
+      matrix:
+        os_dist: [
+          # # macosx x86_64
+          # {os: macos-latest, dist: cp38-macosx_x86_64},
+          # {os: macos-latest, dist: cp39-macosx_x86_64},
+          # {os: macos-latest, dist: cp310-macosx_x86_64},
+          # {os: macos-latest, dist: cp311-macosx_x86_64},
+
+          # # macosx arm64
+          # {os: macos-latest, dist: cp38-macosx_arm64},
+          # {os: macos-latest, dist: cp39-macosx_arm64},
+          # {os: macos-latest, dist: cp310-macosx_arm64},
+          # {os: macos-latest, dist: cp311-macosx_arm64},
+
+          # # macosx universal2
+          # # {os: macos-latest, dist: cp38-macosx_universal2},
+          # # {os: macos-latest, dist: cp39-macosx_universal2},
+          # # {os: macos-latest, dist: cp310-macosx_universal2},
+          # # {os: macos-latest, dist: cp311-macosx_universal2},
+          # # windows amd64
+          # {os: windows-latest, dist: cp38-win_amd64},
+          # {os: windows-latest, dist: cp39-win_amd64},
+          # {os: windows-latest, dist: cp310-win_amd64},
+          # {os: windows-latest, dist: cp311-win_amd64},
+
+          # ubuntu x86_64
+          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+
+        ]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - uses: pypa/cibuildwheel@v2.11.1
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v3
+      with:
+        path: wheelhouse/*.whl
+
+  upload_pypi:
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
         with:
           name: artifact
-          path: dist/*
-
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.LDPC_TEST_PYPI }}
           repository-url: https://test.pypi.org/legacy/
