@@ -14,12 +14,3 @@ git clone git@github.com:quantumgizmos/ldpc_v2.git
 cd ldpc
 pip install -Ue .
 ```
-
-## Installation from Test PyPi
-
-This package is currently hosted on TestPyPi. Installation requires Python>=3.8. To install, run the following `pip` commands.
-
-```
-pip install -U numpy scipy tqdm pytest stim sinter BeliefMatching
-pip install -i https://test.pypi.org/simple/ ldpc
-```
