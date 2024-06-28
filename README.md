@@ -7,7 +7,7 @@ A C++ rewrite of the `LDPC` package for decoding low density parity check checks
 - A new C++ template class `GF2Sparse`. This is a more flexible implementation of the `mod2sparse` data structure used in the LDPCv1. This will make it much easier to expand the package.
 - Serial schedules for the BP decoder.
 - Run-time improvements for BP+OSD OSD-0. The decoder now implements the fast-syndrome OSD-0 implementation (https://arxiv.org/abs/1904.02703), where Gaussian elimination is terminated as soon as the syndrome becomes linearly dependent on the reduced columns.
-- BP+LSD: Belief propagation plus localised statistics decoding. A parallel decoding algorithm that matches the perforance of BP+OSD. Note that the version implemented currenlty runs in serial. We are working on the parallel version!
+- BP+LSD: Belief propagation plus localised statistics decoding. A parallel decoding algorithm that matches the perforance of BP+OSD. Note that the version implemented currenlty runs in serial. We are working on the parallel version! See our paper: https://arxiv.org/abs/2406.18655
 - The union-find matching decoder (https://arxiv.org/abs/1709.06218). This is an implementation of the Delfosse-Nickerson union-find decoder that is suitable for decoding surface codes and other codes with "matchable" syndromes.
 - The BeliefFind decoder. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails to converge as proposed by Oscar Higgott in https://arxiv.org/abs/2203.04948
 - Flip and P-flip decoders as introduced by Thomas Scruby in https://arxiv.org/abs/2212.06985.
@@ -45,4 +45,35 @@ git clone git@github.com:quantumgizmos/ldpc_v2.git
 cd ldpc
 pip install -Ue .
 ```
+
+## BP+LSD Quickstart
+
+Usage of the new BP+LSD decoder from https://arxiv.org/abs/2406.18655. Similar to BP+OSD, the LSD decoder can be applied to any parity check matrix. We recommend you start with `lsd_order=0`. The speed/accuracy trade-off for higher order values can be explored from there. Example below:
+
+```python
+import numpy as np
+import ldpc.codes
+from ldpc.bplsd_decoder import BpLsdDecoder
+
+H = ldpc.codes.hamming_code(5)
+
+## The
+bp_osd = BpLsdDecoder(
+            H,
+            error_rate = 0.1,
+            bp_method = 'product_sum',
+            max_iter = 2,
+            schedule = 'serial',
+            lsd_method = 'lsd_cs',
+            lsd_order = 0
+        )
+
+syndrome = np.random.randint(size=H.shape[0], low=0, high=2).astype(np.uint8)
+
+print(f"Syndrome: {syndrome}")
+decoding = bp_osd.decode(syndrome)
+print(f"Decoding: {decoding}")
+decoding_syndrome = H@decoding % 2
+print(f"Decoding syndrome: {decoding_syndrome}")
+``` 
 
