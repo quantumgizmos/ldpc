@@ -140,7 +140,7 @@ def test_toric_20():
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
-                           schedule="parallel", bits_per_step=1, osd_order=5)
+                           schedule="parallel", bits_per_step=1, lsd_method = "lsd_cs", lsd_order=5)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
 
 def test_surface_20():
@@ -174,7 +174,7 @@ def test_surface_20():
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Belief-find parallel schedule")
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
-                           schedule="parallel", bits_per_step=1, lsd_order=5)
+                           schedule="parallel", lsd_order=5)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,"Min-sum LSD parallel schedule")
 
 
