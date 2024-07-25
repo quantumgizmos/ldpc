@@ -521,7 +521,7 @@ GF2MATRIX operator+(GF2MATRIX& mat1, GF2MATRIX& mat2){
     }
 
     //Deepcopy mat2
-    auto sum_mat = GF2Sparse(mat2.m,mat2.n);  
+    auto sum_mat = GF2Sparse<GF2MATRIX>(mat2.m,mat2.n);
     for(int i=0; i<mat2.m; i++){
         for(auto& e: mat2.iterate_row(i)){
             sum_mat.insert_entry(e.row_index,e.col_index);
