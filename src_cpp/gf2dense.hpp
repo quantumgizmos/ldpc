@@ -31,7 +31,6 @@
             DENSE_ELIMINATION = 1
         };
 
-        [[maybe_unused]] std::vector<int> NULL_INT_VECTOR = {};
         typedef std::vector<std::vector<int>> CscMatrix;
         using CsrMatrix = std::vector<std::vector<int> >;
 
@@ -722,7 +721,7 @@
             }
             return count;
         }
-    }//end namespace gf2dense
+    } }  // namespace ldpc::gf2dense
 //end namespace ldpc
 
 #endif

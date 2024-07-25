@@ -12,7 +12,7 @@
 #include "rng.hpp"
 
 
-namespace ldpc::flip{
+namespace ldpc { namespace flip{
 
 class FlipDecoder
 {
@@ -22,8 +22,8 @@ public:
     ldpc::bp::BpSparse& pcm;
     int bit_count;
     int check_count;
-    int converge;
-    int iterations;
+    int converge{};
+    int iterations{};
     int max_iter;
     int pfreq;
     int seed;
@@ -31,13 +31,15 @@ public:
     std::vector<uint8_t> syndrome;
     std::vector<uint8_t> decoding;
 
-    FlipDecoder(ldpc::bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
+    explicit FlipDecoder(ldpc::bp::BpSparse& pcm, int max_iter=0, int pfreq=0, int seed = 0):
         pcm(pcm)
     {
         this->max_iter = max_iter;
-        if(this->max_iter == 0) this->max_iter = this->pcm.n;
+        if(this->max_iter == 0) { this->max_iter = this->pcm.n;
+}
         this->pfreq = pfreq;
-        if(this->pfreq == 0) this->pfreq = std::numeric_limits<int>::max();
+        if(this->pfreq == 0) { this->pfreq = std::numeric_limits<int>::max();
+}
         this->seed = seed;
         if (this->seed == 0){
             this->RNG = new ldpc::rng::RandomNumberGenerator();
@@ -64,8 +66,10 @@ public:
         this->syndrome = synd;
 
         int syndrome_hamming_weight = 0;
-        for (auto bit : this->syndrome)
+        for (auto bit : this->syndrome) { {
             syndrome_hamming_weight += bit;
+}
+}
 
         for(int iter = 1; iter<=this->max_iter; iter++){
 
@@ -140,6 +144,6 @@ public:
 
 }; //end of class FlipDecoder
 
-}//end of flip namespace
+} }  // namespace ldpc::flip
 
 #endif

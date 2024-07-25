@@ -53,8 +53,15 @@ namespace ldpc {
              * @return True if the entry is at the end, false otherwise
              */
             bool at_end() {
-                if (row_index == -100) return true;
-                else return false;
+                if (row_index == -100) {
+                    {
+                        return true;
+                    }
+                } else {
+                    {
+                        return false;
+                    }
+                }
             }
 
             /**
@@ -145,7 +152,9 @@ namespace ldpc {
                     this->column_heads.clear();
                     this->row_heads.clear();
                     this->removed_entries.clear();
-                    for (auto entry_block: this->entries) entry_block.clear();
+                    for (auto entry_block: this->entries) {
+                        entry_block.clear();
+                    }
                     this->entries.clear();
                 }
                 this->m = 0;
@@ -219,7 +228,7 @@ namespace ldpc {
              *
              * @return The sparsity of the matrix as a double value.
              */
-            const double sparsity() {
+            double sparsity() {
                 return double(this->entry_count()) / double(this->m * this->n);
             }
 
@@ -277,10 +286,16 @@ namespace ldpc {
                 auto tmp2_ptr = this->row_heads[j]; // store the head element of row j in a temporary variable
                 this->row_heads[j] = tmp1_ptr; // set the head element of row j to the head element of row i
                 this->row_heads[i] = tmp2_ptr; // set the head element of row i to the head element of row j
-                for (auto &e: this->iterate_row(i))
-                    e.row_index = i; // update the row index of all elements in row i to j
-                for (auto &e: this->iterate_row(j))
-                    e.row_index = j; // update the row index of all elements in row j to i
+                for (auto &e: this->iterate_row(i)) {
+                    {
+                        e.row_index = i; // update the row index of all elements in row i to j
+                    }
+                }
+                for (auto &e: this->iterate_row(j)) {
+                    {
+                        e.row_index = j; // update the row index of all elements in row j to i
+                    }
+                }
             }
 
 
@@ -308,8 +323,12 @@ namespace ldpc {
                 this->column_heads[j] = tmp1;
                 this->column_heads[i] = tmp2;
                 // update the column indices for all entries in columns i and j
-                for (auto &e: this->iterate_column(i)) e.col_index = i;
-                for (auto &e: this->iterate_column(j)) e.col_index = j;
+                for (auto &e: this->iterate_column(i)) {
+                    e.col_index = i;
+                }
+                for (auto &e: this->iterate_column(j)) {
+                    e.col_index = j;
+                }
             }
 
             /**
@@ -404,8 +423,11 @@ namespace ldpc {
             ENTRY_OBJ &insert_entry(int j, int i) {
                 // std::cout<<i<<" "<<j<<std::endl;
                 // Check if indices are within bounds
-                if (j >= this->m || i >= this->n || j < 0 || i < 0)
-                    throw std::invalid_argument("Index i or j is out of bounds");
+                if (j >= this->m || i >= this->n || j < 0 || i < 0) {
+                    {
+                        throw std::invalid_argument("Index i or j is out of bounds");
+                    }
+                }
 
                 // Find the left and right entries in the jth row of the matrix
                 auto left_entry_ptr = this->row_heads[j];
@@ -415,7 +437,9 @@ namespace ldpc {
                         // Entry already exists at this position
                         return entry;
                     }
-                    if (entry.col_index > i) right_entry_ptr = &entry;
+                    if (entry.col_index > i) {
+                        right_entry_ptr = &entry;
+                    }
                     if (entry.col_index < i) {
                         left_entry_ptr = &entry;
                         break;
@@ -426,7 +450,9 @@ namespace ldpc {
                 auto up_entry_ptr = this->column_heads[i];
                 auto down_entry_ptr = this->column_heads[i];
                 for (auto &entry: this->reverse_iterate_column(i)) {
-                    if (entry.row_index > j) down_entry_ptr = &entry;
+                    if (entry.row_index > j) {
+                        down_entry_ptr = &entry;
+                    }
                     if (entry.row_index < j) {
                         up_entry_ptr = &entry;
                         break;
@@ -465,13 +491,18 @@ namespace ldpc {
              * @throws std::std::invalid_argument if j or i are out of bounds.
              */
             ENTRY_OBJ &get_entry(int j, int i) {
-                if (j >= this->m || i >= this->n || j < 0 || i < 0)
-                    throw std::invalid_argument("Index i or j is out of bounds");
+                if (j >= this->m || i >= this->n || j < 0 || i < 0) {
+                    {
+                        throw std::invalid_argument("Index i or j is out of bounds");
+                    }
+                }
 
                 // Iterate over the column at index i and check each entry's row index.
                 // If the row index matches j, return that entry.
                 for (auto &e: this->reverse_iterate_column(i)) {
-                    if (e.row_index == j) return e;
+                    if (e.row_index == j) {
+                        return e;
+                    }
                 }
 
                 // If no entry is found, return the column head at index i.
@@ -525,6 +556,7 @@ namespace ldpc {
                 return nonzero;
 
             }
+
             /**
              * Returns row adjacency list as vector of vectors.
              * @return
@@ -558,7 +590,7 @@ namespace ldpc {
              * @param col_index
              * @return
              */
-            std::vector<int> get_column_csc(const std::size_t col_index){
+            std::vector<int> get_column_csc(const std::size_t col_index) {
                 std::vector<int> col;
                 for (auto entry: this->iterate_column(col_index)) {
                     col.push_back(entry.row_index);
@@ -628,7 +660,7 @@ namespace ldpc {
                     e = matrix->row_heads[i];
                 }
 
-                ~RowIterator() {};
+                ~RowIterator() = default;;
 
                 RowIterator &end() {
                     return *this;
@@ -692,7 +724,7 @@ namespace ldpc {
                     e = matrix->row_heads[i];
                 }
 
-                ~ReverseRowIterator() {};
+                ~ReverseRowIterator() = default;;
 
                 ReverseRowIterator &end() {
                     return *this;
@@ -751,7 +783,7 @@ namespace ldpc {
                     e = matrix->column_heads[i];
                 }
 
-                ~ColumnIterator() {};
+                ~ColumnIterator() = default;;
 
                 ColumnIterator &end() {
                     return *this;
@@ -810,7 +842,7 @@ namespace ldpc {
                     e = matrix->column_heads[i];
                 }
 
-                ~ReverseColumnIterator() {};
+                ~ReverseColumnIterator() = default;;
 
                 ReverseColumnIterator &end() {
                     return *this;
@@ -852,7 +884,9 @@ namespace ldpc {
              * @return RowIterator An iterator object that iterates over the given row
              */
             RowIterator iterate_row(int i) {
-                if (i < 0 || i >= m) throw std::invalid_argument("Iterator index out of bounds");
+                if (i < 0 || i >= m) {
+                    throw std::invalid_argument("Iterator index out of bounds");
+                }
                 return RowIterator(this, i);
             }
 
@@ -864,7 +898,9 @@ namespace ldpc {
              * @return ReverseRowIterator An iterator object that iterates over the given row in reverse
              */
             ReverseRowIterator reverse_iterate_row(int i) {
-                if (i < 0 || i >= m) throw std::invalid_argument("Iterator index out of bounds");
+                if (i < 0 || i >= m) {
+                    throw std::invalid_argument("Iterator index out of bounds");
+                }
                 return ReverseRowIterator(this, i);
             }
 
@@ -876,7 +912,9 @@ namespace ldpc {
              * @return ColumnIterator An iterator object that iterates over the given column
              */
             ColumnIterator iterate_column(int i) {
-                if (i < 0 || i >= n) throw std::invalid_argument("Iterator index out of bounds");
+                if (i < 0 || i >= n) {
+                    throw std::invalid_argument("Iterator index out of bounds");
+                }
                 return ColumnIterator(this, i);
             }
 
@@ -888,7 +926,9 @@ namespace ldpc {
              * @return ReverseColumnIterator An iterator object that iterates over the given column in reverse
              */
             ReverseColumnIterator reverse_iterate_column(int i) {
-                if (i < 0 || i >= n) throw std::invalid_argument("Iterator index out of bounds");
+                if (i < 0 || i >= n) {
+                    throw std::invalid_argument("Iterator index out of bounds");
+                }
                 return ReverseColumnIterator(this, i);
             }
 
@@ -896,8 +936,8 @@ namespace ldpc {
         };
 
 
-    }//end namespace
-} //end namespace
+    }  // namespace sparse_matrix_base
+}  // namespace ldpc
 
 
 #endif
