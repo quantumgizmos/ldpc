@@ -8,6 +8,7 @@
 
 #include <random>
 #include <chrono> // for std::chrono::system_clock
+#include <algorithm>
 
 namespace ldpc {
     namespace rng {
