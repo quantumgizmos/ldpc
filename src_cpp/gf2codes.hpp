@@ -6,7 +6,7 @@
 
 #include "gf2sparse.hpp"
 #include "bp.hpp"
-namespace ldpc::gf2codes{
+namespace ldpc { namespace gf2codes{
 
 /**
  * Creates the parity check matrix of a repetition code of length n.
@@ -81,6 +81,6 @@ ldpc::gf2sparse::GF2Sparse<T> hamming_code(int r) {
 
 
 
-} //end namespace gf2codes
+} }  // namespace ldpc::gf2codes
 
 #endif /* Gf2Codes_hpp */

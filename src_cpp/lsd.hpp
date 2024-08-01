@@ -32,24 +32,30 @@ namespace ldpc::lsd {
     // TODO this should probably become a class?
     struct LsdCluster {
         ldpc::bp::BpSparse &pcm;
-        int cluster_id;
-        bool active; // if merge one becomes deactivated
-        bool valid; //
+        int cluster_id{};
+        bool active{}; // if merge one becomes deactivated
+        bool valid{}; //
         tsl::robin_set<int> bit_nodes;
         tsl::robin_set<int> check_nodes;
         tsl::robin_set<int> boundary_check_nodes;
         tsl::robin_set<int> candidate_bit_nodes;
         tsl::robin_set<int> enclosed_syndromes;
-        std::shared_ptr<std::vector<LsdCluster*>> global_check_membership; // store which cluster a check belongs to
-        std::shared_ptr<std::vector<LsdCluster*>> global_bit_membership; // store which cluster a check belongs to
+
+        std::shared_ptr<std::vector<LsdCluster *>>
+                global_check_membership; // store which cluster a check belongs to
+        std::shared_ptr<std::vector<LsdCluster *>> global_bit_membership; // store which cluster a check belongs to
         tsl::robin_set<LsdCluster *> merge_list;
+
         gf2dense::CscMatrix cluster_pcm;
+
         std::vector<uint8_t> cluster_pcm_syndrome;
+
         std::vector<int> cluster_check_idx_to_pcm_check_idx;
         tsl::robin_map<int, int> pcm_check_idx_to_cluster_check_idx;
+
         std::vector<int> cluster_bit_idx_to_pcm_bit_idx;
         gf2dense::PluDecomposition pluDecomposition;
-        int nr_merges;
+        int nr_merges{};
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> *global_timestep_bit_history = nullptr;
         int curr_timestep = 0;
         int absorbed_into_cluster = -1;
@@ -60,13 +66,10 @@ namespace ldpc::lsd {
 
         LsdCluster(ldpc::bp::BpSparse &parity_check_matrix,
                    int syndrome_index,
-                   std::shared_ptr<std::vector<LsdCluster*>> ccm , // global check cluster membership
-                   std::shared_ptr<std::vector<LsdCluster*>> bcm, // global bit cluster membership
+                   std::shared_ptr<std::vector<LsdCluster *>> ccm, // global check cluster membership
+                   std::shared_ptr<std::vector<LsdCluster *>> bcm, // global bit cluster membership
                    bool on_the_fly = false) :
-                pcm(parity_check_matrix) {
-            this->active = true;
-            this->valid = false;
-            this->cluster_id = syndrome_index;
+                pcm(parity_check_matrix), cluster_id(syndrome_index), active(true), valid(false) {
             this->boundary_check_nodes.insert(syndrome_index);
             this->enclosed_syndromes.insert(syndrome_index);
             this->global_check_membership = ccm;
@@ -261,8 +264,8 @@ namespace ldpc::lsd {
          * @param cl2
          */
         static LsdCluster *merge_clusters(LsdCluster *cl1, LsdCluster *cl2) {
-            LsdCluster *smaller;
-            LsdCluster *larger;
+            LsdCluster *smaller = nullptr;
+            LsdCluster *larger = nullptr;
             if (cl1->bit_nodes.size() < cl2->bit_nodes.size()) {
                 smaller = cl1;
                 larger = cl2;
@@ -380,8 +383,6 @@ namespace ldpc::lsd {
             return syndrome_in_image;
         }
 
-        std::string to_string();
-
         /**
          * Reorders the non-pivot columns of the eliminated cluster pcm according to the bit_weights.
          * @param bit_weights
@@ -412,6 +413,52 @@ namespace ldpc::lsd {
             }
             this->pluDecomposition.not_pivot_cols = resorted_np_cls;
         }
+
+        std::string to_string() {
+            int count;
+            std::stringstream ss{};
+            ss << "........." << std::endl;
+            ss << "Cluster ID: " << this->cluster_id << std::endl;
+            ss << "Active: " << this->active << std::endl;
+            ss << "Enclosed syndromes: ";
+            for (auto i: this->enclosed_syndromes) ss << i << " ";
+            ss << std::endl;
+            ss << "Cluster bits: ";
+            for (auto i: this->bit_nodes) ss << i << " ";
+            ss << std::endl;
+            ss << "Cluster checks: ";
+            for (auto i: this->check_nodes) ss << i << " ";
+            ss << std::endl;
+            ss << "Candidate bits: ";
+            for (auto i: this->candidate_bit_nodes) ss << i << " ";
+            ss << std::endl;
+            ss << "Boundary Checks: ";
+            for (auto i: this->boundary_check_nodes) ss << i << " ";
+            ss << std::endl;
+
+            ss << "Cluster bit idx to pcm bit idx: ";
+            count = 0;
+            for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx) {
+                ss << "{" << count << "," << bit_idx << "}";
+                count++;
+            }
+            ss << std::endl;
+
+            ss << "Cluster check idx to pcm check idx: ";
+            count = 0;
+            for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx) {
+                ss << "{" << count << "," << check_idx << "}";
+                count++;
+            }
+            ss << std::endl;
+
+            ss << "Cluster syndrome: ";
+            for (auto check_idx: this->cluster_pcm_syndrome) {
+                ss << unsigned(check_idx);
+            }
+            ss << std::endl;
+            return ss.str();
+        }
     };
 
     struct ClusterStatistics {
@@ -426,18 +473,18 @@ namespace ldpc::lsd {
         int absorbed_by_cluster = -1; // cluster_id of the cluster the current one was merged into
         int nr_of_non_zero_check_matrix_entries = 0; // nr of non zero entries in the cluster pcm
         double cluster_pcm_sparsity = 0; // nr of non zero entries in the cluster pcm
-        std::vector<uint8_t> solution; // local recovery, solution of cluster
+        std::vector<uint8_t> solution{}; // local recovery, solution of cluster
     };
 
     struct Statistics {
         std::unordered_map<int, ClusterStatistics> individual_cluster_stats; // clusterid <> stats
         std::unordered_map<int, std::unordered_map<int, std::vector<int>>> global_timestep_bit_history; //timestep <> (clusterid <> added bits)
-        long elapsed_time;
+        long elapsed_time{};
         osd::OsdMethod lsd_method;
-        int lsd_order;
+        int lsd_order{};
         std::vector<double> bit_llrs;
         std::vector<uint8_t> error; // the original error
-        std::vector<uint8_t> syndrome; // the syndrome to decode
+        std::vector<uint8_t> syndrome;// the syndrome to decode
         std::vector<uint8_t> compare_recover; // a recovery vector to compare against
 
         void clear() {
@@ -448,11 +495,11 @@ namespace ldpc::lsd {
             this->lsd_order = 0;
             this->bit_llrs = {};
             this->error = {};
-            this->syndrome= {};
+            this->syndrome = {};
             this->compare_recover = {};
         }
 
-        [[nodiscard]] std::string toString() const {
+        [[nodiscard]] std::string toString() {
             // build json like string object from individual cluster stats and global timestep bit history
             std::string result = "{";
             result += "\"elapsed_time_mu\":" + std::to_string(this->elapsed_time) + ",";
@@ -553,13 +600,13 @@ namespace ldpc::lsd {
         bool do_stats;
 
     public:
-        std::vector<uint8_t> decoding;
+        std::vector<uint8_t> decoding{};
         Statistics statistics{};
-        int bit_count;
+        int bit_count{};
         osd::OsdMethod lsd_method;
         int lsd_order;
 
-        void reset_cluster_stats(){
+        void reset_cluster_stats() {
             this->statistics.clear();
         }
 
@@ -632,8 +679,10 @@ namespace ldpc::lsd {
 
             std::vector<LsdCluster *> clusters;
             std::vector<LsdCluster *> invalid_clusters;
-            auto global_bit_membership = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(this->pcm.n));
-            auto global_check_membership = std::make_shared<std::vector<LsdCluster*>>(std::vector<LsdCluster*>(this->pcm.m));
+            auto global_bit_membership = std::make_shared<std::vector<LsdCluster *>>(
+                    std::vector<LsdCluster *>(this->pcm.n));
+            auto global_check_membership = std::make_shared<std::vector<LsdCluster *>>(
+                    std::vector<LsdCluster *>(this->pcm.m));
             // timestep to added bits history for stats
             auto *global_timestep_bits_history = new std::unordered_map<int, std::unordered_map<int, std::vector<int>>>{};
             auto timestep = 0;
@@ -712,7 +761,7 @@ namespace ldpc::lsd {
             this->statistics.elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(
                     end_time - start_time).count();
             // cleanup
-            for (auto cl: clusters){
+            for (auto cl: clusters) {
                 delete cl;
             }
             global_bit_membership->clear();
@@ -775,56 +824,6 @@ namespace ldpc::lsd {
             }
         }
     };
-
-    std::string LsdCluster::to_string() {
-        int count;
-        std::stringstream ss{};
-        ss << "........." << std::endl;
-        ss << "Cluster ID: " << this->cluster_id << std::endl;
-        ss << "Active: " << this->active << std::endl;
-        ss << "Enclosed syndromes: ";
-        for (auto i: this->enclosed_syndromes) ss << i << " ";
-        ss << std::endl;
-        ss << "Cluster bits: ";
-        for (auto i: this->bit_nodes) ss << i << " ";
-        ss << std::endl;
-        ss << "Cluster checks: ";
-        for (auto i: this->check_nodes) ss << i << " ";
-        ss << std::endl;
-        ss << "Candidate bits: ";
-        for (auto i: this->candidate_bit_nodes) ss << i << " ";
-        ss << std::endl;
-        ss << "Boundary Checks: ";
-        for (auto i: this->boundary_check_nodes) ss << i << " ";
-        ss << std::endl;
-
-        ss << "Cluster bit idx to pcm bit idx: ";
-        count = 0;
-        for (auto bit_idx: this->cluster_bit_idx_to_pcm_bit_idx) {
-            ss << "{" << count << "," << bit_idx << "}";
-            count++;
-        }
-        ss << std::endl;
-
-        ss << "Cluster check idx to pcm check idx: ";
-        count = 0;
-        for (auto check_idx: this->cluster_check_idx_to_pcm_check_idx) {
-            ss << "{" << count << "," << check_idx << "}";
-            count++;
-        }
-        ss << std::endl;
-
-        ss << "Cluster syndrome: ";
-        for (auto check_idx: this->cluster_pcm_syndrome) {
-            ss << unsigned(check_idx);
-        }
-        ss << std::endl;
-        return ss.str();
-    }
-
-
 }//end namespace lsd
-
-
 
 #endif
