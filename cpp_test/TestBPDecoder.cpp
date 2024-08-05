@@ -431,37 +431,34 @@ TEST(BpDecoder, min_sum_relative_schedule) {
 }
 
 TEST(BpDecoder, random_schedule_seed) {
-    {// todo why are there 3 bits but channel probabilities has length 4?
-        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
+    {
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(4);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.2, 0.3, 0.4},
                                        100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL,
-                                       0.625, 1, vector<int>{2, 3, 1},
+                                       0.625, 1, vector<int>{2, 3, 1, 0},
                                        1234);
-        auto expected_order = vector<int>{2, 3, 1};
+        auto expected_order = vector<int>{2, 3, 1, 0};
         ASSERT_EQ(bpd.random_schedule_seed, -1);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
     }
 
     {
-        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(4);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.2, 0.3, 0.4}, 100, ldpc::bp::MINIMUM_SUM,
                                        ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
-        auto expected_order = vector<int>{0, 1, 2};
+        auto expected_order = vector<int>{0, 1, 2, 3};
         ASSERT_EQ(bpd.random_schedule_seed, 0);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
     }
 
     {
-        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(3);
+        auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(4);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.2, 0.3, 0.4},
                                        100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL,
                                        0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
-        auto expected_order = vector<int>{0, 1, 2};
         ASSERT_EQ(bpd.random_schedule_seed, 4);
-        // ASSERT_EQ(expected_order, bpd.serial_schedule_order);
-
     }
 
 }
@@ -519,8 +516,12 @@ TEST(BpDecoder, ProdSumSerial_RepCode5) {
     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
                                        ldpc::bp::SERIAL, 4324234, ldpc::bp::AUTO);
 
-    auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1}, {0, 1, 1, 0, 0}, {1, 0, 0, 1, 1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {1, 1, 1, 1, 1}}; // todo I'm not sure I understand these cases
+    auto received_vectors = vector<vector<uint8_t>>{{0, 0, 0, 0, 1},
+                                                    {0, 1, 1, 0, 0},
+                                                    {1, 0, 0, 1, 1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0},
+                                                     {0, 0, 0, 0, 0},
+                                                     {1, 1, 1, 1, 1}}; // todo I'm not sure I understand these cases
 
     auto count = 0;
     for (auto received_vector: received_vectors) {
