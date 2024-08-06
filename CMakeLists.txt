@@ -6,9 +6,6 @@ project(ldpc
     DESCRIPTION "ldpc - Software for classical and quantum low density parity check codes"
     LANGUAGES CXX)
 
-# Set the C++ standard to C++20 for this project
-set(CMAKE_CXX_STANDARD 20)
-
 # Enable OpenMP support for parallel programming
 # SET(CMAKE_CXX_FLAGS  "-fopenmp")
 
@@ -30,6 +27,9 @@ add_library(ldpc INTERFACE)
 
 # Add specific directories to the include path for any target that links with the 'ldpc' library
 target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/rapidcsv)
+
+# Set the required C++ standard
+target_compile_features(ldpc INTERFACE cxx_std_20)
 
 if (LDPC_MASTER_PROJECT)
 	add_subdirectory(cpp_example)
