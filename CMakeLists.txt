@@ -1,5 +1,5 @@
 # Set the minimum version of CMake required to build this project
-cmake_minimum_required(VERSION 3.10...3.30)
+cmake_minimum_required(VERSION 3.12...3.30)
 
 # Enable the testing functionality provided by CMake
 enable_testing()
