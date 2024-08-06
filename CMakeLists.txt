@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.12...3.30)
 enable_testing()
 
 # Define the main project, its description, and the languages used
-project(main
+project(ldpc
     DESCRIPTION "ldpc - Software for classical and quantum low density parity check codes"
     LANGUAGES CXX)
 
