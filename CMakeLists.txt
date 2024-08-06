@@ -1,9 +1,6 @@
 # Set the minimum version of CMake required to build this project
 cmake_minimum_required(VERSION 3.12...3.30)
 
-# Enable the testing functionality provided by CMake
-enable_testing()
-
 # Define the main project, its description, and the languages used
 project(ldpc
     DESCRIPTION "ldpc - Software for classical and quantum low density parity check codes"
@@ -17,6 +14,14 @@ set(CMAKE_CXX_STANDARD 20)
 
 # Ensure that the necessary C++11 features are available, as required by the RapidCSV library
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# check if this is the master project or used via add_subdirectory
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	set(LDPC_MASTER_PROJECT ON)
+else()
+	set(LDPC_MASTER_PROJECT OFF)
+endif()
+option(BUILD_LDPC_TESTS "Also build tests for the LDPC project" ${LDPC_MASTER_PROJECT})
 
 ### Library Configuration Section ###
 
@@ -34,57 +39,9 @@ add_executable(main cpp_example/main.cpp)
 # Link the 'ldpc' library to the 'main' executable target
 target_link_libraries(main ldpc)
 
-### GoogleTest Configuration Section ###
-
-# Download the GoogleTest library as a subdirectory of the current project
-include(FetchContent)
-FetchContent_Declare(
-  GoogleTest
-  URL ${CMAKE_CURRENT_SOURCE_DIR}/cpp_test/google_test.zip
-)
-
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-# Make the GoogleTest library available to the project
-FetchContent_MakeAvailable(GoogleTest)
-
-### Test Configuration Section ###
-
-# Define a separate project for the tests, its description, and the languages used
-project(cpp_test
-    DESCRIPTION "Tests for ldpc"
-    LANGUAGES CXX)
-
-# Include the GoogleTest library in the project
-include(GoogleTest)
-
-# List of test executables
-set(TEST_EXECUTABLES
-    TestBPDecoder
-    TestOsdDecoder
-    TestSoftInfo
-    TestFlipDecoder
-    TestGf2Codes
-    TestLsd
-    TestSparseMatrix
-    TestSparseMatrixUtil
-    TestGF2Sparse
-    TestGF2RowReduce
-    TestGf2Linalg
-    TestGf2Dense
-    TestGf2DenseApplications
-    TestUtil
-    TestRng
-    TestUnionFind
-)
-
-# Loop through the list of test executables to:
-# - Add each executable target
-# - Link the necessary libraries (gtest_main and ldpc)
-# - Discover and register the tests with CTest
-foreach(TEST ${TEST_EXECUTABLES})
-    add_executable(${TEST} cpp_test/${TEST}.cpp)  # Add the test executable
-    target_link_libraries(${TEST} gtest_main ldpc)  # Link the libraries
-    gtest_discover_tests(${TEST})  # Discover and register the tests
-endforeach()
+if(BUILD_LDPC_TESTS)
+	# Add test code
+	enable_testing()
+	include(GoogleTest)
+	add_subdirectory(cpp_test)
+endif()
