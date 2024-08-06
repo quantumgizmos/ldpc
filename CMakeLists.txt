@@ -31,13 +31,9 @@ add_library(ldpc INTERFACE)
 # Add specific directories to the include path for any target that links with the 'ldpc' library
 target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/rapidcsv)
 
-### Executable Configuration Section ###
-
-# Add an executable target named 'main', which is built from the 'main.cpp' source file
-add_executable(main cpp_example/main.cpp)
-
-# Link the 'ldpc' library to the 'main' executable target
-target_link_libraries(main ldpc)
+if (LDPC_MASTER_PROJECT)
+	add_subdirectory(cpp_example)
+endif()
 
 if(BUILD_LDPC_TESTS)
 	# Add test code
