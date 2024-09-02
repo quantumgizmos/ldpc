@@ -119,7 +119,7 @@ cdef class bp_decoder:
             for j in range(self.n): self.channel_probs[j]=error_rate
             self.error_rate=error_rate
 
-    cpdef np.ndarray[np.int_t, ndim=1] decode(self, input_vector):
+    cpdef np.ndarray[np.uint8_t, ndim=1] decode(self, input_vector):
 
         """
         Runs the BP decoder for a given input_vector.
