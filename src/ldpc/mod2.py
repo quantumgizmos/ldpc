@@ -249,7 +249,7 @@ def reduced_row_echelon(matrix):
     return [reduced_row_echelon_form, matrix_rank, transform_matrix_rows, transform_matrix_columns]
 
 def nullspace(matrix):
-    """
+    r"""
     Computes the nullspace of the matrix M. Also sometimes referred to as the kernel.
 
     All vectors x in the nullspace of M satisfy the following condition::

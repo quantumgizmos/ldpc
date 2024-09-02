@@ -83,7 +83,7 @@ cdef class bp_decoder:
         else:
             print("Decoder not called")
 
-    cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome):
+    cpdef np.ndarray[np.uint8_t, ndim=1] bp_decode(self, np.ndarray[np.uint8_t, ndim=1] syndrome):
         self.synd=numpy2char(syndrome,self.synd)
         self.bp_decode_cy()
         return char2numpy(self.bp_decoding,self.n)

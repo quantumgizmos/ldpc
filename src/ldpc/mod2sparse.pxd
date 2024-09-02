@@ -77,6 +77,6 @@ cdef class pymod2sparse():
 
     cpdef iter_row(self,int row_index,int reverse_iterate)
     cpdef iter_col(self,int col_index,int reverse_iterate)
-    cpdef np.ndarray[np.int_t, ndim=1] mul(self, np.ndarray[np.int_t, ndim=1] vector)
+    cpdef np.ndarray[np.uint8_t, ndim=1] mul(self, np.ndarray[np.uint8_t, ndim=1] vector)
 
 

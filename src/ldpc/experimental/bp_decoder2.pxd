@@ -27,7 +27,7 @@ cdef class bp_decoder:
     cdef double ms_scaling_factor
     cdef int MEM_ALLOCATED
 
-    cpdef np.ndarray[np.int_t, ndim=1] bp_decode(self, np.ndarray[np.int_t, ndim=1] syndrome)
+    cpdef np.ndarray[np.uint8_t, ndim=1] bp_decode(self, np.ndarray[np.uint8_t, ndim=1] syndrome)
 
     cdef char* bp_decode_cy(self)
 
