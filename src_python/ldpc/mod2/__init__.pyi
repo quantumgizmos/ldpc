@@ -1,7 +1,8 @@
 import numpy as np
 import scipy.sparse
+import ldpc.mod2._legacy_v1
 import ldpc.helpers.scipy_helpers
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 from libc.stdint cimport uintptr_t
 def csc_to_scipy_sparse(vector[vector[int]]& col_adjacency_list):
     """
@@ -125,6 +126,81 @@ def row_basis(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spma
     -------
     scipy.sparse.spmatrix
         The row basis of the input matrix.
+    """
+
+
+def row_echelon(matrix: Union[np.ndarray,scipy.sparse.spmatrix], full: bool = False) -> List[np.ndarray, int, np.ndarray, np.ndarray]:
+    """
+    Converts a binary matrix to row echelon form via Gaussian Elimination
+
+    Parameters
+    ----------
+    matrix : numpy.ndarry or scipy.sparse
+        A binary matrix in either numpy.ndarray format or scipy.sparse
+    full: bool, optional
+        If set to `True', Gaussian elimination is only performed on the rows below
+        the pivot. If set to `False' Gaussian eliminatin is performed on rows above
+        and below the pivot. 
+
+    Returns
+    -------
+        row_ech_form: numpy.ndarray
+            The row echelon form of input matrix
+        rank: int
+            The rank of the matrix
+        transform_matrix: numpy.ndarray
+            The transformation matrix such that (transform_matrix@matrix)=row_ech_form
+        pivot_cols: list
+            List of the indices of pivot num_cols found during Gaussian elimination
+
+    Examples
+    --------
+    >>> H=np.array([[1, 1, 1],[1, 1, 1],[0, 1, 0]])
+    >>> re_matrix=row_echelon(H)[0]
+    >>> print(re_matrix)
+    [[1 1 1]
+        [0 1 0]
+        [0 0 0]]
+
+    >>> re_matrix=row_echelon(H,full=True)[0]
+    >>> print(re_matrix)
+    [[1 0 1]
+        [0 1 0]
+        [0 0 0]]
+
+    """
+
+
+def reduced_row_echelon(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -> List[np.ndarray, int, np.ndarray, np.ndarray]:
+    """
+    Converts matrix to reduced row echelon form such that the output has
+    the form rre=[I,A]
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        A binary matrix in numpy.ndarray format
+
+    Returns
+    -------
+    reduced_row_echelon_from: numpy.ndarray
+        The reduced row echelon form of the inputted matrix in the form rre=[I,A]
+    matrix_rank: int
+        The binary rank of the matrix
+    transform_matrix_rows: numpy.ndarray
+        The transformation matrix for row permutations
+    transform_matrix_cols: numpy.ndarray
+        The transformation matrix for the columns
+
+    Examples
+    --------
+    >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
+    >>> rre=reduced_row_echelon(H)[0]
+    >>> print(rre)
+    [[1 0 0 1 1 0 1]
+        [0 1 0 1 0 1 1]
+        [0 0 1 0 1 1 1]]
+
     """
 
 
