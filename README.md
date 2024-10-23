@@ -1,6 +1,6 @@
-# LDPC version 2 (Beta version)
+# LDPC version 2
 
-A C++ rewrite of the `LDPC` package for decoding low density parity check checks.
+Version 2: A C++ rewrite of the `LDPCv1` package for decoding low density parity check checks.
 Warning, whilst efforts have been made to provide backwards compatability with LDPCv1, the new version may introduce breaking changes.
 
 ## Documentation
@@ -28,6 +28,10 @@ cd ldpc
 pip install -Ue .
 ```
 
+# LDPCv1
+If your package requires LDPCv1, this can be installed from PyPi as follows:
+
+```pip install -U ldpc==0.1.60```
 
 ## New features
 
