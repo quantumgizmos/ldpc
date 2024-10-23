@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy
 
-VERSION="0.1.53"
+VERSION="0.1.60"
 f=open("src/ldpc/VERSION","w+")
 f.write(VERSION)
 f.close()
