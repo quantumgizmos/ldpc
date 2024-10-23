@@ -28,7 +28,7 @@ cd ldpc
 pip install -Ue .
 ```
 
-# LDPCv1
+## LDPCv1
 If your package requires LDPCv1, this can be installed from PyPi as follows:
 
 ```pip install -U ldpc==0.1.60```
