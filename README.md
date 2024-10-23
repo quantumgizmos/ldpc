@@ -1,35 +1,17 @@
 # LDPC version 2 (Beta version)
 
-A C++ rewrite of the `LDPC` package for decoding low density parity check checks. Warning, this version is still in development, so breaking changes may occur.
-
-## New features
-
-- A new C++ template class `GF2Sparse`. This is a more flexible implementation of the `mod2sparse` data structure used in the LDPCv1. This will make it much easier to expand the package.
-- Serial schedules for the BP decoder.
-- Run-time improvements for BP+OSD OSD-0. The decoder now implements the fast-syndrome OSD-0 implementation (https://arxiv.org/abs/1904.02703), where Gaussian elimination is terminated as soon as the syndrome becomes linearly dependent on the reduced columns.
-- BP+LSD: Belief propagation plus localised statistics decoding. A parallel decoding algorithm that matches the perforance of BP+OSD. Note that the version implemented currenlty runs in serial. We are working on the parallel version! See our paper: https://arxiv.org/abs/2406.18655
-- The union-find matching decoder (https://arxiv.org/abs/1709.06218). This is an implementation of the Delfosse-Nickerson union-find decoder that is suitable for decoding surface codes and other codes with "matchable" syndromes.
-- The BeliefFind decoder. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails to converge as proposed by Oscar Higgott in https://arxiv.org/abs/2203.04948
-- Flip and P-flip decoders as introduced by Thomas Scruby in https://arxiv.org/abs/2212.06985.
-- Improved GF2 linear algebra routines (useful for computing code parameters)
+A C++ rewrite of the `LDPC` package for decoding low density parity check checks.
+Warning, whilst efforts have been made to provide backwards compatability with LDPCv1, the new version may introduce breaking changes.
 
 ## Documentation
 
-The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldpc2)
+The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldpc)
 
-## ToDos
+## Installation
 
-`LDPCv2` is still a work in progress. ToDos below:
-- I'm struggling to get the package to compile properly via GitHub actions for M1 Macs. Any help would be appreciated!
-- Implement parallel version of BP+LSD algorithm using OpenMP.
-- Improve support for parallel processing across the package.
-- More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681)
-- Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
-- Generalised BP (https://arxiv.org/abs/2212.03214)
-- Functions need to be properly documented (in progress)
-- STIM integration
-- More functionality for studying classical codes. Eg. support for received vector decoding and the AWGN noise channel.
-- Proper test coverage is required (C++ has 100%, Python tests still need to expanded).
+The easiest way to install the package is via pip.
+
+```pip install ldpc```
 
 ## Python - Installation from source
 
@@ -45,6 +27,30 @@ git clone git@github.com:quantumgizmos/ldpc_v2.git
 cd ldpc
 pip install -Ue .
 ```
+
+
+## New features
+
+- A new C++ template class `GF2Sparse`. This is a more flexible implementation of the `mod2sparse` data structure used in the LDPCv1. This will make it much easier to expand the package.
+- Serial schedules for the BP decoder.
+- Run-time improvements for BP+OSD OSD-0. The decoder now implements the fast-syndrome OSD-0 implementation (https://arxiv.org/abs/1904.02703), where Gaussian elimination is terminated as soon as the syndrome becomes linearly dependent on the reduced columns.
+- BP+LSD: Belief propagation plus localised statistics decoding. A parallel decoding algorithm that matches the perforance of BP+OSD. Note that the version implemented currenlty runs in serial. We are working on the parallel version! See our paper: https://arxiv.org/abs/2406.18655
+- The union-find matching decoder (https://arxiv.org/abs/1709.06218). This is an implementation of the Delfosse-Nickerson union-find decoder that is suitable for decoding surface codes and other codes with "matchable" syndromes.
+- The BeliefFind decoder. A decoder that first runs belief propagation, and falls back on union-find if if the BP decoder fails to converge as proposed by Oscar Higgott in https://arxiv.org/abs/2203.04948
+- Flip and P-flip decoders as introduced by Thomas Scruby in https://arxiv.org/abs/2212.06985.
+- Improved GF2 linear algebra routines (useful for computing code parameters)
+
+## ToDos
+
+`LDPCv2` is still a work in progress. Ongoing projects are listed below:
+- Implement parallel version of BP+LSD algorithm using OpenMP.
+- Improve support for parallel processing across the package.
+- More decoders could be implemented (eg. small set-flip, https://arxiv.org/abs/1810.03681)
+- Stabiliser inactivation BP (https://arxiv.org/abs/2205.06125)
+- Generalised BP (https://arxiv.org/abs/2212.03214)
+- Functions need to be properly documented (in progress)
+- Further STIM integration
+- More functionality for studying classical codes. Eg. support for received vector decoding and the AWGN noise channel.
 
 ## BP+LSD Quickstart
 

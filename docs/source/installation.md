@@ -1,5 +1,11 @@
 # Setup
 
+## Installation from Pip
+
+The package can be installed via pip:
+
+```pip install ldpc```
+
 ## Python - Installation from source
 
 The C++ source code can be found in src_cpp. Python bindings are implemented using Cython and can be found in src/ldpc. To install the Python version of the repository follows the instructions below: 
