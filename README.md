@@ -1,6 +1,6 @@
-# LDPC version 2
+## LDPC version 2
 
-Version 2: A C++ rewrite of the `LDPCv1` package for decoding low density parity check checks.
+LDPC Version 2: A C++ rewrite of the `LDPCv1` package for decoding low density parity check checks.
 Warning, whilst efforts have been made to provide backwards compatability with LDPCv1, the new version may introduce breaking changes.
 
 ## Documentation
