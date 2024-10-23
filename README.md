@@ -9,7 +9,7 @@ The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldp
 
 ## Installation
 
-The easiest way to install the package is via pip.
+The easiest way to install the package is via pip. Python versions `>=3.9` are supported.
 
 ```pip install -U ldpc```
 
