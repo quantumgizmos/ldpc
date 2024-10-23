@@ -83,3 +83,33 @@ decoding_syndrome = H@decoding % 2
 print(f"Decoding syndrome: {decoding_syndrome}")
 ``` 
 
+## Attribution
+
+If you use this software in your research please cite as follows:
+
+```
+@software{Roffe_LDPC_Python_tools_2022,
+author = {Roffe, Joschka},
+title = {{LDPC: Python tools for low density parity check codes}},
+url = {https://pypi.org/project/ldpc/},
+year = {2022}
+}
+```
+
+If you have used the BP+OSD class for quantum error correction, please also cite the following paper:
+
+```
+@article{roffe_decoding_2020,
+   title={Decoding across the quantum low-density parity-check code landscape},
+   volume={2},
+   ISSN={2643-1564},
+   url={http://dx.doi.org/10.1103/PhysRevResearch.2.043423},
+   DOI={10.1103/physrevresearch.2.043423},
+   number={4},
+   journal={Physical Review Research},
+   publisher={American Physical Society (APS)},
+   author={Roffe, Joschka and White, David R. and Burton, Simon and Campbell, Earl},
+   year={2020},
+   month={Dec}
+}
+```
