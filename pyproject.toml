@@ -25,9 +25,11 @@ dependencies = [
     "sinter",
     "BeliefMatching"
 ]
-version = "2.0.19"
+version = "2.1.0"
+
+[project.urls]
+Documentation = "https://software.roffe.eu/ldpc"
 
 [tool.setuptools.packages.find]
 where = ["src_python"]  
 include = ["ldpc","ldpc.*"]
-

@@ -46,6 +46,8 @@ jobs:
           {os: macos-latest, dist: cp310-macosx_x86_64},
           {os: macos-latest, dist: cp311-macosx_x86_64},
           {os: macos-latest, dist: cp312-macosx_x86_64},
+          {os: macos-latest, dist: cp313-macosx_x86_64},
+
 
           # # macosx arm64
           {os: macos-latest, dist: cp38-macosx_arm64},
@@ -53,6 +55,7 @@ jobs:
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
           {os: macos-latest, dist: cp312-macosx_arm64},
+          {os: macos-latest, dist: cp313-macosx_arm64},
 
           # # macosx universal2
           # # {os: macos-latest, dist: cp38-macosx_universal2},
@@ -66,6 +69,8 @@ jobs:
           {os: windows-latest, dist: cp310-win_amd64},
           {os: windows-latest, dist: cp311-win_amd64},
           {os: windows-latest, dist: cp312-win_amd64},
+          {os: windows-latest, dist: cp313-win_amd64},
+
 
           # ubuntu x86_64
           {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
@@ -73,6 +78,7 @@ jobs:
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
 
 
         ]
@@ -81,7 +87,7 @@ jobs:
       with:
         submodules: true
 
-    - uses: pypa/cibuildwheel@v2.19.1
+    - uses: pypa/cibuildwheel@v2.20.0
 
     - uses: actions/upload-artifact@v3
       with:
@@ -102,7 +108,7 @@ jobs:
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.LDPC_TEST_PYPI }}
+          password: ${{ secrets.PYPI_PASSWORD }}
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
           verbose: true
