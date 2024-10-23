@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import scipy.sparse
 from scipy.sparse import csr_matrix
-from ldpc.mod2 import io_test, rank, kernel, PluDecomposition, pivot_rows, reduced_row_echelon
+from ldpc.mod2 import io_test, rank, kernel, PluDecomposition, pivot_rows, reduced_row_echelon, row_echelon
 from ldpc.codes import rep_code, ring_code, hamming_code
 
 def test_constructor_rep_code():
@@ -206,7 +206,13 @@ def test_reduced_row_echelon_invalid_type():
     with pytest.raises(TypeError):
         reduced_row_echelon("invalid input")
 
+def row_echelon_invalid_type():
+    with pytest.raises(TypeError):
+        row_echelon("invalid input")
 
+def inverse():
+    with pytest.raises(TypeError):
+        row_echelon("invalid input")
 
 if __name__ == "__main__":
     test_rank_case3()

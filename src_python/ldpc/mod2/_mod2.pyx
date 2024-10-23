@@ -520,6 +520,67 @@ def reduced_row_echelon(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -> Lis
     return ldpc.mod2._legacy_v1.reduced_row_echelon(matrix)
 
 
+def inverse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -> np.ndarray:
+    """
+    Computes the left inverse of a full-rank matrix.
+
+    Notes
+    -----
+
+    The `left inverse' is computed when the number of rows in the matrix
+    exceeds the matrix rank. The left inverse is defined as follows::
+
+        Inverse(M.T@M)@M.T
+
+    We can make a further simplification by noting that the row echelon form matrix
+    with full column rank has the form::
+
+        row_echelon_form=P@M=vstack[I,A]
+
+    In this case the left inverse simplifies to::
+
+        Inverse(M^T@P^T@P@M)@M^T@P^T@P=M^T@P^T@P=row_echelon_form.T@P
+
+    Parameters
+    ----------
+    matrix: numpy.ndarray
+        The binary matrix to be inverted in numpy.ndarray format. This matrix must either be
+        square full-rank or rectangular with full-column rank.
+
+    Returns
+    -------
+    numpy.ndarray
+        The inverted binary matrix
+
+
+    Examples
+    --------
+
+    >>> # full-rank square matrix
+    >>> mat=np.array([[1,1,0],[0,1,0],[0,0,1]])
+    >>> i_mat=inverse(mat)
+    >>> print(i_mat@mat%2)
+    [[1 0 0]
+     [0 1 0]
+     [0 0 1]]
+
+    >>> # full-column rank matrix
+    >>> mat=np.array([[1,1,0],[0,1,0],[0,0,1],[0,1,1]])
+    >>> i_mat=inverse(mat)
+    >>> print(i_mat@mat%2)
+    [[1 0 0]
+     [0 1 0]
+     [0 0 1]]
+
+    """
+    if isinstance(matrix, scipy.sparse.spmatrix):
+        matrix = matrix.toarray()
+    elif not isinstance(matrix, np.ndarray):
+        raise TypeError(f"The input matrix is of an invalid type. Please input a np.ndarray or scipy.sparse.spmatrix object, not {type(matrix)}")
+    
+    return ldpc.mod2._legacy_v1.inverse(matrix)
+
+
 cdef class PluDecomposition():
     """
     Initialise the PLU Decomposition with a given parity check matrix.

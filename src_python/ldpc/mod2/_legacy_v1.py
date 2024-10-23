@@ -5,65 +5,6 @@ Assorted functions to work with binary vectors and matrices
 import numpy as np
 from scipy import sparse
 
-def mod10_to_mod2(dec, length=0):
- 
-    """Converts a decimal number to a binary number, with optional padding
-    to produce a binary vector of a given length.
-
-    Parameters
-    ----------
-    dec : int
-        Decimal number (base 10).
-    length : int, optional
-        The length of the binary string. If the specified `length' is greater
-        than the bit-length of the binary number the output is left-padded
-        with zeros. The default `length' is set to zero.
-
-    Returns
-    -------
-    list
-        A binary integer list encoding the binary represenation of the
-        inputted decimal number 
-    
-    Examples
-    --------
-    >>> mod10_to_mod2(2,length=5)
-    [0, 0, 0, 1, 0]
-    """
-
-    # Convert dec to a binary string, with <length> leading zeros
-    bin_str = format(dec, '0{}b'.format(length))
-
-    # Split that string into array, converting chars to ints
-    return [int(b) for b in bin_str]
-
-
-def mod2_to_mod10(binary_arr):
-    
-    """
-    Converts binary number represented as a list to a decimal number.
-
-    Parameters
-    ----------
-    binary_arr : list
-        A binary number represented as the entries of a list
-    
-    Returns
-    -------
-    int
-        The decimal representation of the inputted binary array 
-    
-    Examples
-    --------
-    >>> mod2_to_mod10([0,0,0,1,0])
-    2
-
-    """
-
-    bases = 2 ** np.arange(len(binary_arr))[::-1]
-    return binary_arr @ bases
-
-
 def row_echelon(matrix, full=False):
     
     """
