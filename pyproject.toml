@@ -25,7 +25,7 @@ dependencies = [
     "sinter",
     "BeliefMatching"
 ]
-version = "2.1.1"
+version = "2.1.2"
 
 [project.urls]
 Documentation = "https://software.roffe.eu/ldpc"
