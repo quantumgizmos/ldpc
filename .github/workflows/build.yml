@@ -10,73 +10,95 @@ jobs:
     name: Build SDist
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout out repo and submodules
-        uses: actions/checkout@v3
-        with:
-          submodules: true
 
-      - name: Build SDist
-        run: pipx run build --sdist
+    - name: Checkout out repo and submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: true
 
-      - name: Check metadata
-        run: pipx run twine check dist/*
+    - name: Build SDist
+      run: pipx run build --sdist
 
-      - name: Upload SDist
-        uses: actions/upload-artifact@v3
-        with:
-          name: sdist
-          path: dist/*.tar.gz
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
 
   build_wheels:
-    name: Build Wheels
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os_dist.os }}
+    env:
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      # MACOSX_DEPLOYMENT_TARGET: "13.1"
+      # CIBW_ARCHS_MACOS: "arm64 x86_64"
+      # CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        os_dist: [
+          # # macosx x86_64
+          {os: macos-latest, dist: cp38-macosx_x86_64},
+          {os: macos-latest, dist: cp39-macosx_x86_64},
+          {os: macos-latest, dist: cp310-macosx_x86_64},
+          {os: macos-latest, dist: cp311-macosx_x86_64},
+          {os: macos-latest, dist: cp312-macosx_x86_64},
+          {os: macos-latest, dist: cp313-macosx_x86_64},
+
+
+          # # macosx arm64
+          {os: macos-latest, dist: cp38-macosx_arm64},
+          {os: macos-latest, dist: cp39-macosx_arm64},
+          {os: macos-latest, dist: cp310-macosx_arm64},
+          {os: macos-latest, dist: cp311-macosx_arm64},
+          {os: macos-latest, dist: cp312-macosx_arm64},
+          {os: macos-latest, dist: cp313-macosx_arm64},
+
+          # # windows amd64
+          {os: windows-latest, dist: cp38-win_amd64},
+          {os: windows-latest, dist: cp39-win_amd64},
+          {os: windows-latest, dist: cp310-win_amd64},
+          {os: windows-latest, dist: cp311-win_amd64},
+          {os: windows-latest, dist: cp312-win_amd64},
+          {os: windows-latest, dist: cp313-win_amd64},
+
+
+          # ubuntu x86_64
+          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
+
+
+        ]
     steps:
-      - name: Checkout repo and submodules
-        uses: actions/checkout@v3
-        with:
-          submodules: true
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+    - uses: pypa/cibuildwheel@v2.20.0
 
-      - name: Install cibuildwheel
-        run: pip install cibuildwheel
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
 
-      - name: Build Wheels
-        run: cibuildwheel --output-dir wheelhouse
-
-      - name: Upload Wheels
-        uses: actions/upload-artifact@v3
-        with:
-          name: wheels
-          path: wheelhouse/*.whl
+    - name: Upload wheels
+      uses: actions/upload-artifact@v3
+      with:
+        path: wheelhouse/*.whl
 
   upload_pypi:
-    name: Upload to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-      - name: Download SDist
-        uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
-          name: sdist
+          name: artifact
           path: dist
-
-      - name: Download Wheels
-        uses: actions/download-artifact@v3
-        with:
-          name: wheels
-          path: dist
-
-      - name: Upload to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_PASSWORD }}
           skip_existing: true
