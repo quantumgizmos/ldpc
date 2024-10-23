@@ -79,7 +79,7 @@ jobs:
       with:
         submodules: true
 
-    - uses: pypa/cibuildwheel@v2.20.0
+    - uses: pypa/cibuildwheel@v2.21.3
 
     - uses: actions/upload-artifact@v3
       with:
