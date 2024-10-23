@@ -11,7 +11,7 @@ The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldp
 
 The easiest way to install the package is via pip.
 
-```pip install ldpc```
+```pip install -U ldpc```
 
 ## Python - Installation from source
 

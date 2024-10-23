@@ -4,7 +4,7 @@
 
 The package can be installed via pip:
 
-```pip install ldpc```
+```pip install -U ldpc```
 
 ## Python - Installation from source
 
