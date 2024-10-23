@@ -43,6 +43,7 @@ Welcome to LDPC's documentation!
    ldpc/bp_decoder
    ldpc/belief_find_decoder
    ldpc/bposd_decoder
+   ldpc/bplsd_decoder
    ldpc/union_find_decoder
    ldpc/monte_carlo_simulation
    ldpc/sinter_decoders.rst

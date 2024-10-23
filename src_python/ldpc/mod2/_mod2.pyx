@@ -360,6 +360,35 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
     return output
 
 def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
+
+    """
+    Estimate the code distance of a binary matrix representing a parity-check matrix.
+
+    This function estimates the minimum distance of a code defined by the given parity-check matrix (PCM).
+    The calculation runs until either the specified timeout is reached or an estimate is found.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity-check matrix representing the code, provided as a scipy sparse matrix or a numpy ndarray.
+
+    timeout_seconds : float, optional (default=0.025)
+        The maximum time in seconds allowed for estimating the code distance.
+
+    number_of_words_to_save : int, optional (default=10)
+        The number of minimum-weight codewords to save in the returned matrix.
+
+    Returns
+    -------
+    min_distance : int
+        The estimated minimum distance of the code.
+
+    samples_searched : int
+        The number of samples that were searched to find the minimum distance.
+
+    min_weight_words_matrix : scipy.sparse.csr_matrix
+        A sparse matrix containing the minimum-weight codewords found, up to `number_of_words_to_save`.
+    """
   
     cdef int row_count = pcm.shape[0]
     cdef int col_count = pcm.shape[1]
@@ -402,6 +431,23 @@ def row_span(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> scipy.sparse.spmat
     return csr_to_scipy_sparse(rs, int(2**row_count), col_count)
 
 def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]):
+
+    """
+    Compute the exact code distance of a binary matrix representing a parity-check matrix.
+
+    This function computes the exact minimum distance of a code defined by the given parity-check matrix (PCM).
+    Unlike the estimation function, this function guarantees the precise minimum distance, though it may be computationally intensive.
+
+    Parameters
+    ----------
+    pcm : Union[scipy.sparse.spmatrix, np.ndarray]
+        The parity-check matrix representing the code, provided as a scipy sparse matrix or a numpy ndarray.
+
+    Returns
+    -------
+    distance : int
+        The exact minimum distance of the code.
+    """
  
     cdef int row_count = pcm.shape[0]
     cdef int col_count = pcm.shape[1]
