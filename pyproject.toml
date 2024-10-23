@@ -24,7 +24,7 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/quantumgizmos/ldpc"
-Documentation = "https://ldpc.readthedocs.io/en/latest/"
+Documentation = "https://software.roffe.eu/ldpc_v1"
 
 [tool.cibuildwheel]
 build = "cp3*"
