@@ -3,12 +3,10 @@ from scipy.sparse import spmatrix
 class BeliefFindDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Union Find Decoder (UFD) algorithm.
-
     The BeliefFindDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
     it falls back to the Union Find Decoder algorithm. The UFD algorithm is based on the principles outlined in
     https://arxiv.org/abs/1709.06218, with an option to utilise a more general version as described in
     https://arxiv.org/abs/2103.08049 for LDPC codes by setting `uf_method=True`.
-
     Parameters
     ----------
     pcm : Union[np.ndarray, scipy.sparse.spmatrix]
@@ -39,38 +37,29 @@ class BeliefFindDecoder(BpDecoderBase):
         The inversion method can be applied to any parity check matrix.
     bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
-
     Notes
     -----
     The `BeliefFindDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
     in the UFD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
     """
-
-
     def decode(self,syndrome):
         """
         Decodes the input syndrome using the belief propagation and UFD decoding methods.
-
         Initially, the method attempts to decode the syndrome using belief propagation. If this fails to converge,
         it falls back to the UFD algorithm.
-
         Parameters
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
-
         Returns
         -------
         np.ndarray
             The decoded output.
-
         Raises
         ------
         ValueError
             If the length of the input syndrome is not equal to the length of the code.
         """
-
-
     @property
-    def uf_method(self):
+    def uf_method(self): ...

@@ -6,10 +6,8 @@ import warnings
 class BpLsdDecoder(BpDecoderBase):
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
-
     The BpLsdDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
     it falls back to the Localised Statistics Decoder algorithm.
-
     Parameters
     ----------
     pcm : Union[np.ndarray, scipy.sparse.spmatrix]
@@ -46,32 +44,24 @@ class BpLsdDecoder(BpDecoderBase):
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
     in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     """
-
-
     def decode(self,syndrome):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
-
         Initially, the method attempts to decode the syndrome using belief propagation. If this fails to converge,
         it falls back to the LSD algorithm.
-
         Parameters
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
-
         Returns
         -------
         np.ndarray
             The decoded output.
-
         Raises
         ------
         ValueError
             If the length of the input syndrome is not equal to the length of the code.
         """
-
-
     @property
     def statistics(self) -> Statistics:
         """
@@ -81,106 +71,79 @@ class BpLsdDecoder(BpDecoderBase):
         Statistics
             The statistics object.
         """
-
-
     @property
     def do_stats(self) -> bool:
         """
         Returns whether the statistics are being collected.
-
         Returns
         -------
         bool
             Whether the statistics are being collected.
         """
-
-
     def set_do_stats(self, value: bool) -> None:
         """
         Sets whether the statistics are being collected.
-
         Parameters
         ----------
         value : bool
             Whether the statistics are being collected.
         """
-
-
     @property
     def lsd_method(self) -> Optional[str]:
         """
         The Localized Statistic Decoding (LSD) method used.
-
         Returns
         -------
         Optional[str]
             A string representing the LSD method used. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}. If no LSD method
             has been set, returns `None`.
         """
-
-
     @lsd_method.setter
     def lsd_method(self, method: Union[str, int, float]) -> None:
         """
         Sets the LSD method used. That is, the OSD method per cluster.
-
         Parameters
         ----------
         method : Union[str, int, float]
             A string, integer or float representing the OSD method to use. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}, corresponding to
             LSD order-0, LSD Exhaustive or LSD-Cominbation-Sweep.
         """
-
-
     @property
     def lsd_order(self) -> int:
         """
         The LSD order used.
-
         Returns
         -------
         int
             An integer representing the OSD order used.
         """
-
-
     @lsd_order.setter
     def lsd_order(self, order: int) -> None:
         """
         Set the order for the LSD method.
-
         Parameters
         ----------
         order : int
             The order for the OSD method. Must be a positive integer.
-
         Raises
         ------
         ValueError
             If order is less than 0.
-
         Warns
         -----
         UserWarning
             If the LSD method is 'OSD_E' and the order is greater than 15.
-
         """
-
-
     def set_additional_stat_fields(self, error, syndrome, compare_recover) -> None:
         """
         Sets additional fields to be collected in the statistics.
-
         Parameters
         ----------
         fields : List[str]
             A list of strings representing the additional fields to be collected in the statistics.
         """
-
-
     def reset_cluster_stats(self) -> None:
         """
         Resets cluster statistics of the decoder.
         Note that this also resets the additional stat fields, such as the error, and compare_recovery vectors
         """
-
