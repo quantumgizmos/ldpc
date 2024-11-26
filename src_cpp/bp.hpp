@@ -205,6 +205,15 @@ namespace ldpc {
                             }
                         }
                     } else if (this->bp_method == MINIMUM_SUM) {
+
+                        double alpha;
+                        if(this->ms_scaling_factor == 0.0) {
+                            alpha = 1.0 - std::pow(2.0, -1.0*it);
+                        }
+                        else {
+                            alpha = this->ms_scaling_factor;
+                        }
+
                         //check to bit updates
                         for (int i = 0; i < check_count; i++) {
 
@@ -236,8 +245,10 @@ namespace ldpc {
                                 }
 
                                 int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
-                                e.check_to_bit_msg *= message_sign * ms_scaling_factor;
+                                
+                                e.check_to_bit_msg *= message_sign * alpha;
 
+                                
                                 double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
                                 if (abs_bit_to_check_msg < temp) {
                                     temp = abs_bit_to_check_msg;
@@ -431,6 +442,15 @@ namespace ldpc {
                 this->initialise_log_domain_bp();
 
                 for (int it = 1; it <= maximum_iterations; it++) {
+
+                    double alpha;
+                    if(this->ms_scaling_factor == 0.0) {
+                        alpha = 1.0 - std::pow(2.0, -1.0*it);
+                    }
+                    else {
+                        alpha = this->ms_scaling_factor;
+                    }
+
                     if (this->random_schedule_seed > -1) {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                     } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
@@ -483,7 +503,7 @@ namespace ldpc {
                                     }
                                 }
                                 double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
-                                e.check_to_bit_msg = ms_scaling_factor * message_sign * temp;
+                                e.check_to_bit_msg = alpha * message_sign * temp;
                                 e.bit_to_check_msg = log_prob_ratios[bit_index];
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }

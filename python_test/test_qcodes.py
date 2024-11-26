@@ -69,7 +69,7 @@ def test_400_16_6_hgp():
 
     error_rate = 0.01
     run_count = 10000
-    seed = 42
+    seed = 100
     max_iter = 5
     osd_order = 3
     print()
@@ -106,10 +106,20 @@ def test_400_16_6_hgp():
 
     decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0.625,
                            schedule="parallel", lsd_order=osd_order, lsd_method="lsd_cs")
-    # decoder.set_do_stats(True)
     ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
                                                 f"Min-sum LSD-{osd_order} parallel schedule")
-    # print(json.dumps(decoder.statistics))
+
+    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0,
+                           schedule="parallel", bits_per_step=1, lsd_order=0, lsd_method="osd_e")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+                                                f"Min-sum LSD-0 parallel schedule, dynamic scaling factor")
+
+
+    decoder = BpLsdDecoder(hx, error_rate=error_rate, max_iter=max_iter, bp_method="ms", ms_scaling_factor=0,
+                           schedule="serial", bits_per_step=1, lsd_order=0, lsd_method="osd_e")
+    ler, min_logical, speed, _ = quantum_mc_sim(hx, lx, error_rate, run_count, seed, decoder,
+                                                f"Min-sum LSD-0 serial schedule, dynamic scaling factor")
+
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
@@ -181,5 +191,5 @@ def test_surface_20():
 if __name__ == "__main__":
 
     test_400_16_6_hgp()
-    test_toric_20()
-    test_surface_20()
+    # test_toric_20()
+    # test_surface_20()
