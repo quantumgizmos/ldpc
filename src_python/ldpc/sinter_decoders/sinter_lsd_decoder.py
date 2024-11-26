@@ -3,7 +3,7 @@ import pathlib
 import numpy as np
 import sinter
 import stim
-from beliefmatching import detector_error_model_to_check_matrices
+from ldpc.ckt_noise.dem_matrices import detector_error_model_to_check_matrices
 from ldpc.bplsd_decoder._bplsd_decoder import BpLsdDecoder
 
 

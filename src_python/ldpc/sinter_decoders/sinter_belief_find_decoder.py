@@ -3,7 +3,7 @@ import numpy as np
 import pathlib
 from ldpc.belief_find_decoder import BeliefFindDecoder
 import sinter
-from beliefmatching import detector_error_model_to_check_matrices
+from ldpc.ckt_noise.dem_matrices import detector_error_model_to_check_matrices
 
 
 class SinterBeliefFindDecoder(sinter.Decoder):
