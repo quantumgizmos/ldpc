@@ -22,7 +22,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     # identify top-level import lines
     pattern = re.compile(r"^(import|from)\s+.*\n", re.MULTILINE)
     for match in pattern.finditer(pyx_content):
-        pyi_content += pyx_content[match.start():match.end()]
+        pyi_content += pyx_content[match.start() : match.end()]
 
     # identify patterns to ignore
     ignore_pattern = re.compile(r"__cinit__\(|__del__\(")
@@ -35,7 +35,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     docstring = rf"\s*?(?:{docstring_double}|{docstring_single})\s*?\n"
     pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.DOTALL | re.MULTILINE)
     for match in pattern.finditer(pyx_content):
-        content = pyx_content[match.start():match.end()]
+        content = pyx_content[match.start() : match.end()]
         if not ignore_pattern.match(content, re.MULTILINE):
             pyi_content += content.rstrip()  # strip trailing whitespace
             if match.group(3):
