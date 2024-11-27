@@ -230,7 +230,11 @@ class BpDecoder(BpDecoderBase):
         Note, it is only necessary to specify this value when the parity check matrix is square. When the
         parity matrix is non-square the input vector type is inferred automatically from its length.
     """
-    def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None, ...
+    def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
+                 input_vector_type: str = "auto", **kwargs): ...
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
         Decode the input input_vector using belief propagation decoding algorithm.

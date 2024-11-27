@@ -28,21 +28,21 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     ignore_pattern = re.compile(r"__cinit__\(|__del__\(")
 
     # identify class or function declarations
-    decorator = r"^\s*@.*\n"
-    declaration = r"^\s*(?:class|def)\s+.*(?:.|\n)\n"
-    docstring_double = r"\"\"\"(?:.|\n)*?\"\"\""
-    docstring_single = r"'''(?:.|\n)*?'''"
-    docstring = rf"\s*(?:{docstring_double}|{docstring_single})\s*\n"
-    pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.MULTILINE)
+    decorator = r"^\s*@.*?\n"
+    declaration = r"^\s*(?:class|def)\s+.*?:\n"
+    docstring_double = r"\"\"\".*?\"\"\""
+    docstring_single = r"'''.*?'''"
+    docstring = rf"\s*?(?:{docstring_double}|{docstring_single})\s*?\n"
+    pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.DOTALL | re.MULTILINE)
     for match in pattern.finditer(pyx_content):
         content = pyx_content[match.start():match.end()]
         if not ignore_pattern.match(content, re.MULTILINE):
-            pyi_content += content.rstrip()
+            pyi_content += content.rstrip()  # strip any trailing whitespace
             if match.group(3):
-                # there is a docstring!
+                # there is a docstring, so we only need to add a newline character
                 pyi_content += "\n"
             else:
-                # there is no docstring
+                # there is no docstring, so inject ellipses before the trailing newline
                 pyi_content += " ...\n"
 
     open(output_filepath, "w").write(pyi_content)
