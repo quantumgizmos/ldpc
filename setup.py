@@ -37,7 +37,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     for match in pattern.finditer(pyx_content):
         content = pyx_content[match.start():match.end()]
         if not ignore_pattern.match(content, re.MULTILINE):
-            pyi_content += content.rstrip()  # strip any trailing whitespace
+            pyi_content += content.rstrip()  # strip trailing whitespace
             if match.group(3):
                 # there is a docstring, so we only need to add a newline character
                 pyi_content += "\n"
