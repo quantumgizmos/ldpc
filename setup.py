@@ -29,7 +29,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
 
     # identify class or function declarations
     decorator = r"^\s*@.*?\n"
-    declaration = r"^\s*(?:class|def)\s+.*?:\n"
+    declaration = r"^\s*(?:class|def)\s+.*?:\s*\n"
     docstring_double = r"\"\"\".*?\"\"\""
     docstring_single = r"'''.*?'''"
     docstring = rf"\s*?(?:{docstring_double}|{docstring_single})\s*?\n"
