@@ -22,28 +22,27 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     # identify top-level import lines
     pattern = re.compile(r"^(import|from)\s+.*\n", re.MULTILINE)
     for match in pattern.finditer(pyx_content):
-        pyi_content += pyx_content[match.start():match.end()]
+        pyi_content += pyx_content[match.start() : match.end()]
 
     # identify patterns to ignore
     ignore_pattern = re.compile(r"__cinit__\(|__del__\(")
 
     # identify class or function declarations
-    decorator = r"^\s*@.*\n"
-    declaration = r"^\s*(?:class|def)\s+.*(?:.|\n)\n"
-    docstring_double = r"\"\"\"(?:.|\n)*?\"\"\""
-    docstring_single = r"'''(?:.|\n)*?'''"
-    docstring = rf"\s*(?:{docstring_double}|{docstring_single})\s*\n"
-    pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.MULTILINE)
+    decorator = r"^\s*@.*?\n"
+    declaration = r"^\s*(?:class|def)\s+.*?:\s*\n"
+    docstring_double = r"\"\"\".*?\"\"\""
+    docstring_single = r"'''.*?'''"
+    docstring = rf"\s*?(?:{docstring_double}|{docstring_single})\s*?\n"
+    pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.DOTALL | re.MULTILINE)
     for match in pattern.finditer(pyx_content):
-        content = pyx_content[match.start():match.end()]
+        content = pyx_content[match.start() : match.end()]
         if not ignore_pattern.match(content, re.MULTILINE):
-            pyi_content += content.rstrip()
-            if match.group(3):
-                # there is a docstring!
-                pyi_content += "\n"
-            else:
-                # there is no docstring
-                pyi_content += " ...\n"
+            pyi_content += content.rstrip()  # strip trailing whitespace
+
+            # If there is a docstring, we only need to add a newline character.  Otherwise, we also
+            # need to add ellipses as a placeholder for the class/method "body".
+            suffix = "\n" if match.group(3) else " ...\n"
+            pyi_content += suffix
 
     open(output_filepath, "w").write(pyi_content)
 
