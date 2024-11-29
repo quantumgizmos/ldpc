@@ -24,7 +24,7 @@ dependencies = [
     "stim",
     "sinter"
 ]
-version = "2.1.6"
+version = "2.1.7"
 
 [project.urls]
 Documentation = "https://software.roffe.eu/ldpc"
