@@ -14,12 +14,14 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     # load file contents
     pyx_content = open(pyx_filepath, "r").read()
 
-    # strip cython syntax, empty lines, and comments
+    # Replace 'cimport' with 'import'
+    pyx_content = re.sub(r'\bcimport\b', 'import', pyx_content)
+
+    # strip cython syntax and comments
     pyx_content = re.sub("cdef ", "", pyx_content)
-    pyx_content = re.sub(r"^\s*\n", "", pyx_content, flags=re.MULTILINE)
     pyx_content = re.sub(r"^\s*#.*\n", "", pyx_content, flags=re.MULTILINE)
 
-    # identify top-level import lines
+    # identify top-level import lines (including modified 'cimport' lines)
     pattern = re.compile(r"^(import|from)\s+.*\n", re.MULTILINE)
     for match in pattern.finditer(pyx_content):
         pyi_content += pyx_content[match.start() : match.end()]
@@ -33,18 +35,22 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     docstring_double = r"\"\"\".*?\"\"\""
     docstring_single = r"'''.*?'''"
     docstring = rf"\s*?(?:{docstring_double}|{docstring_single})\s*?\n"
-    pattern = re.compile(rf"({decorator})?({declaration})({docstring})?", re.DOTALL | re.MULTILINE)
+    pattern = re.compile(
+        rf"({decorator})?({declaration})({docstring})?", re.DOTALL | re.MULTILINE
+    )
     for match in pattern.finditer(pyx_content):
         content = pyx_content[match.start() : match.end()]
         if not ignore_pattern.match(content, re.MULTILINE):
             pyi_content += content.rstrip()  # strip trailing whitespace
 
-            # If there is a docstring, we only need to add a newline character.  Otherwise, we also
-            # need to add ellipses as a placeholder for the class/method "body".
+            # If there is a docstring, we only need to add a newline character.
+            # Otherwise, we also need to add ellipses as a placeholder for the class/method "body".
             suffix = "\n" if match.group(3) else " ...\n"
             pyi_content += suffix
 
     open(output_filepath, "w").write(pyi_content)
+
+
 
 ## BUILD
 
