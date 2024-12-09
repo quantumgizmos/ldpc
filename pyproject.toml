@@ -22,9 +22,10 @@ dependencies = [
     "tqdm",
     "pytest",
     "stim",
-    "sinter"
+    "sinter",
+    "pymatching"
 ]
-version = "2.1.7"
+version = "2.1.8"
 
 [project.urls]
 Documentation = "https://software.roffe.eu/ldpc"
