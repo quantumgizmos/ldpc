@@ -650,8 +650,8 @@ cdef class PluDecomposition():
         self.Lmat = scipy.sparse.csr_matrix((0,0))
         self.Umat = scipy.sparse.csr_matrix((0,0))
         self.Pmat = scipy.sparse.csr_matrix((0,0))
-        cdef GF2Sparse* cpcm = Py2GF2Sparse(pcm)
-        self.rr = new RowReduce(cpcm[0])
+        self.cpcm = Py2GF2Sparse(pcm)
+        self.rr = new RowReduce(self.cpcm[0])
         self._MEM_ALLOCATED = True
         self.full_reduce = full_reduce
         self.lower_triangular = full_reduce
