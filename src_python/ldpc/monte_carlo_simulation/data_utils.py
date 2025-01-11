@@ -102,7 +102,7 @@ def is_converged(x_success, z_success, runs, code_params, precission):
     z_cond = _check_convergence(
         z_success, runs, code_params, precission_cutoff=precission
     )
-    return x_cond == z_cond == True
+    return x_cond == z_cond is True
 
 
 def _check_convergence(success_cnt, runs, code_params, precission_cutoff):
@@ -175,7 +175,7 @@ def create_outpath(
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
 
-    if overwrite == False:
+    if overwrite is False:
         f_loc = path + f"id_{id}.json"
         while os.path.exists(f_loc):
             id += 1

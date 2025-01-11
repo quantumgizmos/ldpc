@@ -7,21 +7,21 @@ def test_scipy_sparse_matrices():
     # Ring code
 
     # default scipy input
-    bpd = BpDecoder(
+    BpDecoder(
         ring_code(3), error_rate=0.1, input_vector_type="syndrome", bp_method="ms"
     )
-    bpd = bp_decoder(
+    bp_decoder(
         ring_code(3), error_rate=0.1, input_vector_type="syndrome", bp_method="ms"
     )
 
     # numpy input
-    bpd = BpDecoder(
+    BpDecoder(
         ring_code(3).toarray(),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         ring_code(3).toarray(),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -29,13 +29,13 @@ def test_scipy_sparse_matrices():
     )
 
     # scipy sparse csr
-    bpd = BpDecoder(
+    BpDecoder(
         scipy.sparse.csr_matrix(ring_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         scipy.sparse.csr_matrix(ring_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -43,13 +43,13 @@ def test_scipy_sparse_matrices():
     )
 
     # scipy sparse csc
-    bpd = BpDecoder(
+    BpDecoder(
         scipy.sparse.csc_matrix(ring_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         scipy.sparse.csc_matrix(ring_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -59,21 +59,21 @@ def test_scipy_sparse_matrices():
     # hamming code
 
     # default scipy input
-    bpd = BpDecoder(
+    BpDecoder(
         hamming_code(3), error_rate=0.1, input_vector_type="syndrome", bp_method="ms"
     )
-    bpd = bp_decoder(
+    bp_decoder(
         hamming_code(3), error_rate=0.1, input_vector_type="syndrome", bp_method="ms"
     )
 
     # numpy input
-    bpd = BpDecoder(
+    BpDecoder(
         hamming_code(3).toarray(),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         hamming_code(3).toarray(),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -81,13 +81,13 @@ def test_scipy_sparse_matrices():
     )
 
     # scipy sparse csr
-    bpd = BpDecoder(
+    BpDecoder(
         scipy.sparse.csr_matrix(hamming_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         scipy.sparse.csr_matrix(hamming_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -95,13 +95,13 @@ def test_scipy_sparse_matrices():
     )
 
     # scipy sparse csc
-    bpd = BpDecoder(
+    BpDecoder(
         scipy.sparse.csc_matrix(hamming_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
         bp_method="ms",
     )
-    bpd = bp_decoder(
+    bp_decoder(
         scipy.sparse.csc_matrix(hamming_code(3)),
         error_rate=0.1,
         input_vector_type="syndrome",
@@ -113,51 +113,51 @@ def test_osd_scipy_sparse_matrices():
     # Ring code
 
     # default scipy input
-    bposd = BpOsdDecoder(ring_code(3), error_rate=0.1, bp_method="ms")
-    bposd = bposd_decoder(ring_code(3), error_rate=0.1, bp_method="ms")
+    BpOsdDecoder(ring_code(3), error_rate=0.1, bp_method="ms")
+    bposd_decoder(ring_code(3), error_rate=0.1, bp_method="ms")
 
     # numpy input
-    bposd = BpOsdDecoder(ring_code(3).toarray(), error_rate=0.1, bp_method="ms")
-    bposd = bposd_decoder(ring_code(3).toarray(), error_rate=0.1, bp_method="ms")
+    BpOsdDecoder(ring_code(3).toarray(), error_rate=0.1, bp_method="ms")
+    bposd_decoder(ring_code(3).toarray(), error_rate=0.1, bp_method="ms")
 
     # scipy sparse csr
-    bposd = BpOsdDecoder(
+    BpOsdDecoder(
         scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
     )
-    bposd = bposd_decoder(
+    bposd_decoder(
         scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
     )
 
     # scipy sparse csc
-    bposd = BpOsdDecoder(
+    BpOsdDecoder(
         scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
     )
-    bposd = bposd_decoder(
+    bposd_decoder(
         scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
     )
 
     # hamming code
 
     # default scipy input
-    bposd = BpOsdDecoder(hamming_code(3), error_rate=0.1, bp_method="ms")
-    bposd = bposd_decoder(hamming_code(3), error_rate=0.1, bp_method="ms")
+    BpOsdDecoder(hamming_code(3), error_rate=0.1, bp_method="ms")
+    bposd_decoder(hamming_code(3), error_rate=0.1, bp_method="ms")
 
     # numpy input
-    bposd = BpOsdDecoder(hamming_code(3).toarray(), error_rate=0.1, bp_method="ms")
-    bposd = bposd_decoder(hamming_code(3).toarray(), error_rate=0.1, bp_method="ms")
+    BpOsdDecoder(hamming_code(3).toarray(), error_rate=0.1, bp_method="ms")
+    bposd_decoder(hamming_code(3).toarray(), error_rate=0.1, bp_method="ms")
 
     # scipy sparse csr
-    bposd = BpOsdDecoder(
+    BpOsdDecoder(
         scipy.sparse.csr_matrix(hamming_code(3)), error_rate=0.1, bp_method="ms"
     )
-    bposd = bposd_decoder(
+    bposd_decoder(
         scipy.sparse.csr_matrix(hamming_code(3)), error_rate=0.1, bp_method="ms"
     )
 
     # scipy sparse csc
-    bposd = BpOsdDecoder(
+    BpOsdDecoder(
         scipy.sparse.csc_matrix(hamming_code(3)), error_rate=0.1, bp_method="ms"
     )
-    bposd = bposd_decoder(
+    bposd_decoder(
         scipy.sparse.csc_matrix(hamming_code(3)), error_rate=0.1, bp_method="ms"
     )

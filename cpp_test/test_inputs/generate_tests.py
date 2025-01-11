@@ -27,7 +27,7 @@ def to_csr(mat: np.ndarray):
         first = True
         for j in range(n):
             if mat[i, j] == 1:
-                if first != True:
+                if first is not True:
                     csr_string += ","
                 first = False
                 csr_string += f"{j}"

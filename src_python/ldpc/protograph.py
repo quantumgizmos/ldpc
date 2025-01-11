@@ -96,7 +96,7 @@ class RingOfCirculantsF2:
                 if sorted(self.coefficients) != sorted(other.coefficients):
                     return False
                 return True
-        elif other == None:
+        elif other is None:
             return False
         else:
             if len(self.coefficients) == len(other):

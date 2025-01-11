@@ -89,11 +89,11 @@ class bposd_decoder(BpOsdDecoder):
 
         # error channel setup
         error_channel = np.zeros(parity_check_matrix.shape[1]).astype(float)
-        if channel_probs[0] != None:
+        if channel_probs[0] is not None:
             for j in range(parity_check_matrix.shape[1]):
                 error_channel[j] = channel_probs[j]
             # self.error_rate=np.mean(channel_probs)
-        if channel_probs[0] != None:
+        if channel_probs[0] is not None:
             if len(channel_probs) != parity_check_matrix.shape[1]:
                 raise ValueError(
                     f"The length of the channel probability vector must be eqaul to the block length n={parity_check_matrix.shape[1]}."
@@ -105,7 +105,7 @@ class bposd_decoder(BpOsdDecoder):
                 "Either the error_rate or channel_probs must be specified."
             )
 
-        if channel_probs[0] != None:
+        if channel_probs[0] is not None:
             for j in range(parity_check_matrix.shape[1]):
                 error_channel[j] = channel_probs[j]
             # self.error_rate=np.mean(channel_probs)

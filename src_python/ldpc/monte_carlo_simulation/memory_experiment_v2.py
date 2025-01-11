@@ -126,7 +126,7 @@ def decode_multiround(
     )
     # extract time correction
 
-    if last_round == False:
+    if last_round is False:
         # this corresponds to the decoding on the second block of the H3D matrix
         time_correction = (
             decoded[H.shape[1] * repetitions :].reshape((repetitions, H.shape[0])).T

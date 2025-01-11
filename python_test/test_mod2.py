@@ -18,22 +18,22 @@ def test_constructor_rep_code():
     for i in range(2, 10):
         H = rep_code(i)
         out = io_test(H)
-        assert np.array_equal(out.toarray(), H.toarray()) == True
+        assert np.array_equal(out.toarray(), H.toarray()) is True
 
     for i in range(2, 10):
         H = rep_code(i).toarray()
         out = io_test(H)
-        assert np.array_equal(out.toarray(), H) == True
+        assert np.array_equal(out.toarray(), H) is True
 
     for i in range(2, 100):
         H = ring_code(i)
         out = io_test(H)
-        assert np.array_equal(out.toarray(), H.toarray()) == True
+        assert np.array_equal(out.toarray(), H.toarray()) is True
 
     for i in range(2, 100):
         H = ring_code(i).toarray()
         out = io_test(H)
-        assert np.array_equal(out.toarray(), H) == True
+        assert np.array_equal(out.toarray(), H) is True
 
 
 def test_rank_rep_code():

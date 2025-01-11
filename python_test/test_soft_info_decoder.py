@@ -12,7 +12,6 @@ def test_errored_close_to_zero():
     pcm = np.eye(n, dtype=int)
     pcm += np.roll(pcm, 1, axis=1)
 
-    cutoff = 10
     sbpd = SoftInfoBpDecoder(
         pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0
     )
