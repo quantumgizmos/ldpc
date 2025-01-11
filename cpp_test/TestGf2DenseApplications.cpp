@@ -371,6 +371,18 @@ TEST(Gf2Dense, exact_code_distance) {
 
 }
 
+TEST(Gf2Dense, exact_code_distance_dimension_zero) {
+
+    CsrMatrix pcm_csr = {{0},
+                         {1},
+                         {2}};
+
+    int d = ldpc::gf2dense::compute_exact_code_distance(3, 3, pcm_csr);
+
+    ASSERT_EQ(d, -1);
+
+}
+
 // TEST(Gf2Dense, partial_rref) {
 //     auto ham_code = hamming_code_csc(3);
 

@@ -166,7 +166,14 @@ def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -
                             'ldpc.code_util.estimate_code_distance' function instead."
         )
 
-    return ldpc.mod2.compute_exact_code_distance(pcm)
+    d = ldpc.mod2.compute_exact_code_distance(pcm)
+
+    if d == -1:
+        raise ValueError(
+            "The input matrix has dimension zero and the code distance is not defined."
+        )
+    else:
+        return d
 
 
 def search_cycles(H, girth, row=None, terminate=True, exclude_rows=[]):

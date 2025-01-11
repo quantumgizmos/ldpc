@@ -121,20 +121,12 @@ def test_osd_scipy_sparse_matrices():
     bposd_decoder(ring_code(3).toarray(), error_rate=0.1, bp_method="ms")
 
     # scipy sparse csr
-    BpOsdDecoder(
-        scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
-    )
-    bposd_decoder(
-        scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
-    )
+    BpOsdDecoder(scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms")
+    bposd_decoder(scipy.sparse.csr_matrix(ring_code(3)), error_rate=0.1, bp_method="ms")
 
     # scipy sparse csc
-    BpOsdDecoder(
-        scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
-    )
-    bposd_decoder(
-        scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms"
-    )
+    BpOsdDecoder(scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms")
+    bposd_decoder(scipy.sparse.csc_matrix(ring_code(3)), error_rate=0.1, bp_method="ms")
 
     # hamming code
 

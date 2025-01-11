@@ -687,8 +687,11 @@ namespace ldpc::gf2dense {
 
         CscMatrix ker = ldpc::gf2dense::kernel(row_count, col_count, csr_mat);
 
-
         CsrMatrix ker_csr = csc_to_csr(ker);
+
+        if(ker_csr.size() == 0){
+            return -1;
+        }
 
         int row_permutations = std::pow(2, ker_csr.size());
 
