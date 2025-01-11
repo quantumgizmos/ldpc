@@ -161,8 +161,8 @@ def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -
 
     col_count = pcm.shape[1]
     if col_count > 15:
-        warnings.warning(
-            "This function has exponential complexity. Not recommend for large pcms. Use the\
+        warnings.warn(
+            "This function has exponential complexity. Not recommended for large pcms. Use the\
                             'ldpc.code_util.estimate_code_distance' function instead."
         )
 
