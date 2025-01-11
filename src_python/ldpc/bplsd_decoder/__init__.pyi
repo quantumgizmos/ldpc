@@ -51,7 +51,7 @@ class BpLsdDecoder(BpDecoderBase):
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel',
+                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel',
                  omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0,
                  serial_schedule_order: Optional[List[int]] = None,
