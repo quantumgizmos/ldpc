@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from typing import List, Tuple, Dict, Union, Optional
+from typing import Dict, Union
 import datetime
 import time
 from tqdm import tqdm
@@ -43,19 +43,30 @@ class MonteCarloBscSimulation:
         target_run_count=1000,
         tqdm_disable=False,
         save_interval=60,
-        seed = None,
-        run = False,
+        seed=None,
+        run=False,
     ) -> None:
         """
         Initializes a MonteCarloBscSimulation object with the given parameters.
 
         """
-        if parity_check_matrix is None or not isinstance(parity_check_matrix, (np.ndarray, sp.csr_matrix)):
-            raise ValueError(f"parity_check_matrix should be of type np.ndarray or scipy.sparse.csr_matrix. Not {type(parity_check_matrix)}")
+        if parity_check_matrix is None or not isinstance(
+            parity_check_matrix, (np.ndarray, sp.csr_matrix)
+        ):
+            raise ValueError(
+                f"parity_check_matrix should be of type np.ndarray or scipy.sparse.csr_matrix. Not {type(parity_check_matrix)}"
+            )
         self.parity_check_matrix = parity_check_matrix
 
-        if error_rate is None or not isinstance(error_rate, float) or error_rate < 0 or error_rate > 1:
-            raise ValueError("Invalid error rate provided. The error rate should be a float with value between 0 and 1.")
+        if (
+            error_rate is None
+            or not isinstance(error_rate, float)
+            or error_rate < 0
+            or error_rate > 1
+        ):
+            raise ValueError(
+                "Invalid error rate provided. The error rate should be a float with value between 0 and 1."
+            )
         self.error_rate = error_rate
 
         if Decoder is None:
@@ -78,7 +89,9 @@ class MonteCarloBscSimulation:
             self.seed = None
         else:
             if not isinstance(seed, int):
-                raise ValueError("Invalid seed provided. Please provide a postive integer")
+                raise ValueError(
+                    "Invalid seed provided. Please provide a postive integer"
+                )
 
             self.seed = seed
             np.random.seed(self.seed)
@@ -95,9 +108,9 @@ class MonteCarloBscSimulation:
         Runs Monte Carlo simulations of the code.
 
         """
-        self.start_date = datetime.datetime.fromtimestamp(
-            time.time()
-        ).strftime("%A, %B %d, %Y %H:%M:%S")
+        self.start_date = datetime.datetime.fromtimestamp(time.time()).strftime(
+            "%A, %B %d, %Y %H:%M:%S"
+        )
 
         # Set up the progress bar
         pbar = tqdm(
@@ -109,7 +122,6 @@ class MonteCarloBscSimulation:
         self.fail_count = 0
 
         for self.run_count in pbar:
-
             # Generate a random bit-flip error
             error = generate_bsc_error(
                 self.parity_check_matrix.shape[1], self.error_rate
@@ -118,9 +130,9 @@ class MonteCarloBscSimulation:
             # Calculate the corresponding syndrome and decoded codeword
             syndrome = self.parity_check_matrix @ error % 2  # calculate the syndrome
 
-            decoding = self.Decoder.decode(syndrome)  # decode relative to the zero codeword
-
-
+            decoding = self.Decoder.decode(
+                syndrome
+            )  # decode relative to the zero codeword
 
             # Check for decoding failure
             if not np.array_equal(decoding, error):
@@ -128,22 +140,20 @@ class MonteCarloBscSimulation:
 
             # Update the logical error rate and progress bar
             self.logical_error_rate = self.fail_count / self.run_count
-            self.logical_error_rate_eb = np.sqrt(self.logical_error_rate*(1-self.logical_error_rate)/self.run_count)
+            self.logical_error_rate_eb = np.sqrt(
+                self.logical_error_rate * (1 - self.logical_error_rate) / self.run_count
+            )
             pbar.set_description(
                 f"Physical error rate: {100*self.error_rate:.2f}%; Logical error rate: {100*self.logical_error_rate:.2f}+-{100*self.logical_error_rate_eb:.2f}%"
             )
         return self.save()
 
-
     def save(self):
-        
         output_dict = {}
         output_dict["logical_error_rate"] = self.logical_error_rate
         output_dict["logical_error_rate_eb"] = self.logical_error_rate_eb
         output_dict["error_rate"] = self.error_rate
         output_dict["run_count"] = self.run_count
         output_dict["fail_count"] = self.fail_count
-        
+
         return output_dict
-
-

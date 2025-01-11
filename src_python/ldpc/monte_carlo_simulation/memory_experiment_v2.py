@@ -25,11 +25,11 @@ def build_multiround_pcm(pcm, repetitions, format="csr"):
 
     # Construct the block of identity matrices
     H_3DID_diag = block_diag(
-        [eye(pcm_rows, format=format)] * (repetitions + 1), format=format)
+        [eye(pcm_rows, format=format)] * (repetitions + 1), format=format
+    )
 
     # Construct the block of identity matrices
-    H_3DID_offdiag = eye(pcm_rows * (repetitions + 1),
-                         k=-pcm_rows, format=format)
+    H_3DID_offdiag = eye(pcm_rows * (repetitions + 1), k=-pcm_rows, format=format)
 
     # Construct the block of identity matrices
     H_3DID = H_3DID_diag + H_3DID_offdiag
@@ -52,11 +52,8 @@ def move_syndrome(syndrome, data_type=np.int32):
     return new_syndrome
 
 
-def get_updated_decoder(decoding_method: str,
-                        decoder,
-                        new_channel,
-                        H3D=None):
-    """ Updates the decoder with the new channel information and returns the updated decoder object."""
+def get_updated_decoder(decoding_method: str, decoder, new_channel, H3D=None):
+    """Updates the decoder with the new channel information and returns the updated decoder object."""
     if decoding_method == "bposd" or decoding_method == "lsd":
         decoder.update_channel_probs(new_channel)
         return decoder
@@ -72,17 +69,17 @@ def get_updated_decoder(decoding_method: str,
 
 
 def decode_multiround(
-        syndrome: np.ndarray,
-        H: np.ndarray,
-        decoder,
-        channel_probs: np.ndarray,  # needed for matching decoder does not have an update weights method
-        repetitions: int,
-        last_round=False,
-        analog_syndr=None,
-        check_block_size: int = 0,
-        sigma: float = 0.0,
-        H3D: np.ndarray = None,  # needed for matching decoder
-        decoding_method: str = "lsd"  # bposd or matching
+    syndrome: np.ndarray,
+    H: np.ndarray,
+    decoder,
+    channel_probs: np.ndarray,  # needed for matching decoder does not have an update weights method
+    repetitions: int,
+    last_round=False,
+    analog_syndr=None,
+    check_block_size: int = 0,
+    sigma: float = 0.0,
+    H3D: np.ndarray = None,  # needed for matching decoder
+    decoding_method: str = "lsd",  # bposd or matching
 ):
     """Overlapping window decoding.
     First, we compute the difference syndrome from the recorded syndrome of each measurement round for all measurement
@@ -101,24 +98,20 @@ def decode_multiround(
     if analog_tg:
         # If we have analog information, we use it to initialize the time-like syndrome nodes, which are defined
         # in the block of the H3D matrix after the diagonal H block.
-        analog_init_vals = get_virtual_check_init_vals(
-            analog_syndr.flatten("F"), sigma
-        )
+        analog_init_vals = get_virtual_check_init_vals(analog_syndr.flatten("F"), sigma)
 
-        new_channel = np.hstack(
-            (channel_probs[:check_block_size], analog_init_vals)
-        )
+        new_channel = np.hstack((channel_probs[:check_block_size], analog_init_vals))
 
         # in the last round, we have a perfect syndrome round to make sure we're in the codespace
         if last_round:
-            new_channel[-H.shape[0]:] = 1e-15
+            new_channel[-H.shape[0] :] = 1e-15
 
         decoder = get_updated_decoder(decoding_method, decoder, new_channel, H3D)
 
     else:
         if last_round:
             new_channel = np.copy(channel_probs)
-            new_channel[-H.shape[0]:] = 1e-15
+            new_channel[-H.shape[0] :] = 1e-15
 
             decoder = get_updated_decoder(decoding_method, decoder, new_channel, H3D)
 
@@ -129,18 +122,14 @@ def decode_multiround(
 
     # extract space correction, first repetitions * n entires
     space_correction = (
-        decoded[: H.shape[1] * repetitions]
-        .reshape((repetitions, H.shape[1]))
-        .T
+        decoded[: H.shape[1] * repetitions].reshape((repetitions, H.shape[1])).T
     )
     # extract time correction
 
     if last_round == False:
         # this corresponds to the decoding on the second block of the H3D matrix
         time_correction = (
-            decoded[H.shape[1] * repetitions:]
-            .reshape((repetitions, H.shape[0]))
-            .T
+            decoded[H.shape[1] * repetitions :].reshape((repetitions, H.shape[0])).T
         )
 
         # append time correction with zeros
@@ -156,12 +145,12 @@ def decode_multiround(
 
         # propagate the syndrome correction through the tentative region
         syndrome[:, region_size:] = (
-                (syndrome[:, region_size:] + corr_syndrome[:, None]) % 2
+            (syndrome[:, region_size:] + corr_syndrome[:, None]) % 2
         ).astype(np.int32)
 
         # apply the time correction of round region_size - 1 to the syndrome at the beginning of the tentative region
         syndrome[:, region_size] = (
-                (syndrome[:, region_size] + time_correction[:, region_size - 1]) % 2
+            (syndrome[:, region_size] + time_correction[:, region_size - 1]) % 2
         ).astype(np.int32)
 
     else:

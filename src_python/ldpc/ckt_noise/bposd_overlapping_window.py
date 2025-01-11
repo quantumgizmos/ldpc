@@ -1,13 +1,9 @@
-import sys
 import numpy as np
 import stim
 from ldpc.ckt_noise.base_overlapping_window_decoder import BaseOverlappingWindowDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.ckt_noise.config import (
     DEFAULT_BPOSD_DECODER_ARGS,
-    DEFAULT_DECODINGS,
-    DEFAULT_WINDOW,
-    DEFAULT_COMMIT,
 )
 
 

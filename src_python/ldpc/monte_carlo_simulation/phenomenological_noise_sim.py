@@ -17,7 +17,7 @@ if __name__ == "__main__":
         codename = "2DTC"
         code = panqec.codes.Toric2DCode(dist)
         Hz = code.Hz.toarray().astype(np.int32)
-        Lz = code.logicals_z[:, Hz.shape[1]:]
+        Lz = code.logicals_z[:, Hz.shape[1] :]
         for p in ps:
             print(f"p={p}")
             sim1 = QSS_SimulatorV2(
@@ -30,10 +30,12 @@ if __name__ == "__main__":
                 decoding_method="lsd",
                 check_side="Z",
                 analog_tg=False,
-                rounds=(decoding_rds + 1) * dist,  # how often to decode, i.e., how often we slide window-1
-                repetitions=2 * dist,  # how many noisy syndromes, == window size == 2 * region_size
+                rounds=(decoding_rds + 1)
+                * dist,  # how often to decode, i.e., how often we slide window-1
+                repetitions=2
+                * dist,  # how many noisy syndromes, == window size == 2 * region_size
                 experiment="test",
-                bp_params=BpParams(max_bp_iter=5)
+                bp_params=BpParams(max_bp_iter=5),
             )
             sim2 = QSS_SimulatorV2(
                 H=Hz,
@@ -45,10 +47,12 @@ if __name__ == "__main__":
                 decoding_method="matching",
                 check_side="Z",
                 analog_tg=False,
-                rounds=(decoding_rds + 1) * dist,  # how often to decode, i.e., how often we slide window-1
-                repetitions=2 * dist,  # how many noisy syndromes, == window size == 2 * region_size
+                rounds=(decoding_rds + 1)
+                * dist,  # how often to decode, i.e., how often we slide window-1
+                repetitions=2
+                * dist,  # how many noisy syndromes, == window size == 2 * region_size
                 experiment="test",
-                bp_params=BpParams(max_bp_iter=50)
+                bp_params=BpParams(max_bp_iter=50),
             )
             out1 = sim1.run(samples=nr_samples)
             out2 = sim2.run(samples=nr_samples)
@@ -58,7 +62,8 @@ if __name__ == "__main__":
             ps,
             lsd_lers,
             label=f"lsd d={dist}",
-            marker="o", linestyle="dashed",
+            marker="o",
+            linestyle="dashed",
         )
         axis[1].plot(
             ps,

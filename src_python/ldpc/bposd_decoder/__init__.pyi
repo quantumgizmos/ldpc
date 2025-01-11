@@ -1,5 +1,4 @@
 import numpy as np
-import warnings
 from scipy.sparse import spmatrix
 from typing import Union, List, Optional
 
@@ -46,14 +45,24 @@ class BpOsdDecoder(BpDecoderBase):
     method deallocates memory if it has been allocated.
     """
 
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
-                 osd_order: int = 0, input_vector_type: str = "syndrome", **kwargs): ...
-
+    def __cinit__(
+        self,
+        pcm: Union[np.ndarray, spmatrix],
+        error_rate: Optional[float] = None,
+        error_channel: Optional[List[float]] = None,
+        max_iter: Optional[int] = 0,
+        bp_method: Optional[str] = "minimum_sum",
+        ms_scaling_factor: Optional[Union[float, int]] = 1.0,
+        schedule: Optional[str] = "parallel",
+        omp_thread_count: Optional[int] = 1,
+        random_schedule_seed: Optional[int] = 0,
+        serial_schedule_order: Optional[List[int]] = None,
+        osd_method: Union[str, int, float] = 0,
+        osd_order: int = 0,
+        input_vector_type: str = "syndrome",
+        **kwargs,
+    ): ...
     def __del__(self): ...
-
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.
@@ -86,8 +95,6 @@ class BpOsdDecoder(BpDecoderBase):
 
         """
 
-
-
     @property
     def osd_method(self) -> Optional[str]:
         """
@@ -112,7 +119,6 @@ class BpOsdDecoder(BpDecoderBase):
             OSD order-0, OSD Exhaustive or OSD-Cominbation-Sweep.
         """
 
-
     @property
     def osd_order(self) -> int:
         """
@@ -123,7 +129,6 @@ class BpOsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
-
 
     @osd_order.setter
     def osd_order(self, order: int) -> None:
@@ -164,8 +169,6 @@ class BpOsdDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the BP decoding output.
         """
-
-    
 
     @property
     def osd0_decoding(self) -> np.ndarray:

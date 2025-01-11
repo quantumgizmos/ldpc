@@ -20,5 +20,4 @@
 #     assert px+py+pz <= 1, "The sum of the error rates should be less than or equal to 1."
 
 
-
 #     return np.random.multinomial(1, [1-px-py-pz, px, py, pz], size=1)[0].astype(np.uint8)

@@ -2,12 +2,15 @@ import numpy as np
 import scipy.sparse
 from typing import Union
 
-def convert_to_binary_sparse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -> scipy.sparse.spmatrix:
+
+def convert_to_binary_sparse(
+    matrix: Union[np.ndarray, scipy.sparse.spmatrix],
+) -> scipy.sparse.spmatrix:
     """
     Convert a numpy array or a scipy sparse matrix to a binary scipy sparse matrix.
 
     This function checks if the input matrix is either a numpy array or a scipy sparse matrix with a suitable data type.
-    It converts a numpy array to a scipy sparse matrix (CSR format), eliminates zero elements, and ensures that all 
+    It converts a numpy array to a scipy sparse matrix (CSR format), eliminates zero elements, and ensures that all
     elements are either 0 or 1. Raises appropriate errors for invalid inputs or non-binary matrices.
 
     Parameters
@@ -36,7 +39,7 @@ def convert_to_binary_sparse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -
         raise TypeError(
             f"Input must be a binary numpy array or scipy sparse matrix, not {type(matrix)}"
         )
-    
+
     # Check dtype
     if matrix.dtype not in [np.uint8, np.int8, int, float]:
         raise TypeError(
@@ -61,9 +64,5 @@ def convert_to_binary_sparse(matrix: Union[np.ndarray, scipy.sparse.spmatrix]) -
 
     # Eliminate any zero elements
     matrix.eliminate_zeros()
-
-
-    
-
 
     return matrix

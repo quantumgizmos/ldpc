@@ -1,5 +1,5 @@
-import scipy.sparse as sp
 import numpy as np
+
 
 def generate_bsc_error(n: int, error_rate: float) -> np.ndarray:
     """
@@ -16,7 +16,7 @@ def generate_bsc_error(n: int, error_rate: float) -> np.ndarray:
     Example:
         >>> generate_bsc_error(5, 0.1)
         array([0, 0, 1, 0, 0], dtype=uint8)
-        
+
         >>> generate_bsc_error(10, 0.3)
         array([1, 0, 0, 1, 1, 1, 0, 0, 0, 1], dtype=uint8)
     """

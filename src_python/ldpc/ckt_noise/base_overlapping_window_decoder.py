@@ -5,7 +5,6 @@ import numpy as np
 
 
 class BaseOverlappingWindowDecoder:
-
     def __init__(
         self,
         model: stim.DetectorErrorModel,

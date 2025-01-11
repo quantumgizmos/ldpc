@@ -1,8 +1,4 @@
 import numpy as np
-from scipy.sparse import spmatrix
-import json
-from ldpc.bposd_decoder import OsdMethod
-import warnings
 
 class BpLsdDecoder(BpDecoderBase):
     """
@@ -42,27 +38,33 @@ class BpLsdDecoder(BpDecoderBase):
     lsd_method: str, optional
         The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
         By default 'LSD_0'.
-    
+
     Notes
     -----
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
     in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     """
 
-    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel',
-                 omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0,
-                 serial_schedule_order: Optional[List[int]] = None,
-                  bits_per_step:int = 1,
-                  input_vector_type: str = "syndrome",
-                  lsd_order: int = 0,
-                  lsd_method: Union[str, int] = 0, **kwargs): ...
-
+    def __cinit__(
+        self,
+        pcm: Union[np.ndarray, scipy.sparse.spmatrix],
+        error_rate: Optional[float] = None,
+        error_channel: Optional[List[float]] = None,
+        max_iter: Optional[int] = 0,
+        bp_method: Optional[str] = "minimum_sum",
+        ms_scaling_factor: Optional[Union[float, int]] = 1.0,
+        schedule: Optional[str] = "parallel",
+        omp_thread_count: Optional[int] = 1,
+        random_schedule_seed: Optional[int] = 0,
+        serial_schedule_order: Optional[List[int]] = None,
+        bits_per_step: int = 1,
+        input_vector_type: str = "syndrome",
+        lsd_order: int = 0,
+        lsd_method: Union[str, int] = 0,
+        **kwargs,
+    ): ...
     def __del__(self): ...
-
-    def decode(self,syndrome):
+    def decode(self, syndrome):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -140,7 +142,6 @@ class BpLsdDecoder(BpDecoderBase):
             LSD order-0, LSD Exhaustive or LSD-Cominbation-Sweep.
         """
 
-
     @property
     def lsd_order(self) -> int:
         """
@@ -151,7 +152,6 @@ class BpLsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
-
 
     @lsd_order.setter
     def lsd_order(self, order: int) -> None:

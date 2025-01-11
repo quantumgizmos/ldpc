@@ -5,8 +5,8 @@ Assorted functions to work with binary vectors and matrices
 import numpy as np
 from scipy import sparse
 
+
 def row_echelon(matrix, full=False):
-    
     """
     Converts a binary matrix to row echelon form via Gaussian Elimination
 
@@ -17,8 +17,8 @@ def row_echelon(matrix, full=False):
     full: bool, optional
         If set to `True', Gaussian elimination is only performed on the rows below
         the pivot. If set to `False' Gaussian eliminatin is performed on rows above
-        and below the pivot. 
-    
+        and below the pivot.
+
     Returns
     -------
         row_ech_form: numpy.ndarray
@@ -57,46 +57,48 @@ def row_echelon(matrix, full=False):
         the_matrix = matrix
         transform_matrix = sparse.eye(num_rows, dtype="int", format="csr")
     else:
-        raise ValueError('Unrecognised matrix type')
+        raise ValueError("Unrecognised matrix type")
 
     pivot_row = 0
     pivot_cols = []
 
     # Iterate over cols, for each col find a pivot (if it exists)
     for col in range(num_cols):
-
         # Select the pivot - if not in this row, swap rows to bring a 1 to this row, if possible
         if the_matrix[pivot_row, col] != 1:
-
             # Find a row with a 1 in this col
             swap_row_index = pivot_row + np.argmax(the_matrix[pivot_row:num_rows, col])
 
             # If an appropriate row is found, swap it with the pivot. Otherwise, all zeroes - will loop to next col
             if the_matrix[swap_row_index, col] == 1:
-
                 # Swap rows
-                the_matrix[[swap_row_index, pivot_row]] = the_matrix[[pivot_row, swap_row_index]]
+                the_matrix[[swap_row_index, pivot_row]] = the_matrix[
+                    [pivot_row, swap_row_index]
+                ]
 
                 # Transformation matrix update to reflect this row swap
-                transform_matrix[[swap_row_index, pivot_row]] = transform_matrix[[pivot_row, swap_row_index]]
+                transform_matrix[[swap_row_index, pivot_row]] = transform_matrix[
+                    [pivot_row, swap_row_index]
+                ]
 
         # If we have got a pivot, now let's ensure values below that pivot are zeros
         if the_matrix[pivot_row, col]:
-
-            if not full:  
+            if not full:
                 elimination_range = [k for k in range(pivot_row + 1, num_rows)]
             else:
                 elimination_range = [k for k in range(num_rows) if k != pivot_row]
 
             # Let's zero those values below the pivot by adding our current row to their row
             for j in elimination_range:
-
-                if the_matrix[j, col] != 0 and pivot_row != j:    ### Do we need second condition?
-
+                if (
+                    the_matrix[j, col] != 0 and pivot_row != j
+                ):  ### Do we need second condition?
                     the_matrix[j] = (the_matrix[j] + the_matrix[pivot_row]) % 2
 
                     # Update transformation matrix to reflect this op
-                    transform_matrix[j] = (transform_matrix[j] + transform_matrix[pivot_row]) % 2
+                    transform_matrix[j] = (
+                        transform_matrix[j] + transform_matrix[pivot_row]
+                    ) % 2
 
             pivot_row += 1
             pivot_cols.append(col)
@@ -126,7 +128,7 @@ def rank(matrix):
     -------
     int
         The rank of the matrix
-    
+
 
     Examples
     --------
@@ -180,14 +182,22 @@ def reduced_row_echelon(matrix):
     _, matrix_rank, _, pivot_columns = row_echelon(matrix)
 
     # Rearrange matrix so that the pivot columns are first
-    info_set_order = pivot_columns + [j for j in range(num_cols) if j not in pivot_columns]
+    info_set_order = pivot_columns + [
+        j for j in range(num_cols) if j not in pivot_columns
+    ]
     transform_matrix_columns = (np.identity(num_cols)[info_set_order].astype(int)).T
     m_q = matrix @ transform_matrix_columns  # Rearranged M
 
     # Row reduce m_q
     reduced_row_echelon_form, _, transform_matrix_rows, _ = row_echelon(m_q, full=True)
 
-    return [reduced_row_echelon_form, matrix_rank, transform_matrix_rows, transform_matrix_columns]
+    return [
+        reduced_row_echelon_form,
+        matrix_rank,
+        transform_matrix_rows,
+        transform_matrix_columns,
+    ]
+
 
 def nullspace(matrix):
     r"""
@@ -196,7 +206,7 @@ def nullspace(matrix):
     All vectors x in the nullspace of M satisfy the following condition::
 
         Mx=0 \forall x \in nullspace(M)
-   
+
     Notes
     -----
     Why does this work?
@@ -204,7 +214,7 @@ def nullspace(matrix):
     The transformation matrix, P, transforms the matrix M into row echelon form, ReM::
 
         P@M=ReM=[A,0]^T,
-    
+
 
     where the width of A is equal to the rank. This means the bottom n-k rows of P
     must produce a zero vector when applied to M. For a more formal definition see
@@ -214,13 +224,13 @@ def nullspace(matrix):
     ----------
     matrix: numpy.ndarray
         A binary matrix in numpy.ndarray format
-    
+
     Returns
     -------
     numpy.ndarray
         A binary matrix where each row is a nullspace vector of the inputted binary
         matrix
-    
+
     Examples
     --------
     >>> H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
@@ -236,6 +246,7 @@ def nullspace(matrix):
     _, matrix_rank, transform, _ = row_echelon(transpose)
     nspace = transform[matrix_rank:m]
     return nspace
+
 
 def row_span(matrix):
     """
@@ -338,8 +349,11 @@ def inverse(matrix):
         return row_echelon_form.T @ transform % 2
 
     else:
-        raise ValueError("This matrix is not invertible. Please provide either a full-rank square\
-        matrix or a rectangular matrix with full column rank.")
+        raise ValueError(
+            "This matrix is not invertible. Please provide either a full-rank square\
+        matrix or a rectangular matrix with full column rank."
+        )
+
 
 def row_basis(matrix):
     """
@@ -355,7 +369,7 @@ def row_basis(matrix):
     -------
     numpy.ndarray
         A numpy.ndarray matrix where each row is a basis element.
-    
+
     Examples
     --------
 
@@ -367,18 +381,19 @@ def row_basis(matrix):
     """
     return matrix[row_echelon(matrix.T)[3]]
 
+
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod(verbose=True)
 
-    from ldpc.mod2 import rank, row_echelon,reduced_row_echelon,row_span, nullspace
-    from ldpc.codes import ring_code,hamming_code
+    from ldpc.mod2 import row_echelon
     from ldpc.code_util import codewords
 
     # H=ring_code(3)
     # H=hamming_code(3)
     # print([0,H])
-    H=np.array([[0, 0, 0, 1, 1, 1, 1],[0, 1, 1, 0, 0, 1, 1],[1, 0, 1, 0, 1, 0, 1]])
+    H = np.array([[0, 0, 0, 1, 1, 1, 1], [0, 1, 1, 0, 0, 1, 1], [1, 0, 1, 0, 1, 0, 1]])
 
     # print(reduced_row_echelon(H)[0])
 

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 
+
 def hamming_code(rank: int) -> sp.csr_matrix:
     """
     Outputs a Hamming code parity check matrix given its rank.
@@ -37,7 +38,7 @@ def hamming_code(rank: int) -> sp.csr_matrix:
         raise TypeError("The input variable 'rank' must be of type 'int'.")
 
     # The number of columns in the parity check matrix is (2^rank) - 1
-    num_cols = int((2 ** rank) - 1)
+    num_cols = int((2**rank) - 1)
 
     # Initialize lists to store the row indices, column indices, and data values of the nonzero elements in the matrix
     row_indices = []
@@ -57,4 +58,6 @@ def hamming_code(rank: int) -> sp.csr_matrix:
                 data.append(np.uint8(value))
 
     # Create a sparse matrix in CSR format from the data, row indices, and column indices
-    return sp.csr_matrix((data, (row_indices, col_indices)), shape=(rank, num_cols), dtype=np.uint8)
+    return sp.csr_matrix(
+        (data, (row_indices, col_indices)), shape=(rank, num_cols), dtype=np.uint8
+    )

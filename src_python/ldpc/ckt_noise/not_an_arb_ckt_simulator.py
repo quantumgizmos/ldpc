@@ -1,4 +1,4 @@
-from typing import Union, List, Union
+from typing import List, Union
 from scipy.sparse import csr_matrix
 import stim
 import numpy as np

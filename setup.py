@@ -8,6 +8,7 @@ import re
 
 ## cython stub files
 
+
 def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     pyi_content = ""
 
@@ -15,7 +16,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     pyx_content = open(pyx_filepath, "r").read()
 
     # Replace 'cimport' with 'import'
-    pyx_content = re.sub(r'\bcimport\b', 'import', pyx_content)
+    pyx_content = re.sub(r"\bcimport\b", "import", pyx_content)
 
     # strip cython syntax and comments
     pyx_content = re.sub("cdef ", "", pyx_content)
@@ -51,7 +52,6 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
     open(output_filepath, "w").write(pyi_content)
 
 
-
 ## BUILD
 
 if sys.platform == "darwin":
@@ -60,23 +60,33 @@ if sys.platform == "darwin":
 
 if sys.platform == "win32":
     compile_flags = ["/Ox", "/std:c++20"]
-    extra_link_args =[]
+    extra_link_args = []
     # compile_flags = ["/Ox", "/std:c++20",'-fopenmp']
     # extra_link_args =['-lgomp','-fopenmp'],
 else:
     compile_flags = ["-std=c++2a", "-O3"]
-    extra_link_args =[]
+    extra_link_args = []
     # compile_flags = ["-std=c++2a", "-O3", "-fopenmp"]
     # extra_link_args =['-lgomp','-fopenmp'],
 
 this_directory = Path(__file__).parent
 
-cpp_modules = ["bp_decoder", "bposd_decoder", "bp_flip", "belief_find_decoder", "mod2", "union_find_decoder", "bplsd_decoder"]
+cpp_modules = [
+    "bp_decoder",
+    "bposd_decoder",
+    "bp_flip",
+    "belief_find_decoder",
+    "mod2",
+    "union_find_decoder",
+    "bplsd_decoder",
+]
 
 c_extensions = []
 for module in cpp_modules:
-
-    generate_cython_stub_file(f"src_python/ldpc/{module}/_{module}.pyx", f"src_python/ldpc/{module}/__init__.pyi")
+    generate_cython_stub_file(
+        f"src_python/ldpc/{module}/_{module}.pyx",
+        f"src_python/ldpc/{module}/__init__.pyi",
+    )
 
     c_extensions.append(
         Extension(
@@ -84,7 +94,12 @@ for module in cpp_modules:
             sources=[f"src_python/ldpc/{module}/_{module}.pyx"],
             libraries=[],
             library_dirs=[],
-            include_dirs=[np.get_include(),'src_cpp', 'include/robin_map','include/ldpc/src_cpp'],
+            include_dirs=[
+                np.get_include(),
+                "src_cpp",
+                "include/robin_map",
+                "include/ldpc/src_cpp",
+            ],
             extra_compile_args=compile_flags,
             extra_link_args=extra_link_args,
             language="c++",

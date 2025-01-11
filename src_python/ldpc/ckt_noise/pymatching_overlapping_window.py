@@ -5,7 +5,6 @@ from pymatching import Matching
 
 
 class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
-
     def __init__(
         self,
         model,

@@ -1,6 +1,7 @@
 import scipy.sparse as sp
 import numpy as np
 
+
 def rep_code(distance: int) -> sp.csr_matrix:
     """
     Outputs repetition code parity check matrix for specified distance.
@@ -30,15 +31,18 @@ def rep_code(distance: int) -> sp.csr_matrix:
 
     for i in range(distance - 1):
         rows += [i, i]
-        cols += [i, i+1]
+        cols += [i, i + 1]
         data += [1, 1]
 
-    return sp.csr_matrix((data, (rows, cols)), shape=(distance-1, distance), dtype=np.uint8)
+    return sp.csr_matrix(
+        (data, (rows, cols)), shape=(distance - 1, distance), dtype=np.uint8
+    )
+
 
 def ring_code(distance: int) -> sp.csr_matrix:
     """
     Outputs ring code (closed-loop repetion code) parity check matrix
-    for a specified distance. 
+    for a specified distance.
     Parameters
     ----------
     distance: int
@@ -66,7 +70,7 @@ def ring_code(distance: int) -> sp.csr_matrix:
 
     for i in range(distance - 1):
         rows += [i, i]
-        cols += [i, i+1]
+        cols += [i, i + 1]
         data += [1, 1]
 
     # close the loop
@@ -74,6 +78,6 @@ def ring_code(distance: int) -> sp.csr_matrix:
     cols += [0, distance - 1]
     data += [1, 1]
 
-    return sp.csr_matrix((data, (rows, cols)), shape=(distance, distance), dtype=np.uint8)
-
-
+    return sp.csr_matrix(
+        (data, (rows, cols)), shape=(distance, distance), dtype=np.uint8
+    )

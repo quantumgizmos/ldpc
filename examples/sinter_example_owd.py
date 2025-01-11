@@ -10,7 +10,10 @@ from ldpc.ckt_noise.sinter_overlapping_window_decoder import (
     SinterDecoder_PyMatching_OWD,
 )
 
-from src_python.ldpc.ckt_noise.not_an_arb_ckt_simulator import stim_circuit_from_time_steps, get_stabilizer_time_steps
+from src_python.ldpc.ckt_noise.not_an_arb_ckt_simulator import (
+    stim_circuit_from_time_steps,
+    get_stabilizer_time_steps,
+)
 
 
 def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
@@ -45,7 +48,10 @@ def generate_decoders(ds: np.ndarray, decodings: np.ndarray):
             # )
     return decoders
 
-def generate_example_tasks_surface(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray):
+
+def generate_example_tasks_surface(
+    ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
+):
     for r in decodings:
         for p in ps:
             for d in ds:
@@ -57,7 +63,7 @@ def generate_example_tasks_surface(ps: np.ndarray, ds: np.ndarray, decodings: np
                     after_reset_flip_probability=p,
                     before_measure_flip_probability=p,
                     before_round_data_depolarization=p,
-                    code_task=f"surface_code:rotated_memory_x",
+                    code_task="surface_code:rotated_memory_x",
                 )
                 yield sinter.Task(
                     circuit=sc_circuit,
@@ -71,15 +77,21 @@ def generate_example_tasks_surface(ps: np.ndarray, ds: np.ndarray, decodings: np
                         "decodings": int(r),
                     },
                 )
+
+
 def generate_example_tasks_qera(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray):
     for r in decodings:
         for p in ps:
             for d in ds:
-                pcm = scipy.sparse.load_npz(f"/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hqcodes/HQ_{d}_hx.npz")
-                logicals = scipy.sparse.load_npz(f"/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hqcodes/HQ_{d}_lx.npz")
+                pcm = scipy.sparse.load_npz(
+                    f"/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hqcodes/HQ_{d}_hx.npz"
+                )
+                logicals = scipy.sparse.load_npz(
+                    f"/home/luca/Documents/codeRepos/ldpc/python_test/pcms/hqcodes/HQ_{d}_lx.npz"
+                )
                 time_steps, measured_bits = get_stabilizer_time_steps(pcm)
 
-                sc_circuit= stim_circuit_from_time_steps(
+                sc_circuit = stim_circuit_from_time_steps(
                     pcm,
                     logicals,
                     time_steps,
@@ -116,7 +128,7 @@ def generate_example_tasks(ps: np.ndarray, ds: np.ndarray, decodings: np.ndarray
                     after_reset_flip_probability=p,
                     before_measure_flip_probability=p,
                     before_round_data_depolarization=p,
-                    code_task=f"surface_code:rotated_memory_x",
+                    code_task="surface_code:rotated_memory_x",
                 )
                 yield sinter.Task(
                     circuit=sc_circuit,
@@ -143,7 +155,7 @@ def main():
         tasks=generate_example_tasks_qera(ps, ds, decodings),
         custom_decoders=generate_decoders(ds, decodings),
         print_progress=True,
-        save_resume_filepath=f"owd_sc.csv",
+        save_resume_filepath="owd_sc.csv",
     )
 
     # Print samples as CSV data.

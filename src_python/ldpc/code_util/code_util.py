@@ -3,29 +3,32 @@ from itertools import combinations
 import ldpc.mod2
 import scipy.sparse
 from scipy.special import comb as nCr
-from typing import Union, Tuple, List
+from typing import Union, Tuple
 import warnings
 
-def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) -> scipy.sparse.spmatrix:
-    '''
-    Constructs a generator matrix G from a given parity check matrix H. 
-    The generator matrix G is formed such that it satisfies the condition H * G.T = 0 (mod 2), 
+
+def construct_generator_matrix(
+    pcm: Union[np.ndarray, scipy.sparse.spmatrix],
+) -> scipy.sparse.spmatrix:
+    """
+    Constructs a generator matrix G from a given parity check matrix H.
+    The generator matrix G is formed such that it satisfies the condition H * G.T = 0 (mod 2),
     where G.T represents the transpose of G and the multiplication is carried out in GF(2).
 
-    Each row of the generator matrix G is a vector in the null space of H, 
-    meaning that when matrix H is multiplied by any of these vectors, 
+    Each row of the generator matrix G is a vector in the null space of H,
+    meaning that when matrix H is multiplied by any of these vectors,
     the result is a zero vector, satisfying the parity check condition.
 
     Parameters
     ----------
     pcm : Union[np.ndarray, scipy.sparse.spmatrix]
-        A binary matrix representing the parity check matrix H, 
+        A binary matrix representing the parity check matrix H,
         which can be either a dense numpy array or a sparse matrix.
 
     Returns
     -------
     scipy.sparse.spmatrix
-        The generator matrix G as a sparse matrix, which provides efficient storage 
+        The generator matrix G as a sparse matrix, which provides efficient storage
         and performance for matrices that are large or have a high sparsity.
 
     Examples
@@ -43,17 +46,21 @@ def construct_generator_matrix(pcm: Union[np.ndarray, scipy.sparse.spmatrix]) ->
 
     Note
     ----
-    The function assumes that the input matrix H is a valid parity check matrix 
-    and does not perform any checks for this condition. It is the user's responsibility 
+    The function assumes that the input matrix H is a valid parity check matrix
+    and does not perform any checks for this condition. It is the user's responsibility
     to ensure that H is properly formed.
 
     The function uses the `mod2.nullspace` method from the `ldpc` package to find the null space.
 
-    '''
+    """
     return ldpc.mod2.nullspace(pcm)
 
-def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025, number_of_words_to_save = 10):
 
+def estimate_code_distance(
+    pcm: Union[scipy.sparse.spmatrix, np.ndarray],
+    timeout_seconds: float = 0.025,
+    number_of_words_to_save=10,
+):
     """
     Estimates the code distance of a given parity check matrix (pcm).
 
@@ -73,13 +80,16 @@ def estimate_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout
     Returns
     -------
     tuple
-        A tuple containing the estimated minimum distance (int), the number of samples searched (int), 
+        A tuple containing the estimated minimum distance (int), the number of samples searched (int),
         and a Scipy sparse matrix of the minimum weight words.
     """
 
-    return ldpc.mod2.estimate_code_distance(pcm, timeout_seconds, number_of_words_to_save)
+    return ldpc.mod2.estimate_code_distance(
+        pcm, timeout_seconds, number_of_words_to_save
+    )
 
-def compute_code_dimension(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> int:
+
+def compute_code_dimension(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     """
     Compute the code dimension of a given parity check matrix.
 
@@ -98,11 +108,14 @@ def compute_code_dimension(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> int:
     """
     return pcm.shape[1] - ldpc.mod2.rank(pcm, method="dense")
 
-def compute_code_parameters(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeout_seconds: float = 0.025) -> Tuple[int, int, int]:
+
+def compute_code_parameters(
+    pcm: Union[scipy.sparse.spmatrix, np.ndarray], timeout_seconds: float = 0.025
+) -> Tuple[int, int, int]:
     """
     Compute the parameters of a given parity check matrix.
 
-    This function computes the parameters of the parity check matrix (pcm), including the number of columns (n), 
+    This function computes the parameters of the parity check matrix (pcm), including the number of columns (n),
     the code dimension (k), and an estimate of the minimum distance.
 
     Parameters
@@ -119,11 +132,12 @@ def compute_code_parameters(pcm: Union[scipy.sparse.spmatrix,np.ndarray], timeou
     """
     n = pcm.shape[1]
     k = compute_code_dimension(pcm)
-    distance_estimate,_,_=estimate_code_distance(pcm, timeout_seconds)
+    distance_estimate, _, _ = estimate_code_distance(pcm, timeout_seconds)
 
-    return (n,k,distance_estimate)
+    return (n, k, distance_estimate)
 
-def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) -> int:
+
+def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix, np.ndarray]) -> int:
     """
     Compute the exact code distance of a given parity check matrix.
 
@@ -139,7 +153,7 @@ def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->
     -------
     int
         The exact code distance of the input matrix.
-    
+
     Warning
     -------
     This function can be very slow for large matrices or matrices with a large minimum distance. Use with caution.
@@ -147,14 +161,15 @@ def compute_exact_code_distance(pcm: Union[scipy.sparse.spmatrix,np.ndarray]) ->
 
     col_count = pcm.shape[1]
     if col_count > 15:
-        warnings.warning("This function has exponential complexity. Not recommend for large pcms. Use the\
-                            'ldpc.code_util.estimate_code_distance' function instead.")
-        
+        warnings.warning(
+            "This function has exponential complexity. Not recommend for large pcms. Use the\
+                            'ldpc.code_util.estimate_code_distance' function instead."
+        )
+
     return ldpc.mod2.compute_exact_code_distance(pcm)
-    
 
-def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
 
+def search_cycles(H, girth, row=None, terminate=True, exclude_rows=[]):
     """
     Searches (and counts) cycles of a specified girth.
 
@@ -171,7 +186,7 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
         Default value is True. If set to True, the search function will terminate as soon as the first cycle of the specefied girth is found
     exclude_rows: list, optional
         The rows of the parity check to ignore. This is useful when you are filling an empty matrix.
-    
+
     Returns
     -------
     bool, if Terminate=True
@@ -180,7 +195,7 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
         If terminate is set to true, the function will count the number of cycles of the specified girth
     """
 
-    if(isinstance(H, scipy.sparse.spmatrix)):
+    if isinstance(H, scipy.sparse.spmatrix):
         H = H.toarray()
 
     m, n = np.shape(H)
@@ -189,33 +204,41 @@ def search_cycles(H, girth,row=None,terminate=True,exclude_rows=[]):
     if row is None:
         print(girth)
         print(list(combinations([k for k in range(m)], girth // 2)))
-        for i, combination in enumerate(combinations([k for k in range(m)], girth // 2)):
+        for i, combination in enumerate(
+            combinations([k for k in range(m)], girth // 2)
+        ):
             row_sum = np.zeros(n).astype(int)
             for _, element in enumerate(combination):
                 row_sum += H[element]
             two_count = np.count_nonzero(row_sum == 2)
             if two_count >= girth // 2:
-                if terminate: return True
-                cycle_count += nCr(two_count, girth // 2) 
+                if terminate:
+                    return True
+                cycle_count += nCr(two_count, girth // 2)
     else:
-        rows=[row]+exclude_rows
-        for i, combination in enumerate(combinations([k for k in range(m) if k not in rows], (girth // 2)-1)):
+        rows = [row] + exclude_rows
+        for i, combination in enumerate(
+            combinations([k for k in range(m) if k not in rows], (girth // 2) - 1)
+        ):
             row_sum = np.zeros(n).astype(int)
-            temp=(row,)+combination
+            temp = (row,) + combination
             for _, element in enumerate(temp):
                 row_sum += H[element]
 
             two_count = np.count_nonzero(row_sum == 2)
             if two_count >= girth // 2:
-                if terminate: return True
-                cycle_count += nCr(two_count, girth // 2)     
+                if terminate:
+                    return True
+                cycle_count += nCr(two_count, girth // 2)
 
-    if terminate: return False #terminates if the code is not cycle free
+    if terminate:
+        return False  # terminates if the code is not cycle free
     return cycle_count
 
 
-
-def compute_avg_hamming_weights(H: Union[scipy.sparse.spmatrix,np.ndarray]) -> Tuple[float, float]:
+def compute_avg_hamming_weights(
+    H: Union[scipy.sparse.spmatrix, np.ndarray],
+) -> Tuple[float, float]:
     """
     Compute the average row and column Hamming weights of a binary matrix.
 
@@ -233,4 +256,3 @@ def compute_avg_hamming_weights(H: Union[scipy.sparse.spmatrix,np.ndarray]) -> T
     avg_row_weight = np.mean(H.sum(axis=1))
 
     return avg_col_weight, avg_row_weight
-

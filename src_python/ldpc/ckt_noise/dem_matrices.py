@@ -1,5 +1,5 @@
 # from Oscar https://github.com/oscarhiggott/stimbposd/blob/main/src/stimbposd/dem_to_matrices.py
-from typing import List, FrozenSet, Dict, Tuple, Union
+from typing import List, FrozenSet, Dict, Tuple
 from dataclasses import dataclass
 from scipy.sparse import csc_matrix
 import numpy as np

@@ -45,7 +45,6 @@ class SinterBpOsdDecoder(sinter.Decoder):
         osd_method="osd0",
         osd_order=0,
     ):
-
         self.max_iter = max_iter
         self.bp_method = bp_method
         self.ms_scaling_factor = ms_scaling_factor

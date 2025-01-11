@@ -41,7 +41,7 @@ def extract_settings(filename):
 
     keyword_lists = {}
 
-    with open(filename, 'r') as file:
+    with open(filename, "r") as file:
         for line in file:
             json_data = json.loads(line.strip())
             for keyword, value in json_data.items():
@@ -54,7 +54,7 @@ def extract_settings(filename):
 
 
 def load_data(
-        input_filenames: list[str],
+    input_filenames: list[str],
 ) -> list[dict]:
     """
     Loads data from a list of JSON files and returns it as a list of dictionaries.
@@ -80,14 +80,12 @@ def calculate_error_rates(success_cnt, runs, code_params):
     and word error rate error bar.
     """
     logical_err_rate = 1.0 - (success_cnt / runs)
-    logical_err_rate_eb = np.sqrt(
-        (1 - logical_err_rate) * logical_err_rate / runs
-    )
+    logical_err_rate_eb = np.sqrt((1 - logical_err_rate) * logical_err_rate / runs)
     word_error_rate = 1.0 - (1 - logical_err_rate) ** (1 / code_params["k"])
     word_error_rate_eb = (
-            logical_err_rate_eb
-            * ((1 - logical_err_rate_eb) ** (1 / code_params["k"] - 1))
-            / code_params["k"]
+        logical_err_rate_eb
+        * ((1 - logical_err_rate_eb) ** (1 / code_params["k"] - 1))
+        / code_params["k"]
     )
     return (
         logical_err_rate,
@@ -117,20 +115,20 @@ def _check_convergence(success_cnt, runs, code_params, precission_cutoff):
 
 
 def create_outpath(
-        x_meta: bool = False,
-        z_meta: bool = False,
-        bias: List[float] = None,
-        codename: str = None,
-        single_stage: bool = True,
-        sus_th_depth: int = None,
-        rounds: int = None,
-        id: int = 0,
-        overwrite: bool = False,
-        analog_info: bool = False,
-        analog_tg: bool = False,
-        repetitions: int = None,
-        experiment: str = "wer_per_round",
-        **kwargs,
+    x_meta: bool = False,
+    z_meta: bool = False,
+    bias: List[float] = None,
+    codename: str = None,
+    single_stage: bool = True,
+    sus_th_depth: int = None,
+    rounds: int = None,
+    id: int = 0,
+    overwrite: bool = False,
+    analog_info: bool = False,
+    analog_tg: bool = False,
+    repetitions: int = None,
+    experiment: str = "wer_per_round",
+    **kwargs,
 ) -> str:
     path = f"results/{experiment:s}/"
     if analog_info:
@@ -166,19 +164,13 @@ def create_outpath(
 
     path += f"{codename:s}/"
 
-    if "syndr_err_rate" not in kwargs or kwargs['syndr_err_rate'] is None:
+    if "syndr_err_rate" not in kwargs or kwargs["syndr_err_rate"] is None:
         if "sigma" in kwargs:
-            path += (
-                f"per_{kwargs['data_err_rate']:.3e}_sigma_{kwargs['sigma']:.3e}/"
-            )
+            path += f"per_{kwargs['data_err_rate']:.3e}_sigma_{kwargs['sigma']:.3e}/"
         if "z_sigma" in kwargs:
-            path += (
-                f"per_{kwargs['data_err_rate']:.3e}_x_sigma_{kwargs['x_sigma']:.3e}_z_sigma_{kwargs['z_sigma']:.3e}"
-            )
+            path += f"per_{kwargs['data_err_rate']:.3e}_x_sigma_{kwargs['x_sigma']:.3e}_z_sigma_{kwargs['z_sigma']:.3e}"
     else:
-        path += (
-            f"per_{kwargs['data_err_rate']:.3e}_ser_{kwargs['syndr_err_rate']:.3e}/"
-        )
+        path += f"per_{kwargs['data_err_rate']:.3e}_ser_{kwargs['syndr_err_rate']:.3e}/"
 
     if not os.path.exists(path):
         os.makedirs(path, exist_ok=True)
@@ -247,14 +239,10 @@ def _update_error_rates(success_cnt, runs, code_K):
     and word error rate error bar.
     """
     logical_err_rate = 1.0 - (success_cnt / runs)
-    logical_err_rate_eb = np.sqrt(
-        (1 - logical_err_rate) * logical_err_rate / runs
-    )
+    logical_err_rate_eb = np.sqrt((1 - logical_err_rate) * logical_err_rate / runs)
     word_error_rate = 1.0 - (1 - logical_err_rate) ** (1 / code_K)
     word_error_rate_eb = (
-            logical_err_rate_eb
-            * ((1 - logical_err_rate_eb) ** (1 / code_K - 1))
-            / code_K
+        logical_err_rate_eb * ((1 - logical_err_rate_eb) ** (1 / code_K - 1)) / code_K
     )
     return (
         logical_err_rate,
@@ -471,9 +459,7 @@ def merge_json_files(input_path: str) -> None:
     # save output to parent directiory
     code_name = os.path.basename(os.path.normpath(input_path))
     parent_dir = os.path.abspath(os.path.join(input_path, os.pardir))
-    with open(
-            os.path.join(parent_dir, f"{code_name:s}.json"), "w"
-    ) as output_file:
+    with open(os.path.join(parent_dir, f"{code_name:s}.json"), "w") as output_file:
         json.dump(output_data, output_file, ensure_ascii=False, indent=4)
 
 
@@ -510,9 +496,7 @@ def merge_json_files_x(input_path: str) -> None:
     # save output to parent directiory
     code_name = os.path.basename(os.path.normpath(input_path))
     parent_dir = os.path.abspath(os.path.join(input_path, os.pardir))
-    with open(
-            os.path.join(parent_dir, f"{code_name:s}.json"), "w"
-    ) as output_file:
+    with open(os.path.join(parent_dir, f"{code_name:s}.json"), "w") as output_file:
         json.dump(output_data, output_file, ensure_ascii=False, indent=4)
 
 
@@ -549,9 +533,7 @@ def merge_json_files_z(input_path: str) -> None:
     # save output to parent directiory
     code_name = os.path.basename(os.path.normpath(input_path))
     parent_dir = os.path.abspath(os.path.join(input_path, os.pardir))
-    with open(
-            os.path.join(parent_dir, f"{code_name:s}.json"), "w"
-    ) as output_file:
+    with open(os.path.join(parent_dir, f"{code_name:s}.json"), "w") as output_file:
         json.dump(output_data, output_file, ensure_ascii=False, indent=4)
 
 
@@ -592,9 +574,7 @@ def merge_json_files_xz(input_path: str) -> None:
     # save output to parent directiory
     code_name = os.path.basename(os.path.normpath(input_path))
     parent_dir = os.path.abspath(os.path.join(input_path, os.pardir))
-    with open(
-            os.path.join(parent_dir, f"{code_name:s}.json"), "w"
-    ) as output_file:
+    with open(os.path.join(parent_dir, f"{code_name:s}.json"), "w") as output_file:
         json.dump(output_data, output_file, ensure_ascii=False, indent=4)
 
 

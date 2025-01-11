@@ -1,6 +1,5 @@
 # from Oscar https://github.com/oscarhiggott/stimbposd/blob/main/src/stimbposd/sinter_bp_osd.py
 import pathlib
-from typing import Dict
 from ldpc.ckt_noise.pymatching_overlapping_window import (
     PyMatchingOverlappingWindowDecoder,
 )

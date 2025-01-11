@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import scipy.sparse
-from ldpc.codes import rep_code, ring_code, hamming_code
+from ldpc.codes import rep_code
 from ldpc.bplsd_decoder import BpLsdDecoder
 
 # Define valid inputs for testing
@@ -65,11 +65,22 @@ valid_input_permutations = pytest.mark.parametrize(
     ],
 )
 
-def test_BpLsdDecoder_init():
 
+def test_BpLsdDecoder_init():
     # test with numpy ndarray as pcm
     pcm = np.array([[1, 0, 1], [0, 1, 1]])
-    decoder = BpLsdDecoder(pcm, error_rate=0.1, max_iter=10, bp_method='prod_sum', ms_scaling_factor=0.5, schedule='parallel', omp_thread_count=4, random_schedule_seed=1, serial_schedule_order=[1,2,0],input_vector_type = "syndrome")
+    decoder = BpLsdDecoder(
+        pcm,
+        error_rate=0.1,
+        max_iter=10,
+        bp_method="prod_sum",
+        ms_scaling_factor=0.5,
+        schedule="parallel",
+        omp_thread_count=4,
+        random_schedule_seed=1,
+        serial_schedule_order=[1, 2, 0],
+        input_vector_type="syndrome",
+    )
     assert decoder is not None
     assert decoder.check_count == 2
     assert decoder.bit_count == 3
@@ -84,7 +95,9 @@ def test_BpLsdDecoder_init():
 
     # test with scipy.sparse scipy.sparse.csr_matrix as pcm
     pcm = scipy.sparse.csr_matrix([[1, 0, 1], [0, 1, 1]])
-    decoder = BpLsdDecoder(pcm, error_channel=[0.1, 0.2, 0.3],input_vector_type = "syndrome")
+    decoder = BpLsdDecoder(
+        pcm, error_channel=[0.1, 0.2, 0.3], input_vector_type="syndrome"
+    )
     assert decoder is not None
     assert decoder.check_count == 2
     assert decoder.bit_count == 3
@@ -97,83 +110,83 @@ def test_BpLsdDecoder_init():
     assert np.array_equal(decoder.serial_schedule_order, np.array([0, 1, 2]))
     assert np.array_equal(decoder.input_vector_type, "syndrome")
 
-
     # test with invalid pcm type
     with pytest.raises(TypeError):
-        decoder = BpLsdDecoder('invalid', error_rate=0.1)
+        decoder = BpLsdDecoder("invalid", error_rate=0.1)
 
     # test with invalid max_iter type
     with pytest.raises(TypeError):
-        decoder = BpLsdDecoder(pcm, error_rate=0.1,max_iter='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, max_iter="invalid")
 
     # test with invalid max_iter value
     with pytest.raises(ValueError):
-        decoder = BpLsdDecoder(pcm, error_rate =0.1, max_iter=-1)
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, max_iter=-1)
 
     # test with invalid bp_method value
     with pytest.raises(ValueError):
-        decoder = BpLsdDecoder(pcm,error_rate=0.1, bp_method='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, bp_method="invalid")
 
     # test with invalid schedule value
     with pytest.raises(ValueError):
-        decoder = BpLsdDecoder(pcm,error_rate=0.1, schedule='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, schedule="invalid")
 
     # test with invalid ms_scaling_factor value
     with pytest.raises(TypeError):
-        decoder = BpLsdDecoder(pcm,error_rate=0.1, ms_scaling_factor='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, ms_scaling_factor="invalid")
 
     # test with invalid omp_thread_count value
     with pytest.raises(TypeError):
-        decoder = BpLsdDecoder(pcm, error_rate=0.1,omp_thread_count='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, omp_thread_count="invalid")
 
     # test with invalid random_schedule_seed value
     with pytest.raises(TypeError):
-        decoder = BpLsdDecoder(pcm, error_rate=0.1, random_schedule_seed='invalid')
+        decoder = BpLsdDecoder(pcm, error_rate=0.1, random_schedule_seed="invalid")
 
     # test with invalid serial_schedule_order value
     with pytest.raises(Exception):
         decoder = BpLsdDecoder(pcm, error_rate=0.1, serial_schedule_order=[1, 2])
 
-def test_rep_code_ms():
 
+def test_rep_code_ms():
     H = rep_code(3)
 
-    lsd = BpLsdDecoder(H,error_rate=0.1, bp_method='min_sum', ms_scaling_factor=1.0)
+    lsd = BpLsdDecoder(H, error_rate=0.1, bp_method="min_sum", ms_scaling_factor=1.0)
     assert lsd is not None
     assert lsd.bp_method == "minimum_sum"
     assert lsd.schedule == "parallel"
-    assert np.array_equal(lsd.error_channel,np.array([0.1, 0.1, 0.1]))
-
+    assert np.array_equal(lsd.error_channel, np.array([0.1, 0.1, 0.1]))
 
     decoding = lsd.decode(np.array([1, 1]))
-    assert(np.array_equal(decoding, np.array([0, 1,0])))
+    assert np.array_equal(decoding, np.array([0, 1, 0]))
 
     lsd.error_channel = np.array([0.1, 0, 0.1])
-    assert np.array_equal(lsd.error_channel,np.array([0.1, 0, 0.1]))
+    assert np.array_equal(lsd.error_channel, np.array([0.1, 0, 0.1]))
 
-    decoding=lsd.decode(np.array([1, 1]))
-    assert(np.array_equal(decoding, np.array([1, 0, 1])))
+    decoding = lsd.decode(np.array([1, 1]))
+    assert np.array_equal(decoding, np.array([1, 0, 1]))
+
 
 def test_stats_reset():
-
     H = rep_code(5)
 
-    lsd = BpLsdDecoder(H,max_iter=1,error_rate=0.1, bp_method='min_sum', ms_scaling_factor=1.0)
+    lsd = BpLsdDecoder(
+        H, max_iter=1, error_rate=0.1, bp_method="min_sum", ms_scaling_factor=1.0
+    )
     lsd.set_do_stats(True)
-    syndrome = np.array([1,1,0,1])
+    syndrome = np.array([1, 1, 0, 1])
     lsd.decode(syndrome)
 
     stats = lsd.statistics
-    assert stats['lsd_order'] == 0
+    assert stats["lsd_order"] == 0
     assert stats["lsd_method"] == 1
     assert len(stats["bit_llrs"]) == H.shape[1]
-    assert len(stats["individual_cluster_stats"])>0
-    assert len(stats["global_timestep_bit_history"])>0
+    assert len(stats["individual_cluster_stats"]) > 0
+    assert len(stats["global_timestep_bit_history"]) > 0
 
-    syndrome = np.array([0,0,0,0])
+    syndrome = np.array([0, 0, 0, 0])
     lsd.decode(syndrome)
 
     stats = lsd.statistics
     assert len(stats["bit_llrs"]) == 0
-    assert len(stats["individual_cluster_stats"])==0
-    assert len(stats["global_timestep_bit_history"])==0
+    assert len(stats["individual_cluster_stats"]) == 0
+    assert len(stats["global_timestep_bit_history"]) == 0

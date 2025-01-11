@@ -104,22 +104,20 @@ def generate_err(N, channel_probs, residual_err):
         rand = np.random.random()  # this returns a random float in [0,1)
         # e.g. if err channel is p = 0.3, then an error will be applied if rand < p
         if (
-                rand < channel_probs_z[i]
+            rand < channel_probs_z[i]
         ):  # if probability for z error high enough, rand < p, apply
             # if there is a z error on the i-th bit, flip the bit but take residual error into account
             # nothing on x part - probably redundant anyways
             error_z[i] = (residual_err_z[i] + 1) % 2
         elif (  # if p = 0.3 then 0.3 <= rand < 0.6 is the same sized interval as rand < 0.3
-                channel_probs_z[i]
-                <= rand
-                < (channel_probs_z[i] + channel_probs_x[i])
+            channel_probs_z[i] <= rand < (channel_probs_z[i] + channel_probs_x[i])
         ):
             # X error
             error_x[i] = (residual_err_x[i] + 1) % 2
         elif (  # 0.6 <= rand < 0.9
-                (channel_probs_z[i] + channel_probs_x[i])
-                <= rand
-                < (channel_probs_x[i] + channel_probs_y[i] + channel_probs_z[i])
+            (channel_probs_z[i] + channel_probs_x[i])
+            <= rand
+            < (channel_probs_x[i] + channel_probs_y[i] + channel_probs_z[i])
         ):
             # y error == both x and z error
             error_z[i] = (residual_err_z[i] + 1) % 2
@@ -131,7 +129,7 @@ def generate_err(N, channel_probs, residual_err):
 @njit
 def get_analog_llr(analog_syndrome: np.ndarray, sigma: float) -> np.ndarray:
     """Computes analog LLRs given analog syndrome and sigma"""
-    return (2 * analog_syndrome) / (sigma ** 2)
+    return (2 * analog_syndrome) / (sigma**2)
 
 
 def get_sigma_from_syndr_er(ser: float) -> float:
@@ -140,7 +138,7 @@ def get_sigma_from_syndr_er(ser: float) -> float:
     :return: sigma
     """
     return (
-            1 / np.sqrt(2) / (erfcinv(2 * ser))
+        1 / np.sqrt(2) / (erfcinv(2 * ser))
     )  # see Eq. cref{eq:perr-to-sigma} in our paper
 
 
@@ -150,7 +148,7 @@ def get_error_rate_from_sigma(sigma: float) -> float:
     :return: sigma
     """
     return 0.5 * erfc(
-        1 / np.sqrt(2 * sigma ** 2)
+        1 / np.sqrt(2 * sigma**2)
     )  # see Eq. cref{eq:perr-to-sigma} in our paper
 
 
@@ -178,9 +176,7 @@ def generate_syndr_err(channel_probs):
 
 
 # @njit
-def get_noisy_analog_syndrome(
-        perfect_syndr: np.ndarray, sigma: float
-) -> np.array:
+def get_noisy_analog_syndrome(perfect_syndr: np.ndarray, sigma: float) -> np.array:
     """Generate noisy analog syndrome vector given the perfect syndrome and standard deviation sigma (~ noise strength)
     Assumes perfect_syndr has entries in {0,1}"""
 
@@ -214,7 +210,7 @@ def error_channel_setup(error_rate, xyz_error_bias, N):
         pz = error_rate
     else:
         px, py, pz = (
-                error_rate * xyz_error_bias / np.sum(xyz_error_bias)
+            error_rate * xyz_error_bias / np.sum(xyz_error_bias)
         )  # Oscar only considers X or Z errors. For reproducability remove normalization
 
     channel_probs_x = np.ones(N) * px
@@ -248,20 +244,18 @@ def get_binary_from_analog(analog_syndrome: np.ndarray) -> np.ndarray:
 
 
 def save_results(
-        success_cnt: int,
-        nr_runs: int,
-        p: float,
-        s: float,
-        input_vals: dict,
-        outfile: str,
-        code_params,
-        err_side: str = "X",
-        bp_iterations: int = None,
-        bp_params: BpParams = None,
+    success_cnt: int,
+    nr_runs: int,
+    p: float,
+    s: float,
+    input_vals: dict,
+    outfile: str,
+    code_params,
+    err_side: str = "X",
+    bp_iterations: int = None,
+    bp_params: BpParams = None,
 ) -> dict:
-    ler, ler_eb, wer, wer_eb = calculate_error_rates(
-        success_cnt, nr_runs, code_params
-    )
+    ler, ler_eb, wer, wer_eb = calculate_error_rates(success_cnt, nr_runs, code_params)
 
     output = {
         "code_K": code_params["k"],
