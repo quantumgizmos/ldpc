@@ -99,7 +99,26 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.9', '3.10', '3.11', '3.12']
-        platform: [x86_64]  # Add arm64 for macOS if you have ARM runners
+        platform: [x86_64, arm64]  # Added explicit platform matrix
+        exclude:
+          # Remove arm64 builds for non-macOS
+          - os: ubuntu-latest
+            platform: arm64
+          - os: windows-latest
+            platform: arm64
+        include:
+          - os: ubuntu-latest
+            platform: x86_64
+            cibw_platform: manylinux_x86_64
+          - os: windows-latest
+            platform: x86_64
+            cibw_platform: win_amd64
+          - os: macos-latest
+            platform: x86_64
+            cibw_platform: macosx_x86_64
+          - os: macos-latest
+            platform: arm64
+            cibw_platform: macosx_arm64 # Add arm64 for macOS if you have ARM runners
     runs-on: ${{ matrix.os }}
     
     steps:

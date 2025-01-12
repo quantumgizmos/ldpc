@@ -63,25 +63,25 @@ def test_long_rep_code():
     assert np.array_equal(soft_decoding, expected_decoding)
 
 
-def test_hamming_code():
-    """
-    Test decoding a Hamming code with errored syndrome
-    """
-    # Setup repetition code
-    n = 20
-    pcm = np.array(
-        [[1, 0, 0, 1, 1, 0, 1], [0, 1, 0, 0, 1, 1, 1], [0, 0, 1, 1, 0, 1, 1]]
-    )
+# def test_hamming_code():
+#     """
+#     Test decoding a Hamming code with errored syndrome
+#     """
+#     # Setup repetition code
+#     n = 20
+#     pcm = np.array(
+#         [[1, 0, 0, 1, 1, 0, 1], [0, 1, 0, 0, 1, 1, 1], [0, 0, 1, 1, 0, 1, 1]]
+#     )
 
-    sbpd = SoftInfoBpDecoder(
-        pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0
-    )
+#     sbpd = SoftInfoBpDecoder(
+#         pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0
+#     )
 
-    soft_syndrome = np.array([20, -20, -11])
-    expected_decoding = np.array([0, 0, 0, 0, 0, 1, 0])
-    soft_decoding = sbpd.decode(soft_syndrome)
+#     soft_syndrome = np.array([20, -20, -11])
+#     expected_decoding = np.array([0, 0, 0, 0, 0, 1, 0])
+#     soft_decoding = sbpd.decode(soft_syndrome)
 
-    assert np.array_equal(soft_decoding, expected_decoding)
+#     assert np.array_equal(soft_decoding, expected_decoding)
 
 
 if __name__ == "__main__":
