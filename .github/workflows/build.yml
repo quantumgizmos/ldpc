@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ['cp39', 'cp310', 'cp311', 'cp312']
+        python: ['cp39', 'cp310', 'cp311', 'cp312', 'cp313']
         platform: [x86_64, arm64]  # Added explicit platform matrix
         exclude:
           # Remove arm64 builds for non-macOS
@@ -83,7 +83,7 @@ jobs:
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.cibw_platform }}
           CIBW_TEST_REQUIRES: pytest numpy
-          CIBW_TEST_COMMAND: "cd {project} && pytest python_test/"
+          CIBW_TEST_COMMAND: "cd {project} && pytest ."
           CIBW_ARCHS_MACOS: ${{ matrix.platform }}
 
       - name: Upload wheels
@@ -92,70 +92,8 @@ jobs:
           name: wheels-${{ matrix.os }}-${{ matrix.python }}-${{ matrix.platform }}
           path: ./wheelhouse/*.whl
 
-  test_wheels:
-    needs: build_wheels
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-        platform: [x86_64, arm64]  # Added explicit platform matrix
-        exclude:
-          # Remove arm64 builds for non-macOS
-          - os: ubuntu-latest
-            platform: arm64
-          - os: windows-latest
-            platform: arm64
-        include:
-          - os: ubuntu-latest
-            platform: x86_64
-            cibw_platform: manylinux_x86_64
-          - os: windows-latest
-            platform: x86_64
-            cibw_platform: win_amd64
-          - os: macos-latest
-            platform: x86_64
-            cibw_platform: macosx_x86_64
-          - os: macos-latest
-            platform: arm64
-            cibw_platform: macosx_arm64 # Add arm64 for macOS if you have ARM runners
-    runs-on: ${{ matrix.os }}
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          submodules: true
-          fetch-depth: 0  # Get all history and tags
-          lfs: true      # Get LFS files if used
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Download wheels
-        uses: actions/download-artifact@v3
-        with:
-          path: dist
-
-      - name: Install and test wheel
-        shell: bash
-        run: |
-          python -m venv venv
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            source venv/Scripts/activate
-          else
-            source venv/bin/activate
-          fi
-          # Convert Python version to cp format (e.g., 3.9 -> cp39)
-          python_cp_version="cp$(echo ${{ matrix.python-version }} | tr -d '.')"
-          python -m pip install numpy pytest
-          python -m pip install --find-links dist/wheels-${{ matrix.os }}-${python_cp_version}-${{ matrix.platform }} *.whl
-          pytest python_test/
-
   upload_pypi:
-    needs: [build_wheels, build_sdist, test_wheels]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/release'
     
