@@ -78,7 +78,29 @@ jobs:
     - name: Run cibuildwheel
       uses: pypa/cibuildwheel@v2.21.3
 
-    - name: Upload wheels
+
+    - name: Create and activate virtual environment for testing
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install --upgrade pip
+
+    - name: Test wheel install
+      run: |
+        source venv/bin/activate
+        pip install ./wheelhouse/*.whl
+
+    - name: Install test dependencies
+      run: |
+        source venv/bin/activate
+        pip install pytest  # Add additional dependencies here if needed
+
+    - name: Run tests
+      run: |
+        source venv/bin/activate
+        pytest .
+
+    - name: Upload wheels to Github actions
       uses: actions/upload-artifact@v3
       with:
         path: ./wheelhouse/*.whl
