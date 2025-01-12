@@ -82,7 +82,7 @@ jobs:
         submodules: true
 
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: pip install .
 
     - name: Run Pytest
       run: pytest -vs .
