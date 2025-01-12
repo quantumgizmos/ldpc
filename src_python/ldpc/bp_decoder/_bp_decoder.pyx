@@ -491,7 +491,7 @@ cdef class BpDecoderBase:
         Raises:
             TypeError: If the input value is not a float.
         """
-        if not isinstance(value, Union[float,int]):
+        if not isinstance(value, (float,int)):
             raise TypeError("The ms_scaling factor must be specified as a float")
         self.bpd.ms_scaling_factor = value
 

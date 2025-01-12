@@ -25,7 +25,7 @@ dependencies = [
     "sinter",
     "pymatching"
 ]
-version = "2.2.1"
+version = "2.2.2"
 
 [project.urls]
 Documentation = "https://software.roffe.eu/ldpc"
