@@ -110,7 +110,9 @@ jobs:
           else
             source venv/bin/activate
           fi
-          python -m pip install --find-links dist/wheels-${{ matrix.os }}-cp${{ matrix.python-version/./}} *.whl
+          # Convert Python version to cp format (e.g., 3.9 -> cp39)
+          python_cp_version="cp$(echo ${{ matrix.python-version }} | tr -d '.')"
+          python -m pip install --find-links dist/wheels-${{ matrix.os }}-${python_cp_version} *.whl
           python -m pip install pytest
           pytest .
 
