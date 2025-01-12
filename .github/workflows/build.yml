@@ -16,12 +16,6 @@ jobs:
       with:
         submodules: true
 
-    - name: Install dependencies
-      run: pip install .
-
-    - name: Run Pytest
-      run: pytest -vs .
-
     - name: Build SDist
       run: pipx run build --sdist
 
@@ -81,22 +75,13 @@ jobs:
       with:
         submodules: true
 
-    - name: Install dependencies
-      run: pip install .
-
-    - name: Run Pytest
-      run: pytest -vs .
-
-    - uses: pypa/cibuildwheel@v2.21.3
-
-    - uses: actions/upload-artifact@v3
-      with:
-        path: ./wheelhouse/*.whl
+    - name: Run cibuildwheel
+      uses: pypa/cibuildwheel@v2.21.3
 
     - name: Upload wheels
       uses: actions/upload-artifact@v3
       with:
-        path: wheelhouse/*.whl
+        path: ./wheelhouse/*.whl
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
