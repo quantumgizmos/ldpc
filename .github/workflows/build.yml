@@ -1,119 +1,136 @@
-name: Build
+name: Build and Release
 
 on:
   push:
     branches:
-     - release
+      - release
 
 jobs:
   build_sdist:
-    name: Build SDist
+    name: Build Source Distribution
     runs-on: ubuntu-latest
     steps:
-
-    - name: Checkout out repo and submodules
-      uses: actions/checkout@v3
-      with:
-        submodules: true
-
-    - name: Build SDist
-      run: pipx run build --sdist
-
-    - name: Check metadata
-      run: pipx run twine check dist/*
-
-    - uses: actions/upload-artifact@v3
-      with:
-        path: dist/*.tar.gz
-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Build SDist
+        run: |
+          python -m pip install build
+          python -m build --sdist
+          
+      - name: Check metadata
+        run: |
+          python -m pip install twine
+          twine check dist/*
+          
+      - name: Upload SDist
+        uses: actions/upload-artifact@v3
+        with:
+          name: sdist
+          path: dist/*.tar.gz
 
   build_wheels:
-    runs-on: ${{ matrix.os_dist.os }}
-    env:
-      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
-      # MACOSX_DEPLOYMENT_TARGET: "13.1"
-      CIBW_ARCHS_MACOS: "arm64 x86_64"
-      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
+    name: Build wheels on ${{ matrix.os }} for ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os_dist: [
-          # # macosx x86_64
-          {os: macos-latest, dist: cp39-macosx_x86_64},
-          {os: macos-latest, dist: cp310-macosx_x86_64},
-          {os: macos-latest, dist: cp311-macosx_x86_64},
-          {os: macos-latest, dist: cp312-macosx_x86_64},
-          {os: macos-latest, dist: cp313-macosx_x86_64},
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['cp39', 'cp310', 'cp311', 'cp312']
+        include:
+          - os: ubuntu-latest
+            platform: manylinux_x86_64
+          - os: windows-latest
+            platform: win_amd64
+          - os: macos-latest
+            platform: macosx_*
 
-
-          # # macosx arm64
-          {os: macos-latest, dist: cp39-macosx_arm64},
-          {os: macos-latest, dist: cp310-macosx_arm64},
-          {os: macos-latest, dist: cp311-macosx_arm64},
-          {os: macos-latest, dist: cp312-macosx_arm64},
-          {os: macos-latest, dist: cp313-macosx_arm64},
-
-          # # windows amd64
-          {os: windows-latest, dist: cp39-win_amd64},
-          {os: windows-latest, dist: cp310-win_amd64},
-          {os: windows-latest, dist: cp311-win_amd64},
-          {os: windows-latest, dist: cp312-win_amd64},
-          {os: windows-latest, dist: cp313-win_amd64},
-
-
-          # ubuntu x86_64
-          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
-
-
-        ]
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: true
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: true
 
-    - name: Run cibuildwheel
-      uses: pypa/cibuildwheel@v2.21.3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
 
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform }}
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: "delocate-wheel -w {dest_dir} -v {wheel}"
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest {project}"
 
-    - name: Create and activate virtual environment for testing
-      run: |
-        python -m venv venv
-        source venv/bin/activate
-        pip install --upgrade pip
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.python }}
+          path: ./wheelhouse/*.whl
 
-    - name: Test wheel install
-      run: |
-        source venv/bin/activate
-        pip install ./wheelhouse/*.whl
+  test_wheels:
+    needs: build_wheels
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Install test dependencies
-      run: |
-        source venv/bin/activate
-        pip install pytest  # Add additional dependencies here if needed
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Run tests
-      run: |
-        source venv/bin/activate
-        pytest .
+      - name: Download wheels
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
 
-    - name: Upload wheels to Github actions
-      uses: actions/upload-artifact@v3
-      with:
-        path: ./wheelhouse/*.whl
+      - name: Install and test wheel
+        shell: bash
+        run: |
+          python -m venv venv
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            source venv/Scripts/activate
+          else
+            source venv/bin/activate
+          fi
+          python -m pip install --find-links dist/wheels-${{ matrix.os }}-cp${{ matrix.python-version/./}} *.whl
+          python -m pip install pytest
+          pytest .
 
   upload_pypi:
-    needs: [ build_wheels, build_sdist ]
+    needs: [build_wheels, build_sdist, test_wheels]
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/release'
+    
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
         with:
-          name: artifact
           path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Move files to dist root
+        run: |
+          find dist -type f -exec mv {} dist/ \;
+          
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_PASSWORD }}
           skip_existing: true
