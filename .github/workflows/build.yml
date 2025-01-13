@@ -79,7 +79,7 @@ jobs:
           python-version: '3.11'
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.cibw_platform }}
           CIBW_TEST_REQUIRES: pytest numpy
