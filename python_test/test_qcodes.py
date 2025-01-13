@@ -68,8 +68,8 @@ def quantum_mc_sim(
 
 
 def test_400_16_6_hgp():
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+    hx = scipy.sparse.load_npz("./python_test/pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("./python_test/pcms/lx_400_16_6.npz")
 
     error_rate = 0.01
     run_count = 10000
@@ -254,8 +254,8 @@ def test_400_16_6_hgp():
 
 
 def test_toric_20():
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_toric_20.npz")
+    hx = scipy.sparse.load_npz("./python_test/pcms/hx_toric_20.npz")
+    lx = scipy.sparse.load_npz("./python_test/pcms/lx_toric_20.npz")
 
     error_rate = 0.05
     run_count = 1000
@@ -365,8 +365,8 @@ def test_toric_20():
 
 
 def test_surface_20():
-    hx = scipy.sparse.load_npz("python_test/pcms/hx_surface_20.npz")
-    lx = scipy.sparse.load_npz("python_test/pcms/lx_surface_20.npz")
+    hx = scipy.sparse.load_npz("./python_test/pcms/hx_surface_20.npz")
+    lx = scipy.sparse.load_npz("./python_test/pcms/lx_surface_20.npz")
 
     error_rate = 0.05
     run_count = 1000
