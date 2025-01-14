@@ -41,7 +41,7 @@ def convert_to_binary_sparse(
         )
 
     # Check dtype
-    if matrix.dtype not in [np.uint8, np.int8, int, float]:
+    if matrix.dtype not in [np.uint8, np.int8, np.int32, np.int64, int, float]:
         raise TypeError(
             f"Input matrix must have dtype uint8, int8, or int, not {matrix.dtype}"
         )
