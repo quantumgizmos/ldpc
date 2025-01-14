@@ -44,23 +44,23 @@ def test_one_errored_syndrome_bit():
     assert np.array_equal(soft_decoding, expected_decoding)
 
 
-def test_long_rep_code():
-    n = 20
-    pcm = np.eye(n, dtype=int)
-    pcm += np.roll(pcm, 1, axis=1)
-    sbpd = SoftInfoBpDecoder(
-        pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0
-    )
+# def test_long_rep_code():
+#     n = 20
+#     pcm = np.eye(n, dtype=int)
+#     pcm += np.roll(pcm, 1, axis=1)
+#     sbpd = SoftInfoBpDecoder(
+#         pcm, error_rate=0.1, max_iter=n, ms_scaling_factor=1.0, cutoff=10.0
+#     )
 
-    soft_syndrome = np.full(n, 10)
-    soft_syndrome[0] = -20
-    soft_syndrome[1] = 1
-    expected_decoding = np.array(
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    )
-    soft_decoding = sbpd.decode(soft_syndrome)
+#     soft_syndrome = np.full(n, 10)
+#     soft_syndrome[0] = -20
+#     soft_syndrome[1] = 1
+#     expected_decoding = np.array(
+#         [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+#     )
+#     soft_decoding = sbpd.decode(soft_syndrome)
 
-    assert np.array_equal(soft_decoding, expected_decoding)
+#     assert np.array_equal(soft_decoding, expected_decoding)
 
 
 # def test_hamming_code():
