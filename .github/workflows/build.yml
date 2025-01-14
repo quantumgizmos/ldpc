@@ -53,7 +53,7 @@ jobs:
             platform: arm64
           - os: windows-latest
             platform: x86_64
-            python: ['cp13'] # Windows 3.13 not yet supported by PyMatching.
+            python: cp13 #exclude python 3.13 on windows
         include:
           - os: ubuntu-latest
             platform: x86_64
