@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python: ['cp39', 'cp310', 'cp311', 'cp312', 'cp313']
+        python: ['cp39', 'cp310', 'cp311', 'cp312']
         platform: [x86_64, arm64]  # Added explicit platform matrix
         exclude:
           # Remove arm64 builds for non-macOS
@@ -51,9 +51,6 @@ jobs:
             platform: arm64
           - os: windows-latest
             platform: arm64
-          - os: windows-latest
-            platform: x86_64
-            python: cp13 #exclude python 3.13 on windows
         include:
           - os: ubuntu-latest
             platform: x86_64
