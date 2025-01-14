@@ -84,6 +84,7 @@ jobs:
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.cibw_platform }}
           CIBW_TEST_REQUIRES: pytest numpy
           CIBW_TEST_COMMAND: "cd {project} && pytest {project}"
+          CIBW_TEST_COMMAND_WINDOWS: "cd /d {project} && pytest {project}"
           CIBW_ARCHS_MACOS: ${{ matrix.platform }}
 
       - name: Upload wheels
