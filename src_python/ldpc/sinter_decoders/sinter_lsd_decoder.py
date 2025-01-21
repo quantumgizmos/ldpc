@@ -92,7 +92,9 @@ class SinterLsdDecoder(sinter.Decoder):
                 via sinter deleting this directory after killing the decoder.
         """
         self.dem = stim.DetectorErrorModel.from_file(dem_path)
-        self.matrices = detector_error_model_to_check_matrices(self.dem)
+        self.matrices = detector_error_model_to_check_matrices(
+            self.dem, allow_undecomposed_hyperedges=True
+        )
         self.lsd = BpLsdDecoder(
             self.matrices.check_matrix,
             error_channel=list(self.matrices.priors),
