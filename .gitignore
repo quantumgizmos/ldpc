@@ -1,9 +1,6 @@
 zscratch*
-<<<<<<< Updated upstream
 paper_lsd_data_collection/
-=======
-paper_lsd_data_collection/*
->>>>>>> Stashed changes
+scratch_examples/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

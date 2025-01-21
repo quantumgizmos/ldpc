@@ -4,15 +4,21 @@ from typing import Optional, List, Union
 import warnings
 import ldpc.helpers.scipy_helpers
 
-def io_test(pcm: Union[scipy.sparse.spmatrix, np.ndarray]): ...
+
+def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]): ...
+
+
 
 class BpDecoderBase:
+
     """
     Bp Decoder base class
     """
 
-    def __cinit__(self, pcm, **kwargs): ...
+    def __cinit__(self,pcm, **kwargs): ...
+
     def __del__(self): ...
+
     @property
     def error_rate(self) -> np.ndarray:
         """
@@ -41,7 +47,7 @@ class BpDecoderBase:
         """
 
     @error_channel.setter
-    def error_channel(self, value: Union[Optional[List[float]], np.ndarray]) -> None:
+    def error_channel(self, value: Union[Optional[List[float]],np.ndarray]) -> None:
         """
         Sets the error channel for the decoder.
 
@@ -50,17 +56,21 @@ class BpDecoderBase:
             length of the code `self.n`.
         """
 
-    def update_channel_probs(self, value: Union[List[float], np.ndarray]) -> None: ...
+    def update_channel_probs(self, value: Union[List[float],np.ndarray]) -> None: ...
+
     @property
     def channel_probs(self) -> np.ndarray: ...
+
+
     @property
-    def input_vector_type(self) -> str:
+    def input_vector_type(self)-> str:
         """
         Returns the current input vector type.
 
         Returns:
             str: The current input vector type.
         """
+
 
     @input_vector_type.setter
     def input_vector_type(self, input_type: str):
@@ -70,6 +80,7 @@ class BpDecoderBase:
         Args:
             input_type (str): The input vector type to be set. Must be either 'syndrome' or 'received_vector'.
         """
+
 
     @property
     def log_prob_ratios(self) -> np.ndarray:
@@ -97,6 +108,7 @@ class BpDecoderBase:
         Returns:
             int: The number of iterations performed by the decoder.
         """
+
 
     @property
     def check_count(self) -> int:
@@ -147,7 +159,7 @@ class BpDecoderBase:
         """
 
     @bp_method.setter
-    def bp_method(self, value: Union[str, int]) -> None:
+    def bp_method(self, value: Union[str,int]) -> None:
         """
         Sets the belief propagation method used.
 
@@ -168,7 +180,7 @@ class BpDecoderBase:
         """
 
     @schedule.setter
-    def schedule(self, value: Union[str, int]) -> None:
+    def schedule(self, value: Union[str,int]) -> None:
         """
         Sets the scheduling method used.
 
@@ -295,36 +307,17 @@ class BpDecoder(BpDecoderBase):
         parity matrix is non-square the input vector type is inferred automatically from its length.
     """
 
-    def __cinit__(
-        self,
-        pcm: Union[np.ndarray, scipy.sparse.spmatrix],
-        error_rate: Optional[float] = None,
-        error_channel: Optional[Union[np.ndarray, List[float]]] = None,
-        max_iter: Optional[int] = 0,
-        bp_method: Optional[str] = "minimum_sum",
-        ms_scaling_factor: Optional[Union[float, int]] = 1.0,
-        schedule: Optional[str] = "parallel",
-        omp_thread_count: Optional[int] = 1,
-        random_schedule_seed: Optional[int] = 0,
-        serial_schedule_order: Optional[List[int]] = None,
-        input_vector_type: str = "auto",
-        **kwargs,
-    ): ...
-    def __init__(
-        self,
-        pcm: Union[np.ndarray, scipy.sparse.spmatrix],
-        error_rate: Optional[float] = None,
-        error_channel: Optional[Union[np.ndarray, List[float]]] = None,
-        max_iter: Optional[int] = 0,
-        bp_method: Optional[str] = "minimum_sum",
-        ms_scaling_factor: Optional[Union[float, int]] = 1.0,
-        schedule: Optional[str] = "parallel",
-        omp_thread_count: Optional[int] = 1,
-        random_schedule_seed: Optional[int] = 0,
-        serial_schedule_order: Optional[List[int]] = None,
-        input_vector_type: str = "auto",
-        **kwargs,
-    ): ...
+    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs): ...
+
+    def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
+                 input_vector_type: str = "auto", **kwargs): ...
+
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
         Decode the input input_vector using belief propagation decoding algorithm.
@@ -344,6 +337,7 @@ class BpDecoder(BpDecoderBase):
         ValueError
             If the length of the input input_vector does not match the number of rows in the parity check matrix.
         """
+        
 
     @property
     def decoding(self) -> np.ndarray:
@@ -353,6 +347,7 @@ class BpDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
         """
+
 
 class SoftInfoBpDecoder(BpDecoderBase):
     """
@@ -382,18 +377,10 @@ class SoftInfoBpDecoder(BpDecoderBase):
         The threshold value below which syndrome soft information is used.
     """
 
-    def __cinit__(
-        self,
-        pcm: Union[np.ndarray, spmatrix],
-        error_rate: Optional[float] = None,
-        error_channel: Optional[List[float]] = None,
-        max_iter: Optional[int] = 0,
-        bp_method: Optional[str] = "minimum_sum",
-        ms_scaling_factor: Optional[float] = 1.0,
-        cutoff: Optional[float] = np.inf,
-        sigma: float = 2.0,
-        **kwargs,
-    ): ...
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0, **kwargs): ...
+
     def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
         """
         Decode the input syndrome using the soft information belief propagation decoding algorithm.
@@ -417,6 +404,7 @@ class SoftInfoBpDecoder(BpDecoderBase):
         Returns:
             np.ndarray: A numpy array containing the current soft syndrome.
         """
+
 
     @property
     def decoding(self) -> np.ndarray:

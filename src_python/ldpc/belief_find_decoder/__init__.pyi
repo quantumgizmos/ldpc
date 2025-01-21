@@ -2,6 +2,7 @@ import numpy as np
 from scipy.sparse import spmatrix
 
 class BeliefFindDecoder(BpDecoderBase):
+  
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Union Find Decoder (UFD) algorithm.
 
@@ -48,24 +49,15 @@ class BeliefFindDecoder(BpDecoderBase):
     The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
     """
 
-    def __cinit__(
-        self,
-        pcm: Union[np.ndarray, scipy.sparse.spmatrix],
-        error_rate: Optional[float] = None,
-        error_channel: Optional[List[float]] = None,
-        max_iter: Optional[int] = 0,
-        bp_method: Optional[str] = "minimum_sum",
-        ms_scaling_factor: Optional[float] = 1.0,
-        schedule: Optional[str] = "parallel",
-        omp_thread_count: Optional[int] = 1,
-        random_schedule_seed: Optional[int] = 0,
-        serial_schedule_order: Optional[List[int]] = None,
-        uf_method: str = "peeling",
-        bits_per_step: int = 0,
-        input_vector_type: str = "syndrome",
-    ): ...
+    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
+                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
+                 ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling", bits_per_step:int = 0, input_vector_type: str = "syndrome"): ...
+
     def __del__(self): ...
-    def decode(self, syndrome):
+
+    def decode(self,syndrome):
+
         """
         Decodes the input syndrome using the belief propagation and UFD decoding methods.
 
@@ -87,6 +79,7 @@ class BeliefFindDecoder(BpDecoderBase):
         ValueError
             If the length of the input syndrome is not equal to the length of the code.
         """
+
 
     @property
     def uf_method(self): ...
