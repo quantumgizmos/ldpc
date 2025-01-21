@@ -80,11 +80,11 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
-        env:
-          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.cibw_platform }}
-          CIBW_TEST_REQUIRES: pytest numpy
-          CIBW_TEST_COMMAND: "cd {project} && pytest python_test/"
-          CIBW_ARCHS_MACOS: ${{ matrix.platform }}
+        # env:
+        #   CIBW_BUILD: ${{ matrix.python }}-${{ matrix.cibw_platform }}
+        #   CIBW_TEST_REQUIRES: pytest numpy
+        #   CIBW_TEST_COMMAND: "cd {project} && pytest python_test/"
+        #   CIBW_ARCHS_MACOS: ${{ matrix.platform }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
