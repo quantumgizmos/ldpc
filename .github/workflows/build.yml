@@ -24,8 +24,8 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        # name: sdist-${{ github.run_id }}-sdist
-        path: dist/*.tar.gz
+        name: sdist-${{ github.run_id }}-sdist.tar.gz
+        path: dist
 
 
   build_wheels:
