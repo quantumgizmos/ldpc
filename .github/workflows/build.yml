@@ -90,14 +90,18 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-        path: ./wheelhouse/*.whl
+        path: dist
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_PASSWORD }}
-          skip_existing: true
-          verbose: true
+    - name: Checkout out repo and submodules
+      uses: actions/checkout@v3
+      with:
+        path: dist  
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_PASSWORD }}
+        skip_existing: true
+        verbose: true
