@@ -89,7 +89,7 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheel-${{ github.run_id }}-${{ matrix.os_dist.dist }}
+        name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
         path: ./wheelhouse/*.whl
 
 
@@ -113,6 +113,7 @@ jobs:
       with:
         name: wheels
         path: dist
+        merge-multiple: true
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
