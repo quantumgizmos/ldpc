@@ -31,8 +31,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        # name: sdist-${{ github.run_id }}-sdist.tar.gz
-        path: dist
+        path: dist/*.tar.gz
 
 
   build_wheels:
@@ -90,18 +89,23 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-        path: dist
+        path: dist/*.whl
+
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout out repo and submodules
-      uses: actions/checkout@v3
-      with:
-        path: dist  
-    - uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_PASSWORD }}
-        skip_existing: true
-        verbose: true
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: actions/download-artifact@v3
+        with:
+          pattern: *.whl
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_PASSWORD }}
+          skip_existing: true
+          verbose: true
