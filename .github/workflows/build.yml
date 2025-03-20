@@ -10,11 +10,18 @@ jobs:
     name: Build SDist
     runs-on: ubuntu-latest
     steps:
-
     - name: Checkout out repo and submodules
       uses: actions/checkout@v3
       with:
         submodules: true
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipx
+        pipx ensurepath
+        pipx install build
+        pipx install twine
 
     - name: Build SDist
       run: pipx run build --sdist
