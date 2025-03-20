@@ -24,6 +24,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
+        name: sdist-${{ github.run_id }}
         path: dist/*.tar.gz
 
 
@@ -81,6 +82,7 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
+        name: wheels-${{ github.run_id }}
         path: ./wheelhouse/*.whl
 
   upload_pypi:
