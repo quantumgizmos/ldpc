@@ -89,7 +89,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-        path: dist/*.whl
+        path: ./wheelhouse/*.whl
 
 
   upload_pypi:
@@ -99,10 +99,6 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: artifact
-          path: dist
-      - uses: actions/download-artifact@v3
-        with:
-          pattern: *.whl
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
