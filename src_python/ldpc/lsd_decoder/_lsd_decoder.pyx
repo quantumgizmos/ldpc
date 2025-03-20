@@ -70,7 +70,7 @@ cdef class LsdDecoder():
     The BpLsdDecoder is a wrapper around the C++ class `LsdDecoder
     """
 
-    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], bits_per_step: int = 0,
+    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], bits_per_step: int = 1,
                   lsd_order: int = 0,
                   lsd_method: Union[str, int] = 0, **kwargs):
 

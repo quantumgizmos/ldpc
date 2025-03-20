@@ -6,7 +6,28 @@ from ldpc.belief_find_decoder import BeliefFindDecoder
 from ldpc.bp_decoder import BpDecoder
 from ldpc.bplsd_decoder import BpLsdDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
+from ldpc.lsd_decoder import LsdDecoder
 from ldpc.noise_models import generate_bsc_error
+
+
+class pyTestBPLSDDecoder:
+
+    """
+    Just for testing
+    """
+
+    def __init__(self, pcm, error_rate, lsd_order=0, max_iter = 0, lsd_method="lsd0"):
+
+        self.bpd = BpDecoder(pcm, error_rate=error_rate, max_iter=max_iter, bp_method="product_sum")
+        self.lsd = LsdDecoder(pcm, lsd_order=lsd_order, lsd_method=lsd_method)
+
+    def decode(self,syndrome):
+
+        bp_decoding = self.bpd.decode(syndrome)
+        if self.bpd.converge:
+            return bp_decoding
+        
+        return self.lsd.decode(syndrome,self.bpd.log_prob_ratios)
 
 
 def quantum_mc_sim(
@@ -20,13 +41,11 @@ def quantum_mc_sim(
 
     additional_stats = []
 
+    failed_runs_not_bp = []
+
     for i in range(run_count):
-        if DEBUG:
-            print(f"Iteration: {i}")
         error = generate_bsc_error(hx.shape[1], error_rate)
         z = hx @ error % 2
-        if DEBUG:
-            print(f"Syndrome: {np.nonzero(z)[0].__repr__()}")
         decoding = DECODER.decode(z)
         residual = (decoding + error) % 2
 
@@ -42,6 +61,11 @@ def quantum_mc_sim(
 
         if np.any((lx @ residual) % 2):
             fail += 1
+            failed_runs_not_bp.append(i)
+            if DEBUG:
+                print(f"Failed run: {i}")
+                print(f"Syndrome: {np.nonzero(z)[0].__repr__()}")
+
             if np.sum(residual) < min_logical:
                 min_logical = np.sum(residual)
                 # print(f"New min logical: {min_logical}")
@@ -73,7 +97,7 @@ def test_400_16_6_hgp():
 
     error_rate = 0.01
     run_count = 10000
-    seed = 100
+    seed = 149
     max_iter = 5
     osd_order = 3
     print()
@@ -252,6 +276,44 @@ def test_400_16_6_hgp():
         "Min-sum LSD-0 serial schedule, dynamic scaling factor",
     )
 
+    decoder1 = BpLsdDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        bp_method="product_sum",
+        schedule="parallel",
+        bits_per_step=1,
+        lsd_order=0,
+        lsd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder1,
+        "Prod-sum LSD-0 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder2 = pyTestBPLSDDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        lsd_order=0,
+        lsd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder2,
+        "PyBpLsdDecoder, Prod-sum LSD-0 parallel schedule",
+        DEBUG=False,
+    )
 
 def test_toric_20():
     hx = scipy.sparse.load_npz("python_test/pcms/hx_toric_20.npz")
