@@ -112,6 +112,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: wheels
+        pattern: "wheels-${{ github.run_id }}-*.whl"
         path: dist
         merge-multiple: true
 
