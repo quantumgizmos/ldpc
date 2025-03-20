@@ -47,33 +47,33 @@ jobs:
         os_dist: [
           # # macosx x86_64
           {os: macos-latest, dist: cp39-macosx_x86_64},
-          {os: macos-latest, dist: cp310-macosx_x86_64},
-          {os: macos-latest, dist: cp311-macosx_x86_64},
-          {os: macos-latest, dist: cp312-macosx_x86_64},
-          {os: macos-latest, dist: cp313-macosx_x86_64},
+          # {os: macos-latest, dist: cp310-macosx_x86_64},
+          # {os: macos-latest, dist: cp311-macosx_x86_64},
+          # {os: macos-latest, dist: cp312-macosx_x86_64},
+          # {os: macos-latest, dist: cp313-macosx_x86_64},
 
 
-          # # macosx arm64
-          {os: macos-latest, dist: cp39-macosx_arm64},
-          {os: macos-latest, dist: cp310-macosx_arm64},
-          {os: macos-latest, dist: cp311-macosx_arm64},
-          {os: macos-latest, dist: cp312-macosx_arm64},
-          {os: macos-latest, dist: cp313-macosx_arm64},
+          # # # macosx arm64
+          # {os: macos-latest, dist: cp39-macosx_arm64},
+          # {os: macos-latest, dist: cp310-macosx_arm64},
+          # {os: macos-latest, dist: cp311-macosx_arm64},
+          # {os: macos-latest, dist: cp312-macosx_arm64},
+          # {os: macos-latest, dist: cp313-macosx_arm64},
 
-          # # windows amd64
-          {os: windows-latest, dist: cp39-win_amd64},
-          {os: windows-latest, dist: cp310-win_amd64},
-          {os: windows-latest, dist: cp311-win_amd64},
-          {os: windows-latest, dist: cp312-win_amd64},
-          {os: windows-latest, dist: cp313-win_amd64},
+          # # # windows amd64
+          # {os: windows-latest, dist: cp39-win_amd64},
+          # {os: windows-latest, dist: cp310-win_amd64},
+          # {os: windows-latest, dist: cp311-win_amd64},
+          # {os: windows-latest, dist: cp312-win_amd64},
+          # {os: windows-latest, dist: cp313-win_amd64},
 
 
-          # ubuntu x86_64
-          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
+          # # ubuntu x86_64
+          # {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
 
 
         ]
@@ -89,7 +89,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-        path: ./wheelhouse/*.whl
+        path: dist/wheelhouse/*.whl
 
 
   upload_pypi:
