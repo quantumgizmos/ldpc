@@ -50,24 +50,10 @@ cdef BpSparse* Py2BpSparse(pcm):
 
 cdef class LsdDecoder():
     """
-    A class representing a decoder that combines Belief Propagation (BP) with the Localised Statistics Decoder (LSD) algorithm.
+    A class implementing the Localised Statistics Decoder (LSD) in isolation.
 
-    The BpLsdDecoder is designed to decode binary linear codes by initially attempting BP decoding, and if that fails,
-    it falls back to the Localised Statistics Decoder algorithm.
-
-    Parameters
-    ----------
-    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
-        The parity check matrix for the code.
-    lsd_order: int, optional
-        The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
-    lsd_method: str, optional
-        The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
-        By default 'LSD_0'.
-    
-    Notes
-    -----
-    The BpLsdDecoder is a wrapper around the C++ class `LsdDecoder
+    This class provides an interface to directly decode a syndrome using the LSD algorithm without a preceding 
+    Belief Propagation (BP) stage. The user provides the syndrome and bit weights as inputs to produce the decoded output.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], bits_per_step: int = 1,
@@ -128,22 +114,23 @@ cdef class LsdDecoder():
 
     def decode(self,syndrome,bit_weights):
         """
-        Decodes the input syndrome the LSD decoding method.
+        Decodes the input syndrome using the LSD algorithm in isolation.
 
-        Parameters
-        ----------
-        syndrome : np.ndarray
-            The input syndrome to decode.
+        This method directly invokes the LSD decoding routine without attempting any BP decoding first.
+        The provided bit weights are used as input for the LSD decoder.
 
-        Returns
-        -------
-        np.ndarray
-            The decoded output.
+        Parameters:
+            syndrome : np.ndarray
+                A 1D numpy array (dtype=np.uint8) representing the syndrome. Its length must equal the number of rows in the parity check matrix.
+            bit_weights : list or np.ndarray
+                A list or 1D numpy array of doubles, with length equal to the number of columns in the parity check matrix.
 
-        Raises
-        ------
-        ValueError
-            If the length of the input syndrome is not equal to the length of the code.
+        Returns:
+            np.ndarray
+                A 1D numpy array (dtype=np.uint8) containing the decoded output.
+
+        Raises:
+            ValueError: If the length of syndrome or bit_weights does not match the expected dimensions.
         """
 
         if not len(bit_weights)==self.pcm.n:
