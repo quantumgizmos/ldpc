@@ -31,7 +31,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: sdist-${{ github.run_id }}-sdist.tar.gz
+        # name: sdist-${{ github.run_id }}-sdist.tar.gz
         path: dist
 
 
@@ -90,12 +90,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-        path: dist
+        path: ./wheelhouse/*.whl
 
   upload_pypi:
-    name: Upload to PyPI
-    uses: pypa/gh-action-pypi-publish@release/v1
-    with:
-      password: ${{ secrets.PYPI_PASSWORD }}
-      skip_existing: true
-      verbose: true
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_PASSWORD }}
+          skip_existing: true
+          verbose: true
