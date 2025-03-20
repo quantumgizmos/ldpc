@@ -24,7 +24,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: sdist-${{ github.run_id }}
+        name: sdist-${{ github.run_id }}-sdist
         path: dist/*.tar.gz
 
 
@@ -82,16 +82,16 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ github.run_id }}
+        name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
         path: ./wheelhouse/*.whl
 
   upload_pypi:
     needs: [ build_wheels, build_sdist ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: artifact
           path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
