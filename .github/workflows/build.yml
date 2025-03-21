@@ -1,93 +1,84 @@
-# This workflow is triggered when code is pushed to the "release" branch.
-# It builds both a source distribution (sdist) and binary wheels for various platforms and then uploads everything to PyPI.
+# This workflow builds the source distribution (sdist) and the binary wheels using cibuildwheel,
+# and finally uploads these artifacts to PyPI when code is pushed to the "release" branch.
 name: Build
 
 on:
   push:
     branches:
-      - release  # Run this workflow only for pushes to the "release" branch.
+      - release  # Trigger the workflow only on pushes to the "release" branch.
 
 jobs:
   # -------- Job: Build SDist (Source Distribution) --------
-  # The source distribution (sdist) packages your source code (e.g., .py files and a setup script) into a compressed archive.
-  # Users can download an sdist and build it on their local system.
+  # The sdist packages your source code into a compressed archive (typically .tar.gz),
+  # which allows users to rebuild the package on their system.
   build_sdist:
     name: Build SDist
-    runs-on: ubuntu-latest  # Use a fresh Ubuntu environment.
+    runs-on: ubuntu-latest  # Run on a fresh Ubuntu environment.
     steps:
-      # Checkout the repository along with any submodules.
+      # Checkout the repository and any submodules.
       - name: Checkout out repo and submodules
         uses: actions/checkout@v4
         with:
-          submodules: true  # Include submodules in the clone.
-
-      # Install build tools in an isolated environment using pipx.
+          submodules: true  # Ensures all submodules are also cloned.
+      
+      # Install build tools using pipx in an isolated environment.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip   # Upgrade pip.
-          pip install pipx                        # Install pipx to run CLI tools in isolated environments.
-          pipx ensurepath                         # Add pipx binaries to PATH.
-          pipx install build                      # Install the 'build' package to create sdist.
-          pipx install twine                      # Install 'twine' to check and upload distributions.
-
-      # Build the source distribution.
-      # "pipx run build --sdist" builds an sdist (usually a .tar.gz file) in the "dist" folder.
+          pip install pipx                        # Install pipx for isolated CLI tool execution.
+          pipx ensurepath                         # Add pipx's binary path to the PATH.
+          pipx install build                      # Install the 'build' package to create the sdist.
+          pipx install twine                      # Install 'twine' for artifact validation and PyPI upload.
+      
+      # Build the source distribution (sdist).
+      # This command creates a .tar.gz file in the "dist" folder.
       - name: Build SDist
         run: pipx run build --sdist
 
-      # Validate the generated distribution files with twine.
+      # Check the metadata of the built distribution using twine.
       - name: Check metadata
         run: pipx run twine check dist/*
       
-      - name: Upload SDist Artifact
-        uses: actions/upload-artifact@v4
+      # Upload the sdist artifact.
+      # The "name" attribute identifies this artifact as "sdist".
+      # The "path" attribute specifies the files (all .tar.gz in dist/) to be uploaded.
+      - uses: actions/upload-artifact@v4
         with:
-          # "name" is the identifier for this artifact.
-          # When you later download artifacts by name, you will refer to "sdist-${{ github.run_id }}".
-          name: sdist-${{ github.run_id }}
-          # "path" is the file pattern on the local runner.
-          # Here, we upload all .tar.gz files from the "dist" folder.
-          path: dist/*.tar.gz
-          # These files are stored in GitHub's artifact storage for later retrieval.
+          name: sdist         # Artifact identifier: "sdist"
+          path: dist/*.tar.gz  # Local file path pattern to upload.
 
   # -------- Job: Build Wheels --------
-  # Wheels are binary distributions that contain precompiled extensions, allowing for fast installation.
-  # cibuildwheel automates the process of building wheels for multiple Python versions and platforms.
+  # Wheels are precompiled binary distributions which install faster than sdists.
+  # cibuildwheel automates the creation of wheels across different platforms and Python versions.
   build_wheels:
-    runs-on: ${{ matrix.os_dist.os }}  # The operating system is taken from the matrix.
+    runs-on: ${{ matrix.os_dist.os }}  # Run on the OS specified by the matrix.
     env:
-      # Specify the build configuration (e.g., cp39-macosx_x86_64) for cibuildwheel.
-      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
-      # For macOS, indicate that wheels should support both arm64 and x86_64.
-      CIBW_ARCHS_MACOS: "arm64 x86_64"
-      # On macOS, use delocate-wheel to repair wheels (fix dynamic library paths).
-      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"  # Build configuration, e.g. cp39-macosx_x86_64.
+      CIBW_ARCHS_MACOS: "arm64 x86_64"  # For macOS, build wheels supporting both arm64 and x86_64.
+      CIBW_REPAIR_WHEEL_COMMAND_MACOS: delocate-wheel -w {dest_dir} -v {wheel}  # Repair command to fix dependencies in macOS wheels.
     strategy:
-      fail-fast: false  # Continue with other builds even if one fails.
+      fail-fast: false  # Continue with other matrix builds even if one fails.
       matrix:
         os_dist: [
-          # macOS wheels for various CPython versions (x86_64)...
+          # macOS wheels for CPython (x86_64)
           {os: macos-latest, dist: cp39-macosx_x86_64},
           {os: macos-latest, dist: cp310-macosx_x86_64},
           {os: macos-latest, dist: cp311-macosx_x86_64},
           {os: macos-latest, dist: cp312-macosx_x86_64},
           {os: macos-latest, dist: cp313-macosx_x86_64},
-
-          # macOS wheels for various CPython versions (arm64)...
+          # macOS wheels for CPython (arm64)
           {os: macos-latest, dist: cp39-macosx_arm64},
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
           {os: macos-latest, dist: cp312-macosx_arm64},
           {os: macos-latest, dist: cp313-macosx_arm64},
-
-          # Windows wheels...
+          # Windows wheels
           {os: windows-latest, dist: cp39-win_amd64},
           {os: windows-latest, dist: cp310-win_amd64},
           {os: windows-latest, dist: cp311-win_amd64},
           {os: windows-latest, dist: cp312-win_amd64},
           {os: windows-latest, dist: cp313-win_amd64},
-
-          # Ubuntu (Manylinux) wheels...
+          # Ubuntu (Manylinux) wheels
           {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
@@ -95,70 +86,62 @@ jobs:
           {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
         ]
     steps:
-      # Checkout the repository.
+      # Checkout the repository and its submodules.
       - uses: actions/checkout@v4
         with:
           submodules: true
 
-      # Run cibuildwheel:
-      # This tool sets up a clean, isolated build environment (e.g., using Docker on Linux)
-      # to build wheel files for each Python version and platform specified.
-      # A wheel is a built distribution that installs quickly because it contains precompiled extensions.
+      # Run cibuildwheel to build the wheels.
+      # cibuildwheel creates wheels for the specified configurations in isolated environments.
       - name: Run cibuildwheel
         uses: pypa/cibuildwheel@v2.23.1
 
-      # Upload the produced wheels as artifacts.
-      # Each artifact name includes the unique GitHub run ID and build configuration.
-      - name: Upload wheels Artifact
+      # Upload the built wheels as artifacts.
+      # The artifact name includes the GitHub run ID and matrix configuration to uniquely identify the wheels.
+      - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          # The "name" here is dynamically constructed using the run ID and the build configuration.
-          # It uniquely identifies the wheels built for a specific OS and CPython version.
-          name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-          # "path" here specifies where the built wheel files are located on the runner.
-          # In this case, all .whl files are in the "wheelhouse" directory.
-          path: ./wheelhouse/*.whl
+          name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}  # Unique artifact identifier.
+          path: ./wheelhouse/*.whl  # Local path where cibuildwheel stores the wheel files.
 
   # -------- Job: Upload to PyPI --------
-  # This final job downloads the previously generated sdist and wheels and publishes them to PyPI.
+  # This job downloads the previously uploaded sdist and wheels artifacts,
+  # then uses the pypa/gh-action-pypi-publish action to upload all files in the "dist" folder to PyPI.
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist]  # Wait for both build jobs to complete.
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository (if needed for configuration).
+      # Checkout the repository (useful if configuration files are needed).
       - name: Checkout out repo and submodules
         uses: actions/checkout@v4
         with:
           submodules: true
 
-      # Download the sdist artifact into the "dist" folder.
-      - name: Download SDist Artifact
+      # Download the sdist artifact.
+      # "name" in the download action refers to the artifact identifier to fetch (here, "sdist").
+      # "path" specifies where the downloaded file(s) should be placed on the runner.
+      - name: Download SDist
         uses: actions/download-artifact@v4
         with:
-          # "name" tells the download action which artifact to fetch;
-          # here, it downloads the artifact named "sdist" that was uploaded during the build_sdist job.
-          name: sdist-${{ github.run_id }}
-          # "path" is the destination directory on the runner where the artifact files will be placed.
-          # They will be saved in the "dist" folder.
-          path: dist
+          name: sdist   # Download the artifact previously uploaded as "sdist".
+          path: dist    # Place the downloaded files into the "dist" directory.
 
-      # Download all wheel artifacts (all artifacts whose names start with "wheels-").
-      - name: Download Wheels Artifacts
+      # Download all wheels artifacts.
+      # "pattern" specifies a pattern to match artifact names; here it matches any artifact starting with "wheels-".
+      # "path" again specifies the destination directory.
+      # "merge-multiple: true" indicates that if multiple matching artifacts are found, their contents are merged into one folder.
+      - name: Download Wheels
         uses: actions/download-artifact@v4
         with:
-          # "pattern" allows you to fetch all artifacts whose names start with "wheels-".
-          # This downloads every wheels artifact generated by different matrix jobs.
-          pattern: wheels-*
-          # "path" is where these downloaded wheel files will be placed. Here, they’re merged into the "dist" folder.
-          path: dist
-          # "merge-multiple: true" tells the action to combine files from multiple artifacts into one folder.
-          
+          pattern: wheels-*  # Match all artifacts whose names begin with "wheels-".
+          path: dist         # Place all downloaded wheel files into the "dist" directory.
+          merge-multiple: true
+
+      # Publish to PyPI.
+      # The pypa/gh-action-pypi-publish@release/v1 action uploads all files present in the "dist" folder to PyPI.
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          # The "password" field supplies your secure PyPI API token.
-          password: ${{ secrets.PYPI_PASSWORD }}
-          skip-existing: true
-          verbose: true  # Publishes with detailed output.
-          # Note: This action uploads all files in the "dist" folder to PyPI using twine.
-          # In our workflow, "dist" now contains both the sdist (.tar.gz) and all wheel (.whl) files downloaded from previous jobs.
+          password: ${{ secrets.PYPI_PASSWORD }}  # Supply the secure PyPI API token.
+          skip-existing: true  # Skip files already present on PyPI.
+          verbose: true        # Enable verbose output during the upload.
