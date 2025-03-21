@@ -125,11 +125,11 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      # # Checkout the repository (if needed for configuration).
-      # - name: Checkout out repo and submodules
-      #   uses: actions/checkout@v4
-      #   with:
-      #     submodules: true
+      # Checkout the repository (if needed for configuration).
+      - name: Checkout out repo and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
 
       # Download the sdist artifact into the "dist" folder.
       - name: Download SDist Artifact
