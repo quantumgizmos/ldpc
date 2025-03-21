@@ -39,18 +39,12 @@ jobs:
       - name: Check metadata
         run: pipx run twine check dist/*
       
-      # Upload the sdist as an artifact.
-      # Artifacts store build outputs temporarily for retrieval in later jobs.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sdist-${{ github.run_id }}         # This artifact will be named "sdist-${{ github.run_id }}".
-          path: dist/*.tar.gz  # Only upload the .tar.gz file(s) from the dist folder.
       - name: Upload SDist Artifact
         uses: actions/upload-artifact@v4
         with:
           # "name" is the identifier for this artifact.
-          # When you later download artifacts by name, you will refer to "sdist".
-          name: sdist
+          # When you later download artifacts by name, you will refer to "sdist-${{ github.run_id }}".
+          name: sdist-${{ github.run_id }}
           # "path" is the file pattern on the local runner.
           # Here, we upload all .tar.gz files from the "dist" folder.
           path: dist/*.tar.gz
@@ -115,11 +109,6 @@ jobs:
 
       # Upload the produced wheels as artifacts.
       # Each artifact name includes the unique GitHub run ID and build configuration.
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: wheels-${{ github.run_id }}-${{ matrix.os_dist.dist }}
-          path: ./wheelhouse/*.whl  # Wheels are stored in the "wheelhouse" folder.
       - name: Upload wheels Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -136,11 +125,11 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      # Checkout the repository (if needed for configuration).
-      - name: Checkout out repo and submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+      # # Checkout the repository (if needed for configuration).
+      # - name: Checkout out repo and submodules
+      #   uses: actions/checkout@v4
+      #   with:
+      #     submodules: true
 
       # Download the sdist artifact into the "dist" folder.
       - name: Download SDist Artifact
