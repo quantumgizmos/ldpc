@@ -43,7 +43,7 @@ jobs:
       # Artifacts store build outputs temporarily for retrieval in later jobs.
       - uses: actions/upload-artifact@v4
         with:
-          name: sdist         # This artifact will be named "sdist".
+          name: sdist-${{ github.run_id }}         # This artifact will be named "sdist-${{ github.run_id }}".
           path: dist/*.tar.gz  # Only upload the .tar.gz file(s) from the dist folder.
       - name: Upload SDist Artifact
         uses: actions/upload-artifact@v4
@@ -148,7 +148,7 @@ jobs:
         with:
           # "name" tells the download action which artifact to fetch;
           # here, it downloads the artifact named "sdist" that was uploaded during the build_sdist job.
-          name: sdist
+          name: sdist-${{ github.run_id }}
           # "path" is the destination directory on the runner where the artifact files will be placed.
           # They will be saved in the "dist" folder.
           path: dist
