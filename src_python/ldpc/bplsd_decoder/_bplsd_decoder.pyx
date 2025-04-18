@@ -138,16 +138,19 @@ cdef class BpLsdDecoder(BpDecoderBase):
 
         self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
-        if self.bpd.converge:
-            for i in range(self.n):
-                out[i] = self.bpd.decoding[i]
-            self.lsd.reset_cluster_stats()
 
+        # MODIFIED TO RUN LSD ALWAYS REGARDLESS OF BP OUTCOMES
+        # if self.bpd.converge:
+        #     for i in range(self.n):
+        #         out[i] = self.bpd.decoding[i]
+        #     self.lsd.reset_cluster_stats()
+        #
+        #
+        # if not self.bpd.converge:
 
-        if not self.bpd.converge:
-            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
-            for i in range(self.n):
-                out[i] = self.lsd.decoding[i]
+        self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
+        for i in range(self.n):
+            out[i] = self.lsd.decoding[i]
         
         return out
 
