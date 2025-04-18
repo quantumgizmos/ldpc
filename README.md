@@ -3,8 +3,9 @@
 **Note:** This repo is a fork of [quantumgizmos/ldpc](https://github.com/quantumgizmos/ldpc), modified to be used for [seokhyung-lee/ldpc-post-selection](https://github.com/seokhyung-lee/ldpc-post-selection).
 
 **Changes from the original repo:**
-- BP+LSD decoder always runs LSD regardless of BP convergence. Originally, it stopped 
+- BP+LSD decoder always runs LSD regardless of BP convergence.
 - BP+LSD decoder stores the indices of final bits within each cluster in `BpLsdDecoder.statistics["individual_cluster_stats"]["final_bits"]`.
+
 The following is the original README of the repo.
 
 ---
