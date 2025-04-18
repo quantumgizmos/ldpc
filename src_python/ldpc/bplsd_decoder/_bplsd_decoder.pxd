@@ -26,6 +26,7 @@ cdef extern from "lsd.hpp" namespace "ldpc::lsd":
         int nr_of_non_zero_check_matrix_entries
         double cluster_pcm_sparsity
         vector[uint8_t] solution
+        vector[int] final_bits
 
 
 
