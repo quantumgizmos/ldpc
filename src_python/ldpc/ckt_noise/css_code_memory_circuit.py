@@ -77,6 +77,10 @@ def make_css_code_memory_circuit(
     the X stabilizers (maximum weight of any row or column in the x_stabilizers matrix).
     Similarly deg_Z is the maximum weight of any row or column in the z_stabilizers matrix.
 
+    Note that, if decoding this circuit using a decoder based on belief propagation, it may
+    be advisable to set `include_opposite_basis_detectors = False` to improve performance.
+    See the docstring for the `include_opposite_basis_detectors` for details.
+
     Parameters
     ----------
     x_stabilizers : csr_matrix
