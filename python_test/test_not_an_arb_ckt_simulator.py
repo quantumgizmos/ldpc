@@ -1,3 +1,6 @@
+# Copyright 2025 The Project Authors
+# SPDX-License-Identifier: MIT
+
 from scipy.sparse import csr_matrix
 import numpy as np
 import pytest

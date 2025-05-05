@@ -1,3 +1,6 @@
+# Copyright 2025 The Project Authors
+# SPDX-License-Identifier: MIT
+
 from ldpc.ckt_noise.bipartite_edge_coloring import (
     BipartiteGraph,
     bipartite_edge_coloring,

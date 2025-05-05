@@ -1,3 +1,6 @@
+# Copyright 2025 The Project Authors
+# SPDX-License-Identifier: MIT
+
 from dataclasses import dataclass, field
 from typing import Dict, Set
 from scipy.sparse import csr_matrix, csc_matrix
@@ -140,8 +143,8 @@ class BipartiteGraph:
         Uses a method based on augmenting paths (the second algorithm
         reviewed in https://dl.acm.org/doi/pdf/10.1145/800133.804346).
         For a bipartite graph with E edges and V nodes, the worst-case
-        complexity is O(EV), although empirically it is closer 
-        to O(E) for many graphs (e.g. random bipartite graphs with 
+        complexity is O(EV), although empirically it is closer
+        to O(E) for many graphs (e.g. random bipartite graphs with
         constant maximum degree).
 
         Parameters
@@ -302,12 +305,12 @@ def bipartite_edge_coloring(biadjacency_matrix: csr_matrix) -> csr_matrix:
     their integer value now corresponds to the color c of the edge.
     The color c of the edge is an integer satisfying `1 <= c <= degree` where
     degree is the maximum degree of the bipartite graph (its chromatic index).
-    
+
     Uses a method based on augmenting paths (the second algorithm
     reviewed in https://dl.acm.org/doi/pdf/10.1145/800133.804346).
     For a bipartite graph with E edges and V nodes, the worst-case
-    complexity is O(EV), although empirically it is closer 
-    to O(E) for many graphs (e.g. random bipartite graphs with 
+    complexity is O(EV), although empirically it is closer
+    to O(E) for many graphs (e.g. random bipartite graphs with
     constant maximum degree).
 
     Parameters

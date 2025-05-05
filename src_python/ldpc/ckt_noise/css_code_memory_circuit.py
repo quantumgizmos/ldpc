@@ -1,3 +1,6 @@
+# Copyright 2025 The Project Authors
+# SPDX-License-Identifier: MIT
+
 import stim
 from scipy.sparse import csr_matrix, coo_matrix, spmatrix
 from typing import Callable, Optional, Tuple, Iterable
