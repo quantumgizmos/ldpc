@@ -1,9 +1,11 @@
 from scipy.sparse import csr_matrix
 import numpy as np
+import pytest
 
 from ldpc.ckt_noise.not_an_arb_ckt_simulator import get_stabilizer_time_steps
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 def test_get_stabilizer_time_steps():
     M = csr_matrix([[1, 1, 0], [1, 1, 0], [1, 1, 1]], dtype=np.uint8)
 
