@@ -65,10 +65,8 @@ def test_toric_code_matrices(distance: int):
     itertools.product(range(2, 6), ("X", "Z"), (True, False)),
 )
 def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
-    basis = "X"
     Hx, Hz, Lx, Lz = toric_code_matrices(distance=distance)
     num_rounds = 5
-    other_basis_dets = True
     p = 0.001
     circuit = make_css_code_memory_circuit(
         x_stabilizers=Hx,
@@ -86,12 +84,18 @@ def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
     )
     circuit.detector_error_model(decompose_errors=True)
     circuit.compile_detector_sampler().sample(shots=10)
-    assert circuit.num_detectors == num_rounds * 2 * distance**2
-    assert circuit.num_observables == 2
-    assert (
-        circuit.count_determined_measurements()
-        == circuit.num_detectors + circuit.num_observables
+    num_dets_expected = (
+        num_rounds * 2 * distance**2
+        if other_basis_dets
+        else (num_rounds + 1) * distance**2
     )
+    assert circuit.num_detectors == num_dets_expected
+    assert circuit.num_observables == 2
+    if other_basis_dets:
+        assert (
+            circuit.count_determined_measurements()
+            == circuit.num_detectors + circuit.num_observables
+        )
 
     assert circuit.num_qubits == 4 * distance**2
 
@@ -103,7 +107,7 @@ def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
 
 
 @pytest.mark.parametrize(
-    "include_opposite_basis_detectors,basis,expected_det_coords",
+    "include_opposite_basis_detectors,basis,expected_det_coords,expected_qubit_coords",
     [
         [
             True,
@@ -114,6 +118,7 @@ def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
                 [0.0, 5.0, 1.0, 1.0],
                 [0.0, 4.0, 0.0, 1.0],
             ],
+            [[0.0, 0.0], [0.0, 1.0], [0.0, 2.0], [0.0, 3.0], [0.0, 4.0], [0.0, 5.0]],
         ],
         [
             True,
@@ -124,16 +129,19 @@ def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
                 [0.0, 5.0, 1.0, 1.0],
                 [0.0, 5.0, 1.0, 1.0],
             ],
+            [[0.0, 0.0], [0.0, 1.0], [0.0, 2.0], [0.0, 3.0], [0.0, 4.0], [0.0, 5.0]],
         ],
         [
             False,
             "X",
             [[0.0, 4.0, 0.0, 0.0], [0.0, 4.0, 0.0, 1.0], [0.0, 4.0, 0.0, 1.0]],
+            [[0.0, 0.0], [0.0, 1.0], [0.0, 2.0], [0.0, 3.0], [0.0, 4.0], [0.0, 5.0]],
         ],
         [
             False,
             "Z",
             [[0.0, 5.0, 1.0, 0.0], [0.0, 5.0, 1.0, 1.0], [0.0, 5.0, 1.0, 1.0]],
+            [[0.0, 0.0], [0.0, 1.0], [0.0, 2.0], [0.0, 3.0], [0.0, 4.0], [0.0, 5.0]],
         ],
     ],
 )
@@ -141,6 +149,7 @@ def test_make_css_code_memory_circuit_coordinates_422_code(
     include_opposite_basis_detectors: bool,
     basis: str,
     expected_det_coords: Iterable[Iterable[int]],
+    expected_qubit_coords: Iterable[Iterable[int]],
 ):
     H = csr_matrix([[1, 1, 1, 1]])
     n = H.shape[1]
@@ -166,6 +175,13 @@ def test_make_css_code_memory_circuit_coordinates_422_code(
             args = inst.gate_args_copy()
             all_det_coords.append(args)
     assert all_det_coords == expected_det_coords
+
+    all_qubit_coords = []
+    for inst in circuit:
+        if inst.name == "QUBIT_COORDS":
+            args = inst.gate_args_copy()
+            all_qubit_coords.append(args)
+    assert all_qubit_coords == expected_qubit_coords
 
 
 @pytest.mark.parametrize(
