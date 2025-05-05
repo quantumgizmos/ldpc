@@ -4,6 +4,8 @@ import stim
 import numpy as np
 from pymatching import Matching
 
+from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
+
 
 def rep_code(d: int):
     """
@@ -34,21 +36,19 @@ def get_stabilizer_time_steps(pcm: csr_matrix):
             - time_steps: A 2D list where each row represents a time step and each column represents a stabilizer.
             - measured_bits: A 2D list where each row represents a stabilizer and each column represents a time step.
     """
-    # max time steps is the max number of non-zero entries in any row.
-    max_time_steps = max(pcm.getnnz(axis=1))
+    col_mat = csr_matrix(bipartite_edge_coloring(pcm))
+    max_time_steps = np.max(col_mat.data)
     num_stabs = pcm.shape[0]
 
     time_steps = [[None] * num_stabs for _ in range(max_time_steps)]
     measured_bits = [[None] * max_time_steps for _ in range(num_stabs)]
 
-    for t in range(max_time_steps):
-        for k in range(pcm.shape[0]):
-            for q in pcm[k].indices:
-                if q not in measured_bits[k]:
-                    if q not in time_steps[t]:
-                        time_steps[t][k] = q
-                        measured_bits[k][t] = q
-                        break
+    for k in range(col_mat.shape[0]):
+        for j in range(col_mat.indptr[k], col_mat.indptr[k + 1]):
+            t = col_mat.data[j] - 1
+            q = col_mat.indices[j]
+            time_steps[t][k] = q
+            measured_bits[k][t] = q
 
     return time_steps, measured_bits
 
