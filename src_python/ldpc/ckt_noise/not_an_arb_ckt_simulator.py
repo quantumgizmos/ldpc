@@ -34,6 +34,7 @@ def get_stabilizer_time_steps(pcm: csr_matrix):
        version 2.3.5, however this method is now deprecated.
        Users on affected versions are strongly advised to upgrade and use
        :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead.
+       See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
 
     .. deprecated:: 2.3.5
        This function is deprecated and will be removed in a future version. Please use
@@ -96,6 +97,7 @@ def stim_circuit_from_time_steps(
        This bug was fixed in this method in version 2.3.5, however this method is now
        deprecated. Users on affected versions are strongly advised to upgrade and use
        :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead.
+       See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
 
     .. deprecated:: 2.3.5
        This function is deprecated and will be removed in a future version. Please use
