@@ -211,6 +211,8 @@ def make_css_code_memory_circuit(
         a CNOT gate controlled on the X measure qubit for X stabilizer i and targeted on data
         qubit j is applied in time step t. Here t = 1 is the first time step of CNOT gates in
         the subcircuit in which CNOT gates are applied between X measure qubits and data qubits.
+        By default None, in which case a minimum edge coloring of the Tanner graph defining
+        the X stabilizers is used to assign CNOT gates to time steps.
     z_time_steps : Optional[csr_matrix[np.int64]], optional
         If provided, must have the same shape and location of nonzero elements as
         z_stabilizers. `z_time_steps[i,j]` is nonzero if and only if Z stabilizer i acts
@@ -218,6 +220,8 @@ def make_css_code_memory_circuit(
         a CNOT gate controlled on data qubit j and targeted on the Z measure qubit for
         Z stabilizer i is applied in time step t. Here t = 1 is the first time step of CNOT gates in
         the subcircuit in which CNOT gates are applied between Z measure qubits and data qubits.
+        By default None, in which case a minimum edge coloring of the Tanner graph defining
+        the Z stabilizers is used to assign CNOT gates to time steps.
 
 
     Returns
