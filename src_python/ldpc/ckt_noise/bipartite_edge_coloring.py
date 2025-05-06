@@ -353,7 +353,7 @@ def bipartite_edge_coloring(biadjacency_matrix: csr_matrix) -> csr_matrix:
 
     Returns
     -------
-    csr_matrix
+    csr_matrix[np.int64]
         A biadjacency matrix `M` representing the bipartite graph where the
         element `M[i,j]` is nonzero if and only if there is an edge from
         node i in the A set to node j in the B set (it has the same locations

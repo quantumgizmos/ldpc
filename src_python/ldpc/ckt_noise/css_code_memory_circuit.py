@@ -7,10 +7,7 @@ from typing import Callable, Optional, Tuple, Iterable
 import numpy as np
 import numpy.typing as npt
 
-from ldpc.ckt_noise.bipartite_edge_coloring import (
-    bipartite_edge_coloring,
-    is_valid_bipartite_edge_coloring,
-)
+from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
 
 
 def append_cycle_cx_gates_from_steps(
@@ -130,16 +127,16 @@ def make_css_code_memory_circuit(
 
     Parameters
     ----------
-    x_stabilizers : csr_matrix
+    x_stabilizers : csr_matrix[np.uint8]
         Check matrix defining the X stabilizers. `x_stabilizers[i,j] == 1` if and only
         if X stabilizer i is supported on qubit j, otherwise `x_stabilizers[i,j] == 0`.
-    z_stabilizers : csr_matrix
+    z_stabilizers : csr_matrix[np.uint8]
         Check matrix defining the Z stabilizers. `z_stabilizers[i,j] == 1` if and only
         if Z stabilizer i is supported on qubit j, otherwise `z_stabilizers[i,j] == 0`.
-    x_logicals : csr_matrix
+    x_logicals : csr_matrix[np.uint8]
         Check matrix defining the X logical operators. `x_logicals[i,j] == 1` if and only
         if X logical i is supported on qubit j, otherwise `x_logicals[i,j] == 0`.
-    z_logicals : csr_matrix
+    z_logicals : csr_matrix[np.uint8]
         Check matrix defining the Z logical operators. `z_logicals[i,j] == 1` if and only
         if Z logical i is supported on qubit j, otherwise `z_logicals[i,j] == 0`.
     num_rounds : int
