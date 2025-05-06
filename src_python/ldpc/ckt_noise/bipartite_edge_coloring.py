@@ -255,12 +255,41 @@ class BipartiteGraph:
 def is_valid_bipartite_edge_coloring(
     biadj_matrix: csr_matrix, colored_biadj_matrix: csr_matrix
 ) -> bool:
+    """Checks whether `colored_biadj_matrix` is a valid minimum edge coloring of
+    the bipartite graph defined by biadj_matrix.
+
+    Parameters
+    ----------
+    biadj_matrix : csr_matrix[np.uint8]
+        A biadjacency matrix defining a bipartite graph.
+        For a bipartite graph with node sets A and B, each row of biadjacency_matrix
+        corresponds to a node in A, and each column of biadjacency matrix corresponds
+        to a node in B. Element `biadjacency_matrix[i,j]==1` if and only if node
+        i in A is connected by an edge to node j in B, otherwise `biadjacency_matrix[i,j]==0`.
+    colored_biadj_matrix : csr_matrix[np.int64]
+        A biadjacency matrix representing the bipartite graph where the
+        element `colored_biadj_matrix[i,j]` should be nonzero if and only if there
+        is an edge from node i in the A set to node j in the B set.
+        The value of `colored_biadj_matrix[i,j]` is the edge's color in the graph.
+        In other words, if it is a valid minimum edge coloring, we should have
+        `1 <= M[i,j] <= degree`, where degree is the maximum degree of the
+        bipartite graph.
+
+    Returns
+    -------
+    bool
+        True if colored_biadj_matrix is a valid minimum edge coloring of the bipartite
+        graph defined by biadj_matrix, otherwise False
+    """
     m = csr_matrix(biadj_matrix)
     m.eliminate_zeros()
     m.sort_indices()
     m_csr = csr_matrix(colored_biadj_matrix)
     m_csr.eliminate_zeros()
     m_csr.sort_indices()
+
+    if m.shape != m_csr.shape:
+        return False
 
     # Check nonzero elements are the same
     if not np.array_equal(m.indices, m_csr.indices):
@@ -270,7 +299,7 @@ def is_valid_bipartite_edge_coloring(
 
     m_csc = csc_matrix(m_csr)
     # All edges should be colored
-    if np.any(m_csr.data == -1):
+    if np.any(m_csr.data < 0):
         return False
     row_weight = np.max(m_csr.indptr[1:] - m_csr.indptr[0:-1])
     col_weight = np.max(m_csc.indptr[1:] - m_csc.indptr[0:-1])
@@ -315,7 +344,7 @@ def bipartite_edge_coloring(biadjacency_matrix: csr_matrix) -> csr_matrix:
 
     Parameters
     ----------
-    biadjacency_matrix : csr_matrix
+    biadjacency_matrix : csr_matrix[np.uint8]
         A biadjacency matrix defining a bipartite graph.
         For a bipartite graph with node sets A and B, each row of biadjacency_matrix
         corresponds to a node in A, and each column of biadjacency matrix corresponds

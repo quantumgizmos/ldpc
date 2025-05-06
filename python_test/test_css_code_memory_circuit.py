@@ -5,6 +5,7 @@ from typing import Tuple, Iterable
 import itertools
 
 from ldpc.ckt_noise.css_code_memory_circuit import make_css_code_memory_circuit
+from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
 
 
 def repetition_code(distance: int) -> csr_matrix:
@@ -61,13 +62,24 @@ def test_toric_code_matrices(distance: int):
 
 
 @pytest.mark.parametrize(
-    "distance,basis,other_basis_dets",
-    itertools.product(range(2, 6), ("X", "Z"), (True, False)),
+    "distance,basis,other_basis_dets,custom_time_steps",
+    itertools.product(range(2, 6), ("X", "Z"), (True, False), (False, True)),
 )
-def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
+def test_toric_code_circuit(
+    distance: int, basis: str, other_basis_dets: bool, custom_time_steps: bool
+):
     Hx, Hz, Lx, Lz = toric_code_matrices(distance=distance)
     num_rounds = 5
     p = 0.001
+    if custom_time_steps:
+        x_time_steps = bipartite_edge_coloring(Hx)
+        # Double the number of time steps and reverse the order
+        x_time_steps.data = (np.max(x_time_steps.data) + 1 - x_time_steps.data) * 2
+        z_time_steps = bipartite_edge_coloring(Hz)
+        z_time_steps.data = (np.max(z_time_steps.data) + 1 - z_time_steps.data) * 2
+    else:
+        x_time_steps = None
+        z_time_steps = None
     circuit = make_css_code_memory_circuit(
         x_stabilizers=Hx,
         z_stabilizers=Hz,
@@ -81,6 +93,8 @@ def test_toric_code_circuit(distance: int, basis: str, other_basis_dets: bool):
         before_measure_flip_probability=p,
         after_reset_flip_probability=p,
         idle_during_clifford_depolarization=p,
+        x_time_steps=x_time_steps,
+        z_time_steps=z_time_steps,
     )
     circuit.detector_error_model(decompose_errors=True)
     circuit.compile_detector_sampler().sample(shots=10)
@@ -185,10 +199,11 @@ def test_make_css_code_memory_circuit_coordinates_422_code(
 
 
 @pytest.mark.parametrize(
-    "basis,expected_circuit",
+    "basis,double_time_steps,expected_circuit",
     [
         (
             "X",
+            False,
             """QUBIT_COORDS(0) 0
 QUBIT_COORDS(1) 1
 QUBIT_COORDS(2) 2
@@ -290,6 +305,7 @@ OBSERVABLE_INCLUDE(1) rec[-2] rec[-1]""",
         ),
         (
             "Z",
+            False,
             """QUBIT_COORDS(0) 0
 QUBIT_COORDS(1) 1
 QUBIT_COORDS(2) 2
@@ -389,15 +405,225 @@ DETECTOR(5, 0) rec[-5] rec[-4] rec[-3] rec[-2] rec[-1]
 OBSERVABLE_INCLUDE(0) rec[-4] rec[-3]
 OBSERVABLE_INCLUDE(1) rec[-2] rec[-1]""",
         ),
+        (
+            "X",
+            True,
+            """QUBIT_COORDS(0) 0
+QUBIT_COORDS(1) 1
+QUBIT_COORDS(2) 2
+QUBIT_COORDS(3) 3
+QUBIT_COORDS(4) 4
+QUBIT_COORDS(5) 5
+RX 0 1 2 3
+Z_ERROR(0.004) 0 1 2 3
+DEPOLARIZE1(0.002) 0 1 2 3
+RX 4
+Z_ERROR(0.004) 4
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 4
+TICK
+CX 4 3
+DEPOLARIZE2(0.001) 4 3
+DEPOLARIZE1(0.005) 0 1 2
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 4
+TICK
+CX 4 2
+DEPOLARIZE2(0.001) 4 2
+DEPOLARIZE1(0.005) 0 1 3
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 4
+TICK
+CX 4 1
+DEPOLARIZE2(0.001) 4 1
+DEPOLARIZE1(0.005) 0 2 3
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 4
+TICK
+CX 4 0
+DEPOLARIZE2(0.001) 4 0
+DEPOLARIZE1(0.005) 1 2 3
+TICK
+MX(0.003) 4
+R 5
+X_ERROR(0.004) 5
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX 0 5
+DEPOLARIZE2(0.001) 0 5
+DEPOLARIZE1(0.005) 1 2 3
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX 1 5
+DEPOLARIZE2(0.001) 1 5
+DEPOLARIZE1(0.005) 0 2 3
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX 2 5
+DEPOLARIZE2(0.001) 2 5
+DEPOLARIZE1(0.005) 0 1 3
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX
+DEPOLARIZE2(0.001)
+DEPOLARIZE1(0.005) 0 1 2 3 5
+TICK
+CX 3 5
+DEPOLARIZE2(0.001) 3 5
+DEPOLARIZE1(0.005) 0 1 2
+TICK
+M(0.003) 5
+DETECTOR(4, 0) rec[-2]
+REPEAT 9 {
+    DEPOLARIZE1(0.002) 0 1 2 3
+    RX 4
+    Z_ERROR(0.004) 4
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 4
+    TICK
+    CX 4 3
+    DEPOLARIZE2(0.001) 4 3
+    DEPOLARIZE1(0.005) 0 1 2
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 4
+    TICK
+    CX 4 2
+    DEPOLARIZE2(0.001) 4 2
+    DEPOLARIZE1(0.005) 0 1 3
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 4
+    TICK
+    CX 4 1
+    DEPOLARIZE2(0.001) 4 1
+    DEPOLARIZE1(0.005) 0 2 3
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 4
+    TICK
+    CX 4 0
+    DEPOLARIZE2(0.001) 4 0
+    DEPOLARIZE1(0.005) 1 2 3
+    TICK
+    MX(0.003) 4
+    R 5
+    X_ERROR(0.004) 5
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX 0 5
+    DEPOLARIZE2(0.001) 0 5
+    DEPOLARIZE1(0.005) 1 2 3
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX 1 5
+    DEPOLARIZE2(0.001) 1 5
+    DEPOLARIZE1(0.005) 0 2 3
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX 2 5
+    DEPOLARIZE2(0.001) 2 5
+    DEPOLARIZE1(0.005) 0 1 3
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX
+    DEPOLARIZE2(0.001)
+    DEPOLARIZE1(0.005) 0 1 2 3 5
+    TICK
+    CX 3 5
+    DEPOLARIZE2(0.001) 3 5
+    DEPOLARIZE1(0.005) 0 1 2
+    TICK
+    M(0.003) 5
+    SHIFT_COORDS(0, 1)
+    DETECTOR(4, 0) rec[-4] rec[-2]
+    DETECTOR(5, 0) rec[-3] rec[-1]
+}
+MX(0.003) 0 1 2 3
+DETECTOR(4, 0) rec[-6] rec[-4] rec[-3] rec[-2] rec[-1]
+OBSERVABLE_INCLUDE(0) rec[-4] rec[-2]
+OBSERVABLE_INCLUDE(1) rec[-2] rec[-1]""",
+        ),
     ],
 )
 def test_css_code_memory_circuit_422_code_exact_match(
-    basis: str, expected_circuit: str
+    basis: str, double_time_steps: bool, expected_circuit: str
 ):
+    Hx = csr_matrix([[1, 1, 1, 1]])
+    Hz = csr_matrix([[1, 1, 1, 1]])
+    if double_time_steps:
+        x_time_steps = bipartite_edge_coloring(Hx)
+        # Double the number of X time steps and reverse the order
+        x_time_steps.data = (np.max(x_time_steps.data) + 1 - x_time_steps.data) * 2
+        z_time_steps = bipartite_edge_coloring(Hz)
+        # Triple the number of Z time steps but keep the order
+        z_time_steps.data = 3 * z_time_steps.data
+    else:
+        x_time_steps = None
+        z_time_steps = None
     num_rounds = 10
     circuit = make_css_code_memory_circuit(
-        x_stabilizers=[[1, 1, 1, 1]],
-        z_stabilizers=[[1, 1, 1, 1]],
+        x_stabilizers=Hx,
+        z_stabilizers=Hz,
         x_logicals=[[1, 0, 1, 0], [0, 0, 1, 1]],
         z_logicals=[[1, 1, 0, 0], [0, 0, 1, 1]],
         num_rounds=num_rounds,
@@ -407,6 +633,8 @@ def test_css_code_memory_circuit_422_code_exact_match(
         before_measure_flip_probability=0.003,
         after_reset_flip_probability=0.004,
         idle_during_clifford_depolarization=0.005,
+        x_time_steps=x_time_steps,
+        z_time_steps=z_time_steps,
     )
     assert circuit.num_detectors == 2 * num_rounds
     assert circuit.num_observables == 2

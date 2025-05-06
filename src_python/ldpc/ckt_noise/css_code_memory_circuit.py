@@ -2,12 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 import stim
-from scipy.sparse import csr_matrix, coo_matrix, spmatrix
+from scipy.sparse import csr_matrix, coo_matrix, spmatrix, csc_matrix
 from typing import Callable, Optional, Tuple, Iterable
 import numpy as np
 import numpy.typing as npt
 
-from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
+from ldpc.ckt_noise.bipartite_edge_coloring import (
+    bipartite_edge_coloring,
+    is_valid_bipartite_edge_coloring,
+)
 
 
 def append_cycle_cx_gates_from_steps(
@@ -22,7 +25,7 @@ def append_cycle_cx_gates_from_steps(
 ):
     """A cx gate controlled on control_qubits[i] and targeted on target_qubits[j]
     is implemented in timestep cx_steps[i,j], and is not implemented at all
-    if cx_steps[i,j]==0.
+    if cx_steps[i,j] == 0.
     """
     cx_steps = coo_matrix(cx_steps)
     num_steps = np.max(cx_steps.data)
@@ -51,6 +54,45 @@ def append_cycle_cx_gates_from_steps(
         circuit.append("TICK")
 
 
+def _is_valid_time_steps_matrix(
+    check_matrix: csr_matrix, time_steps: csr_matrix
+) -> bool:
+    m = csr_matrix(check_matrix)
+    m.eliminate_zeros()
+    m.sort_indices()
+    m_csr = csr_matrix(time_steps)
+    m_csr.eliminate_zeros()
+    m_csr.sort_indices()
+
+    if m.shape != m_csr.shape:
+        return False
+
+    # Check nonzero elements are the same
+    if not (
+        np.array_equal(m.indices, m_csr.indices)
+        and np.array_equal(m.indptr, m_csr.indptr)
+    ):
+        return False
+
+    m_csc = csc_matrix(m_csr)
+    # All nonzero elements should be assigned a positive time step
+    if np.any(m_csr.data < 0):
+        return False
+
+    # Check nonzero elements in each row (using m_csr) and column
+    # (using m_csc) have unique elements. Corresponds to checking
+    # that no qubit is involved in more than one CNOT gate in a
+    # given time step.
+    for m_sparse in (m_csr, m_csc):
+        for i in range(m_sparse.indptr.shape[0] - 1):
+            row_or_col_steps = m_sparse.data[
+                m_sparse.indptr[i] : m_sparse.indptr[i + 1]
+            ]
+            if np.unique(row_or_col_steps).shape[0] < row_or_col_steps.shape[0]:
+                return False
+    return True
+
+
 def make_css_code_memory_circuit(
     *,
     x_stabilizers: csr_matrix,
@@ -68,6 +110,8 @@ def make_css_code_memory_circuit(
     qubit_coord_func: Optional[Callable[[int], Iterable[float]]] = None,
     detector_coord_func: Optional[Callable[[int], Iterable[float]]] = None,
     shift_coords_per_round: Optional[Iterable[int]] = None,
+    x_time_steps: Optional[csr_matrix] = None,
+    z_time_steps: Optional[csr_matrix] = None,
 ) -> stim.Circuit:
     """Generates a syndrome extraction circuit implementing a memory
     experiment for an arbitrary CSS code.
@@ -103,9 +147,9 @@ def make_css_code_memory_circuit(
         is measured using its measure qubit.
     basis : str
         The basis of the memory experiment. This is the basis (X or Z) in which the memory
-        experiment if implemented. If `basis=="X"`, the data qubits are initialized in
+        experiment if implemented. If `basis == "X"`, the data qubits are initialized in
         |+> and measured at the end of the circuit in the X basis (the X logical operators
-        are measured transversally). If `basis=="Z"`, the data qubits are initialized in
+        are measured transversally). If `basis == "Z"`, the data qubits are initialized in
         |0> and measured at the end of the circuit in the Z basis (the Z logical operators
         are measured transversally).
     after_clifford_depolarization : float, optional
@@ -163,6 +207,21 @@ def make_css_code_memory_circuit(
         The shift in the coordinates to apply to each detector at the end of each round. i.e. the
         argument to the SHIFT_COORDS instruction that is inserted after each round.
         By default None, in which case SHIFT_COORDS(0, 1) is inserted after each round.
+    x_time_steps : Optional[csr_matrix[np.int64]], optional
+        If provided, must have the same shape and location of nonzero elements as
+        x_stabilizers. `x_time_steps[i,j]` is nonzero if and only if X stabilizer i acts
+        nontrivially on data qubit j. If `x_time_steps[i,j] == t` for `t >= 1` then, in each round,
+        a CNOT gate controlled on the X measure qubit for X stabilizer i and targeted on data
+        qubit j is applied in time step t. Here t = 1 is the first time step of CNOT gates in
+        the subcircuit in which CNOT gates are applied between X measure qubits and data qubits.
+    z_time_steps : Optional[csr_matrix[np.int64]], optional
+        If provided, must have the same shape and location of nonzero elements as
+        z_stabilizers. `z_time_steps[i,j]` is nonzero if and only if Z stabilizer i acts
+        nontrivially on data qubit j. If `z_time_steps[i,j] == t` for `t >= 1` then, in each round,
+        a CNOT gate controlled on data qubit j and targeted on the Z measure qubit for
+        Z stabilizer i is applied in time step t. Here t = 1 is the first time step of CNOT gates in
+        the subcircuit in which CNOT gates are applied between Z measure qubits and data qubits.
+
 
     Returns
     -------
@@ -200,8 +259,28 @@ def make_css_code_memory_circuit(
 
     basis_measure_qubit_offset = n if basis == "X" else n + rx
 
-    x_steps = bipartite_edge_coloring(biadjacency_matrix=x_stabilizers)
-    z_steps = bipartite_edge_coloring(biadjacency_matrix=z_stabilizers).T
+    if x_time_steps is None:
+        x_time_steps = bipartite_edge_coloring(biadjacency_matrix=x_stabilizers)
+    else:
+        if not _is_valid_time_steps_matrix(x_stabilizers, x_time_steps):
+            raise ValueError(
+                "x_time_steps is not a valid assignment of time steps to x_stabilizers. "
+                "x_time_steps should be a valid edge coloring of the Tanner graph defining "
+                "the X stabilizers (although it does not need to be a minimum edge coloring)."
+            )
+        else:
+            x_time_steps = csr_matrix(x_time_steps, dtype=np.int64)
+    if z_time_steps is None:
+        z_time_steps = bipartite_edge_coloring(biadjacency_matrix=z_stabilizers).T
+    else:
+        if not _is_valid_time_steps_matrix(z_stabilizers, z_time_steps):
+            raise ValueError(
+                "z_time_steps is not a valid assignment of time steps to z_stabilizers. "
+                "z_time_steps should be a valid edge coloring of the Tanner graph defining "
+                "the Z stabilizers (although it does not need to be a minimum edge coloring)."
+            )
+        else:
+            z_time_steps = csr_matrix(z_time_steps.T, dtype=np.int64)
 
     x_measure_and_data = np.concatenate([data_qubits, x_measure_qubits])
     z_measure_and_data = np.concatenate([data_qubits, z_measure_qubits])
@@ -221,7 +300,7 @@ def make_css_code_memory_circuit(
         # Measure X stabilizers
         append_cycle_cx_gates_from_steps(
             circuit=circuit,
-            cx_steps=x_steps,
+            cx_steps=x_time_steps,
             control_qubits=x_measure_qubits,
             target_qubits=data_qubits,
             all_qubits=x_measure_and_data,
@@ -242,7 +321,7 @@ def make_css_code_memory_circuit(
         # Measure Z stabilizers
         append_cycle_cx_gates_from_steps(
             circuit=circuit,
-            cx_steps=z_steps,
+            cx_steps=z_time_steps,
             control_qubits=data_qubits,
             target_qubits=z_measure_qubits,
             all_qubits=z_measure_and_data,
