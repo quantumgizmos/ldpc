@@ -185,7 +185,7 @@ def make_css_code_memory_circuit(
         By default 0
     idle_inactive_measure_qubits_during_clifford_depolarization: float, optional
         The strength of a DEPOLARIZE1 error applied to each X measure qubit during a time step
-        in which CNOT gates are applied between Z measure qubits to data qubits. It is also the
+        in which CNOT gates are applied between Z measure qubits and data qubits. It is also the
         strength of a DEPOLARIZE1 error applied to each Z measure qubit during a time step in
         which CNOT gates are applied between X measure qubits and data qubits. You could set
         this to 0 to model a circuit where measure qubits are initialized immediately before
