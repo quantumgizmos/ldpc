@@ -10,15 +10,17 @@ import numpy.typing as npt
 from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
 
 
-def append_cycle_cx_gates_from_steps(
+def _append_cycle_cx_gates_from_steps(
     *,
     circuit: stim.Circuit,
     cx_steps: spmatrix,
     control_qubits: npt.NDArray,
     target_qubits: npt.NDArray,
-    all_qubits: npt.NDArray,
+    all_active_qubits: npt.NDArray,
+    inactive_measure_qubits: npt.NDArray,
     after_cx_depolarization: float,
-    idle_during_cx_depolarization: float,
+    idle_active_qubits_during_cx_depolarization: float,
+    idle_inactive_qubits_during_cx_depolarization: float
 ):
     """A cx gate controlled on control_qubits[i] and targeted on target_qubits[j]
     is implemented in timestep cx_steps[i,j], and is not implemented at all
@@ -41,12 +43,18 @@ def append_cycle_cx_gates_from_steps(
             circuit.append(
                 name="DEPOLARIZE2", targets=cx_targets, arg=after_cx_depolarization
             )
-        if idle_during_cx_depolarization > 0:
-            idle_qubits = np.setdiff1d(all_qubits, cx_targets)
+        if idle_active_qubits_during_cx_depolarization > 0:
+            idle_qubits = np.setdiff1d(all_active_qubits, cx_targets)
             circuit.append(
                 name="DEPOLARIZE1",
                 targets=idle_qubits,
-                arg=idle_during_cx_depolarization,
+                arg=idle_active_qubits_during_cx_depolarization,
+            )
+        if idle_inactive_qubits_during_cx_depolarization > 0:
+            circuit.append(
+                name="DEPOLARIZE1",
+                targets=inactive_measure_qubits,
+                arg=idle_inactive_qubits_during_cx_depolarization,
             )
         circuit.append("TICK")
 
@@ -103,6 +111,7 @@ def make_css_code_memory_circuit(
     before_measure_flip_probability: float = 0,
     after_reset_flip_probability: float = 0,
     idle_during_clifford_depolarization: float = 0,
+    idle_inactive_measure_qubits_during_clifford_depolarization: float = 0,
     include_opposite_basis_detectors: bool = True,
     qubit_coord_func: Optional[Callable[[int], Iterable[float]]] = None,
     detector_coord_func: Optional[Callable[[int], Iterable[float]]] = None,
@@ -162,16 +171,29 @@ def make_css_code_memory_circuit(
         This is the strength of a stim X_ERROR immediately after each RZ gate, and also the
         strength of a stim Z_ERROR immediately after each RX gate. By default 0
     idle_during_clifford_depolarization : float, optional
-        This is the strength of a DEPOLARIZE1 error applied to each idling qubit during a
+        The strength of a DEPOLARIZE1 error applied to each idling qubit during a
         time step in which CNOT gates are being applied to other qubits. Specifically,
         this is the strength of a DEPOLARIZE1 error applied to each idling data qubit and
         X measure qubit during a time step in which CNOT gates are coupling other X measure
         qubits to data qubits; it is also the strength of a DEPOLARIZE1 error applied to
         each idling data qubit and Z measure qubit during a time step in which CNOT gates
-        are coupling other Z measure qubits to data qubits. In other words, Z measure qubits
-        are assumed not to be idle (not yet initialized) during X measurements, and X measure
-        qubits are assumed not to be idle (not yet initialized) during Z measurements.
+        are coupling other Z measure qubits to data qubits. Z measure qubits do not need to be
+        idle (not yet initialized) while CNOT gates are implementing X basis syndrome extraction
+        (and vice versa for Z basis syndrome extraction), so idling errors on these other
+        basis measure qubits can be set separately using the argument
+        idle_inactive_measure_qubits_during_clifford_depolarization.
         By default 0
+    idle_inactive_measure_qubits_during_clifford_depolarization: float, optional
+        The strength of a DEPOLARIZE1 error applied to each X measure qubit during a time step
+        in which CNOT gates are applied between Z measure qubits to data qubits. It is also the
+        strength of a DEPOLARIZE1 error applied to each Z measure qubit during a time step in
+        which CNOT gates are applied between X measure qubits and data qubits. You could set
+        this to 0 to model a circuit where measure qubits are initialized immediately before
+        they are first used in each round, and measured immediately after they are last used
+        in each round. You could set this argument equal to idle_during_clifford_depolarization
+        to model a circuit where X and Z measure qubits are both inialized in the same time step
+        at the beginning of a round, and also both measured in the same time step at the end
+        of a round. By default 0
     include_opposite_basis_detectors : bool, optional
         Whether or not to include detectors of the opposite basis to that of the memory experiment.
         If set to True, then all detectors (both bases) are included. If set to False, then only
@@ -298,19 +320,6 @@ def make_css_code_memory_circuit(
                 targets=list(x_measure_qubits),
                 arg=after_reset_flip_probability,
             )
-        # Measure X stabilizers
-        append_cycle_cx_gates_from_steps(
-            circuit=circuit,
-            cx_steps=x_time_steps,
-            control_qubits=x_measure_qubits,
-            target_qubits=data_qubits,
-            all_qubits=x_measure_and_data,
-            after_cx_depolarization=after_clifford_depolarization,
-            idle_during_cx_depolarization=idle_during_clifford_depolarization,
-        )
-        circuit.append(
-            "MX", targets=list(x_measure_qubits), arg=before_measure_flip_probability
-        )
         circuit.append("RZ", targets=list(z_measure_qubits))
         if after_reset_flip_probability > 0:
             circuit.append(
@@ -319,19 +328,37 @@ def make_css_code_memory_circuit(
                 arg=after_reset_flip_probability,
             )
         circuit.append("TICK")
+        # Measure X stabilizers
+        _append_cycle_cx_gates_from_steps(
+            circuit=circuit,
+            cx_steps=x_time_steps,
+            control_qubits=x_measure_qubits,
+            target_qubits=data_qubits,
+            all_active_qubits=x_measure_and_data,
+            inactive_measure_qubits=z_measure_qubits,
+            after_cx_depolarization=after_clifford_depolarization,
+            idle_active_qubits_during_cx_depolarization=idle_during_clifford_depolarization,
+            idle_inactive_qubits_during_cx_depolarization=idle_inactive_measure_qubits_during_clifford_depolarization
+        )
         # Measure Z stabilizers
-        append_cycle_cx_gates_from_steps(
+        _append_cycle_cx_gates_from_steps(
             circuit=circuit,
             cx_steps=z_time_steps,
             control_qubits=data_qubits,
             target_qubits=z_measure_qubits,
-            all_qubits=z_measure_and_data,
+            all_active_qubits=z_measure_and_data,
+            inactive_measure_qubits=x_measure_qubits,
             after_cx_depolarization=after_clifford_depolarization,
-            idle_during_cx_depolarization=idle_during_clifford_depolarization,
+            idle_active_qubits_during_cx_depolarization=idle_during_clifford_depolarization,
+            idle_inactive_qubits_during_cx_depolarization=idle_inactive_measure_qubits_during_clifford_depolarization
+        )
+        circuit.append(
+            "MX", targets=list(x_measure_qubits), arg=before_measure_flip_probability
         )
         circuit.append(
             "MZ", targets=list(z_measure_qubits), arg=before_measure_flip_probability
         )
+        circuit.append("TICK")
 
     opp_basis = "X" if basis == "Z" else "Z"
 
