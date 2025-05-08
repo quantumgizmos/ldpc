@@ -152,7 +152,12 @@ cdef class BpLsdDecoder(BpDecoderBase):
         for i in range(self.n):
             out[i] = self.lsd.decoding[i]
         
-        return out
+        # BP Prediction
+        out_bp = np.zeros(self.n,dtype=DTYPE)
+        for i in range(self.n):
+            out_bp[i] = self.bpd.decoding[i]
+        
+        return out, out_bp
 
     @property
     def statistics(self) -> Statistics:
