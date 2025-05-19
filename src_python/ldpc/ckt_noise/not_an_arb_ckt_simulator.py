@@ -28,15 +28,15 @@ def rep_code(d: int):
 def get_stabilizer_time_steps(pcm: csr_matrix):
     """
     .. warning::
-       A bug was present in this function in ldpc version 2.3.4 and earlier,
+       A bug was present in this function in ldpc version 2.3.5 and earlier,
        which, for some inputs, could lead to some nonzero elements of the check matrix
        being ignored (and not assigned to any time step). This bug was fixed in
-       version 2.3.5, however this method is now deprecated.
+       version 2.3.6, however this method is now deprecated.
        Users on affected versions are strongly advised to upgrade and use
        :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead.
        See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
 
-    .. deprecated:: 2.3.5
+    .. deprecated:: 2.3.6
        This function is deprecated and will be removed in a future version. Please use
        :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead.
 
@@ -56,7 +56,7 @@ def get_stabilizer_time_steps(pcm: csr_matrix):
     warnings.warn(
         "get_stabilizer_time_steps(pcm) is deprecated and will be removed in a future version. "
         "Use :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead."
-        "WARNING: in ldpc version 2.3.4 and earlier this method contained a bug which, for some "
+        "WARNING: in ldpc version 2.3.5 and earlier this method contained a bug which, for some "
         "inputs, could lead to some nonzero elements of the check matrix "
         "being ignored (see docstring).",
         DeprecationWarning,
@@ -93,14 +93,14 @@ def stim_circuit_from_time_steps(
 ):
     """
     .. warning::
-       A bug was present in this function in ldpc version 2.3.4 and earlier,
+       A bug was present in this function in ldpc version 2.3.5 and earlier,
        which, for some inputs, could lead to some CNOT gates being omitted from the circuit.
-       This bug was fixed in this method in version 2.3.5, however this method is now
+       This bug was fixed in this method in version 2.3.6, however this method is now
        deprecated. Users on affected versions are strongly advised to upgrade and use
        :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead.
        See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
 
-    .. deprecated:: 2.3.5
+    .. deprecated:: 2.3.6
        This function is deprecated and will be removed in a future version. Please use
        :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead.
        The new `make_css_code_memory_circuit()` method allows for measuring both X and Z
@@ -119,7 +119,7 @@ def stim_circuit_from_time_steps(
     warnings.warn(
         "stim_circuit_from_time_steps(pcm) is deprecated and will be removed in a future version. "
         "Use :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead."
-        "WARNING: in ldpc version 2.3.4 and earlier this method contained a bug where some"
+        "WARNING: in ldpc version 2.3.5 and earlier this method contained a bug where some"
         " CNOT gates could be silently omitted from the circuit for certain inputs (see docstring).",
         DeprecationWarning,
         stacklevel=2,
