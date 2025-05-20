@@ -22,7 +22,7 @@ dependencies = [
     "tqdm",
     "pytest",
     "stim",
-    "sinter",
+    "sinter>=1.12.0",
     "pymatching"
 ]
 version = "2.3.4"
