@@ -71,11 +71,11 @@ TEST(BpDecoderTest, InitializationWithOptionalParametersTest) {
     ldpc::bp::BpSchedule bp_schedule = ldpc::bp::SERIAL;
     int omp_threads = 4;
     vector<int> serial_schedule{1, 3, 0, 2};
-    int random_schedule = 0;
+    int random_serial_schedule = 0;
 
     // Initialize decoder using input arguments and optional parameters
     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, bp_method, bp_schedule,
-                                       min_sum_scaling_factor, omp_threads, serial_schedule, random_schedule);
+                                       min_sum_scaling_factor, omp_threads, serial_schedule, random_serial_schedule);
 
     // Check if member variables are set correctly
     EXPECT_TRUE(pcm == decoder.pcm);
@@ -438,7 +438,7 @@ TEST(BpDecoder, random_schedule_seed) {
                                        0.625, 1, vector<int>{2, 3, 1, 0},
                                        1234);
         auto expected_order = vector<int>{2, 3, 1, 0};
-        ASSERT_EQ(bpd.random_schedule_seed, -1);
+        ASSERT_EQ(bpd.random_schedule_seed, 1234);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
 
     }
@@ -446,10 +446,11 @@ TEST(BpDecoder, random_schedule_seed) {
     {
         auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(4);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.2, 0.3, 0.4}, 100, ldpc::bp::MINIMUM_SUM,
-                                       ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0);
+                                       ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0,true);
         auto expected_order = vector<int>{0, 1, 2, 3};
         ASSERT_EQ(bpd.random_schedule_seed, 0);
         ASSERT_EQ(expected_order, bpd.serial_schedule_order);
+        ASSERT_TRUE(bpd.random_serial_schedule);
 
     }
 
@@ -457,8 +458,9 @@ TEST(BpDecoder, random_schedule_seed) {
         auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(4);
         auto bpd = ldpc::bp::BpDecoder(pcm, vector<double>{0.1, 0.2, 0.3, 0.4},
                                        100, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL,
-                                       0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4);
+                                       0.625, 1, ldpc::bp::NULL_INT_VECTOR, 4,true);
         ASSERT_EQ(bpd.random_schedule_seed, 4);
+        ASSERT_TRUE(bpd.random_serial_schedule);
     }
 
 }
@@ -531,6 +533,103 @@ TEST(BpDecoder, ProdSumSerial_RepCode5) {
     }
 }
 
+TEST(BpDecoder, ScheduleChangesOnMultipleDecodeCalls) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 5;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with random_serial_schedule enabled
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0, true);
+
+    auto syndrome = vector<uint8_t>(pcm.m, 0);
+
+    // Capture the schedule order after the first decode call
+    decoder.decode(syndrome);
+    auto first_schedule = decoder.serial_schedule_order;
+
+    // Capture the schedule order after the second decode call
+    decoder.decode(syndrome);
+    auto second_schedule = decoder.serial_schedule_order;
+
+    // Verify that the schedule changes between the two decode calls
+    ASSERT_NE(first_schedule, second_schedule) << "Schedule did not change between decode calls.";
+}
+
+TEST(BpDecoder, ScheduleRemainsSameWithManualOrder) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 5;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Manually specify the schedule order
+    vector<int> manual_schedule_order = {4, 3, 2, 1, 0};
+
+    // Initialize decoder with the manually specified schedule order
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::SERIAL, 0.625, 1, manual_schedule_order, 0, false);
+
+    auto syndrome = vector<uint8_t>(pcm.m, 0);
+
+    // Capture the schedule order after the first decode call
+    decoder.decode(syndrome);
+    auto first_schedule = decoder.serial_schedule_order;
+
+    // Capture the schedule order after the second decode call
+    decoder.decode(syndrome);
+    auto second_schedule = decoder.serial_schedule_order;
+
+    // Verify that the schedule remains the same between the two decode calls
+    ASSERT_EQ(first_schedule, second_schedule) << "Schedule changed despite being manually specified.";
+    ASSERT_EQ(first_schedule, manual_schedule_order) << "Schedule does not match the manually specified order.";
+}
+
+TEST(BpDecoder, ErrorOnManualScheduleWithRandomSerialSchedule) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 5;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Manually specify the schedule order
+    vector<int> manual_schedule_order = {4, 3, 2, 1, 0};
+
+    // Attempt to initialize decoder with both manual schedule and random_serial_schedule enabled
+    EXPECT_THROW(
+        ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                            ldpc::bp::SERIAL, 0.625, 1, manual_schedule_order, 0, true),
+        std::runtime_error
+    );
+}
+
+TEST(BpDecoder, DefaultScheduleAndConstantWhenRandomSerialScheduleFalse) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 5;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder without manually specifying the schedule and with random_serial_schedule=false
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::SERIAL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0, false);
+
+    auto syndrome = vector<uint8_t>(pcm.m, 0);
+
+    // Capture the schedule order after the first decode call
+    decoder.decode(syndrome);
+    auto first_schedule = decoder.serial_schedule_order;
+
+    // Capture the schedule order after the second decode call
+    decoder.decode(syndrome);
+    auto second_schedule = decoder.serial_schedule_order;
+
+    // Verify that the default schedule is {0, 1, 2, 3, ...}
+    vector<int> default_schedule(n);
+    iota(default_schedule.begin(), default_schedule.end(), 0);
+    ASSERT_EQ(first_schedule, default_schedule) << "Default schedule is not standard {0, 1, 2, 3, ...}.";
+
+    // Verify that the schedule remains constant between decode calls
+    ASSERT_EQ(first_schedule, second_schedule) << "Schedule changed despite random_serial_schedule being false.";
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
