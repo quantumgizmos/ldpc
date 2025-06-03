@@ -110,6 +110,38 @@ def test_default_schedule_is_standard_and_constant():
     assert np.array_equal(first_schedule, second_schedule), "Schedule changed despite random_serial_schedule being false."
 
 
+def test_random_serial_schedule_with_default_seed():
+    n = 10
+    H = rep_code(n)
+
+    decoder = BpDecoder(
+        H,
+        error_rate=0.1,
+        max_iter=5,
+        bp_method="minimum_sum",
+        schedule="serial",
+        random_serial_schedule=True,
+    )
+
+    assert decoder.random_serial_schedule is True, "Random serial schedule should be enabled."
+    assert decoder.random_schedule_seed == 0, "Random schedule seed should be set to 0 by default."
+    assert decoder.serial_schedule_order is not None, "Serial schedule order should be initialized."
+
+    syndrome = np.zeros(H.shape[0], dtype=np.uint8)
+    syndrome[0] = 1  # Example syndrome to trigger decoding
+
+    # Capture the schedule order after the first decode call
+    decoder.decode(syndrome)
+    first_schedule = decoder.serial_schedule_order
+
+    # Capture the schedule order after the second decode call
+    decoder.decode(syndrome)
+    second_schedule = decoder.serial_schedule_order
+
+    # Verify that the schedule changes between decode calls
+    assert not np.array_equal(first_schedule, second_schedule), "Schedule did not change between decode calls."
+
+
 # if __name__ == "__main__":
 #     pytest.main()
 
