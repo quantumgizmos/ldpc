@@ -491,36 +491,6 @@ TEST(BpDecoder, ProdSumSerial_RepCode5) {
     }
 }
 
-TEST(BpDecoderParallel, ThreadScaling) {
-    int n = 1200;
-    int m = 600;
-    auto pcm = create_random_ldpc(m, n, 5);
-    auto channel_probabilities = vector<double>(n, 0.04);
-    auto syndrome = create_random_syndrome(m, 0.08);
-
-    std::vector<int> thread_counts = {1, 2, 4, 8};
-    std::vector<long> times;
-
-    for (int threads : thread_counts) {
-        auto decoder_serial = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625);
-        auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625, threads);
-
-        auto start = high_resolution_clock::now();
-        auto result = decoder.decode(syndrome);
-        auto end = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(end - start);
-        times.push_back(duration.count());
-        std::cout << "Threads: " << threads << ", Time: " << duration.count() << " μs\n";
-
-        start = high_resolution_clock::now();
-        auto result2 = decoder_serial.decode(syndrome);
-        end = high_resolution_clock::now();
-        duration = duration_cast<microseconds>(end - start);
-        std::cout << "Serial Time: " << duration.count() << " μs\n";
-        EXPECT_EQ(result, result2) << "Decoding results should match for serial and parallel versions";
-    }
-}
-
 ldpc::bp::BpSparse create_random_ldpc(int m, int n, int avg_row_weight = 4) {
     auto pcm = ldpc::bp::BpSparse(m, n);
     std::uniform_int_distribution<int> col_dist(0, n - 1);
@@ -550,6 +520,36 @@ std::vector<uint8_t> create_random_syndrome(int m, double error_prob = 0.1) {
         syndrome[i] = error_dist(rng) ? 1 : 0;
     }
     return syndrome;
+}
+
+TEST(BpDecoder, Benchmark) {
+    int n = 1200;
+    int m = 600;
+    auto pcm = create_random_ldpc(m, n, 5);
+    auto channel_probabilities = vector<double>(n, 0.04);
+    auto syndrome = create_random_syndrome(m, 0.08);
+
+    std::vector<int> thread_counts = {1, 2, 4, 8};
+    std::vector<long> times;
+
+    for (int threads : thread_counts) {
+        auto decoder_serial = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625);
+        auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625, threads);
+
+        auto start = high_resolution_clock::now();
+        auto result = decoder.decode(syndrome);
+        auto end = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(end - start);
+        times.push_back(duration.count());
+        std::cout << "Threads: " << threads << ", Time: " << duration.count() << " μs\n";
+
+        start = high_resolution_clock::now();
+        auto result2 = decoder_serial.decode(syndrome);
+        end = high_resolution_clock::now();
+        duration = duration_cast<microseconds>(end - start);
+        std::cout << "Serial Time: " << duration.count() << " μs\n";
+        EXPECT_EQ(result, result2) << "Decoding results should match for serial and parallel versions";
+    }
 }
 
 int main(int argc, char** argv) {
