@@ -523,46 +523,67 @@ std::vector<uint8_t> create_random_syndrome(int m, double error_prob = 0.1) {
 }
 
 TEST(BpDecoder, Benchmark) {
-    int n = 10000;
-    int m = 5000;
-    int cycles = 10;
+    const int n = 10000;
+    const int m = 5000;
+    const int cycles = 10;
+    const int max_iterations = 40;
+    const double channel_prob = 0.04;
+    const double syndrome_error_prob = 0.08;
+    const double scaling_factor = 0.625;
+
     auto pcm = create_random_ldpc(m, n, 5);
-    auto channel_probabilities = vector<double>(n, 0.04);
-    auto syndrome = create_random_syndrome(m, 0.08);
+    auto channel_probabilities = vector<double>(n, channel_prob);
+    auto syndrome = create_random_syndrome(m, syndrome_error_prob);
 
     std::vector<int> thread_counts = {1, 2, 4, 8};
-    std::vector<long> ptimes;
-    std::vector<long> stimes;
+    std::vector<long> parallel_times;
+    std::vector<long> serial_times;
 
     for (int threads : thread_counts) {
-        auto serial_decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, 0.625);
-        auto parallel_decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, 40, ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, 0.625, threads);
-        std::vector<long> serial_times(1000);
-        std::vector<long> parallel_times(1000);
+        auto serial_decoder = ldpc::bp::BpDecoder(
+            pcm, channel_probabilities, max_iterations, 
+            ldpc::bp::MINIMUM_SUM, ldpc::bp::SERIAL, scaling_factor
+        );
+        auto parallel_decoder = ldpc::bp::BpDecoder(
+            pcm, channel_probabilities, max_iterations, 
+            ldpc::bp::MINIMUM_SUM, ldpc::bp::PARALLEL, scaling_factor, threads
+        );
+
+        std::vector<long> parallel_durations;
+        std::vector<long> serial_durations;
+        parallel_durations.reserve(cycles);
+        serial_durations.reserve(cycles);
+
         for (int i = 0; i < cycles; i++) {
             auto start = high_resolution_clock::now();
-            auto result = parallel_decoder.decode(syndrome);
+            auto parallel_result = parallel_decoder.decode(syndrome);
             auto end = high_resolution_clock::now();
             auto duration = duration_cast<microseconds>(end - start);
-            parallel_times.push_back(duration.count());
+            parallel_durations.push_back(duration.count());
 
             start = high_resolution_clock::now();
-            auto result2 = serial_decoder.decode(syndrome);
+            auto serial_result = serial_decoder.decode(syndrome);
             end = high_resolution_clock::now();
             duration = duration_cast<microseconds>(end - start);
-            serial_times.push_back(duration.count());
-            EXPECT_EQ(result, result2) << "Decoding results should match for serial and parallel versions";
+            serial_durations.push_back(duration.count());
+
+            EXPECT_EQ(parallel_result, serial_result) 
+                << "Decoding results should match for serial and parallel versions";
         }
-        ptimes.push_back((long)std::accumulate(parallel_times.begin(), parallel_times.end(), 0)/cycles);
-        stimes.push_back((long)std::accumulate(serial_times.begin(), serial_times.end(), 0)/cycles);
-        parallel_times.clear();
-        serial_times.clear();
+
+        long avg_parallel = std::accumulate(parallel_durations.begin(), parallel_durations.end(), 0L) / cycles;
+        long avg_serial = std::accumulate(serial_durations.begin(), serial_durations.end(), 0L) / cycles;
+        
+        parallel_times.push_back(avg_parallel);
+        serial_times.push_back(avg_serial);
     }
+
     for (size_t i = 0; i < thread_counts.size(); i++) {
+        double speedup = static_cast<double>(serial_times[i]) / parallel_times[i];
         std::cout << "Threads: " << thread_counts[i] 
-                  << ", Parallel avg: " << ptimes[i] << " μs"
-                  << ", Serial avg: " << stimes[i] << " μs"
-                  << ", Speedup: " << (double)stimes[i] / ptimes[i] << "x" << std::endl;
+                  << ", Parallel avg: " << parallel_times[i] << " μs"
+                  << ", Serial avg: " << serial_times[i] << " μs"
+                  << ", Speedup: " << speedup << "x" << std::endl;
     }
 }
 
