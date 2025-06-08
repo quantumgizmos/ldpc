@@ -60,7 +60,7 @@ cdef class UnionFindDecoder:
         Default is False.
     """ 
  
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False):
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False, omp_thread_count: int = 1):
         
         self.MEMORY_ALLOCATED=False
 
@@ -75,7 +75,8 @@ cdef class UnionFindDecoder:
         # get the parity check dimensions
         self.m, self.n = pcm.shape[0], pcm.shape[1]
 
-        self.ufd = new uf_decoder_cpp(self.pcm[0])
+        self.ufd = new uf_decoder_cpp(self.pcm[0], omp_thread_count)
+        self.omp_thread_count = omp_thread_count
         self._syndrome.resize(self.m) #C vector for the syndrome
         self.uf_llrs.resize(self.n) #C vector for the log-likehood ratios
         self.uf_method = uf_method

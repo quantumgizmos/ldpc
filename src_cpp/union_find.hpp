@@ -14,6 +14,7 @@
 #include <robin_map.h>
 #include <robin_set.h>
 #include <numeric>
+#include <mutex>
 
 #include "gf2sparse_linalg.hpp"
 #include "bp.hpp"
@@ -22,6 +23,7 @@ namespace ldpc::uf {
 
     const std::vector<double> EMPTY_DOUBLE_VECTOR = {};
     tsl::robin_set<int> EMPTY_INT_ROBIN_SET = {};
+    inline std::mutex uf_global_mutex;
 
     std::vector<int> sort_indices(std::vector<double> &B) {
         std::vector<int> indices(B.size());
@@ -107,6 +109,7 @@ namespace ldpc::uf {
         }
 
         int add_bit_node_to_cluster(int bit_index) {
+            std::lock_guard<std::mutex> lk(uf_global_mutex);
             auto bit_membership = this->global_bit_membership[bit_index];
             if (bit_membership == this) return 0; //if the bit is already in the cluster terminate.
             else if (bit_membership == NULL) {
@@ -141,6 +144,7 @@ namespace ldpc::uf {
         }
 
         void merge_with_cluster(Cluster *cl2) {
+            std::lock_guard<std::mutex> lk(uf_global_mutex);
             for (auto bit_index: cl2->bit_nodes) {
                 this->bit_nodes.insert(bit_index);
                 this->global_bit_membership[bit_index] = this;
@@ -407,12 +411,14 @@ namespace ldpc::uf {
         int check_count;
         tsl::robin_set<int> planar_code_boundary_bits;
         bool pcm_max_bit_degree_2;
+        int omp_thread_count;
 
-        UfDecoder(ldpc::bp::BpSparse &parity_check_matrix) : pcm(parity_check_matrix) {
+        UfDecoder(ldpc::bp::BpSparse &parity_check_matrix, int omp_threads = 1) : pcm(parity_check_matrix) {
             this->bit_count = pcm.n;
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
             this->weighted = false;
+            this->omp_thread_count = omp_threads;
 
             this->pcm_max_bit_degree_2 = true;
             for (auto i = 0; i < this->pcm.n; i++) {
@@ -452,15 +458,21 @@ namespace ldpc::uf {
             }
 
             while (!invalid_clusters.empty()) {
-                for (auto cl: invalid_clusters) {
+                #pragma omp parallel for num_threads(this->omp_thread_count) schedule(dynamic)
+                for (size_t i = 0; i < invalid_clusters.size(); i++) {
+                    Cluster *cl = invalid_clusters[i];
                     if (cl->active) {
+                        #pragma omp critical
                         cl->grow_cluster(bit_weights, bits_per_step);
                     }
                 }
 
                 invalid_clusters.clear();
-                for (auto cl: clusters) {
+                #pragma omp parallel for num_threads(this->omp_thread_count)
+                for (size_t i = 0; i < clusters.size(); i++) {
+                    Cluster *cl = clusters[i];
                     if (cl->active && cl->parity() == 1 && !cl->contains_boundary_bits) {
+                        #pragma omp critical
                         invalid_clusters.push_back(cl);
                     }
                 }
@@ -468,10 +480,15 @@ namespace ldpc::uf {
                     return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                 });
             }
-            for (auto cl: clusters) {
+            #pragma omp parallel for num_threads(this->omp_thread_count)
+            for (size_t i = 0; i < clusters.size(); i++) {
+                Cluster *cl = clusters[i];
                 if (cl->active) {
                     auto erasure = cl->peel_decode(syndrome);
-                    for (int bit: erasure) this->decoding[bit] = 1;
+                    for (int bit: erasure) {
+                        #pragma omp critical
+                        this->decoding[bit] = 1;
+                    }
                 }
                 delete cl;
             }

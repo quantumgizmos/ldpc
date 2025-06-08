@@ -209,6 +209,18 @@ TEST(UfDecoder, peeling_with_boundaries_edge_case){
 
 }
 
+TEST(UfDecoder, parallel_peeling){
+    auto pcm = ldpc::gf2codes::ring_code<ldpc::bp::BpEntry>(10);
+    UfDecoder ufd(pcm,4);
+    std::vector<uint8_t> syndrome(pcm.m,0);
+    syndrome[0]=1;
+    syndrome[1]=1;
+    auto decoding = ufd.peel_decode(syndrome);
+    std::vector<uint8_t> expected(pcm.n,0);
+    expected[1]=1;
+    ASSERT_EQ(decoding,expected);
+}
+
 
 
 int main(int argc, char **argv)

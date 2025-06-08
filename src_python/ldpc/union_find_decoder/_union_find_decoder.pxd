@@ -10,7 +10,7 @@ ctypedef np.uint8_t uint8_t
 
 cdef extern from "union_find.hpp" namespace "ldpc::uf":
     cdef cppclass uf_decoder_cpp "ldpc::uf::UfDecoder":
-        uf_decoder_cpp(BpSparse& pcm) except +
+        uf_decoder_cpp(BpSparse& pcm, int omp_thread_count=1) except +
         vector[uint8_t]& peel_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
         vector[uint8_t]& matrix_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
         vector[uint8_t] decoding
@@ -27,3 +27,4 @@ cdef class UnionFindDecoder():
     cdef vector[double] uf_llrs
     cdef bool uf_method
     cdef int bits_per_step
+    cdef int omp_thread_count
