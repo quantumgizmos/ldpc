@@ -7,7 +7,7 @@ project(ldpc
     LANGUAGES CXX)
 
 # Enable OpenMP support for parallel programming
-# SET(CMAKE_CXX_FLAGS  "-fopenmp")
+find_package(OpenMP)
 
 # Ensure that the necessary C++11 features are available, as required by the RapidCSV library
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -24,6 +24,9 @@ option(BUILD_LDPC_TESTS "Also build tests for the LDPC project" ${LDPC_MASTER_PR
 
 # Define an interface library named 'ldpc' which only includes headers
 add_library(ldpc INTERFACE)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(ldpc INTERFACE OpenMP::OpenMP_CXX)
+endif()
 
 # Add specific directories to the include path for any target that links with the 'ldpc' library
 target_include_directories(ldpc INTERFACE src_cpp include/robin_map include/rapidcsv)
