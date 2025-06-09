@@ -64,8 +64,10 @@ if sys.platform == "win32":
     # compile_flags = ["/Ox", "/std:c++20",'-fopenmp']
     # extra_link_args =['-lgomp','-fopenmp'],
 else:
-    compile_flags = ["-std=c++2a", "-O3", "-fopenmp"]
-    extra_link_args = ['-lgomp','-fopenmp']
+    compile_flags = ["-std=c++2a", "-O3"]
+    extra_link_args = []
+    # compile_flags = ["-std=c++2a", "-O3", "-fopenmp"]
+    # extra_link_args =['-lgomp','-fopenmp'],
 
 this_directory = Path(__file__).parent
 
