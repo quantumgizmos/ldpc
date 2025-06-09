@@ -13,6 +13,8 @@ cdef extern from "union_find.hpp" namespace "ldpc::uf":
         uf_decoder_cpp(BpSparse& pcm, int omp_thread_count=1) except +
         vector[uint8_t]& peel_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
         vector[uint8_t]& matrix_decode(vector[uint8_t]& syndrome, const vector[double]& bit_weights, int bits_per_step)
+        void set_omp_thread_count(int count)
+        int omp_thread_count
         vector[uint8_t] decoding
 
     cdef const vector[double] EMPTY_DOUBLE_VECTOR "ldpc::uf::EMPTY_DOUBLE_VECTOR"

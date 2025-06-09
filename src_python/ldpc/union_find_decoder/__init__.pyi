@@ -50,4 +50,10 @@ class UnionFindDecoder:
         """
 
     @property
+    def omp_thread_count(self) -> int: ...
+
+    @omp_thread_count.setter
+    def omp_thread_count(self, value: int) -> None: ...
+
+    @property
     def decoding(self): ...

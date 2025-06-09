@@ -418,7 +418,7 @@ namespace ldpc::uf {
             this->check_count = pcm.m;
             this->decoding.resize(this->bit_count);
             this->weighted = false;
-            this->omp_thread_count = omp_threads;
+            this->omp_thread_count = 1;
 
             this->pcm_max_bit_degree_2 = true;
             for (auto i = 0; i < this->pcm.n; i++) {
@@ -431,6 +431,10 @@ namespace ldpc::uf {
                     throw (std::runtime_error("Invalid parity check matrix. Column weight is zero."));
                 }
             }
+        }
+
+        void set_omp_thread_count(int count) {
+            this->omp_thread_count = count;
         }
 
         std::vector<uint8_t> &
@@ -458,9 +462,9 @@ namespace ldpc::uf {
             }
 
             while (!invalid_clusters.empty()) {
-                #pragma omp parallel for num_threads(this->omp_thread_count) schedule(dynamic)
+                #pragma omp parallel for num_threads(this->omp_thread_count) schedule(static)
                 for (size_t i = 0; i < invalid_clusters.size(); i++) {
-                    Cluster *cl = invalid_clusters[i];
+                    auto cl = invalid_clusters[i];
                     if (cl->active) {
                         #pragma omp critical
                         cl->grow_cluster(bit_weights, bits_per_step);
@@ -468,28 +472,34 @@ namespace ldpc::uf {
                 }
 
                 invalid_clusters.clear();
-                #pragma omp parallel for num_threads(this->omp_thread_count)
-                for (size_t i = 0; i < clusters.size(); i++) {
-                    Cluster *cl = clusters[i];
-                    if (cl->active && cl->parity() == 1 && !cl->contains_boundary_bits) {
-                        #pragma omp critical
-                        invalid_clusters.push_back(cl);
+                std::vector<Cluster *> tmp_invalid;
+                #pragma omp parallel
+                {
+                    std::vector<Cluster *> local_invalid;
+                    #pragma omp for nowait schedule(static)
+                    for (size_t i = 0; i < clusters.size(); i++) {
+                        auto cl = clusters[i];
+                        if (cl->active && cl->parity() == 1 && !cl->contains_boundary_bits) {
+                            local_invalid.push_back(cl);
+                        }
                     }
+                    #pragma omp critical
+                    invalid_clusters.insert(invalid_clusters.end(), local_invalid.begin(), local_invalid.end());
                 }
                 std::sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster *lhs, const Cluster *rhs) {
                     return lhs->bit_nodes.size() < rhs->bit_nodes.size();
                 });
             }
-            #pragma omp parallel for num_threads(this->omp_thread_count)
+            #pragma omp parallel for num_threads(this->omp_thread_count) schedule(static)
             for (size_t i = 0; i < clusters.size(); i++) {
-                Cluster *cl = clusters[i];
+                auto cl = clusters[i];
                 if (cl->active) {
                     auto erasure = cl->peel_decode(syndrome);
-                    for (int bit: erasure) {
-                        #pragma omp critical
-                        this->decoding[bit] = 1;
-                    }
+                    #pragma omp critical
+                    for (int bit: erasure) this->decoding[bit] = 1;
                 }
+            }
+            for (auto cl: clusters) {
                 delete cl;
             }
             delete[] global_bit_membership;

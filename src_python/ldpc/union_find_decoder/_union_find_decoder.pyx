@@ -160,8 +160,18 @@ cdef class UnionFindDecoder:
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n):
             out[i] = self.ufd.decoding[i]
-        
+
         return out
+
+    @property
+    def omp_thread_count(self) -> int:
+        return self.ufd.omp_thread_count
+
+    @omp_thread_count.setter
+    def omp_thread_count(self, value: int) -> None:
+        if not isinstance(value, int) or value < 1:
+            raise TypeError("The omp_thread_count must be specified as a positive integer.")
+        self.ufd.set_omp_thread_count(value)
 
     @property
     def decoding(self):
