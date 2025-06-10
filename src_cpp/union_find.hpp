@@ -15,6 +15,9 @@
 #include <robin_set.h>
 #include <numeric>
 #include <mutex>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "gf2sparse_linalg.hpp"
 #include "bp.hpp"
@@ -466,25 +469,29 @@ namespace ldpc::uf {
                 for (size_t i = 0; i < invalid_clusters.size(); i++) {
                     auto cl = invalid_clusters[i];
                     if (cl->active) {
-                        #pragma omp critical
                         cl->grow_cluster(bit_weights, bits_per_step);
                     }
                 }
 
                 invalid_clusters.clear();
-                std::vector<Cluster *> tmp_invalid;
-                #pragma omp parallel
+                std::vector<std::vector<Cluster *>> local_invalid_vec(this->omp_thread_count);
+                #pragma omp parallel num_threads(this->omp_thread_count)
                 {
-                    std::vector<Cluster *> local_invalid;
-                    #pragma omp for nowait schedule(static)
+                    int tid = 0;
+                    #ifdef _OPENMP
+                    tid = omp_get_thread_num();
+                    #endif
+                    auto &local_invalid = local_invalid_vec[tid];
+                    #pragma omp for schedule(static)
                     for (size_t i = 0; i < clusters.size(); i++) {
                         auto cl = clusters[i];
                         if (cl->active && cl->parity() == 1 && !cl->contains_boundary_bits) {
                             local_invalid.push_back(cl);
                         }
                     }
-                    #pragma omp critical
-                    invalid_clusters.insert(invalid_clusters.end(), local_invalid.begin(), local_invalid.end());
+                }
+                for (auto &vec : local_invalid_vec) {
+                    invalid_clusters.insert(invalid_clusters.end(), vec.begin(), vec.end());
                 }
                 std::sort(invalid_clusters.begin(), invalid_clusters.end(), [](const Cluster *lhs, const Cluster *rhs) {
                     return lhs->bit_nodes.size() < rhs->bit_nodes.size();
@@ -495,8 +502,10 @@ namespace ldpc::uf {
                 auto cl = clusters[i];
                 if (cl->active) {
                     auto erasure = cl->peel_decode(syndrome);
-                    #pragma omp critical
-                    for (int bit: erasure) this->decoding[bit] = 1;
+                    for (int bit: erasure) {
+                        #pragma omp atomic write
+                        this->decoding[bit] = 1;
+                    }
                 }
             }
             for (auto cl: clusters) {
