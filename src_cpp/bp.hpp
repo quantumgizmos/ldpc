@@ -11,6 +11,9 @@
 #include <chrono>
 #include <stdexcept>  // required for std::runtime_error
 #include <set>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "math.h"
 #include "sparse_matrix_base.hpp"
