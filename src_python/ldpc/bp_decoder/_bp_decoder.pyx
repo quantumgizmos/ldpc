@@ -502,8 +502,7 @@ cdef class BpDecoderBase:
         Returns:
             int: The number of threads used.
         """
-        if self.bpd.omp_thread_count != 1:
-            warnings.warn("The OpenMP functionality is not yet implemented")
+        # Note: OpenMP is implemented for bp_decode_parallel method
         return self.bpd.omp_thread_count
 
     @omp_thread_count.setter
@@ -520,8 +519,7 @@ cdef class BpDecoderBase:
             raise TypeError("The omp_thread_count must be specified as a\
             positive integer.")
         self.bpd.set_omp_thread_count(value)
-        if self.bpd.omp_thread_count != 1:
-            warnings.warn("The OpenMP functionality is not yet implemented")
+        # Note: OpenMP is implemented for bp_decode_parallel method
 
     @property
     def random_schedule_seed(self) -> int:
@@ -657,6 +655,66 @@ cdef class BpDecoder(BpDecoderBase):
                 self.bpd.converge = True
                 return np.zeros(self.bit_count,dtype=DTYPE)
             self.bpd.decode(self._received_vector)
+        
+        out = np.zeros(self.n,dtype=DTYPE)
+        for i in range(self.n): out[i] = self.bpd.decoding[i]
+        return out
+
+    def bp_decode_parallel(self, input_vector: np.ndarray) -> np.ndarray:
+        """
+        Parallel belief propagation decoder using OpenMP acceleration.
+
+        This method performs belief propagation decoding using OpenMP parallelization
+        for improved performance on multi-core systems. The number of threads used
+        is controlled by the omp_thread_count parameter.
+
+        Parameters
+        ----------
+        input_vector : np.ndarray
+            The input vector for decoding. Can be either a syndrome vector (for syndrome decoding)
+            or a received vector (for received vector decoding).
+
+        Returns
+        -------
+        numpy.ndarray
+            A 1D numpy array of length equal to the number of columns in the parity check matrix.
+
+        Raises
+        ------
+        ValueError
+            If the length of the input input_vector does not match the number of rows in the parity check matrix.
+        """
+        
+        if(self.bpd.bp_input_type == SYNDROME and not len(input_vector)==self.m):
+            raise ValueError(f"The input_vector must have length {self.m} (for syndrome decoding). Not length {len(input_vector)}.")
+        elif(self.bpd.bp_input_type == RECEIVED_VECTOR and not len(input_vector)==self.n):
+            raise ValueError(f"The input_vector must have length {self.n} (for received vector decoding). Not length {len(input_vector)}.")
+        elif(self.bpd.bp_input_type == AUTO and not (len(input_vector)==self.m or len(input_vector)==self.n)):
+            raise ValueError(f"The input_vector must have length {self.m} (for syndrome decoding) or length {self.n} (for received vector decoding). Not length {len(input_vector)}.")
+
+        cdef int i
+        cdef bool zero_input_vector = True
+        DTYPE = input_vector.dtype
+
+        cdef int len_input_vector = len(input_vector)
+        
+        if(self.bpd.bp_input_type == SYNDROME or (self.bpd.bp_input_type == AUTO and len(input_vector)==self.m)):
+            for i in range(len_input_vector):
+                self._syndrome[i] = input_vector[i]
+                if self._syndrome[i]: zero_input_vector = False
+            if zero_input_vector:
+                self.bpd.converge = True
+                return np.zeros(self.bit_count,dtype=DTYPE)
+            self.bpd.bp_decode_parallel(self._syndrome)
+
+        elif(self.bpd.bp_input_type == RECEIVED_VECTOR or (self.bpd.bp_input_type == AUTO and len(input_vector)==self.n)):
+            for i in range(len_input_vector):
+                self._received_vector[i] = input_vector[i]
+                if self._received_vector[i]: zero_input_vector = False
+            if zero_input_vector:
+                self.bpd.converge = True
+                return np.zeros(self.bit_count,dtype=DTYPE)
+            self.bpd.bp_decode_parallel(self._received_vector)
         
         out = np.zeros(self.n,dtype=DTYPE)
         for i in range(self.n): out[i] = self.bpd.decoding[i]
