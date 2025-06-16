@@ -62,7 +62,7 @@ class BpLsdDecoder(BpDecoderBase):
 
     def __del__(self): ...
 
-    def decode(self,syndrome):
+    def decode(self, syndrome, custom=False):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -73,11 +73,15 @@ class BpLsdDecoder(BpDecoderBase):
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
+        custom : bool
+            If True, always run LSD regardless of BP convergence and return out_bp separately
 
         Returns
         -------
-        np.ndarray
+        out : np.ndarray
             The decoded output.
+        out_bp : np.ndarray
+            The decoded output from BP (only when custom=True).
 
         Raises
         ------
