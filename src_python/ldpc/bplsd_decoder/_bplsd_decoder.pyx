@@ -100,7 +100,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         if self.MEMORY_ALLOCATED:
             del self.lsd
 
-    def decode(self,syndrome):
+    def decode(self, syndrome, custom=False):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -111,11 +111,15 @@ cdef class BpLsdDecoder(BpDecoderBase):
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
+        custom : bool
+            If True, always run LSD regardless of BP convergence and return out_bp separately
 
         Returns
         -------
-        np.ndarray
+        out : np.ndarray
             The decoded output.
+        out_bp : np.ndarray
+            The decoded output from BP (only when custom=True).
 
         Raises
         ------
@@ -139,25 +143,30 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
 
-        # MODIFIED TO RUN LSD ALWAYS REGARDLESS OF BP OUTCOMES
-        # if self.bpd.converge:
-        #     for i in range(self.n):
-        #         out[i] = self.bpd.decoding[i]
-        #     self.lsd.reset_cluster_stats()
-        #
-        #
-        # if not self.bpd.converge:
+        if not custom:
+            if self.bpd.converge:
+                for i in range(self.n):
+                    out[i] = self.bpd.decoding[i]
+                self.lsd.reset_cluster_stats()
+            
+            else:
+                self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
+                for i in range(self.n):
+                    out[i] = self.lsd.decoding[i]
+            
+            return out
 
-        self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
-        for i in range(self.n):
-            out[i] = self.lsd.decoding[i]
+        else:
+            self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
+            for i in range(self.n):
+                out[i] = self.lsd.decoding[i]
+                
+            # BP Prediction
+            out_bp = np.zeros(self.n,dtype=DTYPE)
+            for i in range(self.n):
+                out_bp[i] = self.bpd.decoding[i]
         
-        # BP Prediction
-        out_bp = np.zeros(self.n,dtype=DTYPE)
-        for i in range(self.n):
-            out_bp[i] = self.bpd.decoding[i]
-        
-        return out, out_bp
+            return out, out_bp
 
     @property
     def statistics(self) -> Statistics:
