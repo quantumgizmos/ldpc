@@ -51,7 +51,7 @@ class G:
         :param j: Integer index of the second element.
         :return: Integer index of the product i * j.
         """
-        return self.table[i, j]
+        return int(self.table[i, j])
 
     def ord(self, el):
         """
@@ -129,7 +129,7 @@ def direct_product(table_1, table_2):
 
     Table of Z3 x Z2 has [0, 1, 2, 3, 4, 5] --> [00, 01, 10, 11, 20, 21]
     Table of (Z3 x Z2) X Z2 --> [000, 001, 010, 011, 100, 101, 110, 111, 200, 201, 210, 211]
-    [0 of first ]x i of second -- [1 of first ]x i of second -- ..
+    [0 of first ]x i of second -- [1 of first ]x i of second -- etc.
     my_ord = []
     for i in range(4):
         for j in range(4):
@@ -186,13 +186,13 @@ if __name__ == '__main__':
     q8 = G(quaternion)
 
     quaternion_left = q8.left_cayley({1, 5})
+    print('Print edges of a left Cayley graph for the Quaternion group')
     print(quaternion_left)
 
     # this is the ordering that is used in direct product
     my_ord = []
-    for i in range(4):
-        for j in range(4):
-            for k in range(2):
-                my_ord.append((i, j, k))
-
+    for i_ in range(4):
+        for j_ in range(4):
+            for k_ in range(2):
+                my_ord.append((i_, j_, k_))
 
