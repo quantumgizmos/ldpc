@@ -9,8 +9,11 @@
 #include <limits>
 #include <random>
 #include <chrono>
-#include <stdexcept> // required for std::runtime_error
+#include <stdexcept>  // required for std::runtime_error
 #include <set>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "math.h"
 #include "sparse_matrix_base.hpp"
@@ -40,7 +43,7 @@ namespace ldpc {
         const std::vector<int> NULL_INT_VECTOR = {};
 
         class BpEntry : public ldpc::sparse_matrix_base::EntryBase<BpEntry> {
-        public:
+            public:
             double bit_to_check_msg = 0.0;
             double check_to_bit_msg = 0.0;
 
@@ -50,8 +53,8 @@ namespace ldpc {
 
         class BpDecoder {
             // TODO properties should be private and only accessible via getters and setters
-        public:
-            BpSparse &pcm;
+            public:
+            BpSparse& pcm;
             std::vector<double> channel_probabilities;
             int check_count;
             int bit_count;
@@ -75,23 +78,19 @@ namespace ldpc {
             ldpc::rng::RandomListShuffle<int> rng_list_shuffle;
 
             BpDecoder(
-                    BpSparse &parity_check_matrix,
-                    std::vector<double> channel_probabilities,
-                    int maximum_iterations = 0,
-                    BpMethod bp_method = PRODUCT_SUM,
-                    BpSchedule schedule = PARALLEL,
-                    double min_sum_scaling_factor = 0.625,
-                    int omp_threads = 1,
-                    const std::vector<int> &serial_schedule = NULL_INT_VECTOR,
-                    int random_schedule_seed = -1, // TODO what should be default here? 0 is set but -1 is checked in decode method?
-                    bool random_schedule_at_every_iteration = true,
-                    BpInputType bp_input_type = AUTO) :
-                    pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
-                    check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
-                    schedule(schedule), ms_scaling_factor(min_sum_scaling_factor),
-                    iterations(0) //the parity check matrix is passed in by reference
+                BpSparse& parity_check_matrix,
+                std::vector<double> channel_probabilities,
+                int maximum_iterations = 0,
+                BpMethod bp_method = PRODUCT_SUM,
+                BpSchedule schedule = PARALLEL,
+                double min_sum_scaling_factor = 0.625,
+                int omp_threads = 1,
+                const std::vector<int>& serial_schedule = NULL_INT_VECTOR,
+                int random_schedule_seed = -1,  // TODO what should be default here? 0 is set but -1 is checked in decode method?
+                bool random_schedule_at_every_iteration = true,
+                BpInputType bp_input_type = AUTO)
+                    : pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)), check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method), schedule(schedule), ms_scaling_factor(min_sum_scaling_factor), iterations(0)  // the parity check matrix is passed in by reference
             {
-
                 this->initial_log_prob_ratios.resize(bit_count);
                 this->log_prob_ratios.resize(bit_count);
                 this->candidate_syndrome.resize(check_count);
@@ -102,10 +101,9 @@ namespace ldpc {
                 this->random_schedule_at_every_iteration = random_schedule_at_every_iteration;
                 this->bp_input_type = bp_input_type;
 
-
                 if (this->channel_probabilities.size() != this->bit_count) {
                     throw std::runtime_error(
-                            "Channel probabilities vector must have length equal to the number of bits");
+                        "Channel probabilities vector must have length equal to the number of bits");
                 }
                 if (serial_schedule != NULL_INT_VECTOR) {
                     this->serial_schedule_order = serial_schedule;
@@ -118,9 +116,9 @@ namespace ldpc {
                     this->rng_list_shuffle.seed(this->random_schedule_seed);
                 }
 
-                //Initialise OMP thread pool
-                // this->omp_thread_count = omp_threads;
-                // this->set_omp_thread_count(this->omp_thread_count);
+                // Initialise OMP thread pool
+                //  this->omp_thread_count = omp_threads;
+                //  this->set_omp_thread_count(this->omp_thread_count);
             }
 
             ~BpDecoder() = default;
@@ -135,17 +133,15 @@ namespace ldpc {
                 // initialise BP
                 for (int i = 0; i < this->bit_count; i++) {
                     this->initial_log_prob_ratios[i] = std::log(
-                            (1 - this->channel_probabilities[i]) / this->channel_probabilities[i]);
+                        (1 - this->channel_probabilities[i]) / this->channel_probabilities[i]);
 
-                    for (auto &e: this->pcm.iterate_column(i)) {
+                    for (auto& e : this->pcm.iterate_column(i)) {
                         e.bit_to_check_msg = this->initial_log_prob_ratios[i];
                     }
                 }
             }
 
-            std::vector<uint8_t> decode(std::vector<uint8_t> &input_vector) {
-
-
+            std::vector<uint8_t> decode(std::vector<uint8_t>& input_vector) {
                 if ((this->bp_input_type == AUTO && input_vector.size() == this->bit_count) ||
                     this->bp_input_type == RECEIVED_VECTOR) {
                     auto syndrome = pcm.mulvec(input_vector);
@@ -163,128 +159,128 @@ namespace ldpc {
                     }
 
                     return this->decoding;
-
                 }
-
 
                 if (schedule == PARALLEL) {
                     return bp_decode_parallel(input_vector);
                 }
                 if (schedule == SERIAL || schedule == SERIAL_RELATIVE) {
                     return bp_decode_serial(input_vector);
-                } else { throw std::runtime_error("Invalid BP schedule"); }
-
+                } else {
+                    throw std::runtime_error("Invalid BP schedule");
+                }
             }
 
-            std::vector<uint8_t> &bp_decode_parallel(std::vector<uint8_t> &syndrome) {
-
+            std::vector<uint8_t>& bp_decode_parallel(std::vector<uint8_t>& syndrome) {
                 this->converge = 0;
 
                 this->initialise_log_domain_bp();
 
-                //main interation loop
+                // main interation loop
                 for (int it = 1; it <= this->maximum_iterations; it++) {
-
                     if (this->bp_method == PRODUCT_SUM) {
+#pragma omp parallel for num_threads(this->omp_thread_count)
                         for (int i = 0; i < this->check_count; i++) {
-                            this->candidate_syndrome[i] = 0;
-
                             double temp = 1.0;
-                            for (auto &e: this->pcm.iterate_row(i)) {
+                            for (auto& e : this->pcm.iterate_row(i)) {
                                 e.check_to_bit_msg = temp;
                                 temp *= std::tanh(e.bit_to_check_msg / 2);
                             }
 
                             temp = 1;
-                            for (auto &e: this->pcm.reverse_iterate_row(i)) {
+                            for (auto& e : this->pcm.reverse_iterate_row(i)) {
                                 e.check_to_bit_msg *= temp;
-                                int message_sign = syndrome[i] != 0u ? -1.0 : 1.0;
-                                e.check_to_bit_msg =
-                                        message_sign * std::log((1 + e.check_to_bit_msg) / (1 - e.check_to_bit_msg));
+                                int const message_sign = syndrome[i] != 0U ? -1.0
+                                                                           : 1.0;
+                                e.check_to_bit_msg = message_sign * std::log((1 + e.check_to_bit_msg) /
+                                                                             (1 - e.check_to_bit_msg));
                                 temp *= std::tanh(e.bit_to_check_msg / 2);
                             }
                         }
                     } else if (this->bp_method == MINIMUM_SUM) {
-
-                        double alpha;
-                        if(this->ms_scaling_factor == 0.0) {
-                            alpha = 1.0 - std::pow(2.0, -1.0*it);
-                        }
-                        else {
+                        double alpha = NAN;
+                        if (this->ms_scaling_factor == 0.0) {
+                            alpha = 1.0 - std::pow(2.0, -1.0 * it);
+                        } else {
                             alpha = this->ms_scaling_factor;
                         }
 
-                        //check to bit updates
+// check to bit updates
+#pragma omp parallel for num_threads(this->omp_thread_count)
                         for (int i = 0; i < check_count; i++) {
-
-                            this->candidate_syndrome[i] = 0;
                             int total_sgn = 0;
                             int sgn = 0;
                             total_sgn = syndrome[i];
                             double temp = std::numeric_limits<double>::max();
 
-                            for (auto &e: this->pcm.iterate_row(i)) {
+                            for (auto& e : this->pcm.iterate_row(i)) {
                                 if (e.bit_to_check_msg <= 0) {
                                     total_sgn += 1;
                                 }
                                 e.check_to_bit_msg = temp;
-                                double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
-                                if (abs_bit_to_check_msg < temp) {
-                                    temp = abs_bit_to_check_msg;
-                                }
+                                double const abs_bit_to_check_msg =
+                                    std::abs(e.bit_to_check_msg);
+                                temp = std::min(abs_bit_to_check_msg, temp);
                             }
 
                             temp = std::numeric_limits<double>::max();
-                            for (auto &e: this->pcm.reverse_iterate_row(i)) {
+                            for (auto& e : this->pcm.reverse_iterate_row(i)) {
                                 sgn = total_sgn;
                                 if (e.bit_to_check_msg <= 0) {
                                     sgn += 1;
                                 }
-                                if (temp < e.check_to_bit_msg) {
-                                    e.check_to_bit_msg = temp;
-                                }
+                                e.check_to_bit_msg = std::min(temp,
+                                                              e.check_to_bit_msg);
 
-                                int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
-                                
+                                int const message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
+
                                 e.check_to_bit_msg *= message_sign * alpha;
 
-                                
-                                double abs_bit_to_check_msg = std::abs(e.bit_to_check_msg);
-                                if (abs_bit_to_check_msg < temp) {
-                                    temp = abs_bit_to_check_msg;
+                                double const abs_bit_to_check_msg =
+                                    std::abs(e.bit_to_check_msg);
+                                temp = std::min(abs_bit_to_check_msg, temp);
+                            }
+                        }
+                    }
+
+                    std::fill(this->candidate_syndrome.begin(),
+                              this->candidate_syndrome.end(),
+                              0);
+
+#pragma omp parallel num_threads(this->omp_thread_count)
+                    {
+                        std::vector<uint8_t> local_syndrome(this->check_count, 0);
+
+#pragma omp for
+                        for (int i = 0; i < this->bit_count; i++) {
+                            double temp = initial_log_prob_ratios[i];
+                            for (auto& e : this->pcm.iterate_column(i)) {
+                                e.bit_to_check_msg = temp;
+                                temp += e.check_to_bit_msg;
+                            }
+
+                            this->log_prob_ratios[i] = temp;
+                            if (temp <= 0) {
+                                this->decoding[i] = 1;
+                                for (auto& e : this->pcm.iterate_column(i)) {
+                                    local_syndrome[e.row_index] ^= 1;
                                 }
-
+                            } else {
+                                this->decoding[i] = 0;
                             }
+                        }
 
+#pragma omp critical
+                        {
+                            for (int i = 0; i < this->check_count; i++) {
+                                this->candidate_syndrome[i] ^= local_syndrome[i];
+                            }
                         }
                     }
 
-
-                    //compute log probability ratios
-                    for (int i = 0; i < this->bit_count; i++) {
-                        double temp = initial_log_prob_ratios[i];
-                        for (auto &e: this->pcm.iterate_column(i)) {
-                            e.bit_to_check_msg = temp;
-                            temp += e.check_to_bit_msg;
-                            // if(isnan(temp)) temp = e.bit_to_check_msg;
-
-
-                        }
-
-                        //make hard decision on basis of log probability ratio for bit i
-                        this->log_prob_ratios[i] = temp;
-                        // if(isnan(log_prob_ratios[i])) log_prob_ratios[i] = initial_log_prob_ratios[i];
-                        if (temp <= 0) {
-                            this->decoding[i] = 1;
-                            for (auto &e: this->pcm.iterate_column(i)) {
-                                this->candidate_syndrome[e.row_index] ^= 1;
-                            }
-                        } else {
-                            this->decoding[i] = 0;
-                        }
-                    }
-
-                    if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
+                    if (std::equal(candidate_syndrome.begin(),
+                                   candidate_syndrome.end(),
+                                   syndrome.begin())) {
                         this->converge = true;
                     }
 
@@ -294,25 +290,21 @@ namespace ldpc {
                         return this->decoding;
                     }
 
-
-                    //compute bit to check update
+// compute bit to check update
+#pragma omp parallel for num_threads(this->omp_thread_count)
                     for (int i = 0; i < bit_count; i++) {
                         double temp = 0;
-                        for (auto &e: this->pcm.reverse_iterate_column(i)) {
+                        for (auto& e : this->pcm.reverse_iterate_column(i)) {
                             e.bit_to_check_msg += temp;
                             temp += e.check_to_bit_msg;
                         }
                     }
-
                 }
 
-
                 return this->decoding;
-
             }
 
-            std::vector<uint8_t> &bp_decode_single_scan(std::vector<uint8_t> &syndrome) {
-
+            std::vector<uint8_t>& bp_decode_single_scan(std::vector<uint8_t>& syndrome) {
                 converge = 0;
                 int CONVERGED = 0;
 
@@ -321,16 +313,14 @@ namespace ldpc {
 
                 for (int i = 0; i < bit_count; i++) {
                     this->initial_log_prob_ratios[i] = std::log(
-                            (1 - this->channel_probabilities[i]) / this->channel_probabilities[i]);
+                        (1 - this->channel_probabilities[i]) / this->channel_probabilities[i]);
                     this->log_prob_ratios[i] = this->initial_log_prob_ratios[i];
-
                 }
 
                 // initialise_log_domain_bp();
 
-                //main interation loop
+                // main interation loop
                 for (int it = 1; it <= maximum_iterations; it++) {
-
                     if (CONVERGED != 0) {
                         continue;
                     }
@@ -343,9 +333,8 @@ namespace ldpc {
                         this->log_prob_ratios = this->initial_log_prob_ratios;
                     }
 
-                    //check to bit updates
+                    // check to bit updates
                     for (int i = 0; i < check_count; i++) {
-
                         this->candidate_syndrome[i] = 0;
 
                         int total_sgn = 0;
@@ -355,7 +344,7 @@ namespace ldpc {
 
                         double bit_to_check_msg = NAN;
 
-                        for (auto &e: pcm.iterate_row(i)) {
+                        for (auto& e : pcm.iterate_row(i)) {
                             if (it == 1) {
                                 e.check_to_bit_msg = 0;
                             }
@@ -371,7 +360,7 @@ namespace ldpc {
                         }
 
                         temp = std::numeric_limits<double>::max();
-                        for (auto &e: pcm.reverse_iterate_row(i)) {
+                        for (auto& e : pcm.reverse_iterate_row(i)) {
                             sgn = total_sgn;
                             if (it == 1) {
                                 e.check_to_bit_msg = 0;
@@ -388,24 +377,18 @@ namespace ldpc {
                             e.check_to_bit_msg = message_sign * ms_scaling_factor * e.bit_to_check_msg;
                             this->log_prob_ratios[e.col_index] += e.check_to_bit_msg;
 
-
                             double abs_bit_to_check_msg = std::abs(bit_to_check_msg);
                             if (abs_bit_to_check_msg < temp) {
                                 temp = abs_bit_to_check_msg;
                             }
-
                         }
-
-
                     }
 
-
-
-                    //compute hard decisions and calculate syndrome
+                    // compute hard decisions and calculate syndrome
                     for (int i = 0; i < bit_count; i++) {
                         if (this->log_prob_ratios[i] <= 0) {
                             this->decoding[i] = 1;
-                            for (auto &e: pcm.iterate_column(i)) {
+                            for (auto& e : pcm.iterate_column(i)) {
                                 this->candidate_syndrome[e.row_index] ^= 1;
                             }
                         } else {
@@ -426,28 +409,23 @@ namespace ldpc {
                         converge = (CONVERGED != 0);
                         return decoding;
                     }
-
                 }
-
 
                 converge = (CONVERGED != 0);
                 return decoding;
-
             }
 
-            std::vector<uint8_t> &bp_decode_serial(std::vector<uint8_t> &syndrome) {
+            std::vector<uint8_t>& bp_decode_serial(std::vector<uint8_t>& syndrome) {
                 int check_index = 0;
                 this->converge = false;
                 // initialise BP
                 this->initialise_log_domain_bp();
 
                 for (int it = 1; it <= maximum_iterations; it++) {
-
                     double alpha;
-                    if(this->ms_scaling_factor == 0.0) {
-                        alpha = 1.0 - std::pow(2.0, -1.0*it);
-                    }
-                    else {
+                    if (this->ms_scaling_factor == 0.0) {
+                        alpha = 1.0 - std::pow(2.0, -1.0 * it);
+                    } else {
                         alpha = this->ms_scaling_factor;
                     }
 
@@ -455,28 +433,27 @@ namespace ldpc {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                     } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
                         // resort by LLRs in each iteration to ensure that the most reliable bits are considered first
-                        std::sort(this->serial_schedule_order.begin(), this->serial_schedule_order.end(),
-                                  [this, it](int bit1, int bit2) {
-                                      if (it != 1) {
-                                          return this->log_prob_ratios[bit1] > this->log_prob_ratios[bit2];
-                                      } else {
-                                          return std::log(
-                                                  (1 - channel_probabilities[bit1]) / channel_probabilities[bit1]) >
-                                                 std::log((1 - channel_probabilities[bit2]) /
-                                                          channel_probabilities[bit2]);
-                                      }
-                                  });
+                        std::sort(this->serial_schedule_order.begin(), this->serial_schedule_order.end(), [this, it](int bit1, int bit2) {
+                            if (it != 1) {
+                                return this->log_prob_ratios[bit1] > this->log_prob_ratios[bit2];
+                            } else {
+                                return std::log(
+                                           (1 - channel_probabilities[bit1]) / channel_probabilities[bit1]) >
+                                       std::log((1 - channel_probabilities[bit2]) /
+                                                channel_probabilities[bit2]);
+                            }
+                        });
                     }
 
-                    for (int bit_index: this->serial_schedule_order) {
+                    for (int bit_index : this->serial_schedule_order) {
                         double temp = NAN;
                         this->log_prob_ratios[bit_index] = std::log(
-                                (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
+                            (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
                         if (this->bp_method == 0) {
-                            for (auto &e: this->pcm.iterate_column(bit_index)) {
+                            for (auto& e : this->pcm.iterate_column(bit_index)) {
                                 check_index = e.row_index;
                                 e.check_to_bit_msg = 1.0;
-                                for (auto &g: this->pcm.iterate_row(check_index)) {
+                                for (auto& g : this->pcm.iterate_row(check_index)) {
                                     if (&g != &e) {
                                         e.check_to_bit_msg *= tanh(g.bit_to_check_msg / 2);
                                     }
@@ -487,11 +464,11 @@ namespace ldpc {
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }
                         } else if (this->bp_method == 1) {
-                            for (auto &e: pcm.iterate_column(bit_index)) {
+                            for (auto& e : pcm.iterate_column(bit_index)) {
                                 check_index = e.row_index;
                                 int sgn = syndrome[check_index];
                                 temp = std::numeric_limits<double>::max();
-                                for (auto &g: this->pcm.iterate_row(check_index)) {
+                                for (auto& g : this->pcm.iterate_row(check_index)) {
                                     if (&g != &e) {
                                         double abs_bit_to_check_msg = std::abs(g.bit_to_check_msg);
                                         if (abs_bit_to_check_msg < temp) {
@@ -514,7 +491,7 @@ namespace ldpc {
                             this->decoding[bit_index] = 0;
                         }
                         temp = 0;
-                        for (auto &e: this->pcm.reverse_iterate_column(bit_index)) {
+                        for (auto& e : this->pcm.reverse_iterate_column(bit_index)) {
                             e.bit_to_check_msg += temp;
                             temp += e.check_to_bit_msg;
                         }
@@ -531,8 +508,8 @@ namespace ldpc {
                 return this->decoding;
             }
 
-            std::vector<uint8_t> &
-            soft_info_decode_serial(std::vector<double> &soft_info_syndrome, double cutoff, double sigma) {
+            std::vector<uint8_t>&
+            soft_info_decode_serial(std::vector<double>& soft_info_syndrome, double cutoff, double sigma) {
                 // compute the syndrome log-likelihoods and initialize hard syndrome
                 std::vector<uint8_t> syndrome;
                 this->soft_syndrome = soft_info_syndrome;
@@ -559,21 +536,20 @@ namespace ldpc {
                     }
                     if (this->random_schedule_at_every_iteration && omp_thread_count == 1) {
                         // reorder schedule elements randomly
-                        shuffle(serial_schedule_order.begin(), serial_schedule_order.end(),
-                                std::default_random_engine(random_schedule_seed));
+                        shuffle(serial_schedule_order.begin(), serial_schedule_order.end(), std::default_random_engine(random_schedule_seed));
                     }
 
                     check_indices_updated.clear();
-                    for (auto bit_index: serial_schedule_order) {
+                    for (auto bit_index : serial_schedule_order) {
                         double temp = NAN;
                         log_prob_ratios[bit_index] = std::log(
-                                (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
-                        for (auto &check_nbr: pcm.iterate_column(bit_index)) {
+                            (1 - channel_probabilities[bit_index]) / channel_probabilities[bit_index]);
+                        for (auto& check_nbr : pcm.iterate_column(bit_index)) {
                             // first, we compute the min absolute value of neighbours excluding the current recipient
                             check_index = check_nbr.row_index;
                             int sgn = 0;
                             temp = std::numeric_limits<double>::max();
-                            for (auto &g: pcm.iterate_row(check_index)) {
+                            for (auto& g : pcm.iterate_row(check_index)) {
                                 if (&g != &check_nbr) {
                                     if (std::abs(g.bit_to_check_msg) < temp) {
                                         temp = std::abs(g.bit_to_check_msg);
@@ -599,11 +575,11 @@ namespace ldpc {
                                     if (check_node_sgn == syndrome[check_index]) {
                                         if (std::abs(check_nbr.bit_to_check_msg) < min_bit_to_check_msg) {
                                             this->soft_syndrome[check_index] =
-                                                    pow(-1, syndrome[check_index]) *
-                                                    std::abs(check_nbr.bit_to_check_msg);
+                                                pow(-1, syndrome[check_index]) *
+                                                std::abs(check_nbr.bit_to_check_msg);
                                         } else {
                                             this->soft_syndrome[check_index] =
-                                                    pow(-1, syndrome[check_index]) * min_bit_to_check_msg;
+                                                pow(-1, syndrome[check_index]) * min_bit_to_check_msg;
                                         }
                                     } else {
                                         syndrome[check_index] ^= 1;
@@ -623,7 +599,7 @@ namespace ldpc {
                             decoding[bit_index] = 0;
                         }
                         temp = 0;
-                        for (auto &e: pcm.reverse_iterate_column(bit_index)) {
+                        for (auto& e : pcm.reverse_iterate_column(bit_index)) {
                             e.bit_to_check_msg += temp;
                             temp += e.check_to_bit_msg;
                         }
@@ -651,7 +627,7 @@ namespace ldpc {
                 return decoding;
             }
         };
-    }
-}  // namespace ldpc::bp
+    }  // namespace bp
+}  // namespace ldpc
 
 #endif

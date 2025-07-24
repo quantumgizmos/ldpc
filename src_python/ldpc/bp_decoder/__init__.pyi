@@ -337,6 +337,26 @@ class BpDecoder(BpDecoderBase):
         ValueError
             If the length of the input input_vector does not match the number of rows in the parity check matrix.
         """
+
+    def bp_decode_parallel(self, input_vector: np.ndarray) -> np.ndarray:
+        """
+        Parallel belief propagation decoder using OpenMP.
+
+        This method performs belief propagation decoding using OpenMP parallelization
+        for improved performance on multi-core systems. The number of threads used
+        is controlled by the omp_thread_count parameter.
+
+        Parameters
+        ----------
+        input_vector : np.ndarray
+            The input vector for decoding. Can be either a syndrome vector (for syndrome decoding)
+            or a received vector (for received vector decoding).
+
+        Returns
+        -------
+        numpy.ndarray
+            A 1D numpy array of length equal to the number of columns in the parity check matrix.
+        """
         
 
     @property
