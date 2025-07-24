@@ -34,7 +34,7 @@ class OsdDecoder{
         std::vector<uint8_t> osdw_decoding;
         std::vector<std::vector<uint8_t>> osd_candidate_strings;
         std::vector<int> column_ordering;
-        ldpc::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>* LuDecomposition;
+        ldpc::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry> LuDecomposition;
         
         OsdDecoder(
             ldpc::bp::BpSparse& parity_check_matrix,
@@ -42,7 +42,8 @@ class OsdDecoder{
             int osd_order,
             std::vector<double>& channel_probs):
             pcm(parity_check_matrix),
-            channel_probabilities(channel_probs)    
+            channel_probabilities(channel_probs),
+            LuDecomposition(parity_check_matrix)  // Initialize LuDecomposition with the parity check matrix   
         {
 
             this->bit_count = this->pcm.n;
@@ -51,8 +52,9 @@ class OsdDecoder{
             this->osd_order = osd_order;
             this->osd_method = osd_method;
 
-            this->osd_setup();
-
+            if (osd_method != OSD_OFF){
+                this->osd_setup();
+            }
 
         }
 
@@ -62,11 +64,10 @@ class OsdDecoder{
             
             if(this->osd_method == OSD_OFF) return 0;
 
-            this->LuDecomposition = new ldpc::gf2sparse_linalg::RowReduce<ldpc::bp::BpEntry>(this->pcm);
             this->column_ordering.resize(this->pcm.n);
             int osd_candidate_string_count;
-            this->LuDecomposition->rref(false,true); 
-            this->k = this->pcm.n - this->LuDecomposition->rank;
+            this->LuDecomposition.rref(false,true); 
+            this->k = this->pcm.n - this->LuDecomposition.rank;
 
             if(this->osd_method == OSD_0 || this->osd_order==0){
                 return 1;
@@ -103,7 +104,7 @@ class OsdDecoder{
         }
 
         ~OsdDecoder(){
-            delete this->LuDecomposition;
+            this->osd_candidate_strings.clear();
         };
 
 
@@ -112,17 +113,17 @@ class OsdDecoder{
             ldpc::sort::soft_decision_col_sort(log_prob_ratios, this->column_ordering,bit_count);
 
             if(this->osd_order == 0){
-                this->osd0_decoding = this->osdw_decoding =  this->LuDecomposition->fast_solve(syndrome,this->column_ordering);
+                this->osd0_decoding = this->osdw_decoding =  this->LuDecomposition.fast_solve(syndrome,this->column_ordering);
                 return this->osd0_decoding;
             }
 
             //row reduce the matrix according to the new column ordering
-            this->LuDecomposition->rref(false,true,this->column_ordering);
+            this->LuDecomposition.rref(false,true,this->column_ordering);
 
             // find the OSD0 solution
-            this->osd0_decoding = this->osdw_decoding = LuDecomposition->lu_solve(syndrome);
+            this->osd0_decoding = this->osdw_decoding = LuDecomposition.lu_solve(syndrome);
 
-            // this->osd0_decoding = this->LuDecomposition->fast_solve(syndrome,this->column_ordering);
+            // this->osd0_decoding = this->LuDecomposition.fast_solve(syndrome,this->column_ordering);
 
             // if(osd_order==0){
             //     return this->osd0_decoding;
@@ -139,17 +140,17 @@ class OsdDecoder{
 
             std::vector<int> non_pivot_columns;
             std::vector<ldpc::gf2sparse::GF2Entry*> delete_entries;
-            for(int i = this->LuDecomposition->rank; i<this->pcm.n; i++){
-                int col = this->LuDecomposition->cols[i];
+            for(int i = this->LuDecomposition.rank; i<this->pcm.n; i++){
+                int col = this->LuDecomposition.cols[i];
                 non_pivot_columns.push_back(col);
                 
-                for(auto& e: this->LuDecomposition->U.iterate_column(col)){
+                for(auto& e: this->LuDecomposition.U.iterate_column(col)){
                     delete_entries.push_back(&e);
                 }
             }
 
             for (auto e: delete_entries){
-                this->LuDecomposition->U.remove(*e);
+                this->LuDecomposition.U.remove(*e);
             }
             
             for(auto& candidate_string: this->osd_candidate_strings){
@@ -165,7 +166,7 @@ class OsdDecoder{
                     col_index++;
                 }
 
-                auto candidate_solution = this->LuDecomposition->lu_solve(t_syndrome);
+                auto candidate_solution = this->LuDecomposition.lu_solve(t_syndrome);
                 for(int i=0; i<k; i++){
                     candidate_solution[non_pivot_columns[i]]=candidate_string[i];
                 }
