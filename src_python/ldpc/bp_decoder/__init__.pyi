@@ -271,6 +271,27 @@ class BpDecoderBase:
             ValueError: If the input value is not a postive integer.
         """
 
+    @property
+    def random_serial_schedule(self) -> bool:
+        """
+        Returns whether the random serial schedule is enabled.
+
+        Returns:
+            bool: True if random serial schedule is enabled, False otherwise.
+        """
+
+    @random_serial_schedule.setter
+    def random_serial_schedule(self, value: bool) -> None:
+        """
+        Sets whether the random serial schedule is enabled.
+
+        Args:
+            value (int): True to enable random serial schedule, False to disable it.
+
+        Raises:
+            ValueError: If random serial schedule is enabled while a fixed serial schedule is set.
+        """
+
 class BpDecoder(BpDecoderBase):
     """
     Belief propagation decoder for binary linear codes.
@@ -298,25 +319,28 @@ class BpDecoder(BpDecoderBase):
     omp_thread_count : Optional[int], optional
         The number of OpenMP threads to use, by default 1.
     random_schedule_seed : Optional[int], optional
-        The seed for the random serial schedule, by default 0. If set to 0, the seed is set according the system clock.
+        The seed for the random serial schedule, by default 0. If set to 0, the seed is set according to the system clock.
     serial_schedule_order : Optional[List[int]], optional
         The custom order for serial scheduling, by default None.
+    random_serial_schedule : bool, optional
+        Whether to enable random serial scheduling. If True, the serial schedule order is randomized in each iteration.
+        By default False.
     input_vector_type: str, optional
-        Use this paramter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
+        Use this parameter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
         Note, it is only necessary to specify this value when the parity check matrix is square. When the
-        parity matrix is non-square the input vector type is inferred automatically from its length.
+        parity matrix is non-square, the input vector type is inferred automatically from its length.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", **kwargs): ...
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", **kwargs): ...
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
 
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
@@ -375,6 +399,9 @@ class SoftInfoBpDecoder(BpDecoderBase):
         The scaling factor used in the minimum sum method. The default value is 1.0.
     cutoff : Optional[float]
         The threshold value below which syndrome soft information is used.
+    random_serial_schedule : bool, optional
+        Whether to enable random serial scheduling. If True, the serial schedule order is randomized in each iteration.
+        By default False.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
