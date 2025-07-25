@@ -207,10 +207,10 @@ namespace ldpc {
                     } else if (this->bp_method == MINIMUM_SUM) {
 
                         double alpha;
-                        if(this->ms_scaling_factor == 0.0) {
-                            alpha = 1.0 - std::pow(2.0, -1.0*it);
-                        }
-                        else {
+                        if(this->ms_scaling_factor < 0.0) {
+                            double damping_factor = std::abs(this->ms_scaling_factor);
+                            alpha = 1.0 - std::pow(2.0, -1.0*it/damping_factor);
+                        } else {
                             alpha = this->ms_scaling_factor;
                         }
 
@@ -444,8 +444,9 @@ namespace ldpc {
                 for (int it = 1; it <= maximum_iterations; it++) {
 
                     double alpha;
-                    if(this->ms_scaling_factor == 0.0) {
-                        alpha = 1.0 - std::pow(2.0, -1.0*it);
+                    if(this->ms_scaling_factor < 0.0) {
+                        double damping_factor = std::abs(this->ms_scaling_factor);
+                        alpha = 1.0 - std::pow(2.0, -1.0*it/damping_factor);
                     }
                     else {
                         alpha = this->ms_scaling_factor;
