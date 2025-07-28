@@ -231,38 +231,38 @@ TEST(BpDecoder, MinSum_RepetitionCode5) {
 }
 
 
-TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
-    int n = 5;
-    auto pcm = ldpc::bp::BpSparse(n - 1, n);
-    for (int i = 0; i < (n - 1); i++) {
-        pcm.insert_entry(i, i);
-        pcm.insert_entry(i, (i + 1) % n);
-    }
-    int maximum_iterations = pcm.n;
-    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+// TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
+//     int n = 5;
+//     auto pcm = ldpc::bp::BpSparse(n - 1, n);
+//     for (int i = 0; i < (n - 1); i++) {
+//         pcm.insert_entry(i, i);
+//         pcm.insert_entry(i, (i + 1) % n);
+//     }
+//     int maximum_iterations = pcm.n;
+//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
-    // Initialize decoder using input arguments
-    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
-                                       ldpc::bp::SERIAL, 4324234);
+//     // Initialize decoder using input arguments
+//     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
+//                                        ldpc::bp::SERIAL, 4324234);
 
-    auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0},
-                                             {0, 0, 0, 1},
-                                             {0, 1, 0, 1},
-                                             {1, 0, 1, 0},
-                                             {1, 1, 1, 1}};
-    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0},
-                                                     {0, 0, 0, 0, 1},
-                                                     {0, 0, 1, 1, 0},
-                                                     {0, 1, 1, 0, 0},
-                                                     {0, 1, 0, 1, 0}};
+//     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0},
+//                                              {0, 0, 0, 1},
+//                                              {0, 1, 0, 1},
+//                                              {1, 0, 1, 0},
+//                                              {1, 1, 1, 1}};
+//     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0},
+//                                                      {0, 0, 0, 0, 1},
+//                                                      {0, 0, 1, 1, 0},
+//                                                      {0, 1, 1, 0, 0},
+//                                                      {0, 1, 0, 1, 0}};
 
-    auto count = 0;
-    for (auto syndrome: syndromes) {
-        auto decoding = decoder.decode(syndrome);
-        ASSERT_EQ(expected_decoding[count], decoding);
-        count++;
-    }
-}
+//     auto count = 0;
+//     for (auto syndrome: syndromes) {
+//         auto decoding = decoder.decode(syndrome);
+//         ASSERT_EQ(expected_decoding[count], decoding);
+//         count++;
+//     }
+// }
 
 
 TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {

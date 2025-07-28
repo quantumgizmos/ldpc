@@ -60,9 +60,10 @@ namespace ldpc {
             BpSchedule schedule;
             BpInputType bp_input_type;
             double ms_scaling_factor;
+            std::vector<double> ms_scaling_factor_vector;
+            double dynamic_scaling_factor_damping;
             std::vector<uint8_t> decoding;
             std::vector<uint8_t> candidate_syndrome;
-
             std::vector<double> log_prob_ratios;
             std::vector<double> initial_log_prob_ratios;
             std::vector<double> soft_syndrome;
@@ -85,10 +86,12 @@ namespace ldpc {
                     const std::vector<int> &serial_schedule = NULL_INT_VECTOR,
                     int random_schedule_seed = 0,
                     bool random_serial_schedule = false,
-                    BpInputType bp_input_type = AUTO) :
+                    BpInputType bp_input_type = AUTO,
+                    double dynamic_scaling_factor_damping = -1.0) : 
                     pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
                     check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
                     schedule(schedule), ms_scaling_factor(min_sum_scaling_factor),
+                    dynamic_scaling_factor_damping(dynamic_scaling_factor_damping),
                     iterations(0) //the parity check matrix is passed in by reference
             {
 
@@ -126,12 +129,40 @@ namespace ldpc {
                     }
                 }
 
+
+                if(this->bp_method == MINIMUM_SUM ){
+                    if (this->ms_scaling_factor <= 0.0 || this->ms_scaling_factor > 1.0) {
+                        throw std::runtime_error("Minimum sum scaling factor must be in the range (0, 1]");
+                    }
+                    this->set_up_ms_scaling_factors();
+                } else {
+                    this->ms_scaling_factor_vector.clear();
+                }
+
                 //Initialise OMP thread pool
                 // this->omp_thread_count = omp_threads;
                 // this->set_omp_thread_count(this->omp_thread_count);
             }
 
             ~BpDecoder() = default;
+
+
+            void set_up_ms_scaling_factors(){
+
+                if(this->dynamic_scaling_factor_damping <= 0) {
+                    this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                    for (int i = 0; i < this->maximum_iterations; i++) {
+                        this->ms_scaling_factor_vector[i] = this->ms_scaling_factor;
+                    }
+                } else {
+                    this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                    for (int i = 0; i < this->maximum_iterations; i++) {
+                        this->ms_scaling_factor_vector[i] = 1.0 - (1.0 - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
+                    }
+                } 
+
+            }
+
 
             void set_omp_thread_count(int count) {
                 this->omp_thread_count = count;
@@ -219,13 +250,7 @@ namespace ldpc {
                         }
                     } else if (this->bp_method == MINIMUM_SUM) {
 
-                        double alpha;
-                        if(this->ms_scaling_factor == 0.0) {
-                            alpha = 1.0 - std::pow(2.0, -1.0*it);
-                        }
-                        else {
-                            alpha = this->ms_scaling_factor;
-                        }
+                        double alpha = this->ms_scaling_factor_vector[it - 1];
 
                         //check to bit updates
                         for (int i = 0; i < check_count; i++) {
@@ -456,13 +481,7 @@ namespace ldpc {
 
                 for (int it = 1; it <= maximum_iterations; it++) {
 
-                    double alpha;
-                    if(this->ms_scaling_factor == 0.0) {
-                        alpha = 1.0 - std::pow(2.0, -1.0*it);
-                    }
-                    else {
-                        alpha = this->ms_scaling_factor;
-                    }
+                    double alpha = this->ms_scaling_factor_vector[it - 1];
 
                     if (this->random_serial_schedule) {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
