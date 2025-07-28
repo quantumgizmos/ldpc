@@ -1,30 +1,4 @@
 
-Skip to content
-Navigation Menu
-quantumgizmos
-ldpc
-
-Code
-Issues 7
-Pull requests 6
-Discussions
-Actions
-Projects
-Wiki
-Security
-Insights
-
-    Settings
-
-Build
-chore: bump version to 2.3.7 and add UnionFindDecoder import. #81 #216
-
-Jobs
-
-Run details
-
-Workflow file for this run
-.github/workflows/build.yml at e2f1209
 # This workflow builds the source distribution (sdist) and the binary wheels using cibuildwheel,
 # and finally uploads these artifacts to PyPI when code is pushed to the "release" branch.
 name: Build
