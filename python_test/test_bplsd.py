@@ -151,6 +151,7 @@ def test_rep_code_ms():
     H = rep_code(3)
 
     lsd = BpLsdDecoder(H, error_rate=0.1, bp_method="min_sum", ms_scaling_factor=1.0)
+
     assert lsd is not None
     assert lsd.bp_method == "minimum_sum"
     assert lsd.schedule == "parallel"
@@ -190,3 +191,7 @@ def test_stats_reset():
     assert len(stats["bit_llrs"]) == 0
     assert len(stats["individual_cluster_stats"]) == 0
     assert len(stats["global_timestep_bit_history"]) == 0
+
+
+if __name__ == "__main__":
+    test_rep_code_ms()

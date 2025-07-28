@@ -4,7 +4,6 @@ import numpy as np
 from scipy.sparse import spmatrix
 
 cdef class BeliefFindDecoder(BpDecoderBase):
-  
     """
     A class representing a decoder that combines Belief Propagation (BP) with the Union Find Decoder (UFD) algorithm.
 
@@ -43,18 +42,15 @@ cdef class BeliefFindDecoder(BpDecoderBase):
         The inversion method can be applied to any parity check matrix.
     bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
-
-    Notes
-    -----
-    The `BeliefFindDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
-    in the UFD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
-    The `uf_method` parameter activates a more general version of the UFD algorithm suitable for LDPC codes when set to True.
+    dynamic_scaling_factor_damping : Optional[float], optional
+        The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling", bits_per_step:int = 0, input_vector_type: str = "syndrome"):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling",
+                 bits_per_step: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0):
         self.MEMORY_ALLOCATED=False
         self.ufd = new uf_decoder_cpp(self.pcm[0])
         self.bf_decoding.resize(self.n) #C vector for the bf decoding

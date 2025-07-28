@@ -1,6 +1,10 @@
 import pytest
 import numpy as np
 from ldpc.bp_decoder._bp_decoder import BpDecoder
+from ldpc import BpOsdDecoder
+from ldpc.bplsd_decoder import BpLsdDecoder
+from ldpc.belief_find_decoder import BeliefFindDecoder
+from ldpc.bp_flip import BpFlipDecoder
 
 def test_dynamic_scaling_factor_damping_initialization():
     pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
@@ -47,3 +51,48 @@ def test_dynamic_scaling_factor_damping_update():
     ]
     for i, factor in enumerate(expected_factors):
         assert pytest.approx(decoder.ms_scaling_factor_vector[i], rel=1e-6) == factor, f"Scaling factor mismatch at iteration {i} after update."
+
+def test_dynamic_scaling_factor_damping_bplsd():
+    pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
+    damping_factor = 0.2
+
+    decoder = BpLsdDecoder(pcm, error_rate = 0.1, dynamic_scaling_factor_damping=damping_factor)
+    assert decoder.dynamic_scaling_factor_damping == damping_factor, "Damping factor not set correctly."
+
+    updated_damping_factor = 0.5
+    decoder.dynamic_scaling_factor_damping = updated_damping_factor
+    assert decoder.dynamic_scaling_factor_damping == updated_damping_factor, "Damping factor update failed."
+
+
+def test_dynamic_scaling_factor_damping_bposd():
+    pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
+    damping_factor = 0.3
+
+    decoder = BpOsdDecoder(pcm, error_rate=0.1, dynamic_scaling_factor_damping=damping_factor)
+    assert decoder.dynamic_scaling_factor_damping == damping_factor, "Damping factor not set correctly."
+
+    updated_damping_factor = 0.6
+    decoder.dynamic_scaling_factor_damping = updated_damping_factor
+    assert decoder.dynamic_scaling_factor_damping == updated_damping_factor, "Damping factor update failed."
+
+def test_dynamic_scaling_factor_damping_belief_find():
+    pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
+    damping_factor = 0.4
+
+    decoder = BeliefFindDecoder(pcm, error_rate=0.1, dynamic_scaling_factor_damping=damping_factor)
+    assert decoder.dynamic_scaling_factor_damping == damping_factor, "Damping factor not set correctly."
+
+    updated_damping_factor = 0.7
+    decoder.dynamic_scaling_factor_damping = updated_damping_factor
+    assert decoder.dynamic_scaling_factor_damping == updated_damping_factor, "Damping factor update failed."
+
+# def test_dynamic_scaling_factor_damping_bp_flip():
+#     pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
+#     damping_factor = 0.5
+
+#     decoder = BpFlipDecoder(pcm, error_rate=0.1, dynamic_scaling_factor_damping=damping_factor)
+#     assert decoder.dynamic_scaling_factor_damping == damping_factor, "Damping factor not set correctly."
+
+#     updated_damping_factor = 0.8
+#     decoder.dynamic_scaling_factor_damping = updated_damping_factor
+#     assert decoder.dynamic_scaling_factor_damping == updated_damping_factor, "Damping factor update failed."

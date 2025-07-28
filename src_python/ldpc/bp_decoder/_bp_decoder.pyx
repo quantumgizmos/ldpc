@@ -206,6 +206,7 @@ cdef class BpDecoderBase:
             list of floats of length equal to the block length of the code {self.n}.")
 
 
+        self.bpd.set_up_ms_scaling_factors()
         
 
         self.MEMORY_ALLOCATED=True

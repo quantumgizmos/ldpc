@@ -11,6 +11,7 @@
 #include <chrono>
 #include <stdexcept> // required for std::runtime_error
 #include <set>
+#include <iostream>
 
 #include "math.h"
 #include "sparse_matrix_base.hpp"
@@ -130,14 +131,7 @@ namespace ldpc {
                 }
 
 
-                if(this->bp_method == MINIMUM_SUM ){
-                    if (this->ms_scaling_factor <= 0.0 || this->ms_scaling_factor > 1.0) {
-                        throw std::runtime_error("Minimum sum scaling factor must be in the range (0, 1]");
-                    }
-                    this->set_up_ms_scaling_factors();
-                } else {
-                    this->ms_scaling_factor_vector.clear();
-                }
+                this->set_up_ms_scaling_factors();
 
                 //Initialise OMP thread pool
                 // this->omp_thread_count = omp_threads;
@@ -149,17 +143,23 @@ namespace ldpc {
 
             void set_up_ms_scaling_factors(){
 
-                if(this->dynamic_scaling_factor_damping <= 0) {
-                    this->ms_scaling_factor_vector.resize(this->maximum_iterations);
-                    for (int i = 0; i < this->maximum_iterations; i++) {
-                        this->ms_scaling_factor_vector[i] = this->ms_scaling_factor;
-                    }
+                if(this->bp_method == MINIMUM_SUM){
+
+                    if(this->dynamic_scaling_factor_damping <= 0) {
+                        this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                        for (int i = 0; i < this->maximum_iterations; i++) {
+                            this->ms_scaling_factor_vector[i] = this->ms_scaling_factor;
+                        }
+                    } else {
+                        this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                        for (int i = 0; i < this->maximum_iterations; i++) {
+                            this->ms_scaling_factor_vector[i] = 1.0 - (1.0 - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
+                        }
+                    } 
+
                 } else {
-                    this->ms_scaling_factor_vector.resize(this->maximum_iterations);
-                    for (int i = 0; i < this->maximum_iterations; i++) {
-                        this->ms_scaling_factor_vector[i] = 1.0 - (1.0 - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
-                    }
-                } 
+                    this->ms_scaling_factor_vector.clear();
+                }
 
             }
 
@@ -222,6 +222,7 @@ namespace ldpc {
 
             std::vector<uint8_t> &bp_decode_parallel(std::vector<uint8_t> &syndrome) {
 
+
                 this->converge = 0;
 
                 this->initialise_log_domain_bp();
@@ -250,7 +251,9 @@ namespace ldpc {
                         }
                     } else if (this->bp_method == MINIMUM_SUM) {
 
+
                         double alpha = this->ms_scaling_factor_vector[it - 1];
+
 
                         //check to bit updates
                         for (int i = 0; i < check_count; i++) {
