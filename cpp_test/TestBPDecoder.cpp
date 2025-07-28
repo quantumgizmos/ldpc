@@ -231,38 +231,38 @@ TEST(BpDecoder, MinSum_RepetitionCode5) {
 }
 
 
-// TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
-//     int n = 5;
-//     auto pcm = ldpc::bp::BpSparse(n - 1, n);
-//     for (int i = 0; i < (n - 1); i++) {
-//         pcm.insert_entry(i, i);
-//         pcm.insert_entry(i, (i + 1) % n);
-//     }
-//     int maximum_iterations = pcm.n;
-//     auto channel_probabilities = vector<double>(pcm.n, 0.1);
+TEST(BpDecoder, ProdSumSerial_RepetitionCode5) {
+    int n = 5;
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++) {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
-//     // Initialize decoder using input arguments
-//     auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
-//                                        ldpc::bp::SERIAL, 4324234);
+    // Initialize decoder using input arguments
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
+                                       ldpc::bp::SERIAL, 4324234);
 
-//     auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0},
-//                                              {0, 0, 0, 1},
-//                                              {0, 1, 0, 1},
-//                                              {1, 0, 1, 0},
-//                                              {1, 1, 1, 1}};
-//     auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0},
-//                                                      {0, 0, 0, 0, 1},
-//                                                      {0, 0, 1, 1, 0},
-//                                                      {0, 1, 1, 0, 0},
-//                                                      {0, 1, 0, 1, 0}};
+    auto syndromes = vector<vector<uint8_t>>{{0, 0, 0, 0},
+                                             {0, 0, 0, 1},
+                                             {0, 1, 0, 1},
+                                             {1, 0, 1, 0},
+                                             {1, 1, 1, 1}};
+    auto expected_decoding = vector<vector<uint8_t>>{{0, 0, 0, 0, 0},
+                                                     {0, 0, 0, 0, 1},
+                                                     {0, 0, 1, 1, 0},
+                                                     {0, 1, 1, 0, 0},
+                                                     {0, 1, 0, 1, 0}};
 
-//     auto count = 0;
-//     for (auto syndrome: syndromes) {
-//         auto decoding = decoder.decode(syndrome);
-//         ASSERT_EQ(expected_decoding[count], decoding);
-//         count++;
-//     }
-// }
+    auto count = 0;
+    for (auto syndrome: syndromes) {
+        auto decoding = decoder.decode(syndrome);
+        ASSERT_EQ(expected_decoding[count], decoding);
+        count++;
+    }
+}
 
 
 TEST(BpDecoder, MinSum_Serial_RepetitionCode5) {
@@ -629,6 +629,65 @@ TEST(BpDecoder, DefaultScheduleAndConstantWhenRandomSerialScheduleFalse) {
 
     // Verify that the schedule remains constant between decode calls
     ASSERT_EQ(first_schedule, second_schedule) << "Schedule changed despite random_serial_schedule being false.";
+}
+
+TEST(BpDecoder, DynamicScalingFactorSetup) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 10;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with dynamic scaling factor damping
+    double min_sum_scaling_factor = 0.5;
+    double dynamic_scaling_factor_damping = 0.1;
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::PARALLEL, min_sum_scaling_factor, 1, ldpc::bp::NULL_INT_VECTOR, 0, false, ldpc::bp::AUTO, dynamic_scaling_factor_damping);
+
+    // Verify that the scaling factors are set up correctly
+    ASSERT_EQ(decoder.ms_scaling_factor_vector.size(), maximum_iterations);
+    for (int i = 0; i < maximum_iterations; i++) {
+        double expected_factor = 1.0 - (1.0 - min_sum_scaling_factor) * std::pow(2.0, -1 * i * dynamic_scaling_factor_damping);
+        ASSERT_NEAR(decoder.ms_scaling_factor_vector[i], expected_factor, 1e-6);
+    }
+}
+
+TEST(BpDecoder, StaticScalingFactorSetup) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 10;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with static scaling factor
+    double min_sum_scaling_factor = 0.5;
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::PARALLEL, min_sum_scaling_factor);
+
+    // Verify that the scaling factors are set up correctly
+    ASSERT_EQ(decoder.ms_scaling_factor_vector.size(), maximum_iterations);
+    for (int i = 0; i < maximum_iterations; i++) {
+        ASSERT_NEAR(decoder.ms_scaling_factor_vector[i], min_sum_scaling_factor, 1e-6);
+    }
+}
+
+TEST(BpDecoder, ErrorOnInvalidMsScalingFactor) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 10;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Test with ms_scaling_factor <= 0
+    EXPECT_THROW(
+        ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                            ldpc::bp::PARALLEL, 0.0),
+        std::runtime_error
+    );
+
+    // Test with ms_scaling_factor > 1
+    EXPECT_THROW(
+        ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                            ldpc::bp::PARALLEL, 1.1),
+        std::runtime_error
+    );
 }
 
 int main(int argc, char **argv) {

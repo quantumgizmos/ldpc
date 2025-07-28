@@ -481,8 +481,6 @@ namespace ldpc {
 
                 for (int it = 1; it <= maximum_iterations; it++) {
 
-                    double alpha = this->ms_scaling_factor_vector[it - 1];
-
                     if (this->random_serial_schedule) {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                     } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
@@ -519,6 +517,7 @@ namespace ldpc {
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }
                         } else if (this->bp_method == 1) {
+                            double alpha = this->ms_scaling_factor_vector[it - 1];
                             for (auto &e: pcm.iterate_column(bit_index)) {
                                 check_index = e.row_index;
                                 int sgn = syndrome[check_index];
