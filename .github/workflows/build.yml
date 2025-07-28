@@ -172,4 +172,3 @@ jobs:
           password: ${{ secrets.PYPI_PASSWORD }}  # Supply the secure PyPI API token.
           skip-existing: true  # Skip files already present on PyPI.
           verbose: true        # Enable verbose output during the upload.
-chore: bump version to 2.3.7 and add UnionFindDecoder import. #81 · quantumgizmos/ldpc@e2f1209 
