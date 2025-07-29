@@ -10,19 +10,54 @@ def io_test(pcm: Union[scipy.sparse.spmatrix,np.ndarray]): ...
 
 
 class BpDecoderBase:
-
     """
-    Bp Decoder base class
+    Base class for Belief Propagation (BP) decoders.
+
+    This class provides the foundational structure for BP decoders, including initialization, 
+    memory management, and common properties such as error rates, channel probabilities, 
+    and scheduling methods.
+
+    Attributes:
+        pcm (BpSparse): The parity check matrix in sparse format.
+        m (int): Number of rows in the parity check matrix.
+        n (int): Number of columns in the parity check matrix.
+        MEMORY_ALLOCATED (bool): Indicates whether memory has been allocated for the decoder.
+        bpd (BpDecoderCpp): The underlying C++ BP decoder object.
     """
 
-    def __cinit__(self,pcm, **kwargs): ...
+    def __cinit__(self, pcm, **kwargs):
+        """
+        Initialize the BP decoder base class.
+
+        Args:
+            pcm (Union[np.ndarray, scipy.sparse.spmatrix]): The parity check matrix.
+            **kwargs: Additional parameters for configuring the decoder.
+
+        Keyword Args:
+            error_rate (Optional[float]): Initial error rate for the decoder.
+            error_channel (Optional[List[float]]): Initial error channel probabilities.
+            max_iter (int): Maximum number of iterations for decoding.
+            bp_method (int): Belief propagation method (0 for product-sum, 1 for minimum-sum).
+            ms_scaling_factor (float): Scaling factor for the minimum-sum method.
+            schedule (int): Scheduling method (0 for serial, 1 for parallel, 2 for serial-relative).
+            omp_thread_count (int): Number of OpenMP threads to use.
+            random_serial_schedule (bool): Whether to enable random serial scheduling.
+            random_schedule_seed (int): Seed for random serial scheduling.
+            serial_schedule_order (Optional[List[int]]): Custom order for serial scheduling.
+            channel_probs (Optional[List[float]]): Channel probabilities for the decoder.
+            dynamic_scaling_factor_damping (float): Damping factor for dynamic scaling in the minimum-sum method.
+
+        Raises:
+            TypeError: If the input matrix is not a valid type.
+            ValueError: If required parameters are missing or invalid.
+        """
 
     def __del__(self): ...
 
     @property
     def error_rate(self) -> np.ndarray:
         """
-        Returns the current error rate vector.
+        Get the current error rate vector.
 
         Returns:
             np.ndarray: A numpy array containing the current error rate vector.
@@ -31,29 +66,34 @@ class BpDecoderBase:
     @error_rate.setter
     def error_rate(self, value: Optional[float]) -> None:
         """
-        Sets the error rate for the decoder.
+        Set the error rate for the decoder.
 
         Args:
-            value (Optional[float]): The error rate value to be set. Must be a single float value.
+            value (Optional[float]): The error rate value to be set.
+
+        Raises:
+            ValueError: If the input value is not a valid float.
         """
 
     @property
     def error_channel(self) -> np.ndarray:
         """
-        Returns the current error channel vector.
+        Get the current error channel vector.
 
         Returns:
             np.ndarray: A numpy array containing the current error channel vector.
         """
 
     @error_channel.setter
-    def error_channel(self, value: Union[Optional[List[float]],np.ndarray]) -> None:
+    def error_channel(self, value: Union[Optional[List[float]], np.ndarray]) -> None:
         """
-        Sets the error channel for the decoder.
+        Set the error channel for the decoder.
 
         Args:
-            value (Optional[List[float]]): The error channel vector to be set. Must have length equal to the block
-            length of the code `self.n`.
+            value (Union[Optional[List[float]], np.ndarray]): The error channel vector to be set.
+
+        Raises:
+            ValueError: If the input vector length does not match the block length of the code.
         """
 
     def update_channel_probs(self, value: Union[List[float],np.ndarray]) -> None: ...
@@ -234,6 +274,27 @@ class BpDecoderBase:
         """
 
     @property
+    def ms_scaling_factor_vector(self) -> np.ndarray:
+        """
+        Get the vector of scaling factors for the minimum-sum method.
+
+        Returns:
+            np.ndarray: The current vector of scaling factors.
+        """
+
+    @ms_scaling_factor_vector.setter
+    def ms_scaling_factor_vector(self, value: Union[List[float], np.ndarray]) -> None:
+        """
+        Set the vector of scaling factors for the minimum-sum method.
+
+        Args:
+            value (Union[List[float], np.ndarray]): The new vector of scaling factors.
+
+        Raises:
+            ValueError: If the input vector length does not match the maximum iterations.
+        """
+
+    @property
     def omp_thread_count(self) -> int:
         """Get the number of OpenMP threads.
 
@@ -292,81 +353,75 @@ class BpDecoderBase:
             ValueError: If random serial schedule is enabled while a fixed serial schedule is set.
         """
 
+    @property
+    def dynamic_scaling_factor_damping(self) -> float:
+        """
+        Get the dynamic scaling factor damping value.
+
+        Returns:
+            float: The current dynamic scaling factor damping value.
+        """
+
+    @dynamic_scaling_factor_damping.setter
+    def dynamic_scaling_factor_damping(self, value: float) -> None:
+        """
+        Set the dynamic scaling factor damping value.
+
+        Args:
+            value (float): The new dynamic scaling factor damping value.
+
+        Raises:
+            ValueError: If the input value is not a non-negative float.
+        """
+
 class BpDecoder(BpDecoderBase):
     """
-    Belief propagation decoder for binary linear codes.
+    Belief Propagation (BP) decoder for binary linear codes.
 
-    This class provides an implementation of belief propagation decoding for binary linear codes. The decoder uses a sparse
-    parity check matrix to decode received codewords. The decoding algorithm can be configured using various parameters,
-    such as the belief propagation method used, the scheduling method used, and the maximum number of iterations.
+    This class provides an implementation of BP decoding for binary linear codes. It supports 
+    various configurations, including different BP methods, scheduling strategies, and scaling factors.
 
-    Parameters
-    ----------
-    pcm : Union[np.ndarray, spmatrix]
-        The parity check matrix of the binary linear code, represented as a NumPy array or a SciPy sparse matrix.
-    error_rate : Optional[float], optional
-        The initial error rate for the decoder, by default None.
-    error_channel : Optional[List[float]], optional
-        The initial error channel probabilities for the decoder, by default None.
-    max_iter : Optional[int], optional
-        The maximum number of iterations allowed for decoding, by default 0 (adaptive).
-    bp_method : Optional[str], optional
-        The belief propagation method to use: 'product_sum' or 'minimum_sum', by default 'minimum_sum'.
-    ms_scaling_factor : Optional[float], optional
-        The scaling factor for the minimum sum method, by default 1.0.
-    schedule : Optional[str], optional
-        The scheduling method for belief propagation: 'parallel', 'serial', or 'serial_relative'. By default 'parallel'.
-    omp_thread_count : Optional[int], optional
-        The number of OpenMP threads to use, by default 1.
-    random_schedule_seed : Optional[int], optional
-        The seed for the random serial schedule, by default 0. If set to 0, the seed is set according to the system clock.
-    serial_schedule_order : Optional[List[int]], optional
-        The custom order for serial scheduling, by default None.
-    random_serial_schedule : bool, optional
-        Whether to enable random serial scheduling. If True, the serial schedule order is randomized in each iteration.
-        By default False.
-    input_vector_type: str, optional
-        Use this parameter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
-        Note, it is only necessary to specify this value when the parity check matrix is square. When the
-        parity matrix is non-square, the input vector type is inferred automatically from its length.
+    Parameters:
+        pcm (Union[np.ndarray, scipy.sparse.spmatrix]): The parity check matrix.
+        error_rate (Optional[float]): Initial error rate for the decoder.
+        error_channel (Optional[List[float]]): Initial error channel probabilities.
+        max_iter (Optional[int]): Maximum number of iterations for decoding.
+        bp_method (Optional[str]): Belief propagation method ('product_sum' or 'minimum_sum').
+        ms_scaling_factor (Optional[float]): Scaling factor for the minimum-sum method.
+        schedule (Optional[str]): Scheduling method ('parallel', 'serial', or 'serial_relative').
+        omp_thread_count (Optional[int]): Number of OpenMP threads to use.
+        random_schedule_seed (Optional[int]): Seed for random serial scheduling.
+        serial_schedule_order (Optional[List[int]]): Custom order for serial scheduling.
+        input_vector_type (str): Input vector type ('syndrome', 'received_vector', or 'auto').
+        random_serial_schedule (bool): Whether to enable random serial scheduling.
+        dynamic_scaling_factor_damping (Optional[float]): Damping factor for dynamic scaling in the minimum-sum method.
     """
-
-    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, **kwargs): ...
 
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """
-        Decode the input input_vector using belief propagation decoding algorithm.
+        Decode the input vector using the BP decoding algorithm.
 
-        Parameters
-        ----------
-        input_vector : numpy.ndarray
-            A 1D numpy array of length equal to the number of rows in the parity check matrix.
+        Parameters:
+            input_vector (np.ndarray): A 1D numpy array representing the input vector.
 
-        Returns
-        -------
-        numpy.ndarray
-            A 1D numpy array of length equal to the number of columns in the parity check matrix.
+        Returns:
+            np.ndarray: A 1D numpy array representing the decoded output.
 
-        Raises
-        ------
-        ValueError
-            If the length of the input input_vector does not match the number of rows in the parity check matrix.
+        Raises:
+            ValueError: If the input vector length does not match the expected length.
         """
         
 
     @property
     def decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Get the current decoded output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
@@ -375,42 +430,25 @@ class BpDecoder(BpDecoderBase):
 
 class SoftInfoBpDecoder(BpDecoderBase):
     """
-    A decoder that uses soft information belief propagation algorithm for decoding binary linear codes.
+    Soft Information Belief Propagation (BP) decoder for binary linear codes.
 
-    This class implements a modified version of the belief propagation decoding algorithm that accounts for
-    uncertainty in the syndrome readout using a serial belief propagation schedule. The decoder uses a minimum
-    sum method as the belief propagation variant. For more information on the algorithm, please see the original
-    research paper at https://arxiv.org/abs/2205.02341.
+    This class implements a modified BP decoding algorithm that accounts for uncertainty in 
+    the syndrome readout using a serial belief propagation schedule.
 
-    Parameters
-    ----------
-    pcm : Union[np.ndarray, spmatrix]
-        The parity check matrix for the code.
-    error_rate : Optional[float]
-        The probability of a bit being flipped in the received codeword.
-    error_channel : Optional[List[float]]
-        A list of probabilities that specify the probability of each bit being flipped in the received codeword.
-        Must be of length equal to the block length of the code.
-    max_iter : Optional[int]
-        The maximum number of iterations for the decoding algorithm.
-    bp_method : Optional[str]
-        The variant of belief propagation method to be used. The default value is 'minimum_sum'.
-    ms_scaling_factor : Optional[float]
-        The scaling factor used in the minimum sum method. The default value is 1.0.
-    cutoff : Optional[float]
-        The threshold value below which syndrome soft information is used.
-    random_serial_schedule : bool, optional
-        Whether to enable random serial scheduling. If True, the serial schedule order is randomized in each iteration.
-        By default False.
+    Parameters:
+        pcm (Union[np.ndarray, spmatrix]): The parity check matrix.
+        error_rate (Optional[float]): Initial error rate for the decoder.
+        error_channel (Optional[List[float]]): Initial error channel probabilities.
+        max_iter (Optional[int]): Maximum number of iterations for decoding.
+        bp_method (Optional[str]): Belief propagation method ('minimum_sum').
+        ms_scaling_factor (Optional[float]): Scaling factor for the minimum-sum method.
+        cutoff (Optional[float]): Threshold value below which syndrome soft information is used.
+        sigma (float): Standard deviation of the noise.
     """
-
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[float] = 1.0, cutoff: Optional[float] = np.inf, sigma: float = 2.0, **kwargs): ...
 
     def decode(self, soft_info_syndrome: np.ndarray) -> np.ndarray:
         """
-        Decode the input syndrome using the soft information belief propagation decoding algorithm.
+        Decode the input syndrome using the soft information BP decoding algorithm.
 
         Parameters
         ----------
@@ -426,7 +464,7 @@ class SoftInfoBpDecoder(BpDecoderBase):
     @property
     def soft_syndrome(self) -> np.ndarray:
         """
-        Returns the current soft syndrome.
+        Get the current soft syndrome.
 
         Returns:
             np.ndarray: A numpy array containing the current soft syndrome.
@@ -436,7 +474,7 @@ class SoftInfoBpDecoder(BpDecoderBase):
     @property
     def decoding(self) -> np.ndarray:
         """
-        Returns the current decoded output.
+        Get the current decoded output.
 
         Returns:
             np.ndarray: A numpy array containing the current decoded output.
