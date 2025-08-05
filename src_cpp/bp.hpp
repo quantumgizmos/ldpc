@@ -63,6 +63,7 @@ namespace ldpc {
             double ms_scaling_factor;
             std::vector<double> ms_scaling_factor_vector;
             double dynamic_scaling_factor_damping;
+            double ms_converge_value;
             std::vector<uint8_t> decoding;
             std::vector<uint8_t> candidate_syndrome;
             std::vector<double> log_prob_ratios;
@@ -88,11 +89,13 @@ namespace ldpc {
                     int random_schedule_seed = 0,
                     bool random_serial_schedule = false,
                     BpInputType bp_input_type = AUTO,
-                    double dynamic_scaling_factor_damping = -1.0) : 
+                    double dynamic_scaling_factor_damping = -1.0,
+                    double ms_converge_value = 1.0) : 
                     pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
                     check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
                     schedule(schedule), ms_scaling_factor(min_sum_scaling_factor),
                     dynamic_scaling_factor_damping(dynamic_scaling_factor_damping),
+                    ms_converge_value(ms_converge_value),
                     iterations(0) //the parity check matrix is passed in by reference
             {
 
@@ -153,7 +156,7 @@ namespace ldpc {
                     } else {
                         this->ms_scaling_factor_vector.resize(this->maximum_iterations);
                         for (int i = 0; i < this->maximum_iterations; i++) {
-                            this->ms_scaling_factor_vector[i] = 1.0 - (1.0 - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
+                            this->ms_scaling_factor_vector[i] = this->ms_converge_value - (this->ms_converge_value - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
                         }
                     } 
 

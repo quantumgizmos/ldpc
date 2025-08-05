@@ -669,26 +669,43 @@ TEST(BpDecoder, StaticScalingFactorSetup) {
     }
 }
 
-TEST(BpDecoder, ErrorOnInvalidMsScalingFactor) {
+
+TEST(BpDecoder, MsConvergeValueSetup) {
     int n = 5;
     auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
     int maximum_iterations = 10;
     auto channel_probabilities = vector<double>(pcm.n, 0.1);
 
-    // Test with ms_scaling_factor <= 0
-    EXPECT_THROW(
-        ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
-                            ldpc::bp::PARALLEL, 0.0),
-        std::runtime_error
-    );
+    // Initialize decoder with ms_converge value
+    double ms_converge = 0.01;
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::PARALLEL, 0.5, 1, ldpc::bp::NULL_INT_VECTOR, 0, false, ldpc::bp::AUTO, 0.0, ms_converge);
 
-    // Test with ms_scaling_factor > 1
-    EXPECT_THROW(
-        ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
-                            ldpc::bp::PARALLEL, 1.1),
-        std::runtime_error
-    );
+    // Verify that the ms_converge value is set correctly
+    ASSERT_EQ(decoder.ms_converge_value, 0.01);
 }
+
+TEST(BpDecoder, SetUpMsScalingFactorsTest) {
+    int n = 5;
+    auto pcm = ldpc::gf2codes::rep_code<ldpc::bp::BpEntry>(n);
+    int maximum_iterations = 10;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with ms_scaling_factor=1 and ms_converge_value=2.0
+    double ms_scaling_factor = 1.0;
+    double ms_converge_value = 2.0;
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::MINIMUM_SUM,
+                                       ldpc::bp::PARALLEL, ms_scaling_factor, 1, ldpc::bp::NULL_INT_VECTOR, 0, false,
+                                       ldpc::bp::AUTO, 0.1, ms_converge_value);
+
+    // Verify that the scaling factors are set up correctly
+    ASSERT_EQ(decoder.ms_scaling_factor_vector.size(), maximum_iterations);
+    for (int i = 0; i < maximum_iterations; i++) {
+        double expected_factor = ms_converge_value - (ms_converge_value - ms_scaling_factor) * std::pow(2.0, -1 * i * 0.1);
+        ASSERT_NEAR(decoder.ms_scaling_factor_vector[i], expected_factor, 1e-6);
+    }
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
