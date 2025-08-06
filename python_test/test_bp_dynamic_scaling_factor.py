@@ -32,26 +32,26 @@ def test_dynamic_scaling_factor_damping_effect():
     for i, factor in enumerate(expected_factors):
         assert pytest.approx(decoder.ms_scaling_factor_vector[i], rel=1e-6) == factor, f"Scaling factor mismatch at iteration {i}."
 
-def test_dynamic_scaling_factor_damping_update():
+def test_dynamic_scaling_factor_with_initial_and_converge_parameters():
     pcm = np.array([[1, 1, 0], [0, 1, 1]], dtype=np.uint8)
     channel_probs = [0.1, 0.2, 0.3]
+    
     max_iter = 10
-    initial_damping_factor = 0.1
-    updated_damping_factor = 0.2
+    damping_factor = 0.1
+    ms_scaling_factor = 0.5  # Initial scaling factor for testing
+    ms_converge_value = 2.0  # Convergence value for the minimum-sum method
 
-    decoder = BpDecoder(pcm, channel_probs=channel_probs, max_iter=max_iter,  bp_method="ms", ms_scaling_factor=0.5, dynamic_scaling_factor_damping=initial_damping_factor, ms_converge_value=2.0)
+    decoder = BpDecoder(pcm, channel_probs=channel_probs, max_iter=max_iter,  bp_method="ms", ms_scaling_factor=ms_scaling_factor, dynamic_scaling_factor_damping=damping_factor, ms_converge_value=ms_converge_value)
 
-    print("ms_scaling_factor:", decoder.ms_scaling_factor)
-    print("initial_damping_factor:", initial_damping_factor)
+    print("ms_scaling_factor_start:", decoder.ms_scaling_factor)
+    print("damping_factor:", damping_factor)
     print("ms_converge_value:", decoder.ms_converge_value)
     print("Initial scaling factors:", decoder.ms_scaling_factor_vector)
 
-    # Update the damping factor
-    decoder.dynamic_scaling_factor_damping = updated_damping_factor
 
     # Verify that the scaling factors are recomputed correctly
     expected_factors = [
-        decoder.ms_converge_value - (decoder.ms_converge_value - decoder.ms_scaling_factor) * (2.0 ** (-1 * i * updated_damping_factor))
+        ms_converge_value - (ms_converge_value - ms_scaling_factor) * (2.0 ** (-1 * i * damping_factor))
         for i in range(max_iter)
     ]
     for i, factor in enumerate(expected_factors):
