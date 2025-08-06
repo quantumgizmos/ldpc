@@ -40,6 +40,8 @@ class BpOsdDecoder(BpDecoderBase):
         The OSD order, by default 0.
     dynamic_scaling_factor_damping : Optional[float], optional
         The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
+    ms_converge_value (Optional[float]):
+        Convergence value for the minimum-sum method.
 
     Notes
     -----
@@ -52,7 +54,7 @@ class BpOsdDecoder(BpDecoderBase):
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
-                 osd_order: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0, **kwargs): ...
+                 osd_order: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0, ms_converge_value: Optional[float] = 1.0, **kwargs): ...
 
     def __del__(self): ...
 

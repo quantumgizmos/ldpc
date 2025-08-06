@@ -44,13 +44,16 @@ cdef class BeliefFindDecoder(BpDecoderBase):
         Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
     dynamic_scaling_factor_damping : Optional[float], optional
         The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
+    ms_converge_value (Optional[float]):
+        Convergence value for the minimum-sum method.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling",
-                 bits_per_step: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0):
+                 bits_per_step: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0, ms_converge_value: Optional[float] = 1.0, **kwargs):
+                 
         self.MEMORY_ALLOCATED=False
         self.ufd = new uf_decoder_cpp(self.pcm[0])
         self.bf_decoding.resize(self.n) #C vector for the bf decoding

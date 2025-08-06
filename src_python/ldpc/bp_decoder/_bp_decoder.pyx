@@ -133,6 +133,7 @@ cdef class BpDecoderBase:
         serial_schedule_order = kwargs.get("serial_schedule_order", None)
         channel_probs = kwargs.get("channel_probs", [None])
         dynamic_scaling_factor_damping = kwargs.get("dynamic_scaling_factor_damping", -1.0)
+        ms_converge = kwargs.get("ms_converge_value", 1.0)
         
         # input_vector_type = kwargs.get("input_vector_type", "auto")
         # print(kwargs.get("input_vector_type"))
@@ -191,6 +192,7 @@ cdef class BpDecoderBase:
 
         if dynamic_scaling_factor_damping >= 0:
             self.dynamic_scaling_factor_damping = dynamic_scaling_factor_damping
+            self.ms_converge_value = ms_converge
 
         ## the ldpc_v1 backwards compatibility
         if isinstance(channel_probs, list) or isinstance(channel_probs, np.ndarray):
@@ -203,11 +205,9 @@ cdef class BpDecoderBase:
             self.error_rate = error_rate
         else:
             raise ValueError("Please specify the error channel. Either: 1) error_rate: float or 2) error_channel:\
-            list of floats of length equal to the block length of the code {self.n}.")
-
+            list of floats of length equal to the block length of the code {self.n}.")        
 
         self.bpd.set_up_ms_scaling_factors()
-        
 
         self.MEMORY_ALLOCATED=True
 
@@ -688,9 +688,39 @@ cdef class BpDecoderBase:
         Raises:
             ValueError: If the input value is not a non-negative float.
         """
+        if self.bpd.bp_method != MINIMUM_SUM:
+            raise ValueError(f"The dynamic_scaling_factor_damping can only be set for the minimum-sum method. The current method is {self.bp_method}.")
         if not isinstance(value, (float, int)) or value < 0:
             raise ValueError("The dynamic_scaling_factor_damping must be a non-negative float.")
         self.bpd.dynamic_scaling_factor_damping = value
+        self.bpd.set_up_ms_scaling_factors()
+
+    @property
+    def ms_converge_value(self) -> float:
+        """
+        Get the ms_converge_value for the minimum-sum method.
+
+        Returns:
+            float: The current ms_converge_value.
+        """
+        return self.bpd.ms_converge_value
+
+    @ms_converge_value.setter
+    def ms_converge_value(self, value: float) -> None:
+        """
+        Set the ms_converge_value for the minimum-sum method.
+
+        Args:
+            value (float): The new ms_converge_value.
+
+        Raises:
+            ValueError: If the input value is not a float.
+        """
+        if self.bpd.bp_method != MINIMUM_SUM:
+            raise ValueError(f"The ms_converge_value can only be set for the minimum-sum method. The current method is {self.bp_method}.")
+        if not isinstance(value, (float, int)):
+            raise ValueError("The ms_converge_value must be a float.")
+        self.bpd.ms_converge_value = value
         self.bpd.set_up_ms_scaling_factors()
 
 cdef class BpDecoder(BpDecoderBase):
@@ -714,11 +744,12 @@ cdef class BpDecoder(BpDecoderBase):
         input_vector_type (str): Input vector type ('syndrome', 'received_vector', or 'auto').
         random_serial_schedule (bool): Whether to enable random serial scheduling.
         dynamic_scaling_factor_damping (Optional[float]): Damping factor for dynamic scaling in the minimum-sum method.
+        ms_converge_value (Optional[float]): Convergence value for the minimum-sum method.
     """
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, **kwargs):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, ms_converge_value=1.0, **kwargs):
 
         for key in kwargs.keys():
             if key not in ["channel_probs"]:
@@ -733,7 +764,7 @@ cdef class BpDecoder(BpDecoderBase):
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, **kwargs):
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, ms_converge_value=1.0, **kwargs):
         
         pass
 

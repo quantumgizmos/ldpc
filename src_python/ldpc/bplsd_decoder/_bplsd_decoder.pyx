@@ -46,6 +46,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
         By default 'LSD_0'.
     dynamic_scaling_factor_damping : Optional[float], optional
         The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
+    ms_converge_value (Optional[float]):
+        Convergence value for the minimum-sum method.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
@@ -58,7 +60,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
                   input_vector_type: str = "syndrome",
                   lsd_order: int = 0,
                   lsd_method: Union[str, int] = 0,
-                  dynamic_scaling_factor_damping: Optional[float] = -1.0, **kwargs):
+                  dynamic_scaling_factor_damping: Optional[float] = -1.0,
+                  ms_converge_value: Optional[float] = 1.0, **kwargs):
 
         # compatability with osd_method/osd_order
         if "osd_method" in kwargs:

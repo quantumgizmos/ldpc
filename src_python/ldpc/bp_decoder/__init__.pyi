@@ -374,6 +374,27 @@ class BpDecoderBase:
             ValueError: If the input value is not a non-negative float.
         """
 
+    @property
+    def ms_converge_value(self) -> float:
+        """
+        Get the ms_converge_value for the minimum-sum method.
+
+        Returns:
+            float: The current ms_converge_value.
+        """
+
+    @ms_converge_value.setter
+    def ms_converge_value(self, value: float) -> None:
+        """
+        Set the ms_converge_value for the minimum-sum method.
+
+        Args:
+            value (float): The new ms_converge_value.
+
+        Raises:
+            ValueError: If the input value is not a float.
+        """
+
 class BpDecoder(BpDecoderBase):
     """
     Belief Propagation (BP) decoder for binary linear codes.
@@ -395,13 +416,14 @@ class BpDecoder(BpDecoderBase):
         input_vector_type (str): Input vector type ('syndrome', 'received_vector', or 'auto').
         random_serial_schedule (bool): Whether to enable random serial scheduling.
         dynamic_scaling_factor_damping (Optional[float]): Damping factor for dynamic scaling in the minimum-sum method.
+        ms_converge_value (Optional[float]): Convergence value for the minimum-sum method.
     """
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, **kwargs): ...
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, dynamic_scaling_factor_damping: Optional[float] = -1, ms_converge_value=1.0, **kwargs): ...
 
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """

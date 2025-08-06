@@ -85,6 +85,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             void set_up_ms_scaling_factors()
             double dynamic_scaling_factor_damping
             vector[double] ms_scaling_factor_vector
+            double ms_converge_value
 
 cdef class BpDecoderBase:
     cdef BpSparse *pcm
