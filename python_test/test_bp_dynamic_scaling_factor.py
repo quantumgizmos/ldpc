@@ -37,9 +37,9 @@ def test_dynamic_scaling_factor_with_initial_and_converge_parameters():
     channel_probs = [0.1, 0.2, 0.3]
     
     max_iter = 10
-    damping_factor = 0.1
+    damping_factor = 0.1 # Initial damping factor for dynamic scaling factor growth
     ms_scaling_factor = 0.5  # Initial scaling factor for testing
-    ms_converge_value = 2.0  # Convergence value for the minimum-sum method
+    ms_converge_value = 2.0  # Convergence value for dynamic scaling factor
 
     decoder = BpDecoder(pcm, channel_probs=channel_probs, max_iter=max_iter,  bp_method="ms", ms_scaling_factor=ms_scaling_factor, dynamic_scaling_factor_damping=damping_factor, ms_converge_value=ms_converge_value)
 
