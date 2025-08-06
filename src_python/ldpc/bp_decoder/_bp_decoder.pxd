@@ -56,7 +56,8 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
                 vector[int] serial_schedule,
                 int random_schedule_seed,
                 bool random_serial_schedule,
-                BpInputType bp_input_type) except +
+                BpInputType bp_input_type,
+                double dynamic_scaling_factor_damping) except +
             BpSparse& pcm
             vector[double] channel_probabilities
             int check_count
@@ -81,6 +82,10 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             void set_omp_thread_count(int count)
             BpInputType bp_input_type
             void set_random_schedule_seed(int seed)
+            void set_up_ms_scaling_factors()
+            double dynamic_scaling_factor_damping
+            vector[double] ms_scaling_factor_vector
+            double ms_converge_value
 
 cdef class BpDecoderBase:
     cdef BpSparse *pcm

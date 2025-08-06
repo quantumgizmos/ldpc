@@ -36,17 +36,16 @@ class BpLsdDecoder(BpDecoderBase):
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
     bits_per_step : int, optional
-        Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
+        Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set to the block length of the code.
     lsd_order: int, optional
         The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
     lsd_method: str, optional
         The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
         By default 'LSD_0'.
-    
-    Notes
-    -----
-    The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
-    in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
+    dynamic_scaling_factor_damping : Optional[float], optional
+        The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
+    ms_converge_value (Optional[float]):
+        Convergence value for the minimum-sum method.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
@@ -58,7 +57,10 @@ class BpLsdDecoder(BpDecoderBase):
                   bits_per_step:int = 1,
                   input_vector_type: str = "syndrome",
                   lsd_order: int = 0,
-                  lsd_method: Union[str, int] = 0, **kwargs): ...
+                  lsd_method: Union[str, int] = 0,
+                  dynamic_scaling_factor_damping: Optional[float] = -1.0,
+                  ms_converge_value: Optional[float] = 1.0, **kwargs): ...
+ 
 
     def __del__(self): ...
 

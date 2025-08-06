@@ -11,6 +11,7 @@
 #include <chrono>
 #include <stdexcept> // required for std::runtime_error
 #include <set>
+#include <iostream>
 
 #include "math.h"
 #include "sparse_matrix_base.hpp"
@@ -60,9 +61,11 @@ namespace ldpc {
             BpSchedule schedule;
             BpInputType bp_input_type;
             double ms_scaling_factor;
+            std::vector<double> ms_scaling_factor_vector;
+            double dynamic_scaling_factor_damping;
+            double ms_converge_value;
             std::vector<uint8_t> decoding;
             std::vector<uint8_t> candidate_syndrome;
-
             std::vector<double> log_prob_ratios;
             std::vector<double> initial_log_prob_ratios;
             std::vector<double> soft_syndrome;
@@ -85,10 +88,14 @@ namespace ldpc {
                     const std::vector<int> &serial_schedule = NULL_INT_VECTOR,
                     int random_schedule_seed = 0,
                     bool random_serial_schedule = false,
-                    BpInputType bp_input_type = AUTO) :
+                    BpInputType bp_input_type = AUTO,
+                    double dynamic_scaling_factor_damping = -1.0,
+                    double ms_converge_value = 1.0) : 
                     pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
                     check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
                     schedule(schedule), ms_scaling_factor(min_sum_scaling_factor),
+                    dynamic_scaling_factor_damping(dynamic_scaling_factor_damping),
+                    ms_converge_value(ms_converge_value),
                     iterations(0) //the parity check matrix is passed in by reference
             {
 
@@ -126,12 +133,39 @@ namespace ldpc {
                     }
                 }
 
+
+                this->set_up_ms_scaling_factors();
+
                 //Initialise OMP thread pool
                 // this->omp_thread_count = omp_threads;
                 // this->set_omp_thread_count(this->omp_thread_count);
             }
 
             ~BpDecoder() = default;
+
+
+            void set_up_ms_scaling_factors(){
+
+                if(this->bp_method == MINIMUM_SUM){
+
+                    if(this->dynamic_scaling_factor_damping <= 0) {
+                        this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                        for (int i = 0; i < this->maximum_iterations; i++) {
+                            this->ms_scaling_factor_vector[i] = this->ms_scaling_factor;
+                        }
+                    } else {
+                        this->ms_scaling_factor_vector.resize(this->maximum_iterations);
+                        for (int i = 0; i < this->maximum_iterations; i++) {
+                            this->ms_scaling_factor_vector[i] = this->ms_converge_value - (this->ms_converge_value - this->ms_scaling_factor) * std::pow(2.0, -1*i*this->dynamic_scaling_factor_damping);
+                        }
+                    } 
+
+                } else {
+                    this->ms_scaling_factor_vector.clear();
+                }
+
+            }
+
 
             void set_omp_thread_count(int count) {
                 this->omp_thread_count = count;
@@ -191,6 +225,7 @@ namespace ldpc {
 
             std::vector<uint8_t> &bp_decode_parallel(std::vector<uint8_t> &syndrome) {
 
+
                 this->converge = 0;
 
                 this->initialise_log_domain_bp();
@@ -219,13 +254,9 @@ namespace ldpc {
                         }
                     } else if (this->bp_method == MINIMUM_SUM) {
 
-                        double alpha;
-                        if(this->ms_scaling_factor == 0.0) {
-                            alpha = 1.0 - std::pow(2.0, -1.0*it);
-                        }
-                        else {
-                            alpha = this->ms_scaling_factor;
-                        }
+
+                        double alpha = this->ms_scaling_factor_vector[it - 1];
+
 
                         //check to bit updates
                         for (int i = 0; i < check_count; i++) {
@@ -456,14 +487,6 @@ namespace ldpc {
 
                 for (int it = 1; it <= maximum_iterations; it++) {
 
-                    double alpha;
-                    if(this->ms_scaling_factor == 0.0) {
-                        alpha = 1.0 - std::pow(2.0, -1.0*it);
-                    }
-                    else {
-                        alpha = this->ms_scaling_factor;
-                    }
-
                     if (this->random_serial_schedule) {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                     } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
@@ -500,6 +523,7 @@ namespace ldpc {
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }
                         } else if (this->bp_method == 1) {
+                            double alpha = this->ms_scaling_factor_vector[it - 1];
                             for (auto &e: pcm.iterate_column(bit_index)) {
                                 check_index = e.row_index;
                                 int sgn = syndrome[check_index];

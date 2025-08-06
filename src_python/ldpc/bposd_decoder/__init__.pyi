@@ -35,9 +35,13 @@ class BpOsdDecoder(BpDecoderBase):
         A list of integers that specify the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
     osd_method : int, optional
-        The OSD method used.  Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
+        The OSD method used. Must be one of {'OSD_0', 'OSD_E', 'OSD_CS'}.
     osd_order : int, optional
         The OSD order, by default 0.
+    dynamic_scaling_factor_damping : Optional[float], optional
+        The damping factor for dynamic scaling in the minimum sum method, by default -1.0.
+    ms_converge_value (Optional[float]):
+        Convergence value for the minimum-sum method.
 
     Notes
     -----
@@ -50,7 +54,7 @@ class BpOsdDecoder(BpDecoderBase):
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
-                 osd_order: int = 0, input_vector_type: str = "syndrome", **kwargs): ...
+                 osd_order: int = 0, input_vector_type: str = "syndrome", dynamic_scaling_factor_damping: Optional[float] = -1.0, ms_converge_value: Optional[float] = 1.0, **kwargs): ...
 
     def __del__(self): ...
 
