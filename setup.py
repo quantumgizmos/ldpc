@@ -79,7 +79,8 @@ cpp_modules = [
     "mod2",
     "union_find_decoder",
     "bplsd_decoder",
-    "lsd_decoder"
+    "lsd_decoder",
+    "osd_decoder",
 ]
 
 c_extensions = []

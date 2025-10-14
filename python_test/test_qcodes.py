@@ -7,6 +7,7 @@ from ldpc.bp_decoder import BpDecoder
 from ldpc.bplsd_decoder import BpLsdDecoder
 from ldpc.bposd_decoder import BpOsdDecoder
 from ldpc.lsd_decoder import LsdDecoder
+from ldpc.osd_decoder import OsdDecoder
 from ldpc.noise_models import generate_bsc_error
 
 
@@ -28,6 +29,29 @@ class pyTestBPLSDDecoder:
             return bp_decoding
         
         return self.lsd.decode(syndrome,self.bpd.log_prob_ratios)
+
+
+class pyTestBPOSDDDecoder:
+
+    """
+    Just for testing
+    """
+
+    def __init__(self, pcm, error_rate, osd_order=0, max_iter = 0, osd_method="osd0"):
+
+        self.bpd = BpDecoder(pcm, error_rate=error_rate, max_iter=max_iter, bp_method="product_sum")
+
+        channel_probabilities = error_rate * np.ones(pcm.shape[1])
+
+        self.osd = OsdDecoder(pcm, osd_order=osd_order, osd_method=osd_method, channel_probabilities=channel_probabilities)
+
+    def decode(self,syndrome):
+
+        bp_decoding = self.bpd.decode(syndrome)
+        if self.bpd.converge:
+            return bp_decoding
+        
+        return self.osd.decode(syndrome,self.bpd.log_prob_ratios)
 
 
 def quantum_mc_sim(
@@ -89,6 +113,179 @@ def quantum_mc_sim(
     print()
 
     return ler, min_logical, speed, additional_stats
+
+
+def test_400_16_6_standalone():
+    hx = scipy.sparse.load_npz("python_test/pcms/hx_400_16_6.npz")
+    lx = scipy.sparse.load_npz("python_test/pcms/lx_400_16_6.npz")
+
+    error_rate = 0.01
+    run_count = 10000
+    seed = 149
+    max_iter = 5
+    osd_order = 3
+    print()
+    print(
+        f"Code: [[400, 16, 6]] HGP, error rate: {error_rate}, bp iterations:, {max_iter}, run count: {run_count}, seed: {seed}"
+    )
+    print("...................................................")
+    print()
+
+    decoder1 = BpLsdDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        bp_method="product_sum",
+        schedule="parallel",
+        bits_per_step=1,
+        lsd_order=0,
+        lsd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder1,
+        "Prod-sum LSD-0 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder2 = pyTestBPLSDDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        lsd_order=0,
+        lsd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder2,
+        "PyBpLsdDecoder, Prod-sum LSD-0 parallel schedule",
+        DEBUG=False,
+    )
+
+
+    decoder1 = BpOsdDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        bp_method="product_sum",
+        schedule="parallel",
+        osd_order=0,
+        osd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder1,
+        "Prod-sum OSD-0 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder2 = pyTestBPOSDDDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        osd_order=0,
+        osd_method="osd_0",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder2,
+        "PyBpOsdDecoder, Prod-sum OSD-0 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder1 = BpOsdDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        bp_method="product_sum",
+        schedule="parallel",
+        osd_order=10,
+        osd_method="osd_e",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder1,
+        "Prod-sum OSD-E-10 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder2 = pyTestBPOSDDDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        osd_order=10,
+        osd_method="osd_e",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder2,
+        "PyBpOsdDecoder, Prod-sum OSD-E-10 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder1 = BpOsdDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        bp_method="product_sum",
+        schedule="parallel",
+        osd_order=40,
+        osd_method="osd_cs",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder1,
+        "Prod-sum OSD-CS-40 parallel schedule",
+        DEBUG=False,
+    )
+
+    decoder2 = pyTestBPOSDDDecoder(
+        hx,
+        error_rate=error_rate,
+        max_iter=max_iter,
+        osd_order=40,
+        osd_method="osd_cs",
+    )
+    ler, min_logical, speed, _ = quantum_mc_sim(
+        hx,
+        lx,
+        error_rate,
+        run_count,
+        seed,
+        decoder2,
+        "PyBpOsdDecoder, Prod-sum OSD-CS-40 parallel schedule",
+        DEBUG=False,
+    )
+
+
 
 
 def test_400_16_6_hgp():
@@ -538,6 +735,6 @@ def test_surface_20():
 
 
 if __name__ == "__main__":
-    test_400_16_6_hgp()
+    test_400_16_6_standalone()
     # test_toric_20()
     # test_surface_20()
