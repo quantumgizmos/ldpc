@@ -1,4 +1,4 @@
-## LDPC: Software for Decoding Classical and Quantum Codes (custom)
+## LDPC: Software for Decoding Classical and Quantum Codes
 
 LDPC Version 2: A C++ rewrite of the `LDPCv1` package for decoding low density parity check checks.
 Warning, whilst efforts have been made to provide backwards compatability with LDPCv1, the new version may introduce breaking changes.
