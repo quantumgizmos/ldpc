@@ -44,6 +44,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
     lsd_method: str, optional
         The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
         By default 'LSD_0'.
+    always_run_lsd : bool, optional
+        If True, LSD is always executed regardless of BP convergence.  By default False.
     
     Notes
     -----
@@ -60,7 +62,9 @@ cdef class BpLsdDecoder(BpDecoderBase):
                   bits_per_step:int = 1,
                   input_vector_type: str = "syndrome",
                   lsd_order: int = 0,
-                  lsd_method: Union[str, int] = 0, **kwargs):
+                  lsd_method: Union[str, int] = 0, 
+                  always_run_lsd: bool = False,
+                  **kwargs):
 
         # compatability with osd_method/osd_order
         if "osd_method" in kwargs:
@@ -88,6 +92,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.lsd = new LsdDecoderCpp(pcm=self.pcm[0], lsd_method=OsdMethod.OSD_0, lsd_order=lsd_order)
         self.bplsd_decoding.resize(self.n) #C vector for the bf decoding
         self.lsd_method = lsd_method
+        self.always_run_lsd = always_run_lsd
 
         if bits_per_step == 0:
             self.bits_per_step = pcm.shape[1]
@@ -100,7 +105,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         if self.MEMORY_ALLOCATED:
             del self.lsd
 
-    def decode(self, syndrome, custom=False):
+    def decode(self, syndrome, return_bp_correction=False):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -111,15 +116,16 @@ cdef class BpLsdDecoder(BpDecoderBase):
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
-        custom : bool
-            If True, always run LSD regardless of BP convergence and return out_bp separately
+        return_bp_correction : bool
+            Whether to return the correction from BP. By default False.
 
         Returns
         -------
         out : np.ndarray
             The decoded output.
-        out_bp : np.ndarray
-            The decoded output from BP (only when custom=True).
+        out_bp : np.ndarray, optional
+            The correction from BP. Returned only when return_bp_correction is True.
+            When BP converges, it is identical with `out`.
 
         Raises
         ------
@@ -143,30 +149,28 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.bpd.decoding = self.bpd.decode(self._syndrome)
         out = np.zeros(self.n,dtype=DTYPE)
 
-        if not custom:
-            if self.bpd.converge:
-                for i in range(self.n):
-                    out[i] = self.bpd.decoding[i]
-                self.lsd.reset_cluster_stats()
+        if not self.always_run_lsd and self.bpd.converge:
+            for i in range(self.n):
+                out[i] = self.bpd.decoding[i]
+            self.lsd.reset_cluster_stats()
             
-            else:
-                self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
-                for i in range(self.n):
-                    out[i] = self.lsd.decoding[i]
+            if return_bp_correction:
+                out_bp = out.copy()
             
-            return out
-
         else:
             self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
             for i in range(self.n):
                 out[i] = self.lsd.decoding[i]
-                
-            # BP Prediction
-            out_bp = np.zeros(self.n,dtype=DTYPE)
-            for i in range(self.n):
-                out_bp[i] = self.bpd.decoding[i]
+            
+            if return_bp_correction:
+                out_bp = np.zeros(self.n,dtype=DTYPE)
+                for i in range(self.n):
+                    out_bp[i] = self.bpd.decoding[i]
         
+        if return_bp_correction:
             return out, out_bp
+        else:
+            return out
 
     @property
     def statistics(self) -> Statistics:
