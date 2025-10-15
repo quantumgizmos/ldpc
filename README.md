@@ -1,14 +1,4 @@
-# LDPC: Software for Decoding Classical and Quantum Codes (custom)
-
-**Note:** This repo is a fork of [quantumgizmos/ldpc](https://github.com/quantumgizmos/ldpc), modified to be used for [seokhyung-lee/ldpc-post-selection](https://github.com/seokhyung-lee/ldpc-post-selection).
-
-**Changes from the original repo:**
-- BP+LSD decoder always runs LSD regardless of BP convergence.
-- BP+LSD decoder stores the indices of final bits within each cluster in `BpLsdDecoder.statistics["individual_cluster_stats"]["final_bits"]`.
-
-The following is the original README of the repo.
-
----
+## LDPC: Software for Decoding Classical and Quantum Codes (custom)
 
 LDPC Version 2: A C++ rewrite of the `LDPCv1` package for decoding low density parity check checks.
 Warning, whilst efforts have been made to provide backwards compatability with LDPCv1, the new version may introduce breaking changes.
