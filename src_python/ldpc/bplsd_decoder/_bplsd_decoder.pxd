@@ -59,3 +59,4 @@ cdef class BpLsdDecoder(BpDecoderBase):
     cdef LsdDecoderCpp* lsd
     cdef int bits_per_step
     cdef vector[uint8_t] bplsd_decoding
+    cdef bint always_run_lsd
