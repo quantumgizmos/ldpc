@@ -115,7 +115,7 @@ cdef class OsdDecoder():
 
         ## set vector lengths
         self._syndrome.resize(self.pcm.m)
-        self._log_prob_ratios.resize(self.pcm.n)
+        self._bit_weights.resize(self.pcm.n)
         self.decoding.resize(self.pcm.n)
 
         ## set up OSD with default values and channel probs from BP
@@ -131,7 +131,7 @@ cdef class OsdDecoder():
         if self.MEMORY_ALLOCATED:
             del self.osdD
 
-    def decode(self, syndrome: np.ndarray, log_prob_ratios: np.ndarray) -> np.ndarray:
+    def decode(self, syndrome: np.ndarray, bit_weights: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.
 
@@ -141,6 +141,9 @@ cdef class OsdDecoder():
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
+
+        bit_weights : np.ndarray
+            The bit weights (reliabilities) used for OSD decoding. The OSD columns are ordered by this weighting from smallest to largest.
 
         Returns
         -------
@@ -165,8 +168,8 @@ cdef class OsdDecoder():
         if not len(syndrome) == self.m:
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
 
-        if not len(log_prob_ratios) == self.n:
-            raise ValueError(f"The log_prob_ratios must have length {self.n}. Not {len(log_prob_ratios)}.")
+        if not len(bit_weights) == self.n:
+            raise ValueError(f"The bit_weights must have length {self.n}. Not {len(bit_weights)}.")
         
         zero_syndrome = True
         
@@ -178,9 +181,9 @@ cdef class OsdDecoder():
             return np.zeros(self.n, dtype=syndrome.dtype)
 
         for i in range(self.n):
-            self._log_prob_ratios[i] = log_prob_ratios[i]
+            self._bit_weights[i] = bit_weights[i]
         
-        self.osdD.decode(self._syndrome, self._log_prob_ratios)
+        self.osdD.decode(self._syndrome, self._bit_weights)
 
         out = np.zeros(self.n, dtype=syndrome.dtype)
         for i in range(self.n):

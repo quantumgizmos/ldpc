@@ -51,7 +51,7 @@ class OsdDecoder():
 
     def __del__(self): ...
 
-    def decode(self, syndrome: np.ndarray, log_prob_ratios: np.ndarray) -> np.ndarray:
+    def decode(self, syndrome: np.ndarray, bit_weights: np.ndarray) -> np.ndarray:
         """
         Decodes the input syndrome using the belief propagation and OSD decoding methods.
 

@@ -33,7 +33,7 @@ cdef class OsdDecoder():
      cdef OsdDecoderCpp* osdD
      cdef BpSparse* pcm
      cdef vector[uint8_t] _syndrome
-     cdef vector[double] _log_prob_ratios
+     cdef vector[double] _bit_weights
      cdef int bits_per_step
      cdef vector[uint8_t] decoding
      cdef vector[double] _channel_probabilities
