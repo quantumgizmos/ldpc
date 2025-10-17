@@ -97,7 +97,7 @@ jobs:
       # Run cibuildwheel to build the wheels.
       # cibuildwheel creates wheels for the specified configurations in isolated environments.
       - name: Run cibuildwheel
-        uses: pypa/cibuildwheel@v3.1.1
+        uses: pypa/cibuildwheel@v3.2.1
 
       # Upload the built wheels as artifacts.
       # The artifact name includes the GitHub run ID and matrix configuration to uniquely identify the wheels.
