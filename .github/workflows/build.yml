@@ -79,12 +79,18 @@ jobs:
           {os: windows-latest, dist: cp311-win_amd64},
           {os: windows-latest, dist: cp312-win_amd64},
           {os: windows-latest, dist: cp313-win_amd64},
-          # Ubuntu (Manylinux) wheels
+          # Ubuntu (Manylinux) wheels (x86_64)
           {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
+          # Ubuntu (Manylinux) wheels (aarch64)
+          {os: ubuntu-24.04-arm, dist: cp39-manylinux_aarch64},
+          {os: ubuntu-24.04-arm, dist: cp310-manylinux_aarch64},
+          {os: ubuntu-24.04-arm, dist: cp311-manylinux_aarch64},
+          {os: ubuntu-24.04-arm, dist: cp312-manylinux_aarch64},
+          {os: ubuntu-24.04-arm, dist: cp313-manylinux_aarch64},
         ]
     steps:
       # Checkout the repository and its submodules.
