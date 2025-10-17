@@ -266,7 +266,7 @@ def reduced_row_echelon(matrix):
 
 
 def nullspace(matrix):
-    """
+    r"""
     Computes the nullspace of the matrix M. Also sometimes referred to as the kernel.
 
     All vectors x in the nullspace of M satisfy the following condition::
@@ -426,8 +426,8 @@ def inverse(matrix):
 
     else:
         raise ValueError(
-            "This matrix is not invertible. Please provide either a full-rank square\
-        matrix or a rectangular matrix with full column rank."
+            "This matrix is not invertible. Please provide either a full-rank square "
+            "matrix or a rectangular matrix with full column rank."
         )
 
 
