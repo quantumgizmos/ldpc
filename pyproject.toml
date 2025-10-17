@@ -15,7 +15,7 @@ license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.9.3",
