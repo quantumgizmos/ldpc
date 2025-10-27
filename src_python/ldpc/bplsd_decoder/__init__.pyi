@@ -90,7 +90,7 @@ class BpLsdDecoder(BpDecoderBase):
         """
 
     @property
-    def bp_output(self) -> np.ndarray:
+    def bp_decoding(self) -> np.ndarray:
         """
         Returns the output of the BP decoding stage.
 
