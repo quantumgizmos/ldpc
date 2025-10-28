@@ -1,4 +1,4 @@
-# LDPC: Software for Decoding Classical and Quantum Codes (custom)
+## LDPC: Software for Decoding Classical and Quantum Codes
 
 **Note:** This repo is a fork of [quantumgizmos/ldpc](https://github.com/quantumgizmos/ldpc), modified to be used for [seokhyung-lee/ldpc-post-selection](https://github.com/seokhyung-lee/ldpc-post-selection).
 
