@@ -42,6 +42,8 @@ class BpLsdDecoder(BpDecoderBase):
     lsd_method: str, optional
         The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'}.
         By default 'LSD_0'.
+    always_run_lsd : bool, optional
+        If True, LSD is always executed regardless of BP convergence.  By default False.
     
     Notes
     -----
@@ -58,11 +60,13 @@ class BpLsdDecoder(BpDecoderBase):
                   bits_per_step:int = 1,
                   input_vector_type: str = "syndrome",
                   lsd_order: int = 0,
-                  lsd_method: Union[str, int] = 0, **kwargs): ...
+                  lsd_method: Union[str, int] = 0, 
+                  always_run_lsd: bool = False,
+                  **kwargs): ...
 
     def __del__(self): ...
 
-    def decode(self,syndrome):
+    def decode(self, syndrome):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -83,6 +87,17 @@ class BpLsdDecoder(BpDecoderBase):
         ------
         ValueError
             If the length of the input syndrome is not equal to the length of the code.
+        """
+
+    @property
+    def bp_output(self) -> np.ndarray:
+        """
+        Returns the output of the BP decoding stage.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the current decoded output from BP.
         """
 
     @property
