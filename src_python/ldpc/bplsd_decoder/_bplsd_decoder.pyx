@@ -105,7 +105,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         if self.MEMORY_ALLOCATED:
             del self.lsd
 
-    def decode(self, syndrome, return_bp_correction=False):
+    def decode(self, syndrome):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -116,16 +116,11 @@ cdef class BpLsdDecoder(BpDecoderBase):
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
-        return_bp_correction : bool
-            Whether to return the correction from BP. By default False.
 
         Returns
         -------
-        out : np.ndarray
+        np.ndarray
             The decoded output.
-        out_bp : np.ndarray, optional
-            The correction from BP. Returned only when return_bp_correction is True.
-            When BP converges, it is identical with `out`.
 
         Raises
         ------
@@ -153,24 +148,27 @@ cdef class BpLsdDecoder(BpDecoderBase):
             for i in range(self.n):
                 out[i] = self.bpd.decoding[i]
             self.lsd.reset_cluster_stats()
-            
-            if return_bp_correction:
-                out_bp = out.copy()
-            
         else:
             self.lsd.decoding = self.lsd.lsd_decode(self._syndrome, self.bpd.log_prob_ratios,self.bits_per_step, True)
             for i in range(self.n):
                 out[i] = self.lsd.decoding[i]
-            
-            if return_bp_correction:
-                out_bp = np.zeros(self.n,dtype=DTYPE)
-                for i in range(self.n):
-                    out_bp[i] = self.bpd.decoding[i]
         
-        if return_bp_correction:
-            return out, out_bp
-        else:
-            return out
+        return out
+
+    @property
+    def bp_output(self) -> np.ndarray:
+        """
+        Returns the output of the BP decoding stage.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the current decoded output from BP.
+        """
+        out = np.zeros(self.n).astype(int)
+        for i in range(self.n):
+            out[i] = self.bpd.decoding[i]
+        return out
 
     @property
     def statistics(self) -> Statistics:

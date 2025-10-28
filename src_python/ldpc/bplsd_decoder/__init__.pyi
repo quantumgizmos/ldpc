@@ -44,29 +44,34 @@ class BpLsdDecoder(BpDecoderBase):
         By default 'LSD_0'.
     always_run_lsd : bool, optional
         If True, LSD is always executed regardless of BP convergence.  By default False.
-    
+
     Notes
     -----
     The `BpLsdDecoder` class leverages soft information outputted by the BP decoder to guide the cluster growth
     in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     """
 
-    def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
-                 error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
-                 ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel',
-                 omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0,
-                 serial_schedule_order: Optional[List[int]] = None,
-                  bits_per_step:int = 1,
-                  input_vector_type: str = "syndrome",
-                  lsd_order: int = 0,
-                  lsd_method: Union[str, int] = 0, 
-                  always_run_lsd: bool = False,
-                  **kwargs): ...
-
+    def __cinit__(
+        self,
+        pcm: Union[np.ndarray, scipy.sparse.spmatrix],
+        error_rate: Optional[float] = None,
+        error_channel: Optional[List[float]] = None,
+        max_iter: Optional[int] = 0,
+        bp_method: Optional[str] = "minimum_sum",
+        ms_scaling_factor: Optional[Union[float, int]] = 1.0,
+        schedule: Optional[str] = "parallel",
+        omp_thread_count: Optional[int] = 1,
+        random_schedule_seed: Optional[int] = 0,
+        serial_schedule_order: Optional[List[int]] = None,
+        bits_per_step: int = 1,
+        input_vector_type: str = "syndrome",
+        lsd_order: int = 0,
+        lsd_method: Union[str, int] = 0,
+        always_run_lsd: bool = False,
+        **kwargs,
+    ): ...
     def __del__(self): ...
-
-    def decode(self, syndrome, return_bp_correction=False):
+    def decode(self, syndrome):
         """
         Decodes the input syndrome using the belief propagation and LSD decoding methods.
 
@@ -77,21 +82,27 @@ class BpLsdDecoder(BpDecoderBase):
         ----------
         syndrome : np.ndarray
             The input syndrome to decode.
-        return_bp_correction : bool
-            Whether to return the correction from BP. By default False.
 
         Returns
         -------
-        out : np.ndarray
+        np.ndarray
             The decoded output.
-        out_bp : np.ndarray, optional
-            The correction from BP. Returned only when return_bp_correction is True.
-            When BP converges, it is identical with `out`.
 
         Raises
         ------
         ValueError
             If the length of the input syndrome is not equal to the length of the code.
+        """
+
+    @property
+    def bp_output(self) -> np.ndarray:
+        """
+        Returns the output of the BP decoding stage.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array containing the current decoded output from BP.
         """
 
     @property
@@ -149,7 +160,6 @@ class BpLsdDecoder(BpDecoderBase):
             LSD order-0, LSD Exhaustive or LSD-Cominbation-Sweep.
         """
 
-
     @property
     def lsd_order(self) -> int:
         """
@@ -160,7 +170,6 @@ class BpLsdDecoder(BpDecoderBase):
         int
             An integer representing the OSD order used.
         """
-
 
     @lsd_order.setter
     def lsd_order(self, order: int) -> None:
