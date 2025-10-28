@@ -9,7 +9,7 @@ The documentation for `LDPCv2` can be found [here](https://roffe.eu/software/ldp
 
 ## Installation
 
-The easiest way to install the package is via pip. Python versions `>=3.9` are supported.
+The easiest way to install the package is via pip. Python versions `>=3.10` are supported.
 
 ```pip install -U ldpc```
 
@@ -19,7 +19,7 @@ The C++ source code can be found in src_cpp. Python bindings are implemented usi
 
 - Download the repo.
 - Navigate to the root.
-- Pip install with `python>=3.8`.
+- Pip install with `python>=3.10`.
 Note: installation requires a `C` compiler. Eg. `gcc` on Linux or `clang` on Windows.
 
 ```

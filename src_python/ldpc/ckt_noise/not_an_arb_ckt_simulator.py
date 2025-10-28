@@ -1,8 +1,11 @@
 from typing import List, Union
+
 from scipy.sparse import csr_matrix
 import stim
 import numpy as np
 from pymatching import Matching
+
+from ldpc.ckt_noise.bipartite_edge_coloring import bipartite_edge_coloring
 
 
 def rep_code(d: int):
@@ -24,6 +27,20 @@ def rep_code(d: int):
 
 def get_stabilizer_time_steps(pcm: csr_matrix):
     """
+    .. warning::
+       A bug was present in this function in ldpc version 2.3.5 and earlier,
+       which, for some inputs, could lead to some nonzero elements of the check matrix
+       being ignored (and not assigned to any time step). This bug was fixed in
+       version 2.3.6, however this method is now deprecated.
+       Users on affected versions are strongly advised to upgrade and use
+       :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead.
+       See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
+
+    .. deprecated:: 2.3.6
+       This function is deprecated and will be removed in a future version. Please use
+       :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead.
+
+
     Get the time steps and measured bits for a given parity check matrix.
 
     Args:
@@ -34,21 +51,31 @@ def get_stabilizer_time_steps(pcm: csr_matrix):
             - time_steps: A 2D list where each row represents a time step and each column represents a stabilizer.
             - measured_bits: A 2D list where each row represents a stabilizer and each column represents a time step.
     """
-    # max time steps is the max number of non-zero entries in any row.
-    max_time_steps = max(pcm.getnnz(axis=1))
+    import warnings
+
+    warnings.warn(
+        "get_stabilizer_time_steps(pcm) is deprecated and will be removed in a future version. "
+        "Use :func:`ldpc.ckt_noise.bipartite_edge_coloring.bipartite_edge_coloring` instead."
+        "WARNING: in ldpc version 2.3.5 and earlier this method contained a bug which, for some "
+        "inputs, could lead to some nonzero elements of the check matrix "
+        "being ignored (see docstring).",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
+    col_mat = csr_matrix(bipartite_edge_coloring(pcm))
+    max_time_steps = np.max(col_mat.data)
     num_stabs = pcm.shape[0]
 
     time_steps = [[None] * num_stabs for _ in range(max_time_steps)]
     measured_bits = [[None] * max_time_steps for _ in range(num_stabs)]
 
-    for t in range(max_time_steps):
-        for k in range(pcm.shape[0]):
-            for q in pcm[k].indices:
-                if q not in measured_bits[k]:
-                    if q not in time_steps[t]:
-                        time_steps[t][k] = q
-                        measured_bits[k][t] = q
-                        break
+    for k in range(col_mat.shape[0]):
+        for j in range(col_mat.indptr[k], col_mat.indptr[k + 1]):
+            t = col_mat.data[j] - 1
+            q = col_mat.indices[j]
+            time_steps[t][k] = q
+            measured_bits[k][t] = q
 
     return time_steps, measured_bits
 
@@ -65,8 +92,38 @@ def stim_circuit_from_time_steps(
     rounds: int = 3,
 ):
     """
-    Generates a STIM circuit based on a parity check matrix and associated logcal operators.
+    .. warning::
+       A bug was present in this function in ldpc version 2.3.5 and earlier,
+       which, for some inputs, could lead to some CNOT gates being omitted from the circuit.
+       This bug was fixed in this method in version 2.3.6, however this method is now
+       deprecated. Users on affected versions are strongly advised to upgrade and use
+       :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead.
+       See https://github.com/quantumgizmos/ldpc/issues/68 for more details.
+
+    .. deprecated:: 2.3.6
+       This function is deprecated and will be removed in a future version. Please use
+       :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead.
+       The new `make_css_code_memory_circuit()` method allows for measuring both X and Z
+       stabilizers of a CSS code.
+
+
+    Generates a stim circuit based on a parity check matrix and associated logcal operators.
+    
+    Note that this method only measures X stabilizers (defined by the input check matrix) and 
+    is therefore only a reasonable circuit-level noise model for classical codes (e.g. repetition
+    codes). To generate a stim circuit for a stim circuit, please use the new
+    :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` function instead.
     """
+    import warnings
+
+    warnings.warn(
+        "stim_circuit_from_time_steps(pcm) is deprecated and will be removed in a future version. "
+        "Use :func:`ldpc.ckt_noise.css_code_memory_circuit.make_css_code_memory_circuit` instead."
+        "WARNING: in ldpc version 2.3.5 and earlier this method contained a bug where some"
+        " CNOT gates could be silently omitted from the circuit for certain inputs (see docstring).",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     # use index convention 0..n-1 for qubits and n..n+m-1 for stabilizers.
     m, n = pcm.shape
     data = np.arange(n)

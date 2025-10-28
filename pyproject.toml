@@ -15,17 +15,17 @@ license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 4 - Beta",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.24.0",
     "scipy>=1.9.3",
     "tqdm",
     "pytest",
     "stim",
-    "sinter",
+    "sinter>=1.12.0",
     "pymatching"
 ]
-version = "2.3.4"
+version = "2.3.10"
 
 [project.urls]
 Documentation = "https://software.roffe.eu/ldpc"

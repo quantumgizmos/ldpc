@@ -52,8 +52,22 @@ cdef class LsdDecoder():
     """
     A class implementing the Localised Statistics Decoder (LSD) in isolation.
 
-    This class provides an interface to directly decode a syndrome using the LSD algorithm without a preceding 
-    Belief Propagation (BP) stage. The user provides the syndrome and bit weights as inputs to produce the decoded output.
+    The LsdDecoder class provides an interface to directly decode a syndrome using the LSD algorithm, without a preceding Belief Propagation (BP) stage. The user provides the syndrome and bit weights as inputs to produce the decoded output.
+
+    Parameters
+    ----------
+    pcm : Union[np.ndarray, scipy.sparse.spmatrix]
+        The parity check matrix for the code.
+    bits_per_step : int, optional
+        Specifies the number of bits added to the cluster in each step of the LSD algorithm. The default value is `1`.
+    lsd_order: int, optional
+        The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
+    lsd_method: str or int, optional
+        The LSD method of the LSD algorithm applied to each cluster. Must be one of {'LSD_0', 'LSD_E', 'LSD_CS'} or {0, 1, 2}. By default 'LSD_0'.
+
+    Notes
+    -----
+    The LsdDecoder class leverages soft information (bit weights) provided by the user to guide the cluster growth in the LSD algorithm. The number of bits added to the cluster in each step is controlled by the `bits_per_step` parameter.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], bits_per_step: int = 1,

@@ -36,7 +36,7 @@ class BpLsdDecoder(BpDecoderBase):
         A list of integers specifying the serial schedule order. Must be of length equal to the block length of the code,
         by default None.
     bits_per_step : int, optional
-        Specifies the number of bits added to the cluster in each step of the LSD algorithm. If no value is provided, this is set the block length of the code.
+        Specifies the number of bits added to the cluster in each step of the LSD algorithm. The default value is `1`.
     lsd_order: int, optional
         The order of the LSD algorithm applied to each cluster. Must be greater than or equal to 0, by default 0.
     lsd_method: str, optional

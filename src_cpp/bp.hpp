@@ -71,7 +71,7 @@ namespace ldpc {
             int omp_thread_count;
             bool converge;
             int random_schedule_seed;
-            bool random_schedule_at_every_iteration;
+            bool random_serial_schedule;
             ldpc::rng::RandomListShuffle<int> rng_list_shuffle;
 
             BpDecoder(
@@ -83,8 +83,8 @@ namespace ldpc {
                     double min_sum_scaling_factor = 0.625,
                     int omp_threads = 1,
                     const std::vector<int> &serial_schedule = NULL_INT_VECTOR,
-                    int random_schedule_seed = -1, // TODO what should be default here? 0 is set but -1 is checked in decode method?
-                    bool random_schedule_at_every_iteration = true,
+                    int random_schedule_seed = 0,
+                    bool random_serial_schedule = false,
                     BpInputType bp_input_type = AUTO) :
                     pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
                     check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
@@ -99,7 +99,7 @@ namespace ldpc {
                 this->converge = 0;
                 this->omp_thread_count = omp_threads;
                 this->random_schedule_seed = random_schedule_seed;
-                this->random_schedule_at_every_iteration = random_schedule_at_every_iteration;
+                this->random_serial_schedule = random_serial_schedule;
                 this->bp_input_type = bp_input_type;
 
 
@@ -109,13 +109,21 @@ namespace ldpc {
                 }
                 if (serial_schedule != NULL_INT_VECTOR) {
                     this->serial_schedule_order = serial_schedule;
-                    this->random_schedule_seed = -1;
-                } else {
+                    if (this->random_serial_schedule) {
+                        throw std::runtime_error("Random schedule cannot be used with a fixed serial schedule. Set `random_serial_schedule` input parameter to false.");
+                    }
+                } else if (this->random_serial_schedule) {
                     this->serial_schedule_order.resize(bit_count);
                     for (int i = 0; i < bit_count; i++) {
                         this->serial_schedule_order[i] = i;
                     }
                     this->rng_list_shuffle.seed(this->random_schedule_seed);
+                }
+                else {
+                    this->serial_schedule_order.resize(bit_count);
+                    for (int i = 0; i < bit_count; i++) {
+                        this->serial_schedule_order[i] = i;
+                    }
                 }
 
                 //Initialise OMP thread pool
@@ -129,6 +137,11 @@ namespace ldpc {
                 this->omp_thread_count = count;
                 // omp_set_num_threads(this->omp_thread_count);
                 // NotImplemented
+            }
+
+            void set_random_schedule_seed(int seed) {
+                this->random_schedule_seed = seed;
+                this->rng_list_shuffle.seed(seed);
             }
 
             void initialise_log_domain_bp() {
@@ -451,7 +464,7 @@ namespace ldpc {
                         alpha = this->ms_scaling_factor;
                     }
 
-                    if (this->random_schedule_seed > -1) {
+                    if (this->random_serial_schedule) {
                         this->rng_list_shuffle.shuffle(this->serial_schedule_order);
                     } else if (this->schedule == BpSchedule::SERIAL_RELATIVE) {
                         // resort by LLRs in each iteration to ensure that the most reliable bits are considered first
@@ -557,7 +570,7 @@ namespace ldpc {
                     if (CONVERGED) {
                         continue;
                     }
-                    if (this->random_schedule_at_every_iteration && omp_thread_count == 1) {
+                    if (this->random_serial_schedule && omp_thread_count == 1) {
                         // reorder schedule elements randomly
                         shuffle(serial_schedule_order.begin(), serial_schedule_order.end(),
                                 std::default_random_engine(random_schedule_seed));
