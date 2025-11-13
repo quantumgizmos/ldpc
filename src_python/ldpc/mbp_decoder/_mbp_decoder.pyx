@@ -134,7 +134,7 @@ cdef class mbp_decoder:
 
         self.MEMORY_ALLOCATED = True
 
-    def __del__(self):
+    def __dealloc__(self):
         cdef i
         if self.MEMORY_ALLOCATED:
             del self.pcm

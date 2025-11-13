@@ -121,7 +121,7 @@ cdef class LsdDecoder():
             self.bits_per_step = bits_per_step
         self.MEMORY_ALLOCATED=True
 
-    def __del__(self):
+    def __dealloc__(self):
         if self.MEMORY_ALLOCATED:
             del self.lsd
             del self.pcm

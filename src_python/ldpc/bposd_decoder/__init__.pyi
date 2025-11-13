@@ -42,7 +42,7 @@ class BpOsdDecoder(BpDecoderBase):
     Notes
     -----
     This class makes use of the C++ module `ldpc::osd::OsdDecoderCpp` for implementing the OSD decoder. The `__cinit__` method
-    initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__del__`
+    initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__dealloc__`
     method deallocates memory if it has been allocated.
     """
 
@@ -52,7 +52,7 @@ class BpOsdDecoder(BpDecoderBase):
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, osd_method: Union[str, int, float] = 0,
                  osd_order: int = 0, input_vector_type: str = "syndrome", **kwargs): ...
 
-    def __del__(self): ...
+    def __dealloc__(self): ...
 
     def decode(self, syndrome: np.ndarray) -> np.ndarray:
         """

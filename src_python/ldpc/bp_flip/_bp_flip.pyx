@@ -20,7 +20,7 @@ cdef class BpFlipDecoder(BpDecoderBase):
         self.flipD = new FlipDecoderCpp(self.pcm[0], self.flip_iterations, pflip_frequency, pflip_seed)
         self.MEMORY_ALLOCATED=True
 
-    def __del__(self):
+    def __dealloc__(self):
         if self.MEMORY_ALLOCATED:
             del self.flipD
 
