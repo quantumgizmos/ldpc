@@ -101,7 +101,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
         self.input_vector_type = "syndrome"
         self.MEMORY_ALLOCATED=True
 
-    def __del__(self):
+    def __dealloc__(self):
         if self.MEMORY_ALLOCATED:
             del self.lsd
 
