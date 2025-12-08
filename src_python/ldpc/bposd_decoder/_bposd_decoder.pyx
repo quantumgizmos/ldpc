@@ -44,7 +44,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
     Notes
     -----
     This class makes use of the C++ module `ldpc::osd::OsdDecoderCpp` for implementing the OSD decoder. The `__cinit__` method
-    initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__del__`
+    initializes this module with the parity check matrix and channel probabilities from the belief propagation decoder. The `__dealloc__`
     method deallocates memory if it has been allocated.
     """
 
@@ -71,7 +71,7 @@ cdef class BpOsdDecoder(BpDecoderBase):
 
         self.MEMORY_ALLOCATED=True
 
-    def __del__(self):
+    def __dealloc__(self):
         if self.MEMORY_ALLOCATED:
             del self.osdD
 

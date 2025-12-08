@@ -28,7 +28,7 @@ def generate_cython_stub_file(pyx_filepath: str, output_filepath: str) -> None:
         pyi_content += pyx_content[match.start() : match.end()]
 
     # identify patterns to ignore
-    ignore_pattern = re.compile(r"__cinit__\(|__del__\(")
+    ignore_pattern = re.compile(r"__cinit__\(|__dealloc__\(")
 
     # identify class or function declarations
     decorator = r"^\s*@.*?\n"

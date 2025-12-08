@@ -78,7 +78,7 @@ cdef class BeliefFindDecoder(BpDecoderBase):
 
         self.MEMORY_ALLOCATED=True
 
-    def __del__(self):
+    def __dealloc__(self):
         if self.MEMORY_ALLOCATED:
             del self.ufd
 
