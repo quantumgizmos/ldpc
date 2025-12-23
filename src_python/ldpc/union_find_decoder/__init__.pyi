@@ -18,7 +18,7 @@ class UnionFindDecoder:
         Default is False.
     """
  
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False): ...
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False, omp_thread_count: int = 1): ...
 
     def __dealloc__(self): ...
 
@@ -48,6 +48,12 @@ class UnionFindDecoder:
             If the length of the syndrome or the length of the llrs (if provided) do not match the dimensions 
             of the parity-check matrix.
         """
+
+    @property
+    def omp_thread_count(self) -> int: ...
+
+    @omp_thread_count.setter
+    def omp_thread_count(self, value: int) -> None: ...
 
     @property
     def decoding(self): ...
