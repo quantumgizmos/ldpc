@@ -60,7 +60,7 @@ cdef class UnionFindDecoder:
         Default is False.
     """ 
  
-    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: str = False):
+    def __cinit__(self, pcm: Union[np.ndarray, spmatrix], uf_method: bool = False):
         
         self.MEMORY_ALLOCATED=False
 
