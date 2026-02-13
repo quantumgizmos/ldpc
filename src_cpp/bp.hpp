@@ -414,6 +414,13 @@ namespace ldpc {
 
                             int message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                             e.check_to_bit_msg = message_sign * ms_scaling_factor * e.bit_to_check_msg;
+                            // Clip message
+                            if(e.check_to_bit_msg > this->check_to_bit_clip_value){
+                                e.check_to_bit_msg = this->check_to_bit_clip_value;
+                            }
+                            else if(e.check_to_bit_msg < -this->check_to_bit_clip_value){
+                                e.check_to_bit_msg = -this->check_to_bit_clip_value;
+                            }
                             this->log_prob_ratios[e.col_index] += e.check_to_bit_msg;
 
 
@@ -511,6 +518,13 @@ namespace ldpc {
                                 }
                                 e.check_to_bit_msg = pow(-1, syndrome[check_index]) *
                                                      std::log((1 + e.check_to_bit_msg) / (1 - e.check_to_bit_msg));
+                                // Clip message
+                                if(e.check_to_bit_msg > this->check_to_bit_clip_value){
+                                    e.check_to_bit_msg = this->check_to_bit_clip_value;
+                                }
+                                else if(e.check_to_bit_msg < -this->check_to_bit_clip_value){
+                                    e.check_to_bit_msg = -this->check_to_bit_clip_value;
+                                }
                                 e.bit_to_check_msg = log_prob_ratios[bit_index];
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }
@@ -532,6 +546,13 @@ namespace ldpc {
                                 }
                                 double message_sign = (sgn % 2 == 0) ? 1.0 : -1.0;
                                 e.check_to_bit_msg = alpha * message_sign * temp;
+                                // Clip message
+                                if(e.check_to_bit_msg > this->check_to_bit_clip_value){
+                                    e.check_to_bit_msg = this->check_to_bit_clip_value;
+                                }
+                                else if(e.check_to_bit_msg < -this->check_to_bit_clip_value){
+                                    e.check_to_bit_msg = -this->check_to_bit_clip_value;
+                                }
                                 e.bit_to_check_msg = log_prob_ratios[bit_index];
                                 this->log_prob_ratios[bit_index] += e.check_to_bit_msg;
                             }
@@ -641,6 +662,13 @@ namespace ldpc {
                             }
                             sgn ^= syndrome[check_index];
                             check_nbr.check_to_bit_msg = ms_scaling_factor * pow(-1, sgn) * propagated_msg;
+                            // Clip message
+                            if(check_nbr.check_to_bit_msg > this->check_to_bit_clip_value){
+                                check_nbr.check_to_bit_msg = this->check_to_bit_clip_value;
+                            }
+                            else if(check_nbr.check_to_bit_msg < -this->check_to_bit_clip_value){
+                                check_nbr.check_to_bit_msg = -this->check_to_bit_clip_value;
+                            }
                             check_nbr.bit_to_check_msg = log_prob_ratios[bit_index];
                             log_prob_ratios[bit_index] += check_nbr.check_to_bit_msg;
                         }

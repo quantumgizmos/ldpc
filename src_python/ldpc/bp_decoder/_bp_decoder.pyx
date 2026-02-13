@@ -647,11 +647,6 @@ cdef class BpDecoder(BpDecoderBase):
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, check_to_bit_clip_value: Optional[float] = 1000, **kwargs):
-
-        for key in kwargs.keys():
-            if key not in ["channel_probs"]:
-                raise ValueError(f"Unknown parameter '{key}' passed to the BpDecoder constructor.")
-
         self.input_vector_type = input_vector_type
         self._received_vector.resize(self.n) #C++ vector for the received vector
 

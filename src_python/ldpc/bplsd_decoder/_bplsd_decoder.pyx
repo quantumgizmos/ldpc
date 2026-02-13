@@ -46,6 +46,8 @@ cdef class BpLsdDecoder(BpDecoderBase):
         By default 'LSD_0'.
     always_run_lsd : bool, optional
         If True, LSD is always executed regardless of BP convergence.  By default False.
+    check_to_bit_clip_value : Optional[float], optional
+        The clipping value for check-to-bit messages in PRODUCT_SUM belief propagation method, by default 1000.
     
     Notes
     -----
@@ -64,6 +66,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
                   lsd_order: int = 0,
                   lsd_method: Union[str, int] = 0, 
                   always_run_lsd: bool = False,
+                  check_to_bit_clip_value: Optional[float] = 1000,
                   **kwargs):
 
         # compatability with osd_method/osd_order

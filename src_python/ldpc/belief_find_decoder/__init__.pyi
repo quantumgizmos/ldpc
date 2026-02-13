@@ -41,6 +41,8 @@ class BeliefFindDecoder(BpDecoderBase):
         The inversion method can be applied to any parity check matrix.
     bits_per_step : int, optional
         Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
+    check_to_bit_clip_value : Optional[float], optional
+        The clipping value for check-to-bit messages in PRODUCT_SUM belief propagation method, by default 1000.
 
     Notes
     -----
@@ -52,7 +54,7 @@ class BeliefFindDecoder(BpDecoderBase):
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[List[float]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[float] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling", bits_per_step:int = 0, input_vector_type: str = "syndrome"): ...
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, uf_method: str = "peeling", bits_per_step:int = 0, input_vector_type: str = "syndrome", check_to_bit_clip_value: Optional[float] = 1000): ...
 
     def __dealloc__(self): ...
 
