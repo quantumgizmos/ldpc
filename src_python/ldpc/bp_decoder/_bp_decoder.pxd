@@ -56,7 +56,8 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
                 vector[int] serial_schedule,
                 int random_schedule_seed,
                 bool random_serial_schedule,
-                BpInputType bp_input_type) except +
+                BpInputType bp_input_type,
+                double check_to_bit_clip_value) except +
             BpSparse& pcm
             vector[double] channel_probabilities
             int check_count
@@ -65,6 +66,7 @@ cdef extern from "bp.hpp" namespace "ldpc::bp":
             BpMethod bp_method
             BpSchedule schedule
             double ms_scaling_factor
+            double check_to_bit_clip_value
             vector[uint8_t] decoding
             vector[uint8_t] candidate_syndrome
             vector[double] log_prob_ratios

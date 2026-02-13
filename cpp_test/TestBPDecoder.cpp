@@ -631,6 +631,76 @@ TEST(BpDecoder, DefaultScheduleAndConstantWhenRandomSerialScheduleFalse) {
     ASSERT_EQ(first_schedule, second_schedule) << "Schedule changed despite random_serial_schedule being false.";
 }
 
+TEST(BpDecoder, CheckToBitClipValueDefaultValue) {
+    int n = 5;
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++) {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with default check_to_bit_clip_value
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations);
+
+    // Verify that default check_to_bit_clip_value is 1000
+    EXPECT_EQ(1000, decoder.check_to_bit_clip_value);
+}
+
+TEST(BpDecoder, CheckToBitClipValueCustomValue) {
+    int n = 5;
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++) {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = pcm.n;
+    auto channel_probabilities = vector<double>(pcm.n, 0.1);
+
+    // Initialize decoder with custom check_to_bit_clip_value
+    double custom_check_to_bit_clip_value = 50.0;
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
+                                       ldpc::bp::PARALLEL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0, false,
+                                       ldpc::bp::AUTO, custom_check_to_bit_clip_value);
+
+    // Verify that custom check_to_bit_clip_value is set correctly
+    EXPECT_EQ(custom_check_to_bit_clip_value, decoder.check_to_bit_clip_value);
+}
+
+TEST(BpDecoder, CheckToBitClipValueMessageClipping) {
+    // This test verifies that message clipping respects the check_to_bit_clip_value
+    // We use PRODUCT_SUM method which applies message clipping
+    int n = 5;
+    auto pcm = ldpc::bp::BpSparse(n - 1, n);
+    for (int i = 0; i < (n - 1); i++) {
+        pcm.insert_entry(i, i);
+        pcm.insert_entry(i, (i + 1) % n);
+    }
+    int maximum_iterations = 3;
+    auto channel_probabilities = vector<double>(pcm.n, 0.01);  // Low error rate to force higher messages
+
+    // Test with a small check_to_bit_clip_value to verify clipping
+    double small_check_to_bit_clip_value = 10.0;
+    auto decoder_small = ldpc::bp::BpDecoder(pcm, channel_probabilities, maximum_iterations, ldpc::bp::PRODUCT_SUM,
+                                             ldpc::bp::PARALLEL, 0.625, 1, ldpc::bp::NULL_INT_VECTOR, 0, false,
+                                             ldpc::bp::AUTO, small_check_to_bit_clip_value);
+
+    auto syndrome = vector<uint8_t>{0, 0, 0, 0};
+    auto decoding = decoder_small.decode(syndrome);
+
+    // After decoding, check that messages are within the clipping bounds
+    for (int i = 0; i < decoder_small.check_count; i++) {
+        for (auto &e: decoder_small.pcm.iterate_row(i)) {
+            // Messages should be clipped to [-check_to_bit_clip_value, check_to_bit_clip_value]
+            EXPECT_LE(e.check_to_bit_msg, small_check_to_bit_clip_value + 1e-6)
+                << "Message exceeds check_to_bit_clip_value upper bound";
+            EXPECT_GE(e.check_to_bit_msg, -small_check_to_bit_clip_value - 1e-6)
+                << "Message exceeds check_to_bit_clip_value lower bound";
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

@@ -98,6 +98,7 @@ cdef class BpDecoderBase:
         random_schedule_seed = kwargs.get("random_schedule_seed", 0)
         serial_schedule_order = kwargs.get("serial_schedule_order", None)
         channel_probs = kwargs.get("channel_probs", [None])
+        check_to_bit_clip_value = kwargs.get("check_to_bit_clip_value", 1000)
         
         # input_vector_type = kwargs.get("input_vector_type", "auto")
         # print(kwargs.get("input_vector_type"))
@@ -129,7 +130,7 @@ cdef class BpDecoderBase:
 
 
         ## initialise the decoder with default values
-        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,False,SYNDROME)
+        self.bpd = new BpDecoderCpp(self.pcm[0],self._error_channel,0,PRODUCT_SUM,PARALLEL,1.0,1,self._serial_schedule_order,0,False,SYNDROME,check_to_bit_clip_value)
 
         ## set the decoder parameters
         self.bp_method = bp_method
@@ -499,6 +500,29 @@ cdef class BpDecoderBase:
         self.bpd.ms_scaling_factor = value
 
     @property
+    def check_to_bit_clip_value(self) -> float:
+        """Get the clipping value for check-to-bit messages.
+
+        Returns:
+            float: The current clipping value.
+        """
+        return self.bpd.check_to_bit_clip_value
+
+    @check_to_bit_clip_value.setter
+    def check_to_bit_clip_value(self, value: float) -> None:
+        """Set the clipping value for check-to-bit messages.
+
+        Args:
+            value (float): The new clipping value.
+
+        Raises:
+            TypeError: If the input value is not a float.
+        """
+        if not isinstance(value, (float, int)):
+            raise TypeError("The check_to_bit_clip_value must be specified as a float")
+        self.bpd.check_to_bit_clip_value = value
+
+    @property
     def omp_thread_count(self) -> int:
         """Get the number of OpenMP threads.
 
@@ -615,12 +639,14 @@ cdef class BpDecoder(BpDecoderBase):
         Use this parameter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
         Note, it is only necessary to specify this value when the parity check matrix is square. When the
         parity matrix is non-square, the input vector type is inferred automatically from its length.
+    check_to_bit_clip_value : Optional[float], optional
+        The clipping value for check-to-bit messages in PRODUCT_SUM belief propagation method, by default 1000.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs):
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, check_to_bit_clip_value: Optional[float] = 1000, **kwargs):
 
         for key in kwargs.keys():
             if key not in ["channel_probs"]:
@@ -635,7 +661,7 @@ cdef class BpDecoder(BpDecoderBase):
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs):
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, check_to_bit_clip_value: Optional[float] = 1000, **kwargs):
         
         pass
 

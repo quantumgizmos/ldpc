@@ -234,6 +234,25 @@ class BpDecoderBase:
         """
 
     @property
+    def check_to_bit_clip_value(self) -> float:
+        """Get the clipping value for check-to-bit messages.
+
+        Returns:
+            float: The current clipping value.
+        """
+
+    @check_to_bit_clip_value.setter
+    def check_to_bit_clip_value(self, value: float) -> None:
+        """Set the clipping value for check-to-bit messages.
+
+        Args:
+            value (float): The new clipping value.
+
+        Raises:
+            TypeError: If the input value is not a float.
+        """
+
+    @property
     def omp_thread_count(self) -> int:
         """Get the number of OpenMP threads.
 
@@ -329,18 +348,20 @@ class BpDecoder(BpDecoderBase):
         Use this parameter to specify the input type. Choose either: 1) 'syndrome' or 2) 'received_vector' or 3) 'auto'.
         Note, it is only necessary to specify this value when the parity check matrix is square. When the
         parity matrix is non-square, the input vector type is inferred automatically from its length.
+    check_to_bit_clip_value : Optional[float], optional
+        The clipping value for check-to-bit messages in PRODUCT_SUM belief propagation method, by default 1000.
     """
 
     def __cinit__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
-                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
+                 random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None, input_vector_type: str = "auto", random_serial_schedule: bool = False, check_to_bit_clip_value: Optional[float] = 1000, **kwargs): ...
 
     def __init__(self, pcm: Union[np.ndarray, scipy.sparse.spmatrix], error_rate: Optional[float] = None,
                  error_channel: Optional[Union[np.ndarray,List[float]]] = None, max_iter: Optional[int] = 0, bp_method: Optional[str] = 'minimum_sum',
                  ms_scaling_factor: Optional[Union[float,int]] = 1.0, schedule: Optional[str] = 'parallel', omp_thread_count: Optional[int] = 1,
                  random_schedule_seed: Optional[int] = 0, serial_schedule_order: Optional[List[int]] = None,
-                 input_vector_type: str = "auto", random_serial_schedule: bool = False, **kwargs): ...
+                 input_vector_type: str = "auto", random_serial_schedule: bool = False, check_to_bit_clip_value: Optional[float] = 1000, **kwargs): ...
 
     def decode(self, input_vector: np.ndarray) -> np.ndarray:
         """

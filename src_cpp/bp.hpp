@@ -60,6 +60,7 @@ namespace ldpc {
             BpSchedule schedule;
             BpInputType bp_input_type;
             double ms_scaling_factor;
+            double check_to_bit_clip_value;
             std::vector<uint8_t> decoding;
             std::vector<uint8_t> candidate_syndrome;
 
@@ -85,10 +86,11 @@ namespace ldpc {
                     const std::vector<int> &serial_schedule = NULL_INT_VECTOR,
                     int random_schedule_seed = 0,
                     bool random_serial_schedule = false,
-                    BpInputType bp_input_type = AUTO) :
+                    BpInputType bp_input_type = AUTO,
+                    double check_to_bit_clip_value = 1000) :
                     pcm(parity_check_matrix), channel_probabilities(std::move(channel_probabilities)),
                     check_count(pcm.m), bit_count(pcm.n), maximum_iterations(maximum_iterations), bp_method(bp_method),
-                    schedule(schedule), ms_scaling_factor(min_sum_scaling_factor),
+                    schedule(schedule), ms_scaling_factor(min_sum_scaling_factor), check_to_bit_clip_value(check_to_bit_clip_value),
                     iterations(0) //the parity check matrix is passed in by reference
             {
 
@@ -272,6 +274,19 @@ namespace ldpc {
                         }
                     }
 
+                 
+                    //clip messages min/max
+                    for(int i=0; i<this->check_count; i++){
+                        for(auto &e: this->pcm.iterate_row(i)){
+                            if(e.check_to_bit_msg > this->check_to_bit_clip_value){
+                                e.check_to_bit_msg = this->check_to_bit_clip_value;
+                            }
+                            else if(e.check_to_bit_msg < -this->check_to_bit_clip_value){
+                                e.check_to_bit_msg = -this->check_to_bit_clip_value;
+                            }
+                        }
+                    }
+                    
 
                     //compute log probability ratios
                     for (int i = 0; i < this->bit_count; i++) {
