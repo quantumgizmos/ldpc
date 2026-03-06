@@ -78,7 +78,7 @@ namespace ldpc {
                     BpSparse &parity_check_matrix,
                     std::vector<double> channel_probabilities,
                     int maximum_iterations = 0,
-                    BpMethod bp_method = PRODUCT_SUM,
+                    BpMethod bp_method = MINIMUM_SUM,
                     BpSchedule schedule = PARALLEL,
                     double min_sum_scaling_factor = 0.625,
                     int omp_threads = 1,
