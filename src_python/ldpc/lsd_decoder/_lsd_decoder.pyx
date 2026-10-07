@@ -154,13 +154,13 @@ cdef class LsdDecoder():
             raise ValueError(f"The syndrome must have length {self.pcm.m}. Not {len(syndrome)}.")
         cdef int i
         DTYPE = syndrome.dtype
+        zero_syndrome = True
         
         for i in range(self.pcm.m):
             self._syndrome[i] = syndrome[i]
             if self._syndrome[i]:
                 zero_syndrome = False
         if zero_syndrome:
-            self.bpd.converge = True
             return np.zeros(self.pcm.n,dtype=DTYPE)
 
         for i in range(self.pcm.n):
