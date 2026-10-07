@@ -110,6 +110,7 @@ cdef class BeliefFindDecoder(BpDecoderBase):
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
         cdef int i
         DTYPE = syndrome.dtype
+        zero_syndrome = True
         
         for i in range(self.m):
             self._syndrome[i] = syndrome[i]

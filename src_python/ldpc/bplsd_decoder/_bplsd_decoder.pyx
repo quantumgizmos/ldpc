@@ -132,6 +132,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
             raise ValueError(f"The syndrome must have length {self.m}. Not {len(syndrome)}.")
         cdef int i
         DTYPE = syndrome.dtype
+        zero_syndrome = True
         
         for i in range(self.m):
             self._syndrome[i] = syndrome[i]
@@ -139,6 +140,7 @@ cdef class BpLsdDecoder(BpDecoderBase):
                 zero_syndrome = False
         if zero_syndrome:
             self.bpd.converge = True
+            self.lsd.reset_cluster_stats()
             return np.zeros(self.n,dtype=DTYPE)
 
         self.bpd.decoding = self.bpd.decode(self._syndrome)

@@ -3,6 +3,7 @@ import numpy as np
 import scipy.sparse
 from ldpc.codes import rep_code
 from ldpc.bplsd_decoder import BpLsdDecoder
+from ldpc.lsd_decoder import LsdDecoder
 
 # Define valid inputs for testing
 valid_pcms = [
@@ -190,3 +191,20 @@ def test_stats_reset():
     assert len(stats["bit_llrs"]) == 0
     assert len(stats["individual_cluster_stats"]) == 0
     assert len(stats["global_timestep_bit_history"]) == 0
+
+
+def test_zero_syndrome():
+    H = rep_code(5)
+    zero_syndrome = np.zeros(H.shape[0], dtype=np.uint8)
+
+    for always_run_lsd in [False, True]:
+        lsd = BpLsdDecoder(H, error_rate=0.1, always_run_lsd=always_run_lsd)
+        lsd.decode(np.array([1, 1, 0, 1]))
+        decoding = lsd.decode(zero_syndrome)
+        assert np.array_equal(decoding, np.zeros(H.shape[1]))
+        assert decoding.dtype == zero_syndrome.dtype
+        assert lsd.converge
+
+    lsd = LsdDecoder(H)
+    decoding = lsd.decode(zero_syndrome, np.ones(H.shape[1]))
+    assert np.array_equal(decoding, np.zeros(H.shape[1]))
