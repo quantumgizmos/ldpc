@@ -6,6 +6,7 @@
 #include <iterator>
 #include <cmath> 
 #include <limits>
+#include <algorithm>
 
 #include "bp.hpp"
 #include "sort.hpp"
@@ -87,8 +88,11 @@ class OsdDecoder{
                     this->osd_candidate_strings.push_back(osd_candidate);
                 }
 
-                for(int i = 0; i<this->osd_order;i++){
-                    for(int j = 0; j<this->osd_order; j++){
+                // Weight-2 candidates use the first osd_order non-pivot columns; there are only k of them.
+                // Without the bound, osd_order > k writes past the end of osd_candidate (heap corruption).
+                int w2_columns = std::min(this->osd_order, this->k);
+                for(int i = 0; i<w2_columns;i++){
+                    for(int j = 0; j<w2_columns; j++){
                         if(j<=i) continue;
                         std::vector<uint8_t> osd_candidate;
                         osd_candidate.resize(k,0);
