@@ -5,6 +5,8 @@
 #ifndef CPP_TEST_OSD_DENSE_HPP
 #define CPP_TEST_OSD_DENSE_HPP
 
+#include <algorithm>
+
 #include "osd.hpp"
 #include "gf2dense.hpp"
 
@@ -81,8 +83,11 @@ namespace ldpc::osd {
                     this->osd_candidate_strings.push_back(osd_candidate);
                 }
 
-                for (auto i = 0; i < this->osd_order; i++) {
-                    for (auto j = 0; j < this->osd_order; j++) {
+                // Weight-2 candidates use the first osd_order non-pivot columns; there are only k of them.
+                // In LSD, k is the dimension of one cluster, which can be far below osd_order.
+                const int w2_columns = std::min(this->osd_order, this->k);
+                for (auto i = 0; i < w2_columns; i++) {
+                    for (auto j = 0; j < w2_columns; j++) {
                         if (j <= i) continue;
                         if (k > 0) {
                             std::vector<uint8_t> osd_candidate;

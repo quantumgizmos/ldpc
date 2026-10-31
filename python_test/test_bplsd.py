@@ -1,8 +1,10 @@
 import pytest
 import numpy as np
 import scipy.sparse
+import stim
 from ldpc.codes import rep_code
 from ldpc.bplsd_decoder import BpLsdDecoder
+from ldpc.ckt_noise.dem_matrices import detector_error_model_to_check_matrices
 
 # Define valid inputs for testing
 valid_pcms = [
@@ -190,3 +192,34 @@ def test_stats_reset():
     assert len(stats["bit_llrs"]) == 0
     assert len(stats["individual_cluster_stats"]) == 0
     assert len(stats["global_timestep_bit_history"]) == 0
+
+
+def test_lsd_cs_order_above_cluster_dimension():
+    # In LSD, k is the dimension of one cluster and osd_order is the global lsd_order. The weight-2
+    # sweep of DenseOsdDecoder used to write past the end of its candidates when k < lsd_order (#105).
+    # The write is often silent: build with -D_GLIBCXX_ASSERTIONS to make it abort on the old code.
+    p = 0.002
+    circuit = stim.Circuit.generated(
+        "surface_code:rotated_memory_z",
+        distance=5,
+        rounds=5,
+        after_clifford_depolarization=p,
+        before_round_data_depolarization=p,
+        before_measure_flip_probability=p,
+        after_reset_flip_probability=p,
+    )
+    matrices = detector_error_model_to_check_matrices(
+        circuit.detector_error_model(decompose_errors=True)
+    )
+    lsd = BpLsdDecoder(
+        matrices.check_matrix,
+        error_channel=list(matrices.priors),
+        max_iter=20,
+        bp_method="minimum_sum",
+        lsd_method="lsd_cs",
+        lsd_order=10,
+    )
+    syndromes = circuit.compile_detector_sampler(seed=7).sample(shots=50).astype(np.uint8)
+    for syndrome in syndromes:
+        decoding = lsd.decode(syndrome)
+        assert np.array_equal(matrices.check_matrix @ decoding % 2, syndrome)
