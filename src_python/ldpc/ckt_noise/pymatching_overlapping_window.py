@@ -63,7 +63,7 @@ class PyMatchingOverlappingWindowDecoder(BaseOverlappingWindowDecoder):
         """
         probs = self.dem_matrices.hyperedge_to_edge_matrix @ self.dem_matrices.priors
         probs[probs == 0] = 1e-308
-        return np.clip(np.log1p(probs) - np.log(probs), -16777215, +16777215)
+        return np.clip(np.log1p(-probs) - np.log(probs), -16777215, +16777215)
 
     def _init_decoder(self, round_dcm: np.ndarray, weights: np.ndarray):
         """
