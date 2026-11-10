@@ -127,6 +127,8 @@ def detector_error_model_to_check_matrices(
             frames: List[List[int]] = [[]]
             t: stim.DemTarget
             p = instruction.args_copy()[0]
+            if p == 0:
+                continue
             for t in instruction.targets_copy():
                 if t.is_relative_detector_id():
                     dets[-1].append(t.val)
