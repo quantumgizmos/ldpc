@@ -11,6 +11,9 @@
 #include <chrono>
 #include <stdexcept> // required for std::runtime_error
 #include <set>
+#include <unordered_map>
+#include <cstring>
+#include <cstdint>
 
 #include "math.h"
 #include "sparse_matrix_base.hpp"
@@ -73,6 +76,17 @@ namespace ldpc {
             int random_schedule_seed;
             bool random_serial_schedule;
             ldpc::rng::RandomListShuffle<int> rng_list_shuffle;
+
+            // Flat (CSR-like) copy of the edge structure for the parallel product-sum kernel. Edge ids follow
+            // pcm.iterate_row order; flat_col_* lists the same edges in pcm.iterate_column order.
+            std::vector<BpEntry *> flat_entries;
+            std::vector<int> flat_row_ptr, flat_col_ptr, flat_col_edge, flat_col_row;
+            std::vector<double> flat_b2c, flat_c2b, flat_tanh, flat_log;
+            std::vector<uint64_t> flat_tanh_in, flat_log_in;  // input bits of the memoised tanh / log per edge
+            std::vector<uint64_t> flat_prev;                  // scratch: previous message bits per edge
+            std::vector<int> flat_edge_col;                   // edge -> column
+            std::vector<uint8_t> flat_row_dirty, flat_col_dirty;
+            uint64_t flat_version = 0;                        // pcm.structure_version the flat arrays were built from
 
             BpDecoder(
                     BpSparse &parity_check_matrix,
@@ -189,7 +203,208 @@ namespace ldpc {
 
             }
 
+            void build_flat() {
+                flat_version = this->pcm.structure_version;
+                flat_entries.clear();
+                flat_row_ptr.assign(1, 0);
+                std::unordered_map<BpEntry *, int> id;
+                for (int i = 0; i < this->check_count; i++) {
+                    for (auto &e: this->pcm.iterate_row(i)) {
+                        id[&e] = (int) flat_entries.size();
+                        flat_entries.push_back(&e);
+                    }
+                    flat_row_ptr.push_back((int) flat_entries.size());
+                }
+                flat_col_ptr.assign(1, 0);
+                flat_col_edge.clear();
+                flat_col_row.clear();
+                for (int j = 0; j < this->bit_count; j++) {
+                    for (auto &e: this->pcm.iterate_column(j)) {
+                        flat_col_edge.push_back(id.at(&e));
+                        flat_col_row.push_back(e.row_index);
+                    }
+                    flat_col_ptr.push_back((int) flat_col_edge.size());
+                }
+                const size_t nnz = flat_entries.size();
+                flat_b2c.assign(nnz, 0.0);
+                flat_c2b.assign(nnz, 0.0);
+                flat_tanh.assign(nnz, 0.0);
+                flat_prev.assign(nnz, 0);
+                flat_edge_col.assign(nnz, 0);
+                for (int j = 0; j < this->bit_count; j++) {
+                    for (int q = flat_col_ptr[j]; q < flat_col_ptr[j + 1]; q++) flat_edge_col[flat_col_edge[q]] = j;
+                }
+                flat_log.assign(nnz, 0.0);
+                flat_tanh_in.assign(nnz, 0);
+                flat_log_in.assign(nnz, 0);
+                // memo state: tanh(0.0 / 2) and log((1 + 0.0) / (1 - 0.0)), evaluated by the same expressions
+                const double zero = 0.0;
+                for (size_t k = 0; k < nnz; k++) {
+                    std::memcpy(&flat_tanh_in[k], &zero, sizeof zero);
+                    std::memcpy(&flat_log_in[k], &zero, sizeof zero);
+                    flat_tanh[k] = std::tanh(zero / 2);
+                    flat_log[k] = std::log((1 + zero) / (1 - zero));
+                }
+            }
+
+            static inline uint64_t dbits(double x) {
+                uint64_t b;
+                std::memcpy(&b, &x, sizeof b);
+                return b;
+            }
+
+            // Parallel product-sum BP on flat arrays. Performs exactly the floating-point operations of the
+            // linked-list loop below, in the same order (tanh(b2c/2) is computed once per edge and reused in the
+            // reverse sweep, where b2c is unchanged; tanh/log results are memoised on their exact input bits),
+            // so all outputs are bitwise identical. Messages are written
+            // back to the pcm entries on return.
+            std::vector<uint8_t> &bp_decode_parallel_product_sum_flat(std::vector<uint8_t> &syndrome) {
+                if (flat_entries.empty() || flat_version != this->pcm.structure_version) {
+                    build_flat();
+                }
+                const int nnz = (int) flat_entries.size();
+                const int m = this->check_count, n = this->bit_count;
+                double *b2c = flat_b2c.data();
+                double *c2b = flat_c2b.data();
+                double *tnh = flat_tanh.data();
+                double *lgv = flat_log.data();
+                uint64_t *tin = flat_tanh_in.data();
+                uint64_t *lin = flat_log_in.data();
+                uint64_t *prev = flat_prev.data();
+                const int *rp = flat_row_ptr.data();
+                const int *cp = flat_col_ptr.data();
+                const int *ce = flat_col_edge.data();
+                const int *cr = flat_col_row.data();
+                const int *ec = flat_edge_col.data();
+                // Change propagation (exact): a row whose incoming bit-to-check messages are bitwise unchanged
+                // produces bitwise the same check-to-bit messages, so it is skipped; a column whose incoming
+                // check-to-bit messages are unchanged keeps its messages, llr and hard decision. The candidate
+                // syndrome is kept as a running parity of the hard decisions.
+                flat_row_dirty.assign(m, 1);
+                flat_col_dirty.assign(n, 1);
+                uint8_t *rdirty = flat_row_dirty.data();
+                uint8_t *cdirty = flat_col_dirty.data();
+
+                this->converge = 0;
+                this->initialise_log_domain_bp();
+                for (int k = 0; k < nnz; k++) {
+                    b2c[k] = flat_entries[k]->bit_to_check_msg;
+                }
+
+                for (int it = 1; it <= this->maximum_iterations; it++) {
+                    const bool full = it == 1;
+                    for (int i = 0; i < m; i++) {
+                        if (!full && !rdirty[i]) continue;
+                        rdirty[i] = 0;
+                        double temp = 1.0;
+                        for (int k = rp[i]; k < rp[i + 1]; k++) {
+                            prev[k] = dbits(c2b[k]);
+                            c2b[k] = temp;
+                            // tanh and log are pure functions of their input bits: recompute only when the
+                            // input changed since this edge's last evaluation (most messages saturate).
+                            const uint64_t xb = dbits(b2c[k]);
+                            if (xb != tin[k]) {
+                                tin[k] = xb;
+                                tnh[k] = std::tanh(b2c[k] / 2);
+                            }
+                            temp *= tnh[k];
+                        }
+                        temp = 1;
+                        // log is a pure function of its input bits, and the leave-one-out products of a row
+                        // often coincide (most factors saturate to +-1): reuse the result of the last few
+                        // distinct inputs evaluated in this row before calling log again.
+                        uint64_t row_in[4];
+                        double row_out[4];
+                        int row_n = 0, row_next = 0;
+                        for (int k = rp[i + 1] - 1; k >= rp[i]; k--) {
+                            c2b[k] *= temp;
+                            int message_sign = syndrome[i] != 0u ? -1.0 : 1.0;
+                            const uint64_t xb = dbits(c2b[k]);
+                            if (xb != lin[k]) {
+                                lin[k] = xb;
+                                int z = 0;
+                                while (z < row_n && row_in[z] != xb) z++;
+                                if (z < row_n) {
+                                    lgv[k] = row_out[z];
+                                } else {
+                                    lgv[k] = std::log((1 + c2b[k]) / (1 - c2b[k]));
+                                    row_in[row_next] = xb;
+                                    row_out[row_next] = lgv[k];
+                                    row_next = (row_next + 1) & 3;
+                                    if (row_n < 4) row_n++;
+                                }
+                            }
+                            c2b[k] = message_sign * lgv[k];
+                            temp *= tnh[k];
+                            if (dbits(c2b[k]) != prev[k]) cdirty[ec[k]] = 1;
+                        }
+                    }
+
+                    // Column sweeps fused per column (columns are independent, and within a column the
+                    // operations and their order are unchanged): prefix pass -> llr / hard decision, then the
+                    // suffix pass that completes the bit-to-check messages for the next iteration.
+                    if (full) {
+                        std::fill(this->candidate_syndrome.begin(), this->candidate_syndrome.end(), 0);
+                    }
+                    for (int j = 0; j < n; j++) {
+                        if (!full && !cdirty[j]) continue;
+                        cdirty[j] = 0;
+                        double temp = initial_log_prob_ratios[j];
+                        for (int q = cp[j]; q < cp[j + 1]; q++) {
+                            const int k = ce[q];
+                            prev[k] = dbits(b2c[k]);
+                            b2c[k] = temp;
+                            temp += c2b[k];
+                        }
+                        this->log_prob_ratios[j] = temp;
+                        const uint8_t dec = temp <= 0 ? 1 : 0;
+                        if (full ? dec : dec != this->decoding[j]) {
+                            for (int q = cp[j]; q < cp[j + 1]; q++) {
+                                this->candidate_syndrome[cr[q]] ^= 1;
+                            }
+                        }
+                        this->decoding[j] = dec;
+                        temp = 0;
+                        for (int q = cp[j + 1] - 1; q >= cp[j]; q--) {
+                            const int k = ce[q];
+                            b2c[k] += temp;
+                            temp += c2b[k];
+                            if (dbits(b2c[k]) != prev[k]) rdirty[cr[q]] = 1;
+                        }
+                    }
+
+                    if (std::equal(candidate_syndrome.begin(), candidate_syndrome.end(), syndrome.begin())) {
+                        this->converge = true;
+                    }
+                    this->iterations = it;
+                    if (this->converge) {
+                        // the original loop stops before the suffix pass: restore the prefix-only messages
+                        for (int j = 0; j < n; j++) {
+                            double temp = initial_log_prob_ratios[j];
+                            for (int q = cp[j]; q < cp[j + 1]; q++) {
+                                const int k = ce[q];
+                                b2c[k] = temp;
+                                temp += c2b[k];
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if (this->maximum_iterations >= 1) {  // with 0 iterations the entries keep their old c2b
+                    for (int k = 0; k < nnz; k++) {
+                        flat_entries[k]->bit_to_check_msg = b2c[k];
+                        flat_entries[k]->check_to_bit_msg = c2b[k];
+                    }
+                }
+                return this->decoding;
+            }
+
             std::vector<uint8_t> &bp_decode_parallel(std::vector<uint8_t> &syndrome) {
+
+                if (this->bp_method == PRODUCT_SUM) {
+                    return bp_decode_parallel_product_sum_flat(syndrome);
+                }
 
                 this->converge = 0;
 
