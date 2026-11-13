@@ -635,3 +635,30 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+TEST(BpDecoder, ProdSumParallel_FollowsPcmStructureChanges) {
+    // the product-sum kernel caches the matrix structure; it must follow edits of the matrix, including ones that
+    // keep the number of entries
+    auto pcm = ldpc::bp::BpSparse(2, 2);
+    pcm.insert_entry(0, 0);
+    pcm.insert_entry(1, 1);
+    auto channel_probabilities = vector<double>(2, 0.1);
+    auto decoder = ldpc::bp::BpDecoder(pcm, channel_probabilities, 5, ldpc::bp::PRODUCT_SUM, ldpc::bp::PARALLEL, 0.625, 1,
+                                       ldpc::bp::NULL_INT_VECTOR, 0, false, ldpc::bp::SYNDROME);
+    auto syndrome = vector<uint8_t>{1, 0};
+
+    EXPECT_EQ(decoder.decode(syndrome), (vector<uint8_t>{1, 0}));
+    EXPECT_TRUE(decoder.converge);
+
+    pcm.swap_rows(0, 1);  // H = [[0, 1], [1, 0]]
+    EXPECT_EQ(decoder.decode(syndrome), (vector<uint8_t>{0, 1}));
+    EXPECT_TRUE(decoder.converge);
+
+    pcm.insert_entry(0, 0);  // H = [[1, 1], [1, 0]]: syndrome (1, 0) needs x = (0, 1)
+    EXPECT_EQ(decoder.decode(syndrome), (vector<uint8_t>{0, 1}));
+    EXPECT_TRUE(decoder.converge);
+
+    pcm.remove_entry(0, 1);  // H = [[1, 0], [1, 0]]: syndrome (1, 0) has no solution
+    decoder.decode(syndrome);
+    EXPECT_FALSE(decoder.converge);
+}

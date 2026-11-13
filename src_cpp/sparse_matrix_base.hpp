@@ -1,6 +1,7 @@
 #ifndef SPARSE_MATRIX_BASE_H
 #define SPARSE_MATRIX_BASE_H
 
+#include <cstdint>
 #include <vector>
 #include <iterator>
 
@@ -117,6 +118,9 @@ namespace ldpc {
             std::vector<ENTRY_OBJ *> row_heads; //starting point for each row
             std::vector<ENTRY_OBJ *> column_heads; //starting point for each column
             bool MEMORY_ALLOCATED = false;
+            // incremented by every change to the matrix structure (entries inserted or removed, rows or columns
+            // moved), so that objects caching the structure can tell when to rebuild
+            uint64_t structure_version = 0;
 
             // std::vector<ENTRY_OBJ*> matrix_entries;
 
@@ -136,6 +140,7 @@ namespace ldpc {
             void initialise_sparse_matrix(int check_count, int bit_count, int entry_count = 0) {
 
                 this->reset_matrix();
+                this->structure_version++;
                 this->m = check_count;
                 this->n = bit_count;
                 this->block_idx = -1;
@@ -282,6 +287,7 @@ namespace ldpc {
              * @param j The index of the second row to swap
              */
             void swap_rows(int i, int j) {
+                this->structure_version++;
                 auto tmp1_ptr = this->row_heads[i]; // store the head element of row i in a temporary variable
                 auto tmp2_ptr = this->row_heads[j]; // store the head element of row j in a temporary variable
                 this->row_heads[j] = tmp1_ptr; // set the head element of row j to the head element of row i
@@ -300,6 +306,7 @@ namespace ldpc {
 
 
             void reorder_rows(std::vector<int> rows) {
+                this->structure_version++;
 
                 std::vector<ENTRY_OBJ *> temp_row_heads = this->row_heads;
                 for (int i = 0; i < m; i++) {
@@ -318,6 +325,7 @@ namespace ldpc {
              * @param j The index of the second column to swap.
              */
             void swap_columns(int i, int j) {
+                this->structure_version++;
                 auto tmp1 = this->column_heads[i];
                 auto tmp2 = this->column_heads[j];
                 this->column_heads[j] = tmp1;
@@ -377,6 +385,7 @@ namespace ldpc {
                 ENTRY_OBJ *e_ptr = &e_ref;
                 // Check if the entry is not already at the end of the row or column.
                 if (!e_ptr->at_end()) {
+                    this->structure_version++;
                     // Store pointers to the adjacent entries.
                     auto e_left_ptr = e_ptr->left;
                     auto e_right_ptr = e_ptr->right;
@@ -460,6 +469,7 @@ namespace ldpc {
                 }
 
                 // Create and link the new entry
+                this->structure_version++;
                 auto e_ptr = this->allocate_new_entry();
                 node_count++;
                 e_ptr->row_index = j;

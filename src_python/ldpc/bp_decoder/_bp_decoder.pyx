@@ -213,11 +213,20 @@ cdef class BpDecoderBase:
             value (Optional[List[float]]): The error channel vector to be set. Must have length equal to the block
             length of the code `self.n`.
         """
+        cdef const double[::1] v
+        cdef int j
         if value is not None:
             if len(value) != self.n:
                 raise ValueError(f"The error channel vector must have length {self.n}, not {len(value)}.")
-            for i in range(self.n):
-                self.bpd.channel_probabilities[i] = value[i]
+            # A 1-D float64 ndarray is copied through a typed view (the same doubles value[i] gives, without a
+            # Python float per element); anything else element by element as before.
+            if type(value) is np.ndarray and value.dtype == np.float64 and value.dtype.isnative and value.ndim == 1:
+                v = np.ascontiguousarray(value)
+                for j in range(self.n):
+                    self.bpd.channel_probabilities[j] = v[j]
+            else:
+                for i in range(self.n):
+                    self.bpd.channel_probabilities[i] = value[i]
 
     def update_channel_probs(self, value: Union[List[float],np.ndarray]) -> None:
         self.error_channel = value
